@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.javamodularity.moduleplugin' version '1.8.15'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'com.gradleup.shadow' version '9.1.0'
+
+}
+
+group = 'com.safwat'
+version = '10.01'
+
+repositories {
+    mavenCentral()
+}
+
+def junitVersion = '5.12.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+
+application {
+
+    mainClass = 'com.safwat.hr.Launcher'
+}
+
+javafx {
+    version = '21.0.6'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.web', 'javafx.swing']
+}
+tasks.withType(JavaCompile) {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
+dependencies {
+    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'org.controlsfx:controlsfx:11.2.1'
+    implementation('com.dlsc.formsfx:formsfx-core:11.6.0') {
+        exclude group: 'org.openjfx'
+    }
+    implementation('net.synedra:validatorfx:0.6.1') {
+        exclude group: 'org.openjfx'
+    }
+    implementation 'org.kordamp.ikonli:ikonli-javafx:12.3.1'
+    implementation 'org.kordamp.ikonli:ikonli-fontawesome5-pack:12.3.1'
+    implementation 'org.kordamp.bootstrapfx:bootstrapfx-core:0.4.0'
+    implementation('eu.hansolo:tilesfx:21.0.9') {
+        exclude group: 'org.openjfx'
+    }
+
+    // Lombok: استخدم compileOnly و annotationProcessor
+    compileOnly 'org.projectlombok:lombok:1.18.36'   // أحدث إصدار
+    // annotationProcessor 'org.projectlombok:lombok:1.18.36'
+
+
+}
+
+
+
