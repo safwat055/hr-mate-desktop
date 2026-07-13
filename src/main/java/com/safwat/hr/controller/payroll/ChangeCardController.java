@@ -240,7 +240,7 @@ public class ChangeCardController implements Initializable {
 
             HRNotification.success("جاري تحميل الملف...");
 
-            boolean success = changeService.getChangeCardPDF(request, targetPath);
+            boolean success = changeService.downloadChangeCardPDF(request, targetPath);
 
             if (success) {
                 File downloadedFile = targetPath.toFile();

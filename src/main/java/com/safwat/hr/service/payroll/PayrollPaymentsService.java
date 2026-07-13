@@ -10,6 +10,7 @@ import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiResponse;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class PayrollPaymentsService {
@@ -18,7 +19,7 @@ public class PayrollPaymentsService {
     public ApiResponse<List<SearchEmp>> searchInEmployees(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_YEARLY + "/get/searchEmployee",
+                    ApiEndpoints.PayrollYearly.SEARCH,
                     request,
                     new TypeReference<List<SearchEmp>>() {
                     }
@@ -32,13 +33,27 @@ public class PayrollPaymentsService {
     public ApiResponse<DTO.PaymentsView> getPaymentsData(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_YEARLY + "/get/employeeYearly",
+                    ApiEndpoints.PayrollYearly.EMPLOYEE_RECORD,
                     request,
                     DTO.PaymentsView.class
             );
         } catch (IOException | InterruptedException e) {
             HRNotification.error(e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    public boolean downloadPaymentsPDF(PayrollRequest request, Path targetPath) {
+        try {
+            return ApiClient.downloadFileViaPostWithBody(
+                    ApiEndpoints.PayrollYearly.DOWNLOAD_PAYMENTS,
+                    request,
+                    targetPath
+            );
+        } catch (IOException | InterruptedException e) {
+            HRNotification.error(e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 }

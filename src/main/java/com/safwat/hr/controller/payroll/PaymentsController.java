@@ -25,7 +25,11 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 
+import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -83,7 +87,7 @@ public class PaymentsController implements Initializable {
     void setButtonsAction() {
         btn_search.setOnAction(_ -> searchEmployee());
         btn_view.setOnAction(_ -> getEmployeeData());
-        //btn_pdf.setOnAction(_ -> exportToPDF());
+        btn_pdf.setOnAction(_ -> exportToPDF());
         btn_clear.setOnAction(_ -> clear());
         btn_save.setOnAction(_ -> saveNotes());
 
@@ -101,6 +105,53 @@ public class PaymentsController implements Initializable {
         txt_nationalID.clear();
         txt_startMonth.clear();
         txt_endMonth.clear();
+    }
+
+    private void exportToPDF() {
+
+
+        try {
+            if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
+                HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+                return;
+            }
+
+            PayrollRequest request = new PayrollRequest();
+
+            request.setNationalId(txt_nationalID.getText());
+            request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
+            request.setEndDate(DateUtils.getLastDayOfMonth(txt_endMonth.getText()));
+            request.setFormat("PDF");
+            String fileName = "PAYMENTS_REPORT" + System.currentTimeMillis() + ".pdf";
+
+
+            String workingDir = System.getProperty("user.dir");
+
+
+            Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
+            if (!Files.exists(tempDownloadsDir)) {
+                Files.createDirectories(tempDownloadsDir);
+            }
+
+
+            Path targetPath = tempDownloadsDir.resolve(fileName);
+
+
+            HRNotification.success("جاري تحميل الملف...");
+
+            boolean success = paymentsService.downloadPaymentsPDF(request, targetPath);
+
+            if (success) {
+                File downloadedFile = targetPath.toFile();
+                HRNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
+            } else {
+                HRNotification.error("فشل تحميل الملف");
+            }
+
+        } catch (Exception e) {
+            HRNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
+
+        }
     }
 
     /**
@@ -122,7 +173,7 @@ public class PaymentsController implements Initializable {
         colSelected.setEditable(true);
         colSelected.setPrefWidth(50);
 
-        
+
         TableColumn<PaymentsResult, String> colMonth = new TableColumn<>("الشهر");
         colMonth.setCellValueFactory(new PropertyValueFactory<>("month"));
         colMonth.setEditable(false);
@@ -227,7 +278,7 @@ public class PaymentsController implements Initializable {
             for (Object[] row : subData) {
                 PaymentsResult result = new PaymentsResult(
                         (String) row[0],
-                        row[1].toString(),
+                        (String) row[1],
                         (String) row[2],
                         (String) row[3],
                         (String) row[4],

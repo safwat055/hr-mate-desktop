@@ -19,7 +19,7 @@ public class PayrollChangeService {
     public ApiResponse<List<SearchEmp>> searchInEmployee(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_CHANGE + "/get/searchEmployee",
+                    ApiEndpoints.PayrollChange.SEARCH,
                     request,
                     new TypeReference<List<SearchEmp>>() {
                     }
@@ -34,7 +34,7 @@ public class PayrollChangeService {
 
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_CHANGE + "/get/employeeRecord",
+                    ApiEndpoints.PayrollChange.EMPLOYEE_RECORD,
                     request,
                     DTO.ChangeCardView.class
 
@@ -46,16 +46,24 @@ public class PayrollChangeService {
         }
     }
 
-    public boolean getChangeCardPDF(PayrollRequest request, Path targetPath) {
+    /**
+     * use to
+     *
+     * @param request
+     * @param targetPath
+     * @return
+     */
+    public boolean downloadChangeCardPDF(PayrollRequest request, Path targetPath) {
         // 4. تحميل الملف
         try {
 
             return ApiClient.downloadFileViaPostWithBody(
-                    "/payrollChange/download-changeCard",
+                    ApiEndpoints.PayrollChange.DOWNLOAD_CARD,
                     request,
                     targetPath
             );
         } catch (IOException | InterruptedException e) {
+            HRNotification.error(e.getMessage());
             e.printStackTrace();
             return false;
 
