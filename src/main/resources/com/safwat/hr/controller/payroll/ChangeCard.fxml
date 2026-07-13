@@ -13,27 +13,28 @@
    <content>
       <AnchorPane minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="645.0" prefWidth="991.0">
          <children>
-            <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="909.0" spacing="10.0" AnchorPane.rightAnchor="5.0">
+            <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="909.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
                <padding>
                   <Insets left="5.0" right="5.0" />
                </padding>
                <children>
                   <TextField fx:id="txt_searchValue" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="340.0" promptText="ادخل فيمة للبحث او اكتب الرقم القومي كامل في حقل الادخال " />
-                  <Button fx:id="btn_pdf" mnemonicParsing="false" text="pdf" />
-                  <Button fx:id="btn_clear" layoutX="1031.0" layoutY="17.0" mnemonicParsing="false" text="مسح" />
                   <Button fx:id="btn_search" layoutX="961.0" layoutY="17.0" mnemonicParsing="false" text="بحث" />
+                  <Button fx:id="btn_clear" layoutX="1031.0" layoutY="17.0" mnemonicParsing="false" text="مسح" />
                </children>
             </HBox>
-            <HBox alignment="CENTER_RIGHT" layoutY="40.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="51.0" prefWidth="1086.0" spacing="10.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="40.0">
+            <HBox alignment="CENTER_RIGHT" layoutY="40.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="971.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
                <children>
-                  <TextField fx:id="txt_endMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="129.0" promptText="شهر سنة 2025 2" />
+                  <TextField fx:id="txt_endMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
                   <Label alignment="CENTER" fontSmoothingType="GRAY" layoutX="418.0" layoutY="21.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="الى" />
-                  <TextField fx:id="txt_startMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="108.0" promptText="شهر سنة 2025 2" />
+                  <TextField fx:id="txt_startMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
                   <Label alignment="CENTER" fontSmoothingType="GRAY" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="من" />
-                  <TextField fx:id="txt_empName" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="216.0" promptText="اسم الموظف" />
-                  <TextField fx:id="txt_empCode" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="127.0" promptText="رقم موظف" />
+                  <TextField fx:id="txt_empName" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="198.0" promptText="اسم الموظف" />
+                  <TextField fx:id="txt_empCode" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="112.0" promptText="رقم موظف" />
                   <TextField fx:id="txt_nationalID" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="134.0" promptText="رقم قومى" />
                   <Button fx:id="btn_view" mnemonicParsing="false" text="عرض" />
+                  <Button fx:id="btn_save" mnemonicParsing="false" prefHeight="26.0" prefWidth="35.0" />
+                  <Button fx:id="btn_pdf" mnemonicParsing="false" prefHeight="26.0" prefWidth="36.0" />
                </children>
                <padding>
                   <Insets left="5.0" right="5.0" />

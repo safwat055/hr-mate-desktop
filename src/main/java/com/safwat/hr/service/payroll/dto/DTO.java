@@ -13,6 +13,12 @@ public class DTO {
             LocalDate end_date,
             List<Object[]> rows
     ) {
+    }
+
+    public record PaymentsView(
+            String national_id, String pay_id, String emp_name, List<Object[]> rows, String[] headers
+    ) {
 
     }
+
 }

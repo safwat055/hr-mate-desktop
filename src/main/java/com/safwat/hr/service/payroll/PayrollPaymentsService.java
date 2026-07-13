@@ -10,56 +10,35 @@ import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiResponse;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
-public class PayrollChangeService {
+public class PayrollPaymentsService {
 
 
-    public ApiResponse<List<SearchEmp>> searchInEmployee(PayrollRequest request) {
+    public ApiResponse<List<SearchEmp>> searchInEmployees(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_CHANGE + "/get/searchEmployee",
+                    ApiEndpoints.PAYROLL_YEARLY + "/get/searchEmployee",
                     request,
                     new TypeReference<List<SearchEmp>>() {
                     }
+
             );
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-
-    public ApiResponse<DTO.ChangeCardView> getChangeCardData(PayrollRequest request) {
-
+    public ApiResponse<DTO.PaymentsView> getPaymentsData(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PAYROLL_CHANGE + "/get/employeeRecord",
+                    ApiEndpoints.PAYROLL_YEARLY + "/get/employeeYearly",
                     request,
-                    DTO.ChangeCardView.class
-
+                    DTO.PaymentsView.class
             );
-
         } catch (IOException | InterruptedException e) {
             HRNotification.error(e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    public boolean getChangeCardPDF(PayrollRequest request, Path targetPath) {
-        // 4. تحميل الملف
-        try {
-
-            return ApiClient.downloadFileViaPostWithBody(
-                    "/payrollChange/download-changeCard",
-                    request,
-                    targetPath
-            );
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return false;
-
-        }
-
     }
 }

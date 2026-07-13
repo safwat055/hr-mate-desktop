@@ -8,6 +8,7 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.HRButton;
 import com.safwat.hr.ui.controls.HRNotification;
 import com.safwat.hr.ui.controls.HRTextField;
+import com.safwat.hr.ui.icons.Icons;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,26 +40,12 @@ public class ChangeCardController implements Initializable {
     private final ObservableList<changeCardResult> resultList = FXCollections.observableArrayList();
 
     @FXML
-    private Button btn_clear;
+    private Button btn_clear, btn_save, btn_pdf, btn_search, btn_view;
     @FXML
-    private Button btn_pdf;
-    @FXML
-    private Button btn_search;
-    @FXML
-    private Button btn_view;
+    private TextField txt_empCode, txt_empName, txt_nationalID, txt_searchValue;
 
     @FXML
-    private TextField txt_empCode;
-    @FXML
-    private TextField txt_empName;
-    @FXML
-    private TextField txt_nationalID;
-    @FXML
-    private TextField txt_searchValue;
-    @FXML
-    private TextField txt_startMonth;
-    @FXML
-    private TextField txt_endMonth;
+    private TextField txt_startMonth, txt_endMonth;
 
 
     @FXML
@@ -72,64 +59,86 @@ public class ChangeCardController implements Initializable {
         setupTable(); // إعداد الجدول
     }
 
+    /**
+     * use to setting ui component
+     */
     void setView() {
         HRTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
-        HRButton.flat(true, btn_clear, btn_pdf, btn_search, btn_view);
+        HRButton.flat(true, btn_clear, btn_search, btn_view);
+        Icons.getInstance().getPDFImage(btn_pdf);
+        Icons.getInstance().getSaveImage(btn_save);
     }
 
+    /**
+     * Use To Set Buttons Actions
+     */
     void setButtonsAction() {
         btn_search.setOnAction(_ -> searchEmployee());
         btn_view.setOnAction(_ -> getEmployeeData());
-        btn_pdf.setOnAction(event -> exportToPDF());
+        btn_pdf.setOnAction(_ -> exportToPDF());
+        btn_clear.setOnAction(_ -> clear());
+        btn_save.setOnAction(_ -> saveNotes());
+
     }
 
+    /**
+     * use to clear all components in view
+     */
+    void clear() {
+        resultList.clear();
+        resultTable.getItems().clear();
+        txt_searchValue.clear();
+        txt_empCode.clear();
+        txt_empName.clear();
+        txt_nationalID.clear();
+        txt_startMonth.clear();
+        txt_endMonth.clear();
+    }
 
-    // ====== إعداد الجدول ======
+    void saveNotes() {
+        HRNotification.info("ستتم الاضافة في الاصدارت المستقبلية");
+    }
+
+    /**
+     * use to set result table
+     */
     @SuppressWarnings("unchecked")
     private void setupTable() {
-        // ربط البيانات
+
         resultTable.setItems(resultList);
 
-        // مسح الأعمدة الافتراضية (لو موجودة)
         resultTable.getColumns().clear();
 
-        // ====== 1. عمود الـ CheckBox ======
-        TableColumn<changeCardResult, Boolean> colSelected = new TableColumn<>("اختيار");
+        TableColumn<changeCardResult, Boolean> colSelected = new TableColumn<>("*");
         colSelected.setCellValueFactory(new PropertyValueFactory<>("selected"));
         colSelected.setCellFactory(CheckBoxTableCell.forTableColumn(colSelected));
         colSelected.setEditable(true);
         colSelected.setPrefWidth(80);
 
-        // ====== 2. عمود الشهر ======
         TableColumn<changeCardResult, String> colMonth = new TableColumn<>("الشهر");
         colMonth.setCellValueFactory(new PropertyValueFactory<>("month"));
         colMonth.setEditable(false);
         colMonth.setPrefWidth(120);
 
-        // ====== 3. عمود القيمة ======
-        TableColumn<changeCardResult, String> colValue = new TableColumn<>("القيمة");
+        TableColumn<changeCardResult, String> colValue = new TableColumn<>("اجر الاشتراك");
         colValue.setCellValueFactory(new PropertyValueFactory<>("value"));
         colValue.setEditable(false);
         colValue.setPrefWidth(120);
 
-        // ====== 4. عمود الملاحظات ======
         TableColumn<changeCardResult, String> colNotes = new TableColumn<>("الملاحظات");
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
         colNotes.setCellFactory(TextFieldTableCell.forTableColumn());
         colNotes.setEditable(true);
         colNotes.setPrefWidth(300);
 
-        // التعامل مع تعديل الملاحظات
         colNotes.setOnEditCommit(event -> {
             changeCardResult row = event.getRowValue();
             row.setNotes(event.getNewValue());
             HRNotification.info("تم تحديث الملاحظات");
         });
 
-        // إضافة كل الأعمدة للجدول
         resultTable.getColumns().addAll(colSelected, colMonth, colValue, colNotes);
 
-        // لجعل الجدول قابل للتحرير
         resultTable.setEditable(true);
     }
 
@@ -152,7 +161,7 @@ public class ChangeCardController implements Initializable {
             txt_empName.setText(data.getFirst().getEmp_name());
             HRNotification.success("تم العثور على بيانات");
         }
-        System.out.println(data.size());
+
     }
 
     /**
@@ -178,7 +187,6 @@ public class ChangeCardController implements Initializable {
                 return;
             }
 
-            System.out.println(data.rows().size() + " : " + data.emp_name());
 
             // ====== تعبئة الجدول ======
             resultList.clear();
@@ -208,7 +216,7 @@ public class ChangeCardController implements Initializable {
                 HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
                 return;
             }
-            // 1. بناء الـ Request
+
             PayrollRequest request = new PayrollRequest();
 
             request.setNationalId(txt_nationalID.getText());
@@ -217,23 +225,23 @@ public class ChangeCardController implements Initializable {
             request.setFormat("PDF");
             String fileName = "بطاقة اجر الاشتراك_" + System.currentTimeMillis() + ".pdf";
 
-            // الحصول على مسار التشغيل (حيث الـ JAR أو الـ classes)
+
             String workingDir = System.getProperty("user.dir");
 
-            // إنشاء مجلد temp_downloads إذا لم يكن موجوداً
+
             Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
             if (!Files.exists(tempDownloadsDir)) {
                 Files.createDirectories(tempDownloadsDir);
             }
 
-            // المسار الكامل للملف
+
             Path targetPath = tempDownloadsDir.resolve(fileName);
 
-            // 3. عرض رسالة "جاري التحميل"
+
             HRNotification.success("جاري تحميل الملف...");
 
             boolean success = changeService.getChangeCardPDF(request, targetPath);
-            // 5. التعامل مع النتيجة
+
             if (success) {
                 File downloadedFile = targetPath.toFile();
                 HRNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
