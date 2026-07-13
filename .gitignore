@@ -41,3 +41,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+/temp_downloads
+/.idea
+/.idea
+/.idea

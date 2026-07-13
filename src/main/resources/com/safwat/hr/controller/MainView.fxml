@@ -32,6 +32,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import io.github.palexdev.materialfx.controls.MFXNotificationCenter?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
@@ -48,12 +49,11 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+<VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="701.0" prefWidth="1065.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.MainViewController">
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
@@ -109,8 +109,8 @@
                                        <content>
                                           <VBox alignment="TOP_CENTER" spacing="10.0">
                                              <children>
-                                                <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="تقارير صرف" />
-                                                <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="اجر الاشتراك" />
+                                                <Button fx:id="btn_payments" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="تقارير صرف" />
+                                                <Button fx:id="btn_changeCard" layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="اجر الاشتراك" />
                                                 <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="مفردات" />
                                                 <Button layoutX="20.0" layoutY="93.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="سجلات" />
                                                 <Button layoutX="15.0" layoutY="131.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="شيت الادخال" />
@@ -202,13 +202,13 @@
                   </ScrollPane>
                </children>
         </AnchorPane>
-        <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="550.0" prefWidth="535.0">
+            <ScrollPane fitToHeight="true" fitToWidth="true">
                <content>
-                  <StackPane prefHeight="150.0" prefWidth="200.0">
+                  <AnchorPane prefHeight="546.0" prefWidth="760.0">
                      <children>
-                        <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE">
+                        <TabPane fx:id="tab" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                           <tabs>
-                            <Tab text="الرئيسية">
+                            <Tab fx:id="mainTab" text="الرئيسية">
                               <content>
                                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
                               </content>
@@ -216,18 +216,14 @@
                           </tabs>
                         </TabPane>
                      </children>
-                  </StackPane>
+                  </AnchorPane>
                </content>
-        </ScrollPane>
+            </ScrollPane>
         <AnchorPane fx:id="leftPane" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="60.0">
                <children>
                   <VBox alignment="TOP_CENTER" layoutX="-4.0" layoutY="14.0" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="39.0" text="📩" textFill="#030303">
-                           <font>
-                              <Font size="13.0" />
-                           </font>
-                        </Button>
+                        <MFXNotificationCenter maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="50.0" />
                         <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📩" />
                         <Button layoutX="20.0" layoutY="57.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📸" />
                         <Button layoutX="20.0" layoutY="94.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />

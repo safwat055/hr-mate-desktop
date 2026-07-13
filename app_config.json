@@ -1,0 +1,8 @@
+{"connection": {
+  "alone": false,
+  "url2": "ws://",
+  "port": "8080",
+  "masterPC": "localhost",
+  "user": "admin",
+  "url": "http://"
+}}

@@ -1,8 +1,12 @@
 package com.safwat.hr.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.safwat.hr.shared.AppConfig;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -32,16 +37,25 @@ import java.util.function.Consumer;
  * - إدارة التوكن (للصلاحيات).
  */
 public class ApiClient {
-    private static final String BASE_URL = "http://localhost:8080";
+
     private static final Duration TIMEOUT = Duration.ofSeconds(30);
     private static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(TIMEOUT)
             .build();
-    private static final Gson gson = new Gson();
-
-    // ------ إدارة التوكن (للصلاحيات) ------
+    // ── Jackson ObjectMapper (مكان Gson) ─────────────────────────────
+    private static final ObjectMapper mapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())                        // دعم Java 8 Date/Time
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)    // ISO-8601 بدل epoch
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // تجاهل حقول غير معروفة
+    public static String url = AppConfig.getString("connection", "url", "http://");
+    public static String url2 = AppConfig.getString("connection", "url2", "ws://");
+    public static String masterPC = AppConfig.getString("connection", "masterPC", "localhost");
+    public static String port = AppConfig.getString("connection", "port", "8080");
+    public static final String BASE_URL = url + masterPC + ":" + port + "/api";
+    public static final String BASE_URL2 = url2 + masterPC + ":" + port + "/ws";
+    // ── إدارة التوكن ─────────────────────────────────────────────────
     private static String authToken = null;
 
     public static void setAuthToken(String token) {
@@ -52,160 +66,204 @@ public class ApiClient {
         authToken = null;
     }
 
-    // ------ الطلبات المتزامنة (synchronous) ------
+    // ═════════════════════════════════════════════════════════════════
+    //  GET
+    // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * GET request بدون query parameters.
-     */
-    public static <T> ApiResponse<T> get(String path, Class<T> responseType) throws IOException, InterruptedException {
+    public static <T> ApiResponse<T> get(String path, Class<T> responseType)
+            throws IOException, InterruptedException {
         return sendRequest(path, "GET", null, null, responseType);
     }
 
-    /**
-     * GET request مع query parameters.
-     */
-    public static <T> ApiResponse<T> get(String path, Map<String, String> queryParams, Class<T> responseType) throws IOException, InterruptedException {
-        String fullPath = appendQueryParams(path, queryParams);
-        return sendRequest(fullPath, "GET", null, null, responseType);
+    public static <T> ApiResponse<T> get(String path,
+                                         Map<String, String> queryParams,
+                                         Class<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(appendQueryParams(path, queryParams), "GET", null, null, responseType);
     }
 
-    /**
-     * POST request مع JSON body.
-     */
-    public static <T> ApiResponse<T> post(String path, Object body, Class<T> responseType) throws IOException, InterruptedException {
+    // ═════════════════════════════════════════════════════════════════
+    //  POST
+    // ═════════════════════════════════════════════════════════════════
+
+    public static <T> ApiResponse<T> post(String path, Object body, Class<T> responseType)
+            throws IOException, InterruptedException {
         return sendRequest(path, "POST", body, null, responseType);
     }
 
-    /**
-     * POST request مع JSON body و query parameters.
-     */
-    public static <T> ApiResponse<T> post(String path, Object body, Map<String, String> queryParams, Class<T> responseType) throws IOException, InterruptedException {
-        String fullPath = appendQueryParams(path, queryParams);
-        return sendRequest(fullPath, "POST", body, null, responseType);
+    public static <T> ApiResponse<T> post(String path,
+                                          Object body,
+                                          Map<String, String> queryParams,
+                                          Class<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(appendQueryParams(path, queryParams), "POST", body, null, responseType);
     }
 
     /**
-     * PUT request مع JSON body.
+     * POST مع TypeReference لدعم الأنواع المعقدة مثل List&lt;Employee&gt;.
+     * <pre>
+     *   ApiResponse&lt;List&lt;Employee&gt;&gt; res =
+     *       ApiClient.post("/employees", body, new TypeReference&lt;&gt;() {});
+     * </pre>
      */
-    public static <T> ApiResponse<T> put(String path, Object body, Class<T> responseType) throws IOException, InterruptedException {
+    public static <T> ApiResponse<T> post(String path,
+                                          Object body,
+                                          TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(path, "POST", body, null, responseType);
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  PUT
+    // ═════════════════════════════════════════════════════════════════
+
+    public static <T> ApiResponse<T> put(String path, Object body, Class<T> responseType)
+            throws IOException, InterruptedException {
         return sendRequest(path, "PUT", body, null, responseType);
     }
 
-    /**
-     * DELETE request.
-     */
-    public static <T> ApiResponse<T> delete(String path, Class<T> responseType) throws IOException, InterruptedException {
+    // ═════════════════════════════════════════════════════════════════
+    //  DELETE
+    // ═════════════════════════════════════════════════════════════════
+
+    public static <T> ApiResponse<T> delete(String path, Class<T> responseType)
+            throws IOException, InterruptedException {
         return sendRequest(path, "DELETE", null, null, responseType);
     }
 
-    /**
-     * DELETE request مع query parameters.
-     */
-    public static <T> ApiResponse<T> delete(String path, Map<String, String> queryParams, Class<T> responseType) throws IOException, InterruptedException {
-        String fullPath = appendQueryParams(path, queryParams);
-        return sendRequest(fullPath, "DELETE", null, null, responseType);
+    public static <T> ApiResponse<T> delete(String path,
+                                            Map<String, String> queryParams,
+                                            Class<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(appendQueryParams(path, queryParams), "DELETE", null, null, responseType);
     }
 
-    /**
-     * POST request مع بيانات نموذج (application/x-www-form-urlencoded).
-     */
-    public static <T> ApiResponse<T> postForm(String path, Map<String, String> formData, Class<T> responseType) throws IOException, InterruptedException {
-        String formBody = buildFormData(formData);
-        HttpRequest request = HttpRequest.newBuilder()
+    // ═════════════════════════════════════════════════════════════════
+    //  Form & File Upload
+    // ═════════════════════════════════════════════════════════════════
+
+    public static <T> ApiResponse<T> postForm(String path,
+                                              Map<String, String> formData,
+                                              Class<T> responseType)
+            throws IOException, InterruptedException {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + path))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Accept", "application/json")
                 .timeout(TIMEOUT)
-                .POST(HttpRequest.BodyPublishers.ofString(formBody, StandardCharsets.UTF_8))
-                .build();
-        request = addAuthHeader(request);
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return parseResponse(response, responseType);
-    }
-
-    /**
-     * رفع ملف (multipart/form-data) مع بيانات إضافية.
-     *
-     * @param path           مسار الـ endpoint.
-     * @param file           الملف المراد رفعه (Path).
-     * @param fileParamName  اسم الباراميتر الخاص بالملف (عادة "file").
-     * @param additionalData خريطة بالبيانات النصية الإضافية.
-     * @param responseType   نوع البيانات المتوقعة في الاستجابة.
-     */
-    public static <T> ApiResponse<T> uploadFile(String path, Path file, String fileParamName,
-                                                Map<String, String> additionalData, Class<T> responseType) throws IOException, InterruptedException {
-        Map<String, Object> formData = new HashMap<>();
-        if (additionalData != null) {
-            formData.putAll(additionalData);
-        }
-        formData.put(fileParamName, file);
-        return uploadFile(path, formData, responseType);
-    }
-
-    /**
-     * رفع ملف مع بيانات إضافية (قد تحتوي على كائنات JSON).
-     *
-     * @param path     مسار الـ endpoint.
-     * @param formData خريطة تحتوي على بيانات نصية (String) وملفات (Path) وأي كائنات أخرى (ستحول إلى JSON).
-     */
-    public static <T> ApiResponse<T> uploadFile(String path, Map<String, Object> formData, Class<T> responseType) throws IOException, InterruptedException {
-        String boundary = "---Boundary" + System.currentTimeMillis();
-        var byteArrays = new java.util.ArrayList<byte[]>();
-
-        for (Map.Entry<String, Object> entry : formData.entrySet()) {
-            String name = entry.getKey();
-            Object value = entry.getValue();
-
-            if (value instanceof Path filePath) {
-                // جزء الملف
-                String fileName = filePath.getFileName().toString();
-                String mimeType = Files.probeContentType(filePath);
-                if (mimeType == null) mimeType = "application/octet-stream";
-
-                String header = "--" + boundary + "\r\n" +
-                        "Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + fileName + "\"\r\n" +
-                        "Content-Type: " + mimeType + "\r\n\r\n";
-                byteArrays.add(header.getBytes(StandardCharsets.UTF_8));
-                byteArrays.add(Files.readAllBytes(filePath));
-                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
-            } else {
-                // جزء نصي أو JSON
-                String content;
-                String contentType;
-                if (value instanceof String) {
-                    content = (String) value;
-                    contentType = "text/plain";
-                } else {
-                    content = gson.toJson(value);
-                    contentType = "application/json";
-                }
-                String header = "--" + boundary + "\r\n" +
-                        "Content-Disposition: form-data; name=\"" + name + "\"\r\n" +
-                        "Content-Type: " + contentType + "\r\n\r\n";
-                byteArrays.add(header.getBytes(StandardCharsets.UTF_8));
-                byteArrays.add(content.getBytes(StandardCharsets.UTF_8));
-                byteArrays.add("\r\n".getBytes(StandardCharsets.UTF_8));
-            }
-        }
-        // إنهاء multipart
-        byteArrays.add(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
-
-        // دمج جميع الأجزاء في BodyPublisher
-        var publisher = HttpRequest.BodyPublishers.ofByteArrays(byteArrays);
-
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
-                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                .header("Accept", "application/json")
-                .timeout(TIMEOUT)
-                .POST(publisher);
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        buildFormData(formData), StandardCharsets.UTF_8));
 
         HttpRequest request = addAuthHeader(builder).build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         return parseResponse(response, responseType);
     }
 
-    // ------ الطلبات غير المتزامنة (async) ------
+    public static <T> ApiResponse<T> uploadFile(String path,
+                                                Path file,
+                                                String fileParamName,
+                                                Map<String, String> additionalData,
+                                                Class<T> responseType)
+            throws IOException, InterruptedException {
+        Map<String, Object> formData = new HashMap<>();
+        if (additionalData != null) formData.putAll(additionalData);
+        formData.put(fileParamName, file);
+        return uploadFile(path, formData, responseType);
+    }
+
+    public static <T> ApiResponse<T> uploadFile(String path,
+                                                Map<String, Object> formData,
+                                                Class<T> responseType)
+            throws IOException, InterruptedException {
+        String boundary = "---Boundary" + System.currentTimeMillis();
+        var parts = new ArrayList<byte[]>();
+
+        for (Map.Entry<String, Object> entry : formData.entrySet()) {
+            String name = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof Path filePath) {
+                String mimeType = Files.probeContentType(filePath);
+                if (mimeType == null) mimeType = "application/octet-stream";
+
+                parts.add(("--" + boundary + "\r\n" +
+                        "Content-Disposition: form-data; name=\"" + name +
+                        "\"; filename=\"" + filePath.getFileName() + "\"\r\n" +
+                        "Content-Type: " + mimeType + "\r\n\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+                parts.add(Files.readAllBytes(filePath));
+                parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+
+            } else {
+                String content;
+                String contentType;
+                if (value instanceof String s) {
+                    content = s;
+                    contentType = "text/plain";
+                } else {
+                    // Jackson بدل Gson
+                    content = mapper.writeValueAsString(value);
+                    contentType = "application/json";
+                }
+                parts.add(("--" + boundary + "\r\n" +
+                        "Content-Disposition: form-data; name=\"" + name + "\"\r\n" +
+                        "Content-Type: " + contentType + "\r\n\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+                parts.add(content.getBytes(StandardCharsets.UTF_8));
+                parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        parts.add(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+        HttpRequest request = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + path))
+                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                        .header("Accept", "application/json")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofByteArrays(parts)))
+                .build();
+
+        return parseResponse(
+                httpClient.send(request, HttpResponse.BodyHandlers.ofString()),
+                responseType);
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  File Download
+    // ═════════════════════════════════════════════════════════════════
+
+    public static boolean downloadFile(String path,
+                                       Map<String, String> queryParams,
+                                       Path targetPath)
+            throws IOException, InterruptedException {
+        HttpRequest request = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + appendQueryParams(path, queryParams)))
+                        .timeout(TIMEOUT)
+                        .GET())
+                .build();
+        HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetPath));
+        return response.statusCode() >= 200 && response.statusCode() < 300;
+    }
+
+    public static boolean downloadFileViaPost(String path, Object body, Path targetPath)
+            throws IOException, InterruptedException {
+        HttpRequest request = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + path))
+                        .header("Content-Type", "application/json")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofString(
+                                mapper.writeValueAsString(body), StandardCharsets.UTF_8)))
+                .build();
+        HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetPath));
+        return response.statusCode() >= 200 && response.statusCode() < 300;
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Async variants
+    // ═════════════════════════════════════════════════════════════════
 
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path, Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
@@ -217,7 +275,9 @@ public class ApiClient {
         });
     }
 
-    public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path, Map<String, String> queryParams, Class<T> responseType) {
+    public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
+                                                                 Map<String, String> queryParams,
+                                                                 Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return get(path, queryParams, responseType);
@@ -227,7 +287,9 @@ public class ApiClient {
         });
     }
 
-    public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path, Object body, Class<T> responseType) {
+    public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
+                                                                  Object body,
+                                                                  Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return post(path, body, responseType);
@@ -237,7 +299,9 @@ public class ApiClient {
         });
     }
 
-    public static <T> CompletableFuture<ApiResponse<T>> postFormAsync(String path, Map<String, String> formData, Class<T> responseType) {
+    public static <T> CompletableFuture<ApiResponse<T>> postFormAsync(String path,
+                                                                      Map<String, String> formData,
+                                                                      Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return postForm(path, formData, responseType);
@@ -247,8 +311,11 @@ public class ApiClient {
         });
     }
 
-    public static <T> CompletableFuture<ApiResponse<T>> uploadFileAsync(String path, Path file, String fileParamName,
-                                                                        Map<String, String> additionalData, Class<T> responseType) {
+    public static <T> CompletableFuture<ApiResponse<T>> uploadFileAsync(String path,
+                                                                        Path file,
+                                                                        String fileParamName,
+                                                                        Map<String, String> additionalData,
+                                                                        Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return uploadFile(path, file, fileParamName, additionalData, responseType);
@@ -258,95 +325,9 @@ public class ApiClient {
         });
     }
 
-    // ------ الطلب الأساسي (لإرسال JSON) ------
-    private static <T> ApiResponse<T> sendRequest(String path, String method, Object body,
-                                                  Map<String, String> headers, Class<T> responseType) throws IOException, InterruptedException {
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
-                .timeout(TIMEOUT);
-
-        // إضافة headers عامة
-        builder.header("Content-Type", "application/json")
-                .header("Accept", "application/json");
-
-        // إضافة headers مخصصة (إن وجدت)
-        if (headers != null) {
-            headers.forEach(builder::header);
-        }
-
-        // إضافة التوكن إن وجد
-        builder = addAuthHeader(builder);
-
-        // تعيين method والـ body
-        String jsonBody = body != null ? gson.toJson(body) : "";
-        switch (method) {
-            case "GET":
-                builder.GET();
-                break;
-            case "POST":
-                builder.POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8));
-                break;
-            case "PUT":
-                builder.PUT(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8));
-                break;
-            case "DELETE":
-                builder.DELETE();
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported method: " + method);
-        }
-
-        HttpRequest request = builder.build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        return parseResponse(response, responseType);
-    }
-
-    /**
-     * تحميل ملف فوري (GET) مع إمكانية إضافة query parameters.
-     *
-     * @param path        مسار endpoint (قد يحتوي PathVariable).
-     * @param queryParams باراميترز اختيارية (يمكن null).
-     * @param targetPath  المسار الذي سيحفظ فيه الملف.
-     * @return true إذا نجح التحميل، false مع رسالة الخطأ في استثناء.
-     */
-    public static boolean downloadFile(String path, Map<String, String> queryParams, Path targetPath) throws IOException, InterruptedException {
-        String fullPath = appendQueryParams(path, queryParams);
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + fullPath))
-                .timeout(TIMEOUT)
-                .GET();
-
-        builder = addAuthHeader(builder);
-        HttpRequest request = builder.build();
-
-        HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetPath));
-        return response.statusCode() >= 200 && response.statusCode() < 300;
-    }
-
-    /**
-     * تحميل ملف فوري (POST) مع JSON body.
-     *
-     * @param path       مسار endpoint.
-     * @param body       كائن JSON (سيحول إلى طلب).
-     * @param targetPath المسار المحلي للحفظ.
-     */
-    public static boolean downloadFileViaPost(String path, Object body, Path targetPath) throws IOException, InterruptedException {
-        String jsonBody = body != null ? gson.toJson(body) : "";
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(BASE_URL + path))
-                .header("Content-Type", "application/json")
-                .timeout(TIMEOUT)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8));
-
-        builder = addAuthHeader(builder);
-        HttpRequest request = builder.build();
-
-        HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetPath));
-        return response.statusCode() >= 200 && response.statusCode() < 300;
-    }
-
-    // نسخة غير متزامنة من التحميل المباشر (مع إشعار بالتقدم)
-    public static CompletableFuture<Boolean> downloadFileAsync(String path, Map<String, String> queryParams, Path targetPath) {
+    public static CompletableFuture<Boolean> downloadFileAsync(String path,
+                                                               Map<String, String> queryParams,
+                                                               Path targetPath) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return downloadFile(path, queryParams, targetPath);
@@ -356,84 +337,191 @@ public class ApiClient {
         });
     }
 
-    // ------ تحليل الاستجابة ------
-    private static <T> ApiResponse<T> parseResponse(HttpResponse<String> response, Class<T> responseType) {
-        ApiResponse<T> apiResponse = new ApiResponse<>();
+    // ═════════════════════════════════════════════════════════════════
+    //  Core sendRequest — Class<T>
+    // ═════════════════════════════════════════════════════════════════
+
+    private static <T> ApiResponse<T> sendRequest(String path,
+                                                  String method,
+                                                  Object body,
+                                                  Map<String, String> headers,
+                                                  Class<T> responseType)
+            throws IOException, InterruptedException {
+
+        HttpRequest.Builder builder = baseBuilder(path, headers);
+        applyMethod(builder, method, body);
+        HttpResponse<String> response = httpClient.send(
+                addAuthHeader(builder).build(),
+                HttpResponse.BodyHandlers.ofString());
+        return parseResponse(response, responseType);
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Core sendRequest — TypeReference<T>  (مكان Type من Gson)
+    // ═════════════════════════════════════════════════════════════════
+
+    private static <T> ApiResponse<T> sendRequest(String path,
+                                                  String method,
+                                                  Object body,
+                                                  Map<String, String> headers,
+                                                  TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+
+        HttpRequest.Builder builder = baseBuilder(path, headers);
+        applyMethod(builder, method, body);
+        HttpResponse<String> response = httpClient.send(
+                addAuthHeader(builder).build(),
+                HttpResponse.BodyHandlers.ofString());
+        return parseResponse(response, responseType);
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  parseResponse — Class<T>
+    // ═════════════════════════════════════════════════════════════════
+
+    private static <T> ApiResponse<T> parseResponse(HttpResponse<String> response,
+                                                    Class<T> responseType) {
         String body = response.body();
         int statusCode = response.statusCode();
 
         try {
-            // نحاول تحويل الاستجابة إلى ApiResponse مباشرة (إذا كان backend يعيدها)
-            var type = TypeToken.getParameterized(ApiResponse.class, responseType).getType();
-            ApiResponse<T> parsed = gson.fromJson(body, type);
-            if (parsed != null) {
-                // نجاح: نعيدها كما هي
-                return parsed;
-            }
-        } catch (JsonSyntaxException e) {
-            // إذا لم تكن الاستجابة بصيغة ApiResponse، نتعامل معها يدوياً
+            // نحاول تحليل الاستجابة كـ ApiResponse<T> مباشرة
+            JavaType apiType = mapper.getTypeFactory()
+                    .constructParametricType(ApiResponse.class, responseType);
+            ApiResponse<T> parsed = mapper.readValue(body, apiType);
+            if (parsed != null) return parsed;
+
+        } catch (Exception ignored) {
         }
 
-        // إذا وصلنا هنا، فإما أن الاستجابة ليست ApiResponse أو حدث خطأ في التحليل
-        apiResponse.setSuccess(statusCode >= 200 && statusCode < 300);
-        apiResponse.setMessage(statusCode >= 200 && statusCode < 300 ? "Success" : "HTTP error " + statusCode);
-        if (statusCode >= 200 && statusCode < 300 && responseType != null) {
-            // محاولة تحويل الجسم مباشرة إلى النوع المطلوب
+        // fallback يدوي
+        ApiResponse<T> apiResponse = new ApiResponse<>();
+        boolean success = statusCode >= 200 && statusCode < 300;
+        apiResponse.setSuccess(success);
+        apiResponse.setTimestamp(java.time.LocalDateTime.now().toString());
+
+        if (success && responseType != null) {
             try {
-                T data = gson.fromJson(body, responseType);
-                apiResponse.setData(data);
-            } catch (JsonSyntaxException e) {
+                apiResponse.setData(mapper.readValue(body, responseType));
+                apiResponse.setMessage("Success");
+            } catch (Exception e) {
                 apiResponse.setSuccess(false);
                 apiResponse.setMessage("Failed to parse response: " + e.getMessage());
             }
         } else {
-            // في حالة الخطأ، نضع الجسم كرسالة
-            apiResponse.setMessage(body);
+            apiResponse.setMessage(success ? "Success" : body);
         }
-        apiResponse.setTimestamp(java.time.LocalDateTime.now().toString());
         return apiResponse;
     }
 
-    // ------ دوال مساعدة ------
+    // ═════════════════════════════════════════════════════════════════
+    //  parseResponse — TypeReference<T>
+    // ═════════════════════════════════════════════════════════════════
+
+    private static <T> ApiResponse<T> parseResponse(HttpResponse<String> response,
+                                                    TypeReference<T> responseType) {
+        String body = response.body();
+        int statusCode = response.statusCode();
+
+        try {
+            // نحاول تحليل الاستجابة كـ ApiResponse<T>
+            // نستخرج JavaType من TypeReference
+            JavaType innerType = mapper.getTypeFactory().constructType(responseType);
+            JavaType apiType = mapper.getTypeFactory()
+                    .constructParametricType(ApiResponse.class, innerType);
+            ApiResponse<T> parsed = mapper.readValue(body, apiType);
+            if (parsed != null) return parsed;
+
+        } catch (Exception ignored) {
+        }
+
+        // fallback يدوي
+        ApiResponse<T> apiResponse = new ApiResponse<>();
+        boolean success = statusCode >= 200 && statusCode < 300;
+        apiResponse.setSuccess(success);
+        apiResponse.setTimestamp(java.time.LocalDateTime.now().toString());
+
+        if (success) {
+            try {
+                apiResponse.setData(mapper.readValue(body, responseType));
+                apiResponse.setMessage("Success");
+            } catch (Exception e) {
+                apiResponse.setSuccess(false);
+                apiResponse.setMessage("Failed to parse response: " + e.getMessage());
+            }
+        } else {
+            apiResponse.setMessage(body);
+        }
+        return apiResponse;
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Helpers
+    // ═════════════════════════════════════════════════════════════════
+
+    private static HttpRequest.Builder baseBuilder(String path, Map<String, String> headers) {
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .timeout(TIMEOUT)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json");
+        if (headers != null) headers.forEach(builder::header);
+        return builder;
+    }
+
+    private static void applyMethod(HttpRequest.Builder builder,
+                                    String method,
+                                    Object body) throws IOException {
+        // Jackson بدل Gson لتحويل الكائن إلى JSON
+        String json = body != null ? mapper.writeValueAsString(body) : "";
+        switch (method) {
+            case "GET" -> builder.GET();
+            case "POST" -> builder.POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8));
+            case "PUT" -> builder.PUT(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8));
+            case "DELETE" -> builder.DELETE();
+            default -> throw new IllegalArgumentException("Unsupported method: " + method);
+        }
+    }
+
     private static String appendQueryParams(String path, Map<String, String> params) {
         if (params == null || params.isEmpty()) return path;
         StringBuilder sb = new StringBuilder(path);
-        if (!path.contains("?")) sb.append('?');
-        else sb.append('&');
-        for (Map.Entry<String, String> entry : params.entrySet()) {
+        sb.append(path.contains("?") ? '&' : '?');
+        params.forEach((k, v) -> {
             if (sb.charAt(sb.length() - 1) != '?' && sb.charAt(sb.length() - 1) != '&')
                 sb.append('&');
-            sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+            sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                     .append('=')
-                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
-        }
+                    .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+        });
         return sb.toString();
     }
 
     private static String buildFormData(Map<String, String> formData) {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, String> entry : formData.entrySet()) {
-            if (sb.length() > 0) sb.append('&');
-            sb.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+        formData.forEach((k, v) -> {
+            if (!sb.isEmpty()) sb.append('&');
+            sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8))
                     .append('=')
-                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
-        }
+                    .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
+        });
         return sb.toString();
     }
 
     private static HttpRequest.Builder addAuthHeader(HttpRequest.Builder builder) {
-        if (authToken != null && !authToken.isEmpty()) {
+        if (authToken != null && !authToken.isEmpty())
             builder.header("Authorization", "Bearer " + authToken);
-        }
         return builder;
     }
 
+    /**
+     * مستخدمة فقط في uploadFile (يستقبل HttpRequest بدل Builder)
+     */
     private static HttpRequest addAuthHeader(HttpRequest request) {
-        if (authToken != null && !authToken.isEmpty()) {
+        if (authToken != null && !authToken.isEmpty())
             return HttpRequest.newBuilder(request, (n, v) -> true)
                     .header("Authorization", "Bearer " + authToken)
                     .build();
-        }
         return request;
     }
 
@@ -445,15 +533,135 @@ public class ApiClient {
         return error;
     }
 
-    // ------ WebSocket ------
+    // ═════════════════════════════════════════════════════════════════
+    //  WebSocket
+    // ═════════════════════════════════════════════════════════════════
+
+    public static TaskStatus startAsyncDownload(String path, Object body)
+            throws IOException, InterruptedException {
+        ApiResponse<TaskStatus> response = post(path, body, TaskStatus.class);
+        if (response.isSuccess() && response.getData() != null) return response.getData();
+        throw new IOException("Failed to start async download: " + response.getMessage());
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Async Download with Polling
+    // ═════════════════════════════════════════════════════════════════
+
+    public static TaskStatus getDownloadStatus(String taskId)
+            throws IOException, InterruptedException {
+        ApiResponse<TaskStatus> response = get("/tasks/" + taskId + "/status", TaskStatus.class);
+        if (response.isSuccess() && response.getData() != null) return response.getData();
+        throw new IOException("Failed to get task status: " + response.getMessage());
+    }
+
+    public static boolean downloadCompletedFile(String taskId, Path targetPath)
+            throws IOException, InterruptedException {
+        return downloadFile("/tasks/" + taskId + "/download", null, targetPath);
+    }
+
+    public static CompletableFuture<Path> pollAsyncDownload(String path,
+                                                            Object body,
+                                                            Path targetDir,
+                                                            int pollIntervalSeconds) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TaskStatus startStatus = startAsyncDownload(path, body);
+                String taskId = startStatus.getTaskId();
+                while (true) {
+                    Thread.sleep(pollIntervalSeconds * 1000L);
+                    TaskStatus status = getDownloadStatus(taskId);
+                    if ("COMPLETED".equals(status.getStatus())) {
+                        Path filePath = targetDir.resolve("report_" + taskId + ".xlsx");
+                        if (downloadCompletedFile(taskId, filePath)) return filePath;
+                        throw new IOException("Download failed after task completion");
+                    } else if ("FAILED".equals(status.getStatus())) {
+                        throw new IOException("Task failed: " + status.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /**
+     * تحميل ملف باستخدام POST مع RequestBody
+     * مفيد للـ endpoints اللي بتستخدم @PostMapping وترجع Resource
+     *
+     * @param path       المسار النسبي (مثل: "/payroll/download-changeMonth")
+     * @param body       كائن الطلب (مثل: PayrollReportRequest)
+     * @param targetPath المسار اللي هنحفظ فيه الملف
+     * @return true لو نجح التحميل
+     */
+    public static boolean downloadFileViaPostWithBody(String path,
+                                                      Object body,
+                                                      Path targetPath)
+            throws IOException, InterruptedException {
+
+        // تحويل body لـ JSON
+        String jsonBody = mapper.writeValueAsString(body);
+
+        HttpRequest request = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + path))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/octet-stream, application/pdf, application/*")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8)))
+                .build();
+
+        // التحميل كـ byte array عشان نقدر نتعامل مع الـ Resource
+        HttpResponse<byte[]> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofByteArray());
+
+        // التحقق من نجاح التحميل
+        int statusCode = response.statusCode();
+        if (statusCode >= 200 && statusCode < 300) {
+            byte[] fileBytes = response.body();
+            if (fileBytes != null && fileBytes.length > 0) {
+                // حفظ الملف
+                Files.write(targetPath, fileBytes);
+                return true;
+            }
+            return false;
+        }
+
+        throw new IOException("Download failed with status: " + statusCode +
+                ", body: " + new String(response.body(), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * نفس الميثود بس Async
+     */
+    public static CompletableFuture<Boolean> downloadFileViaPostWithBodyAsync(
+            String path,
+            Object body,
+            Path targetPath) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return downloadFileViaPostWithBody(path, body, targetPath);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════════
+//  File Download via POST with Body (للملفات اللي بترجع Resource)
+// ═════════════════════════════════════════════════════════════════════
+
     public static class WebSocketClient {
-        private WebSocket webSocket;
         private final URI serverUri;
         private final Consumer<String> onMessage;
         private final Consumer<Throwable> onError;
         private final Runnable onClose;
+        private WebSocket webSocket;
 
-        public WebSocketClient(String path, Consumer<String> onMessage, Consumer<Throwable> onError, Runnable onClose) {
+        public WebSocketClient(String path,
+                               Consumer<String> onMessage,
+                               Consumer<Throwable> onError,
+                               Runnable onClose) {
             this.serverUri = URI.create(BASE_URL.replace("http", "ws") + path);
             this.onMessage = onMessage;
             this.onError = onError;
@@ -464,167 +672,86 @@ public class ApiClient {
             return httpClient.newWebSocketBuilder()
                     .buildAsync(serverUri, new WebSocket.Listener() {
                         @Override
-                        public void onOpen(WebSocket webSocket) {
-                            WebSocketClient.this.webSocket = webSocket;
-                            webSocket.request(1); // استعداد لاستقبال أول رسالة
+                        public void onOpen(WebSocket ws) {
+                            webSocket = ws;
+                            ws.request(1);
                         }
 
                         @Override
-                        public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-                            if (onMessage != null) {
-                                onMessage.accept(data.toString());
-                            }
-                            webSocket.request(1);
+                        public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+                            if (onMessage != null) onMessage.accept(data.toString());
+                            ws.request(1);
                             return null;
                         }
 
                         @Override
-                        public void onError(WebSocket webSocket, Throwable error) {
-                            if (onError != null) {
-                                onError.accept(error);
-                            }
+                        public void onError(WebSocket ws, Throwable error) {
+                            if (onError != null) onError.accept(error);
                         }
 
                         @Override
-                        public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-                            if (onClose != null) {
-                                onClose.run();
-                            }
+                        public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
+                            if (onClose != null) onClose.run();
                             return null;
                         }
                     })
-                    .thenAccept(ws -> this.webSocket = ws);
+                    .thenAccept(ws -> webSocket = ws);
         }
 
         public void sendMessage(String message) {
-            if (webSocket != null) {
-                webSocket.sendText(message, true);
-            }
+            if (webSocket != null) webSocket.sendText(message, true);
         }
 
         public void close() {
-            if (webSocket != null) {
-                webSocket.sendClose(1000, "Closing");
-            }
+            if (webSocket != null) webSocket.sendClose(1000, "Closing");
         }
     }
 
-    // كلاس لتمثيل حالة المهمة
     public static class TaskStatus {
         private String taskId;
-        private String status; // "IN_PROGRESS", "COMPLETED", "FAILED"
-        private int progress; // 0-100
+        private String status;     // IN_PROGRESS | COMPLETED | FAILED
+        private int progress;   // 0-100
         private String message;
-        private String downloadUrl; // رابط تحميل الملف النهائي (عند COMPLETED)
+        private String downloadUrl;
 
-        // getters/setters
         public String getTaskId() {
             return taskId;
         }
 
-        public void setTaskId(String taskId) {
-            this.taskId = taskId;
+        public void setTaskId(String v) {
+            taskId = v;
         }
 
         public String getStatus() {
             return status;
         }
 
-        public void setStatus(String status) {
-            this.status = status;
+        public void setStatus(String v) {
+            status = v;
         }
 
         public int getProgress() {
             return progress;
         }
 
-        public void setProgress(int progress) {
-            this.progress = progress;
+        public void setProgress(int v) {
+            progress = v;
         }
 
         public String getMessage() {
             return message;
         }
 
-        public void setMessage(String message) {
-            this.message = message;
+        public void setMessage(String v) {
+            message = v;
         }
 
         public String getDownloadUrl() {
             return downloadUrl;
         }
 
-        public void setDownloadUrl(String downloadUrl) {
-            this.downloadUrl = downloadUrl;
+        public void setDownloadUrl(String v) {
+            downloadUrl = v;
         }
-    }
-
-    /**
-     * بدء مهمة تحميل غير متزامنة (POST).
-     *
-     * @param path endpoint لبدء المهمة.
-     * @param body كائن يحتوي على باراميترز الطلب (قد يكون Map أو كيان).
-     * @return TaskStatus يحوي taskId على الأقل.
-     */
-    public static TaskStatus startAsyncDownload(String path, Object body) throws IOException, InterruptedException {
-        ApiResponse<TaskStatus> response = post(path, body, TaskStatus.class);
-        if (response.isSuccess() && response.getData() != null) {
-            return response.getData();
-        }
-        throw new IOException("Failed to start async download: " + response.getMessage());
-    }
-
-    /**
-     * الاستعلام عن حالة مهمة.
-     *
-     * @param taskId معرف المهمة.
-     */
-    public static TaskStatus getDownloadStatus(String taskId) throws IOException, InterruptedException {
-        ApiResponse<TaskStatus> response = get("/tasks/" + taskId + "/status", TaskStatus.class);
-        if (response.isSuccess() && response.getData() != null) {
-            return response.getData();
-        }
-        throw new IOException("Failed to get task status: " + response.getMessage());
-    }
-
-    /**
-     * تحميل الملف الناتج بعد اكتمال المهمة.
-     *
-     * @param taskId     معرف المهمة.
-     * @param targetPath المسار المحلي للحفظ.
-     */
-    public static boolean downloadCompletedFile(String taskId, Path targetPath) throws IOException, InterruptedException {
-        // نفترض أن الرابط هو /tasks/{taskId}/download
-        String path = "/tasks/" + taskId + "/download";
-        return downloadFile(path, null, targetPath);
-    }
-
-    // دوال غير متزامنة مع استقصاء دوري (polling)
-    public static CompletableFuture<Path> pollAsyncDownload(String path, Object body, Path targetDir, int pollIntervalSeconds) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                // بدء المهمة
-                TaskStatus startStatus = startAsyncDownload(path, body);
-                String taskId = startStatus.getTaskId();
-
-                // استقصاء الحالة حتى الاكتمال
-                while (true) {
-                    Thread.sleep(pollIntervalSeconds * 1000L);
-                    TaskStatus status = getDownloadStatus(taskId);
-                    if ("COMPLETED".equals(status.getStatus())) {
-                        // تحميل الملف
-                        Path filePath = targetDir.resolve("report_" + taskId + ".xlsx"); // اسم ديناميكي
-                        boolean downloaded = downloadCompletedFile(taskId, filePath);
-                        if (downloaded) return filePath;
-                        else throw new IOException("Download failed after task completion");
-                    } else if ("FAILED".equals(status.getStatus())) {
-                        throw new IOException("Task failed: " + status.getMessage());
-                    }
-                    // استمر في الاستقصاء
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
     }
 }

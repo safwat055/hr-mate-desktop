@@ -1,21 +1,24 @@
-package com.safwat.hr.requestModel;
+package com.safwat.hr.service.payroll.dto;
 
-import lombok.Getter;
+
+import lombok.Data;
 
 import java.time.LocalDate;
 
-@Getter
-public class PayrollReportRequest {
 
+@Data
+public class PayrollRequest {
     private String user;
     private String report;
     private String reportName;
-
+    private String searchValue;
     private LocalDate startDate;
     private LocalDate endDate;
 
     private String nationalId;
     private String payGroup;
+    private String management;
+    private String customGroup;
     private String description;
     private String note;
 
