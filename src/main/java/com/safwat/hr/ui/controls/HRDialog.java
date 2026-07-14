@@ -13,7 +13,6 @@ import java.util.Optional;
 
 /**
  * HRDialog — Material-style dialog factory.
- *
  * Usage:
  * <pre>
  *   // Confirm dialog
@@ -30,21 +29,26 @@ public final class HRDialog {
 
     // ─── Confirm ─────────────────────────────────────────────────────
 
+    private HRDialog() {
+    }
+
+    // ─── Message ─────────────────────────────────────────────────────
+
     public static boolean confirm(String title, String message) {
         Dialog<ButtonType> dialog = buildDialog(title);
 
         Label msg = new Label(message);
         msg.setStyle(
-            "-fx-font-size: " + Theme.FONT_SIZE_MD + "px;" +
-            "-fx-text-fill: " + Theme.ON_SURFACE + ";" +
-            "-fx-wrap-text: true;"
+                "-fx-font-size: " + Theme.FONT_SIZE_MD + "px;" +
+                        "-fx-text-fill: " + Theme.ON_SURFACE + ";" +
+                        "-fx-wrap-text: true;"
         );
         msg.setWrapText(true);
         msg.setMaxWidth(380);
 
         Button cancelBtn = new Button("إلغاء");
         Button confirmBtn = new Button("تأكيد");
-        HRButton.flat(false,cancelBtn);
+        HRButton.flat(false, cancelBtn);
         HRButton.primary(confirmBtn);
 
         HBox actions = new HBox(8, cancelBtn, confirmBtn);
@@ -55,22 +59,22 @@ public final class HRDialog {
         dialog.getDialogPane().setContent(body);
         dialog.getDialogPane().getButtonTypes().clear();
 
-        cancelBtn.setOnAction(e  -> dialog.setResult(ButtonType.CANCEL));
+        cancelBtn.setOnAction(e -> dialog.setResult(ButtonType.CANCEL));
         confirmBtn.setOnAction(e -> dialog.setResult(ButtonType.OK));
 
         Optional<ButtonType> result = dialog.showAndWait();
         return result.map(r -> r == ButtonType.OK).orElse(false);
     }
 
-    // ─── Message ─────────────────────────────────────────────────────
+    // ─── Input ───────────────────────────────────────────────────────
 
     public static void message(String title, String message) {
         Dialog<ButtonType> dialog = buildDialog(title);
 
         Label msg = new Label(message);
         msg.setStyle(
-            "-fx-font-size: " + Theme.FONT_SIZE_MD + "px;" +
-            "-fx-text-fill: " + Theme.ON_SURFACE + ";"
+                "-fx-font-size: " + Theme.FONT_SIZE_MD + "px;" +
+                        "-fx-text-fill: " + Theme.ON_SURFACE + ";"
         );
         msg.setWrapText(true);
         msg.setMaxWidth(380);
@@ -89,7 +93,7 @@ public final class HRDialog {
         dialog.showAndWait();
     }
 
-    // ─── Input ───────────────────────────────────────────────────────
+    // ─── Internal helpers ────────────────────────────────────────────
 
     public static Optional<String> input(String title, String prompt) {
         Dialog<String> dialog = new Dialog<>();
@@ -103,7 +107,7 @@ public final class HRDialog {
 
         Button cancelBtn = new Button("إلغاء");
         Button okBtn = new Button("موافق");
-        HRButton.flat(false,cancelBtn);
+        HRButton.flat(false, cancelBtn);
         HRButton.primary(okBtn);
         HBox actions = new HBox(8, cancelBtn, okBtn);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -113,7 +117,10 @@ public final class HRDialog {
         dialog.getDialogPane().setContent(body);
         dialog.getDialogPane().getButtonTypes().clear();
 
-        cancelBtn.setOnAction(e -> { dialog.setResult(null); dialog.close(); });
+        cancelBtn.setOnAction(e -> {
+            dialog.setResult(null);
+            dialog.close();
+        });
         okBtn.setOnAction(e -> {
             dialog.setResult(field.getText().trim());
             dialog.close();
@@ -121,8 +128,6 @@ public final class HRDialog {
 
         return dialog.showAndWait();
     }
-
-    // ─── Internal helpers ────────────────────────────────────────────
 
     private static <T> Dialog<T> buildDialog(String title) {
         Dialog<T> dialog = new Dialog<>();
@@ -132,21 +137,19 @@ public final class HRDialog {
 
     private static void styleDialogPane(DialogPane pane, String title) {
         pane.setStyle(
-            "-fx-background-color: " + Theme.SURFACE + ";" +
-            "-fx-background-radius: " + Radius.XL + ";" +
-            "-fx-effect: " + Elevation.E4 + ";" +
-            "-fx-font-family: '" + Theme.FONT_FAMILY + "';"
+                "-fx-background-color: " + Theme.SURFACE + ";" +
+                        "-fx-background-radius: " + Radius.XL + ";" +
+                        "-fx-effect: " + Elevation.E4 + ";" +
+                        "-fx-font-family: '" + Theme.FONT_FAMILY + "';"
         );
         // Title area
         Label titleLabel = new Label(title);
         titleLabel.setStyle(
-            "-fx-font-size: " + Theme.FONT_SIZE_XL + "px;" +
-            "-fx-font-weight: bold;" +
-            "-fx-text-fill: " + Theme.ON_SURFACE + ";" +
-            "-fx-padding: 20 24 0 24;"
+                "-fx-font-size: " + Theme.FONT_SIZE_XL + "px;" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-text-fill: " + Theme.ON_SURFACE + ";" +
+                        "-fx-padding: 20 24 0 24;"
         );
         pane.setHeader(titleLabel);
     }
-
-    private HRDialog() {}
 }

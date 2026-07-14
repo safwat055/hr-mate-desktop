@@ -1,9 +1,5 @@
 package com.safwat.hr;
 
-import com.safwat.hr.service.auth.dto.LoginRequest;
-import com.safwat.hr.service.auth.dto.LoginResponse;
-import com.safwat.hr.service.auth.service.AuthService;
-import com.safwat.hr.utils.ApiResponse;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,7 +10,6 @@ import java.io.IOException;
 public class HR_Client extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-
 
         FXMLLoader fxmlLoader = new FXMLLoader(HR_Client.class.getResource("/com/safwat/hr/controller/MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
@@ -28,7 +23,7 @@ public class HR_Client extends Application {
 
         super.init();
 
-        LoginRequest request = new LoginRequest();
+        /*LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("admin");
 
@@ -43,6 +38,6 @@ public class HR_Client extends Application {
         }
         if (!response.isSuccess()) {
             throw new RuntimeException(response.getMessage());
-        }
+        }*/
     }
 }
