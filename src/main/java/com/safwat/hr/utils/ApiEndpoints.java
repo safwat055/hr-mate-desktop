@@ -21,6 +21,8 @@ public final class ApiEndpoints {
         public static final String EMPLOYEE_RECORD = "/payrollChange/get/employeeRecord";
         // for download change file in change view
         public static final String DOWNLOAD_CARD = "/payrollChange/download-changeCard";
+        public static final String UPDATE_NOTE = "/payrollChange/update-note";
+        public static final String DELETE_RECORD = "/payrollChange/delete-record";
 
     }
 
@@ -29,6 +31,8 @@ public final class ApiEndpoints {
         public static final String SEARCH = "/payrollYearly/get/searchEmployee";
         public static final String EMPLOYEE_RECORD = "/payrollYearly/get/employeeYearly";
         public static final String DOWNLOAD_PAYMENTS = "/payrollYearly/get/download-payments";
+        public static final String UPDATE_EMPLOYEE_NOTE = "/payrollYearly/update-employee-note";
+        public static final String DELETE_ONE_EMPLOYEE_RECORD = "/payrollYearly/delete-employee-record";
 
     }
 

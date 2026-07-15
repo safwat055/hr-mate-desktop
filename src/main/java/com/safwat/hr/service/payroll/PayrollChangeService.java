@@ -70,4 +70,34 @@ public class PayrollChangeService {
         }
 
     }
+
+    public int updateNote(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.UPDATE_NOTE,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+
+    }
+
+    public int deleteOneRecord(PayrollRequest request) {
+
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.DELETE_RECORD,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            e.printStackTrace();
+            return 0;
+        }
+    }
 }

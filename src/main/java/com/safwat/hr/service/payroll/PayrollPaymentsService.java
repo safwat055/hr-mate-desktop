@@ -8,11 +8,13 @@ import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiEndpoints;
 import com.safwat.hr.utils.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+@Slf4j
 public class PayrollPaymentsService {
 
 
@@ -57,4 +59,34 @@ public class PayrollPaymentsService {
             return false;
         }
     }
+
+    public Integer updateEmployeeNote(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollYearly.UPDATE_EMPLOYEE_NOTE,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            log.error(e.getMessage());
+            return 0;
+        }
+    }
+
+    public Integer deleteOneEmployeeRecord(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollYearly.DELETE_ONE_EMPLOYEE_RECORD,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            log.error(e.getMessage());
+            return 0;
+        }
+    }
+
+
 }

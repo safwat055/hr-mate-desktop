@@ -27,7 +27,7 @@ public final class SAFTooltip {
                         "-fx-background-radius: 4px;" +
                         "-fx-text-fill: " + Theme.SURFACE + ";" +
                         "-fx-font-family: '" + Theme.FONT_FAMILY + "';" +
-                        "-fx-font-size: " + Theme.FONT_FAMILY + "px;" +
+                        "-fx-font-size: " + Theme.FONT_SIZE_SM + "px;" +
                         "-fx-padding: 6 10 6 10;"
         );
         Tooltip.install(node, tooltip);

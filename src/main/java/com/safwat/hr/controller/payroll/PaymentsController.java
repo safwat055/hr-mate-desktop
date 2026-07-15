@@ -6,9 +6,12 @@ import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.service.payroll.dto.SearchEmp;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFButton;
+import com.safwat.hr.ui.controls.SAFDialog;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.icons.Icons;
+import com.safwat.hr.ui.util.PDFView;
+import com.safwat.hr.ui.util.SearchDialog;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -17,13 +20,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.HBox;
+import javafx.scene.web.WebView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -31,8 +34,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
+
+import static com.safwat.hr.shared.util.StringUtil.convertArabicToEnglishNumbers;
 
 /**
  * this is controller to payments view
@@ -40,12 +47,12 @@ import java.util.ResourceBundle;
 @Slf4j
 public class PaymentsController implements Initializable {
     private final ObservableList<PaymentsResult> resultList = FXCollections.observableArrayList();
+    private final PayrollPaymentsService paymentsService = new PayrollPaymentsService();
     @FXML
     private Button btn_clear;
     @FXML
     private Button btn_pdf;
-    @FXML
-    private Button btn_save;
+
     @FXML
     private Button btn_search;
     @FXML
@@ -64,23 +71,35 @@ public class PaymentsController implements Initializable {
     private TextField txt_searchValue;
     @FXML
     private TextField txt_startMonth;
-    private PayrollPaymentsService paymentsService = new PayrollPaymentsService();
+    @FXML
+    private RadioButton RB_show;
+    @FXML
+    private WebView webView;
+    @FXML
+    private Label pathLabel;
+    @FXML
+    private CheckBox chk_showAction;
+    private TableColumn<PaymentsResult, Void> colActions;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setView();
         setButtonsAction();
+        setTextFieldsAction();
         setupTable();
+        pathLabel.setVisible(false);
     }
 
     /**
      * use to setting ui component
      */
     void setView() {
+        webView.setManaged(false);
+        table_payments.setManaged(false);
         SAFTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
         SAFButton.flat(true, btn_clear, btn_search, btn_view);
         Icons.getInstance().getPDFImage(btn_pdf);
-        Icons.getInstance().getSaveImage(btn_save);
+
     }
 
     /**
@@ -91,8 +110,21 @@ public class PaymentsController implements Initializable {
         btn_view.setOnAction(_ -> getEmployeeData());
         btn_pdf.setOnAction(_ -> exportToPDF());
         btn_clear.setOnAction(_ -> clear());
-        btn_save.setOnAction(_ -> saveNotes());
 
+        chk_showAction.selectedProperty().addListener((_, _, newValue) -> colActions.setVisible(newValue));
+
+    }
+
+
+    void setTextFieldsAction() {
+        txt_searchValue.setOnAction(_ -> searchEmployee());
+        txt_nationalID.setOnAction(_ -> exportToPDF());
+
+        txt_nationalID.textProperty().addListener(
+                (_, _, _) -> pathLabel.setText("")
+        );
+        txt_startMonth.textProperty().addListener((_, _, _) -> pathLabel.setText(""));
+        txt_endMonth.textProperty().addListener((_, _, _) -> pathLabel.setText(""));
     }
 
     /**
@@ -107,6 +139,9 @@ public class PaymentsController implements Initializable {
         txt_nationalID.clear();
         txt_startMonth.clear();
         txt_endMonth.clear();
+        pathLabel.setText("");
+        webView.setManaged(false);
+        table_payments.setManaged(false);
     }
 
     private void exportToPDF() {
@@ -116,7 +151,14 @@ public class PaymentsController implements Initializable {
                 SAFNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
                 return;
             }
+            if (!pathLabel.getText().isEmpty()) {
+                Path targetPath = Path.of(pathLabel.getText());
 
+                openPDF(targetPath);
+
+                return;
+            }
+            showWebView();
             PayrollRequest request = new PayrollRequest();
 
             request.setNationalId(txt_nationalID.getText());
@@ -133,15 +175,17 @@ public class PaymentsController implements Initializable {
             }
 
             Path targetPath = tempDownloadsDir.resolve(fileName);
-
+            pathLabel.setText(targetPath.toString());
             SAFNotification.success("جاري تحميل الملف...");
 
             boolean success = paymentsService.downloadPaymentsPDF(request, targetPath);
 
             if (success) {
-                File downloadedFile = targetPath.toFile();
-                SAFNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
+
+                openPDF(targetPath);
+
             } else {
+
                 SAFNotification.error("فشل تحميل الملف");
             }
 
@@ -151,16 +195,38 @@ public class PaymentsController implements Initializable {
         }
     }
 
-    /**
-     *
-     */
-    void saveNotes() {
-        SAFNotification.info("ستتم الاضافة في الاصدارت المستقبلية");
+    private void openPDF(Path targetPath) {
+        if (RB_show.isSelected()) {
+            showWebView();
+            PDFView.showIN(targetPath.toString(), webView);
+        } else {
+            webView.setManaged(false);
+            webView.setVisible(false);
+            File downloadedFile = targetPath.toFile();
+            SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
+        }
     }
+
+    private void showWebView() {
+        table_payments.getItems().clear();
+        table_payments.setManaged(false);
+        table_payments.setVisible(false);
+        webView.setManaged(true);
+        webView.setVisible(true);
+    }
+
+    private void showPaymentsTable() {
+        webView.setManaged(false);
+        webView.setVisible(false);
+        table_payments.setManaged(true);
+        table_payments.setVisible(true);
+    }
+
 
     /**
      *
      */
+    @SuppressWarnings("unchecked")
     private void setupTable() {
         table_payments.setItems(resultList);
         table_payments.getColumns().clear();
@@ -217,12 +283,79 @@ public class PaymentsController implements Initializable {
             row.setNotes(event.getNewValue());
             SAFNotification.info("تم تحديث الملاحظات");
         });
+
+        colActions = new TableColumn<>("الإجراءات");
+        colActions.setPrefWidth(180);
+
+        colActions.setCellFactory(_ -> new TableCell<>() {
+
+            private final Button btnEdit = new Button("تعديل");
+            private final Button btnDelete = new Button("حذف");
+
+            {
+                btnEdit.setStyle("""
+                        -fx-background-color: #1976D2;
+                        -fx-text-fill: white;
+                        -fx-background-radius: 5;
+                        -fx-cursor: hand;
+                        """);
+
+                btnDelete.setStyle("""
+                        -fx-background-color: #D32F2F;
+                        -fx-text-fill: white;
+                        -fx-background-radius: 5;
+                        -fx-cursor: hand;
+                        """);
+
+                btnEdit.setOnAction(_ -> {
+                    PaymentsResult row = getTableView().getItems().get(getIndex());
+                    if (row.getSelected()) {
+                        boolean a = SAFDialog.confirm("تأكيد", "هل تريد تعديل الملاحظة ؟");
+                        if (a) {
+                            int x = updateNote(row);
+                            SAFNotification.success("تم تعديل عدد..." + x + " ملاحظة");
+                        }
+                    } else {
+                        SAFNotification.error("يجب تحديد الصف أولا ...");
+                    }
+
+                });
+
+                btnDelete.setOnAction(_ -> {
+                    PaymentsResult row = getTableView().getItems().get(getIndex());
+                    if (row.getSelected()) {
+                        if (SAFDialog.confirm("تأكيد", "هل تريد حذف هذا القيد ؟")) {
+
+                            int a = deleteOneEmployeeRecord(row);
+                            SAFNotification.success("تم حذف " + a + " قيد");
+                        }
+                    } else {
+                        SAFNotification.error("يجب تحديد الصف أولا ...");
+                    }
+
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    HBox box = new HBox(8, btnEdit, btnDelete);
+                    box.setAlignment(Pos.CENTER);
+                    setGraphic(box);
+                }
+            }
+        });
         table_payments.setStyle("""
                     -fx-font-family: "DejaVu Sans";
                     -fx-font-size: 13px;
                 """);
+        colActions.setVisible(false);
+        boolean _ = table_payments.getColumns().addAll(colSelected, colMonth, colGroup, colTotal, colTax, colStampTax, colNet, colDescription, colNote, colActions);
 
-        boolean a = table_payments.getColumns().addAll(colSelected, colMonth, colGroup, colTotal, colTax, colStampTax, colNet, colDescription, colNote);
         table_payments.setEditable(true);
 
     }
@@ -243,7 +376,25 @@ public class PaymentsController implements Initializable {
             txt_nationalID.setText(data.getFirst().getNational_id());
             txt_empCode.setText(data.getFirst().getPay_id());
             txt_empName.setText(data.getFirst().getEmp_name());
+            getEmployeeData();
             SAFNotification.success("تم العثور على بيانات");
+        } else {
+            List<Object[]> searchData = new ArrayList<>();
+            for (SearchEmp e : data) {
+                searchData.add(new Object[]{e.getNational_id(), e.getPay_id(), e.getEmp_name()});
+
+            }
+            Optional<Object[]> result = SearchDialog.builder().title("نتائج البحث")
+                    .data(searchData)
+                    .headers(new String[]{"رقم قومي", "رقم موظف", "اسم"})
+                    .searchPlaceholder("ابحث للتصفية")
+                    .show();
+            result.ifPresent(row -> {
+                txt_nationalID.setText(row[0].toString());
+                txt_empCode.setText(row[1].toString());
+                txt_empName.setText(row[2].toString());
+            });
+
         }
     }
 
@@ -257,6 +408,10 @@ public class PaymentsController implements Initializable {
         }
 
         try {
+            //   table_payments.getColumns().clear();
+
+            showPaymentsTable();
+
             PayrollRequest request = new PayrollRequest();
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
@@ -289,6 +444,33 @@ public class PaymentsController implements Initializable {
             log.error(e.getMessage());
 
         }
+    }
+
+    /**
+     *
+     * @param row .
+     * @return .
+     */
+    private Integer updateNote(PaymentsResult row) {
+        PayrollRequest request = new PayrollRequest();
+        request.setNationalId(txt_nationalID.getText());
+        request.setPayGroup(convertArabicToEnglishNumbers(row.getPayGroup()));
+        request.setStartDate(DateUtils.fromArabicMonthYear(row.getMonth()));
+        request.setNote(row.getNote());
+        System.out.println(request.getNationalId());
+        System.out.println(request.getPayGroup());
+        System.out.println(request.getStartDate());
+        System.out.println(request.getNote());
+        return paymentsService.updateEmployeeNote(request);
+    }
+
+    private Integer deleteOneEmployeeRecord(PaymentsResult row) {
+        PayrollRequest request = new PayrollRequest();
+        request.setNationalId(txt_nationalID.getText());
+        request.setPayGroup(convertArabicToEnglishNumbers(row.getPayGroup()));
+        request.setStartDate(DateUtils.fromArabicMonthYear(row.getMonth()));
+
+        return paymentsService.deleteOneEmployeeRecord(request);
     }
 
 
