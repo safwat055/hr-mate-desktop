@@ -5,26 +5,38 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * FxUtils — Common JavaFX utilities.
+ * FxUtils — مساعدات JavaFX Thread والـ async.
  *
- * Usage:
  * <pre>
- *   // Run on FX thread safely
+ *   // تشغيل آمن على FX Thread
  *   FxUtils.runOnFx(() -> table.refresh());
  *
- *   // Run heavy task in background, then update UI
+ *   // عملية ثقيلة في الخلفية ثم تحديث الـ UI
  *   FxUtils.runAsync(
- *       () -> service.fetchAll(),       // background
- *       data -> table.setItems(data)    // FX thread
+ *       () -> employeeService.fetchAll(),      // background thread
+ *       list -> table.setItems(list)           // FX thread
+ *   );
+ *
+ *   // مع معالجة الخطأ
+ *   FxUtils.runAsync(
+ *       () -> service.save(employee),
+ *       result -> HRNotification.success("تم الحفظ"),
+ *       err    -> HRNotification.error("فشل الحفظ: " + err.getMessage())
  *   );
  * </pre>
  */
 public final class FxUtils {
 
-    /** Run action on JavaFX Application Thread safely */
+    private FxUtils() {
+    }
+
+    /**
+     * تشغيل على FX Thread بأمان سواء كنت عليه أو لا
+     */
     public static void runOnFx(Runnable action) {
         if (Platform.isFxApplicationThread()) {
             action.run();
@@ -34,22 +46,46 @@ public final class FxUtils {
     }
 
     /**
-     * Run supplier in background thread, deliver result to FX thread.
-     * @param background supplier executed off FX thread
-     * @param onResult   consumer executed on FX thread with the result
+     * تشغيل في background thread، نتيجته تصل على FX Thread
      */
-    public static <T> void runAsync(Supplier<T> background,
-                                    java.util.function.Consumer<T> onResult) {
+    public static <T> void runAsync(Supplier<T> background, Consumer<T> onResult) {
         CompletableFuture
-            .supplyAsync(background)
-            .thenAcceptAsync(onResult, Platform::runLater);
+                .supplyAsync(background)
+                .thenAcceptAsync(onResult, Platform::runLater);
     }
 
-    /** Lookup a node by ID within a parent */
+    /**
+     * تشغيل في background thread مع معالجة الخطأ
+     */
+    public static <T> void runAsync(Supplier<T> background,
+                                    Consumer<T> onResult,
+                                    Consumer<Throwable> onError) {
+        CompletableFuture
+                .supplyAsync(background)
+                .whenCompleteAsync((result, error) -> {
+                    if (error != null) {
+                        if (onError != null) onError.accept(error.getCause() != null
+                                ? error.getCause() : error);
+                    } else {
+                        onResult.accept(result);
+                    }
+                }, Platform::runLater);
+    }
+
+    /**
+     * تشغيل عملية في الخلفية بدون نتيجة
+     */
+    public static void runAsync(Runnable background, Runnable onDone) {
+        CompletableFuture
+                .runAsync(background)
+                .thenRunAsync(onDone, Platform::runLater);
+    }
+
+    /**
+     * البحث عن node بالـ ID داخل parent
+     */
     @SuppressWarnings("unchecked")
     public static <T extends Node> T lookup(Parent root, String id) {
         return (T) root.lookup("#" + id);
     }
-
-    private FxUtils() {}
 }

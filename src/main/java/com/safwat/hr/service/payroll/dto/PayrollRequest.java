@@ -24,5 +24,5 @@ public class PayrollRequest {
 
     private Long reportId;
     private String fileName;
-    private String format;
+    private String format = "PDF";
 }

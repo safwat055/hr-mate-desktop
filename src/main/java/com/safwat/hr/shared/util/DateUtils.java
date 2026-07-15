@@ -18,7 +18,7 @@ public class DateUtils {
 
         int month = Integer.parseInt(parts[0]);
         int year = Integer.parseInt(parts[1]);
-
+       
         return LocalDate.of(year, month, 1);
     }
 

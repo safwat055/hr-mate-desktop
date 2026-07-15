@@ -1,5 +1,9 @@
 package com.safwat.hr;
 
+import com.safwat.hr.service.auth.dto.LoginRequest;
+import com.safwat.hr.service.auth.dto.LoginResponse;
+import com.safwat.hr.service.auth.service.AuthService;
+import com.safwat.hr.utils.ApiResponse;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,21 +27,15 @@ public class HR_Client extends Application {
 
         super.init();
 
-        /*LoginRequest request = new LoginRequest();
+        LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("admin");
 
         ApiResponse<LoginResponse> response =
                 AuthService.login(request);
-        System.out.println("Success : " + response.isSuccess());
-        System.out.println("Message : " + response.getMessage());
-        System.out.println("Data    : " + response.getData());
 
-        if (response.getData() != null) {
-            System.out.println("Token : " + response.getData().getToken());
-        }
         if (!response.isSuccess()) {
             throw new RuntimeException(response.getMessage());
-        }*/
+        }
     }
 }

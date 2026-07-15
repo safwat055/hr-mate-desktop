@@ -1,12 +1,12 @@
 package com.safwat.hr.ui.util;
 
 import com.safwat.hr.ui.animation.Shake;
-import com.safwat.hr.ui.controls.HRTextField;
+import com.safwat.hr.ui.controls.SAFTextField;
 import javafx.scene.control.TextField;
 
 /**
  * Validation — form field validation helpers.
- *
+ * <p>
  * Usage:
  * <pre>
  *   boolean valid = Validation.require(nameField, emailField);
@@ -16,54 +16,63 @@ import javafx.scene.control.TextField;
  */
 public final class Validation {
 
-    /** Mark all empty fields as error and shake them. Returns true if all are valid. */
+    private Validation() {
+    }
+
+    /**
+     * Mark all empty fields as error and shake them. Returns true if all are valid.
+     */
     public static boolean require(TextField... fields) {
         boolean allValid = true;
         for (TextField field : fields) {
             if (field.getText() == null || field.getText().isBlank()) {
-                HRTextField.error(field);
+                SAFTextField.error(field);
                 Shake.play(field);
                 allValid = false;
             } else {
-                HRTextField.clearError(field);
+                SAFTextField.clearError(field);
             }
         }
         return allValid;
     }
 
-    /** Validate email format */
+    /**
+     * Validate email format
+     */
     public static boolean email(TextField field) {
         String text = field.getText();
         boolean valid = text != null &&
-            text.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$");
+                text.matches("^[\\w._%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$");
         if (!valid) {
-            HRTextField.error(field);
+            SAFTextField.error(field);
             Shake.play(field);
         } else {
-            HRTextField.clearError(field);
+            SAFTextField.clearError(field);
         }
         return valid;
     }
 
-    /** Validate numeric input */
+    /**
+     * Validate numeric input
+     */
     public static boolean numeric(TextField field) {
         String text = field.getText();
         boolean valid = text != null && text.matches("\\d+(\\.\\d+)?");
         if (!valid) {
-            HRTextField.error(field);
+            SAFTextField.error(field);
             Shake.play(field);
         } else {
-            HRTextField.clearError(field);
+            SAFTextField.clearError(field);
         }
         return valid;
     }
 
-    /** Clear error state from all fields */
+    /**
+     * Clear error state from all fields
+     */
     public static void clearAll(TextField... fields) {
         for (TextField field : fields) {
-            HRTextField.clearError(field);
+            SAFTextField.clearError(field);
         }
     }
-
-    private Validation() {}
 }

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.service.payroll.dto.SearchEmp;
-import com.safwat.hr.shared.ApiEndpoints;
-import com.safwat.hr.ui.controls.HRNotification;
+import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.utils.ApiClient;
+import com.safwat.hr.utils.ApiEndpoints;
 import com.safwat.hr.utils.ApiResponse;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ public class PayrollChangeService {
             );
 
         } catch (IOException | InterruptedException e) {
-            HRNotification.error(e.getMessage());
+            SAFNotification.error(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -63,7 +63,7 @@ public class PayrollChangeService {
                     targetPath
             );
         } catch (IOException | InterruptedException e) {
-            HRNotification.error(e.getMessage());
+            SAFNotification.error(e.getMessage());
             e.printStackTrace();
             return false;
 

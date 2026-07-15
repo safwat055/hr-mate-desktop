@@ -1,8 +1,9 @@
 package com.safwat.hr.controller;
 
 
-import com.safwat.hr.ui.controls.HRButton;
-import com.safwat.hr.ui.controls.HRDialog;
+import com.safwat.hr.shared.FXMLPaths;
+import com.safwat.hr.ui.controls.SAFButton;
+import com.safwat.hr.ui.util.TabManager;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -18,7 +19,7 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab;
     @FXML
     private TabPane tab;
     @FXML
@@ -46,7 +47,7 @@ public class MainViewController implements Initializable {
      *
      */
     void setMainViewIcon() {
-        HRButton.flat(false, btn_payments, btn_changeCard);
+        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab);
 
 
     }
@@ -55,22 +56,33 @@ public class MainViewController implements Initializable {
      *
      */
     void setButtonsAction() {
-        btn_payments.setOnAction((e) -> openPayView());
-        btn_changeCard.setOnAction((e) -> openChangeCard());
+        btn_payments.setOnAction(_ -> openPaymentsView());
+        btn_changeCard.setOnAction(_ -> openChangeCard());
+        btn_PayrollVocab.setOnAction(_ -> openPayVocab());
 
+    }
+
+
+    /**
+     *
+     */
+    void openPaymentsView() {
+
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPaymentsView(), "تقارير صرف", true);
     }
 
     /**
      *
      */
-    void openPayView() {
-        HRDialog.confirm("", "aaaaaaaaaaaaaaaaa");
+    void openChangeCard() {
 
-        //TabManager.loadFXMLInTab(tab, new FXMLPathes().getPaymentsView(), "تقارير صرف", true);
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getChangeCardView(), "اجر الاشتراك", true);
     }
 
-    void openChangeCard() {
-        HRDialog.input("", "aaaaaaaaaaaa");
-        //TabManager.loadFXMLInTab(tab, new FXMLPathes().getChangeCardView(), "اجر الاشتراك", true);
+    /**
+     *
+     */
+    private void openPayVocab() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollVocab(), "مفردات مرتب", true);
     }
 }

@@ -1,5 +1,6 @@
 package com.safwat.hr.ui.util;
 
+import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
@@ -15,7 +16,7 @@ public class TabManager {
 
     /**
      *
-     * @param tabPane .
+     * @param tabPane  .
      * @param fxmlPath .
      * @param tabTitle .
      * @param closAble .
@@ -32,30 +33,25 @@ public class TabManager {
         }
 
         try {
-            // تحميل FXML
+
             FXMLLoader loader = new FXMLLoader(TabManager.class.getResource(fxmlPath));
             Node content = loader.load();
 
-            // إنشاء تبويبة جديدة
             Tab tab = new Tab(tabTitle, content);
-            tab.setClosable(closAble); // زر الإغلاق ظاهر
+            tab.setClosable(closAble);
 
-            // عند الإغلاق، نحذفه من الماب
             tab.setOnClosed(e
                     -> loadedTabs.remove(fxmlPath)
             );
 
-            // إضافة التبويبة وتفعيلها
             tabPane.getTabs().add(tab);
 
             tabPane.getSelectionModel().select(tab);
 
-            // حفظها في الماب
             loadedTabs.put(fxmlPath, tab);
 
         } catch (IOException e) {
-            e.printStackTrace();
-            // يمكن عرض Alert للمستخدم هنا
+            SAFNotification.error(e.getMessage());
         }
     }
 }

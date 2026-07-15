@@ -5,10 +5,12 @@ import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.service.payroll.dto.SearchEmp;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.ui.controls.HRButton;
-import com.safwat.hr.ui.controls.HRNotification;
-import com.safwat.hr.ui.controls.HRTextField;
+import com.safwat.hr.ui.controls.SAFButton;
+import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.controls.SAFTextField;
+import com.safwat.hr.ui.controls.SAFTooltip;
 import com.safwat.hr.ui.icons.Icons;
+import com.safwat.hr.ui.util.PDFView;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -17,13 +19,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.web.WebView;
 
 import java.io.File;
 import java.net.URL;
@@ -47,6 +47,10 @@ public class ChangeCardController implements Initializable {
     @FXML
     private TextField txt_startMonth, txt_endMonth;
 
+    @FXML
+    private RadioButton RB_open, RB_view;
+    @FXML
+    private WebView webView;
 
     @FXML
     private TableView<changeCardResult> resultTable;
@@ -63,10 +67,13 @@ public class ChangeCardController implements Initializable {
      * use to setting ui component
      */
     void setView() {
-        HRTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
-        HRButton.flat(true, btn_clear, btn_search, btn_view);
+        SAFTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
+        SAFButton.flat(true, btn_clear, btn_search, btn_view);
         Icons.getInstance().getPDFImage(btn_pdf);
+
         Icons.getInstance().getSaveImage(btn_save);
+
+        SAFTooltip.install(btn_pdf, "استخراج او عرض بطافة اجر الاشتراك");
     }
 
     /**
@@ -96,7 +103,7 @@ public class ChangeCardController implements Initializable {
     }
 
     void saveNotes() {
-        HRNotification.info("ستتم الاضافة في الاصدارت المستقبلية");
+        SAFNotification.info("ستتم الإضافة في الإصدارات المستقبلية");
     }
 
     /**
@@ -134,7 +141,7 @@ public class ChangeCardController implements Initializable {
         colNotes.setOnEditCommit(event -> {
             changeCardResult row = event.getRowValue();
             row.setNotes(event.getNewValue());
-            HRNotification.info("تم تحديث الملاحظات");
+            SAFNotification.info("تم تحديث الملاحظات");
         });
 
         resultTable.getColumns().addAll(colSelected, colMonth, colValue, colNotes);
@@ -147,7 +154,7 @@ public class ChangeCardController implements Initializable {
      */
     private void searchEmployee() {
         if (txt_searchValue.getText().isEmpty()) {
-            HRNotification.error("ادخل قيمة للبحث لا تقل عن حرفين او رقمين");
+            SAFNotification.error("ادخل قيمة للبحث لا تقل عن حرفين او رقمين");
             return;
         }
 
@@ -159,7 +166,7 @@ public class ChangeCardController implements Initializable {
             txt_nationalID.setText(data.getFirst().getNational_id());
             txt_empCode.setText(data.getFirst().getPay_id());
             txt_empName.setText(data.getFirst().getEmp_name());
-            HRNotification.success("تم العثور على بيانات");
+            SAFNotification.success("تم العثور على بيانات");
         }
 
     }
@@ -169,10 +176,9 @@ public class ChangeCardController implements Initializable {
      */
     private void getEmployeeData() {
         if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
-            HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+            SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
             return;
         }
-
 
         try {
             PayrollRequest request = new PayrollRequest();
@@ -182,11 +188,10 @@ public class ChangeCardController implements Initializable {
 
             DTO.ChangeCardView data = changeService.getChangeCardData(request).getData();
 
-            if (data == null || data.rows().isEmpty()) {
-                HRNotification.warning("لا توجد بيانات للعرض");
+            if (data == null) {
+                SAFNotification.warning("لا توجد بيانات للعرض");
                 return;
             }
-
 
             // ====== تعبئة الجدول ======
             resultList.clear();
@@ -200,20 +205,19 @@ public class ChangeCardController implements Initializable {
                 resultList.add(result);
             }
 
-            HRNotification.success("تم تحميل " + resultList.size() + " سجل بنجاح");
+            SAFNotification.success("تم تحميل " + resultList.size() + " سجل بنجاح");
 
         } catch (Exception e) {
-            HRNotification.error("حدث خطأ: " + e.getMessage());
+            SAFNotification.error("حدث خطأ: " + e.getMessage());
 
         }
     }
 
     private void exportToPDF() {
 
-
         try {
             if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
-                HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+                SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
                 return;
             }
 
@@ -222,35 +226,37 @@ public class ChangeCardController implements Initializable {
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
             request.setEndDate(DateUtils.getLastDayOfMonth(txt_endMonth.getText()));
-            request.setFormat("PDF");
+           
             String fileName = "بطاقة اجر الاشتراك_" + System.currentTimeMillis() + ".pdf";
 
-
             String workingDir = System.getProperty("user.dir");
-
 
             Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
             if (!Files.exists(tempDownloadsDir)) {
                 Files.createDirectories(tempDownloadsDir);
             }
 
-
             Path targetPath = tempDownloadsDir.resolve(fileName);
 
-
-            HRNotification.success("جاري تحميل الملف...");
+            SAFNotification.success("جاري تحميل الملف...");
 
             boolean success = changeService.downloadChangeCardPDF(request, targetPath);
 
             if (success) {
-                File downloadedFile = targetPath.toFile();
-                HRNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
+                if (RB_view.isSelected()) {
+                    PDFView.showIN(targetPath.toString(), webView);
+                    SAFNotification.success("تم عرض الملف بنجاح");
+                } else {
+                    File downloadedFile = targetPath.toFile();
+                    SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
+                }
+
             } else {
-                HRNotification.error("فشل تحميل الملف");
+                SAFNotification.error("فشل تحميل الملف");
             }
 
         } catch (Exception e) {
-            HRNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
+            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
 
         }
     }

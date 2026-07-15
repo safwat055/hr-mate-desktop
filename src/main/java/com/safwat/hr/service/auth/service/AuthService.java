@@ -3,9 +3,8 @@ package com.safwat.hr.service.auth.service;
 import com.safwat.hr.service.auth.dto.LoginRequest;
 import com.safwat.hr.service.auth.dto.LoginResponse;
 import com.safwat.hr.service.auth.session.SessionManager;
-
-import com.safwat.hr.shared.ApiEndpoints;
 import com.safwat.hr.utils.ApiClient;
+import com.safwat.hr.utils.ApiEndpoints;
 import com.safwat.hr.utils.ApiResponse;
 
 import java.io.IOException;

@@ -5,9 +5,9 @@ import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.service.payroll.dto.SearchEmp;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.ui.controls.HRButton;
-import com.safwat.hr.ui.controls.HRNotification;
-import com.safwat.hr.ui.controls.HRTextField;
+import com.safwat.hr.ui.controls.SAFButton;
+import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.icons.Icons;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -24,6 +24,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.net.URL;
@@ -36,6 +37,7 @@ import java.util.ResourceBundle;
 /**
  * this is controller to payments view
  */
+@Slf4j
 public class PaymentsController implements Initializable {
     private final ObservableList<PaymentsResult> resultList = FXCollections.observableArrayList();
     @FXML
@@ -75,8 +77,8 @@ public class PaymentsController implements Initializable {
      * use to setting ui component
      */
     void setView() {
-        HRTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
-        HRButton.flat(true, btn_clear, btn_search, btn_view);
+        SAFTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
+        SAFButton.flat(true, btn_clear, btn_search, btn_view);
         Icons.getInstance().getPDFImage(btn_pdf);
         Icons.getInstance().getSaveImage(btn_save);
     }
@@ -109,10 +111,9 @@ public class PaymentsController implements Initializable {
 
     private void exportToPDF() {
 
-
         try {
             if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
-                HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+                SAFNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
                 return;
             }
 
@@ -124,32 +125,28 @@ public class PaymentsController implements Initializable {
             request.setFormat("PDF");
             String fileName = "PAYMENTS_REPORT" + System.currentTimeMillis() + ".pdf";
 
-
             String workingDir = System.getProperty("user.dir");
-
 
             Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
             if (!Files.exists(tempDownloadsDir)) {
                 Files.createDirectories(tempDownloadsDir);
             }
 
-
             Path targetPath = tempDownloadsDir.resolve(fileName);
 
-
-            HRNotification.success("جاري تحميل الملف...");
+            SAFNotification.success("جاري تحميل الملف...");
 
             boolean success = paymentsService.downloadPaymentsPDF(request, targetPath);
 
             if (success) {
                 File downloadedFile = targetPath.toFile();
-                HRNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
+                SAFNotification.withAction("✅ تم تحميل الملف بنجاح", downloadedFile);
             } else {
-                HRNotification.error("فشل تحميل الملف");
+                SAFNotification.error("فشل تحميل الملف");
             }
 
         } catch (Exception e) {
-            HRNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
+            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
 
         }
     }
@@ -158,7 +155,7 @@ public class PaymentsController implements Initializable {
      *
      */
     void saveNotes() {
-        HRNotification.info("ستتم الاضافة في الاصدارت المستقبلية");
+        SAFNotification.info("ستتم الاضافة في الاصدارت المستقبلية");
     }
 
     /**
@@ -173,18 +170,15 @@ public class PaymentsController implements Initializable {
         colSelected.setEditable(true);
         colSelected.setPrefWidth(50);
 
-
         TableColumn<PaymentsResult, String> colMonth = new TableColumn<>("الشهر");
         colMonth.setCellValueFactory(new PropertyValueFactory<>("month"));
         colMonth.setEditable(false);
         colMonth.setPrefWidth(100);
 
-
         TableColumn<PaymentsResult, String> colGroup = new TableColumn<>("اسم المجموعة");
         colGroup.setCellValueFactory(new PropertyValueFactory<>("payGroup"));
         colGroup.setEditable(true);
         colGroup.setPrefWidth(240);
-
 
         TableColumn<PaymentsResult, String> colTotal = new TableColumn<>("الاجمالى");
         colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
@@ -221,7 +215,7 @@ public class PaymentsController implements Initializable {
         colNote.setOnEditCommit(event -> {
             PaymentsResult row = event.getRowValue();
             row.setNotes(event.getNewValue());
-            HRNotification.info("تم تحديث الملاحظات");
+            SAFNotification.info("تم تحديث الملاحظات");
         });
         table_payments.setStyle("""
                     -fx-font-family: "DejaVu Sans";
@@ -238,7 +232,7 @@ public class PaymentsController implements Initializable {
      */
     private void searchEmployee() {
         if (txt_searchValue.getText().isEmpty()) {
-            HRNotification.error("ادخل قيمة للبحث لا تقل عن حرفين او رقمين");
+            SAFNotification.error("ادخل قيمة للبحث لا تقل عن حرفين او رقمين");
             return;
         }
         PayrollRequest request = new PayrollRequest();
@@ -249,7 +243,7 @@ public class PaymentsController implements Initializable {
             txt_nationalID.setText(data.getFirst().getNational_id());
             txt_empCode.setText(data.getFirst().getPay_id());
             txt_empName.setText(data.getFirst().getEmp_name());
-            HRNotification.success("تم العثور على بيانات");
+            SAFNotification.success("تم العثور على بيانات");
         }
     }
 
@@ -258,7 +252,7 @@ public class PaymentsController implements Initializable {
      */
     private void getEmployeeData() {
         if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
-            HRNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+            SAFNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
             return;
         }
 
@@ -270,7 +264,7 @@ public class PaymentsController implements Initializable {
 
             DTO.PaymentsView data = paymentsService.getPaymentsData(request).getData();
             if (data == null || data.rows().isEmpty()) {
-                HRNotification.warning("لا توجد بيانات للعرض");
+                SAFNotification.warning("لا توجد بيانات للعرض");
                 return;
             }
             resultList.clear();
@@ -286,13 +280,13 @@ public class PaymentsController implements Initializable {
                         (String) row[6],
                         (String) row[7]
                 );
-                System.out.println(row[1].toString());
+
                 resultList.add(result);
             }
-            HRNotification.success("تم تحميل " + resultList.size() + " سجل بنجاح");
+            SAFNotification.success("تم تحميل " + resultList.size() + " سجل بنجاح");
         } catch (Exception e) {
-            HRNotification.error("حدث خطأ: " + e.getMessage());
-            e.printStackTrace();
+            SAFNotification.error("حدث خطأ: " + e.getMessage());
+            log.error(e.getMessage());
 
         }
     }
