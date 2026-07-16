@@ -9,10 +9,10 @@ import java.time.LocalDate;
 @Data
 public class PayrollRequest {
     private String user;
-    private String report;
-    private String reportName;
-    private String searchValue;
-    private LocalDate startDate;
+    private String report; // اسم التقرير
+    private String reportName; // نوع التقرير الفرعي
+    private String searchValue; // قيمة عامة للبحث
+    private LocalDate startDate; // startDate targetDate
     private LocalDate endDate;
 
     private String nationalId;
