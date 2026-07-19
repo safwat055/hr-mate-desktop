@@ -32,7 +32,6 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<?import io.github.palexdev.materialfx.controls.MFXNotificationCenter?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
@@ -46,6 +45,7 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -223,7 +223,7 @@
                <children>
                   <VBox alignment="TOP_CENTER" layoutX="-4.0" layoutY="14.0" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <MFXNotificationCenter maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="50.0" />
+                        <ToolBar fx:id="toolbar" orientation="VERTICAL" prefHeight="80.0" prefWidth="40.0" />
                         <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📩" />
                         <Button layoutX="20.0" layoutY="57.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📸" />
                         <Button layoutX="20.0" layoutY="94.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />

@@ -1,5 +1,7 @@
 package com.safwat.hr.controller.payroll;
 
+import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.service.payroll.PayrollChangeService;
 import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -395,7 +397,18 @@ public class ChangeCardController implements Initializable {
             webView.setManaged(false);
             webView.setVisible(false);
             File downloadedFile = targetPath.toFile();
-            SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
+            // SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
+            NotificationService.getInstance().send(
+                    HRNotification.builder()
+                            .type(HRNotification.NotificationType.SYSTEM)
+                            .priority(HRNotification.Priority.HIGH)
+                            .title("بطاقة اجر اشتراك")
+                            .message("تم تحميل البطاقة")
+                            .file(targetPath.toString())
+                            .sender("تقارير")
+                            .build()
+            );
+
         }
     }
 
