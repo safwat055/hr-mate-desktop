@@ -1,8 +1,6 @@
 package com.safwat.hr.controller;
 
 
-import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFButton;
@@ -84,16 +82,7 @@ public class MainViewController implements Initializable {
 
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getChangeCardView(), "اجر الاشتراك", true);
 
-        NotificationService.getInstance().send(
-                HRNotification.builder()
-                        .type(HRNotification.NotificationType.SALARY)
-                        .priority(HRNotification.Priority.HIGH)
-                        .title("صرف رواتب يناير 2026")
-                        .message("تم تحويل رواتب 142 موظف")
-                        .file("/temp_downloads/بطاقة اجر الاشتراك_1783928578489.pdf")
-                        .sender("نظام الرواتب")
-                        .build()
-        );
+
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.safwat.hr.controller.payroll;
 
+import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.service.payroll.PayrollPaymentsService;
 import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -196,15 +198,19 @@ public class PaymentsController implements Initializable {
     }
 
     private void openPDF(Path targetPath) {
-        if (RB_show.isSelected()) {
+
             showWebView();
             PDFView.showIN(targetPath.toString(), webView);
-        } else {
-            webView.setManaged(false);
-            webView.setVisible(false);
-            File downloadedFile = targetPath.toFile();
-            SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
-        }
+            NotificationService.getInstance().send(
+                    HRNotification.builder()
+                            .type(HRNotification.NotificationType.SYSTEM)
+                            .priority(HRNotification.Priority.HIGH)
+                            .title("بطاقة اجر الاشتراك")
+                            .message(txt_empName.getText())
+                            .file(targetPath.toString())
+                            .sender("system")
+                            .build()
+            );
     }
 
     private void showWebView() {

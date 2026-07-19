@@ -27,7 +27,6 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.web.WebView;
 
-import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -390,26 +389,21 @@ public class ChangeCardController implements Initializable {
     }
 
     private void openPDF(Path targetPath) {
-        if (RB_show.isSelected()) {
-            showWebView();
-            PDFView.showIN(targetPath.toString(), webView);
-        } else {
-            webView.setManaged(false);
-            webView.setVisible(false);
-            File downloadedFile = targetPath.toFile();
-            // SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
-            NotificationService.getInstance().send(
-                    HRNotification.builder()
-                            .type(HRNotification.NotificationType.SYSTEM)
-                            .priority(HRNotification.Priority.HIGH)
-                            .title("بطاقة اجر اشتراك")
-                            .message("تم تحميل البطاقة")
-                            .file(targetPath.toString())
-                            .sender("تقارير")
-                            .build()
-            );
 
-        }
+        showWebView();
+        PDFView.showIN(targetPath.toString(), webView);
+        NotificationService.getInstance().send(
+                HRNotification.builder()
+                        .type(HRNotification.NotificationType.SYSTEM)
+                        .priority(HRNotification.Priority.HIGH)
+                        .title("بطاقة اجر الاشتراك")
+                        .message(txt_empName.getText())
+                        .file(targetPath.toString())
+                        .sender("system")
+                        .build()
+        );
+
+
     }
 
     private void showWebView() {

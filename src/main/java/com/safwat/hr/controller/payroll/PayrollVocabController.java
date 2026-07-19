@@ -1,5 +1,7 @@
 package com.safwat.hr.controller.payroll;
 
+import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.service.payroll.PayrollVocabService;
 import com.safwat.hr.service.payroll.dto.DTO;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -18,7 +20,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebView;
 
-import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -164,14 +165,18 @@ public class PayrollVocabController implements Initializable {
     }
 
     private void openPDF(Path targetPath) {
-        if (!chk_open.isSelected()) {
 
-            PDFView.showIN(targetPath.toString(), webView);
-        } else {
-
-            File downloadedFile = targetPath.toFile();
-            SAFNotification.withAction("تم تحميل الملف بنجاح", downloadedFile);
-        }
+        PDFView.showIN(targetPath.toString(), webView);
+        NotificationService.getInstance().send(
+                HRNotification.builder()
+                        .type(HRNotification.NotificationType.SYSTEM)
+                        .priority(HRNotification.Priority.HIGH)
+                        .title("تقرير مراجعه")
+                        .message(txt_name.getText())
+                        .file(targetPath.toString())
+                        .sender("system")
+                        .build()
+        );
     }
 
 }
