@@ -1,7 +1,7 @@
 package com.safwat.hr.notification.service;
 
-
 import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.model.HRNotification.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,9 +11,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * محاكي للخدمات الخلفية.
- * يُرسل إشعارات عشوائية كل بضع ثوانٍ لاختبار النظام.
- * في الإنتاج: استبدل هذا بالاتصالات الحقيقية (REST, WebSocket, DB triggers).
+ * محاكي الخدمات الخلفية.
+ * يرسل إشعارات نظام ورسائل مستخدمين بشكل دوري.
+ * <p>
+ * في الإنتاج: استبدل بـ WebSocket Client أو REST Polling.
  */
 public class BackgroundServiceSimulator {
 
@@ -24,17 +25,15 @@ public class BackgroundServiceSimulator {
                 return t;
             });
 
-    private final NotificationService notifService =
-            NotificationService.getInstance();
-
+    private final NotificationService service = NotificationService.getInstance();
     private final Random rnd = new Random();
 
-    // قائمة إشعارات نموذجية لكل خدمة
-    private final List<HRNotification> sampleNotifications = List.of(
+    // ===================== إشعارات النظام =====================
+    private final List<HRNotification> systemSamples = List.of(
 
-            // ===== موظفون =====
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.EMPLOYEE).priority(HRNotification.Priority.HIGH)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.EMPLOYEE).priority(Priority.HIGH)
                     .title("تعيين موظف جديد")
                     .message("تم تعيين سارة خالد - مهندسة برمجيات - قسم التقنية")
                     .action("عرض الملف", "employee/profile/sarah")
@@ -42,32 +41,18 @@ public class BackgroundServiceSimulator {
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.EMPLOYEE).priority(HRNotification.Priority.URGENT)
-                    .title("طلب ترقية معلق")
-                    .message("محمد أحمد يطلب ترقية من مهندس إلى مهندس أول - 3 سنوات خبرة")
-                    .action("مراجعة الطلب", "employee/promotion/123")
-                    .sender("مدير القسم")
-                    .build(),
-
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.EMPLOYEE).priority(HRNotification.Priority.NORMAL)
-                    .title("تجديد عقد موظف")
-                    .message("ينتهي عقد خالد عمر في 15 فبراير - يرجى اتخاذ إجراء")
-                    .action("تجديد العقد", "employee/contract/456")
-                    .build(),
-
-            // ===== رواتب =====
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.SALARY).priority(HRNotification.Priority.HIGH)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.SALARY).priority(Priority.HIGH)
                     .title("صرف رواتب يناير 2026")
-                    .message("تم تحويل رواتب 142 موظف بنجاح - إجمالي: 2,840,000 ريال")
+                    .message("تم تحويل رواتب 142 موظف - إجمالي: 2,840,000 ريال")
                     .action("فتح التقرير", "salary/report/jan2026")
                     .file("/reports/salary_jan2026.pdf")
                     .sender("نظام الرواتب")
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.SALARY).priority(HRNotification.Priority.URGENT)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.SALARY).priority(Priority.URGENT)
                     .title("خطأ في صرف راتب")
                     .message("فشل تحويل راتب علي حسن - الحساب البنكي غير صحيح")
                     .action("تصحيح البيانات", "salary/fix/ali")
@@ -75,16 +60,8 @@ public class BackgroundServiceSimulator {
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.SALARY).priority(HRNotification.Priority.NORMAL)
-                    .title("تقرير المستحقات جاهز")
-                    .message("تم إنشاء تقرير مستحقات ديسمبر 2025 - 89 بند")
-                    .file("/reports/entitlements_dec2025.xlsx")
-                    .sender("نظام المحاسبة")
-                    .build(),
-
-            // ===== إجازات =====
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.LEAVE).priority(HRNotification.Priority.HIGH)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.LEAVE).priority(Priority.HIGH)
                     .title("طلب إجازة يحتاج موافقة")
                     .message("أحمد محمد - 3 أيام سنوية - 20 يناير إلى 23 يناير")
                     .action("مراجعة الطلب", "leave/request/789")
@@ -92,41 +69,18 @@ public class BackgroundServiceSimulator {
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.LEAVE).priority(HRNotification.Priority.NORMAL)
-                    .title("تمت الموافقة على الإجازة")
-                    .message("تمت الموافقة على إجازتك من 25 يناير - 3 أيام سنوية")
-                    .action("عرض التفاصيل", "leave/approved/555")
-                    .sender("المدير المباشر")
-                    .build(),
-
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.LEAVE).priority(HRNotification.Priority.LOW)
-                    .title("رصيد إجازات منخفض")
-                    .message("تبقى لديك 2 يوم فقط من رصيد الإجازات السنوية")
-                    .sender("نظام الإجازات")
-                    .build(),
-
-            // ===== تدريب =====
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.TRAINING).priority(HRNotification.Priority.NORMAL)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.TRAINING).priority(Priority.NORMAL)
                     .title("اكتمال دورة تدريبية")
                     .message("أكمل 12 موظفاً دورة إدارة الوقت - الشهادات جاهزة")
-                    .file("/certificates/time_mgmt_batch3.zip")
                     .action("تحميل الشهادات", "training/certs/batch3")
+                    .file("/certificates/time_mgmt_batch3.zip")
                     .sender("نظام التدريب")
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.TRAINING).priority(HRNotification.Priority.HIGH)
-                    .title("دورة إلزامية قادمة")
-                    .message("دورة السلامة والصحة المهنية - إلزامية لجميع الموظفين - 28 يناير")
-                    .action("التسجيل الآن", "training/register/safety2026")
-                    .sender("قسم السلامة")
-                    .build(),
-
-            // ===== مهام =====
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.TASK).priority(HRNotification.Priority.URGENT)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.TASK).priority(Priority.URGENT)
                     .title("مهمة متأخرة - مراجعة عقود")
                     .message("يجب مراجعة وتجديد 8 عقود قبل نهاية الشهر - متأخرة 3 أيام")
                     .action("مراجعة العقود", "task/contracts/review")
@@ -134,88 +88,168 @@ public class BackgroundServiceSimulator {
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.TASK).priority(HRNotification.Priority.HIGH)
-                    .title("اكتملت مهمة في الخلفية")
-                    .message("تم إنشاء تقرير الأداء السنوي لجميع الموظفين - 156 تقرير")
-                    .file("/reports/performance_annual_2025.pdf")
-                    .action("عرض التقرير", "task/report/performance2025")
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.TASK).priority(Priority.HIGH)
+                    .title("اكتمال تقرير الأداء السنوي")
+                    .message("تم إنشاء تقارير الأداء لـ 156 موظف - جاهزة للمراجعة")
+                    .action("عرض التقارير", "task/report/performance2025")
+                    .attachment("performance_annual_2025.pdf",
+                            "/reports/performance_annual_2025.pdf",
+                            "application/pdf", 2_400_000)
                     .sender("نظام الأداء")
                     .build(),
 
             HRNotification.builder()
-                    .type(HRNotification.NotificationType.TASK).priority(HRNotification.Priority.NORMAL)
-                    .title("تذكير - التقييم الربعي")
-                    .message("موعد تقييم الربع الأول Q1 2026 في 31 مارس - تبقى 75 يوم")
-                    .action("فتح التقييمات", "task/evaluation/q1-2026")
-                    .sender("نظام الأداء")
-                    .build(),
-
-            // ===== نظام =====
-            HRNotification.builder()
-                    .type(HRNotification.NotificationType.SYSTEM).priority(HRNotification.Priority.LOW)
+                    .category(NotificationCategory.SYSTEM)
+                    .type(NotificationType.SYSTEM).priority(Priority.LOW)
                     .title("نسخة احتياطية مكتملة")
-                    .message("تم إنشاء نسخة احتياطية كاملة من قاعدة البيانات بنجاح")
+                    .message("تم حفظ نسخة احتياطية كاملة من قاعدة البيانات")
                     .sender("النظام")
+                    .build()
+    );
+
+    // ===================== رسائل المستخدمين =====================
+    private final List<HRNotification> messageSamples = List.of(
+
+            HRNotification.builder()
+                    .category(NotificationCategory.MESSAGE)
+                    .priority(Priority.NORMAL)
+                    .title("عقد الموظف الجديد")
+                    .message("مرحباً، برجاء مراجعة عقد الموظف الجديد وإرسال ملاحظاتك...")
+                    .messageBody(
+                            "مرحباً،\n\n" +
+                                    "برجاء مراجعة عقد الموظف الجديد المرفق وإرسال ملاحظاتك في أقرب وقت.\n\n" +
+                                    "نحتاج الموافقة قبل نهاية الأسبوع لاستكمال إجراءات التعيين.\n\n" +
+                                    "شكراً،\nأحمد محمد"
+                    )
+                    .sender("أحمد محمد")
+                    .senderAvatar("أم")
+                    .attachment("عقد_موظف_جديد.pdf",
+                            "/temp_downloads/عقد_موظف.pdf",
+                            "application/pdf", 1_200_000)
+                    .build(),
+
+            HRNotification.builder()
+                    .category(NotificationCategory.MESSAGE)
+                    .priority(Priority.HIGH)
+                    .title("تقرير الحضور - أسبوع 3")
+                    .message("ترفق تقرير الحضور الأسبوعي للمراجعة والاعتماد...")
+                    .messageBody(
+                            "السلام عليكم،\n\n" +
+                                    "يرجى الاطلاع على تقرير الحضور والانصراف للأسبوع الثالث من يناير.\n\n" +
+                                    "ملاحظة: يوجد 3 موظفين بتأخيرات متكررة تحتاج مراجعة.\n\n" +
+                                    "مع التحية،\nفاطمة سعيد"
+                    )
+                    .sender("فاطمة سعيد")
+                    .senderAvatar("فس")
+                    .attachment("تقرير_حضور_اسبوع3.xlsx",
+                            "/temp_downloads/attendance_week3.xlsx",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            540_000)
+                    .build(),
+
+            HRNotification.builder()
+                    .category(NotificationCategory.MESSAGE)
+                    .priority(Priority.NORMAL)
+                    .title("صور وثائق الموظف")
+                    .message("مرفق صور وثائق الموظف الجديد للأرشفة...")
+                    .messageBody(
+                            "مرحباً،\n\n" +
+                                    "مرفق صور وثائق الموظف الجديد خالد عمر للأرشفة في الملف.\n\n" +
+                                    "الوثائق تشمل: بطاقة الهوية، الشهادة الدراسية، شهادة الخبرة.\n\n" +
+                                    "خالد عمر"
+                    )
+                    .sender("خالد عمر")
+                    .senderAvatar("خع")
+                    .attachment("بطاقة_هوية.jpg",
+                            "/temp_downloads/id_card.jpg",
+                            "image/jpeg", 820_000)
+                    .attachment("شهادة_دراسية.pdf",
+                            "/temp_downloads/certificate.pdf",
+                            "application/pdf", 1_500_000)
+                    .attachment("شهادة_خبرة.pdf",
+                            "/temp_downloads/experience.pdf",
+                            "application/pdf", 980_000)
+                    .build(),
+
+            HRNotification.builder()
+                    .category(NotificationCategory.MESSAGE)
+                    .priority(Priority.LOW)
+                    .title("دعوة اجتماع - مراجعة الأداء")
+                    .message("يسعدنا دعوتكم لاجتماع مراجعة الأداء الربعي...")
+                    .messageBody(
+                            "السلام عليكم ورحمة الله،\n\n" +
+                                    "يسعدنا دعوتكم لاجتماع مراجعة الأداء الربعي Q1 2026.\n\n" +
+                                    "الموعد: الأحد 25 يناير 2026 الساعة 10 صباحاً\n" +
+                                    "المكان: قاعة الاجتماعات الرئيسية\n\n" +
+                                    "يرجى الإبلاغ بالتأكيد أو الاعتذار.\n\n" +
+                                    "منى عبدالرحمن\nمدير الموارد البشرية"
+                    )
+                    .sender("منى عبدالرحمن")
+                    .senderAvatar("مع")
                     .build()
     );
 
     // ===================== التشغيل =====================
     public void start() {
-        // إرسال 3 إشعارات أولية فوراً
-        sendInitialNotifications();
-
-        // ثم إرسال إشعار عشوائي كل 8-15 ثانية
-        scheduler.scheduleAtFixedRate(
-                this::sendRandom, 8, 12, TimeUnit.SECONDS
-        );
+        sendInitialBatch();
+        // إشعار نظام كل 12 ثانية
+        scheduler.scheduleAtFixedRate(this::sendRandomSystem, 8, 12, TimeUnit.SECONDS);
+        // رسالة مستخدم كل 20 ثانية
+        scheduler.scheduleAtFixedRate(this::sendRandomMessage, 15, 20, TimeUnit.SECONDS);
     }
 
-    private void sendInitialNotifications() {
-        notifService.send(sampleNotifications.get(0));  // تعيين موظف
-        notifService.send(sampleNotifications.get(3));  // صرف رواتب
-        notifService.send(sampleNotifications.get(6));  // طلب إجازة
-        notifService.send(sampleNotifications.get(9));  // اكتمال تدريب
-        notifService.send(sampleNotifications.get(11)); // مهمة متأخرة
+    private void sendInitialBatch() {
+        // إشعارات نظام أولية
+        service.send(systemSamples.get(0));  // موظف جديد
+        service.send(systemSamples.get(1));  // صرف رواتب
+        service.send(systemSamples.get(3));  // طلب إجازة
+        service.send(systemSamples.get(5));  // مهمة متأخرة
+        // رسالة مستخدم أولية
+        service.send(messageSamples.get(0)); // عقد موظف
     }
 
-    private void sendRandom() {
-        int idx = rnd.nextInt(sampleNotifications.size());
-        // نُنشئ نسخة جديدة (timestamp جديد) من نفس القالب
-        HRNotification original = sampleNotifications.get(idx);
-        HRNotification fresh = HRNotification.builder()
-                .type(original.getType())
-                .priority(original.getPriority())
-                .title(original.getTitle())
-                .message(original.getMessage())
-                .sender(original.getSenderName() != null ? original.getSenderName() : "")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        if (original.hasFile()) fresh = addFile(original, fresh);
-        if (original.getActionLabel() != null)
-            // بسيط - أعد البناء مع الـ action
-            notifService.send(rebuildWithAction(original));
-        else
-            notifService.send(fresh);
+    private void sendRandomSystem() {
+        HRNotification original = systemSamples.get(rnd.nextInt(systemSamples.size()));
+        service.send(rebuildWith(original, LocalDateTime.now()));
     }
 
-    private HRNotification addFile(HRNotification src, HRNotification n) {
-        return HRNotification.builder()
-                .type(src.getType()).priority(src.getPriority())
-                .title(src.getTitle()).message(src.getMessage())
-                .file(src.getFilePath())
-                .timestamp(LocalDateTime.now())
-                .build();
+    private void sendRandomMessage() {
+        HRNotification original = messageSamples.get(rnd.nextInt(messageSamples.size()));
+        service.send(rebuildWith(original, LocalDateTime.now()));
     }
 
-    private HRNotification rebuildWithAction(HRNotification src) {
-        return HRNotification.builder()
-                .type(src.getType()).priority(src.getPriority())
-                .title(src.getTitle()).message(src.getMessage())
-                .action(src.getActionLabel(), src.getActionTarget())
-                .sender(src.getSenderName() != null ? src.getSenderName() : "")
-                .timestamp(LocalDateTime.now())
-                .build();
+    /**
+     * يعيد بناء إشعار بـ timestamp جديد مع الحفاظ على كل خصائص الأصل
+     */
+    private HRNotification rebuildWith(HRNotification src, LocalDateTime ts) {
+        Builder builder = HRNotification.builder()
+                .category(src.getCategory())
+                .priority(src.getPriority())
+                .title(src.getTitle())
+                .message(src.getMessage())
+                .timestamp(ts);
+
+        if (src.getType() != null)
+            builder.type(src.getType());
+        if (src.getMessageBody() != null && !src.getMessageBody().isBlank())
+            builder.messageBody(src.getMessageBody());
+        if (src.getSenderName() != null && !src.getSenderName().isBlank())
+            builder.sender(src.getSenderName());
+        if (src.getSenderAvatar() != null && !src.getSenderAvatar().isBlank())
+            builder.senderAvatar(src.getSenderAvatar());
+        if (src.getActionLabel() != null && !src.getActionLabel().isBlank())
+            builder.action(src.getActionLabel(), src.getActionTarget());
+
+        // إعادة بناء المرفقات كلها
+        for (Attachment att : src.getAttachments()) {
+            builder.attachment(
+                    att.getFileName(), att.getFilePath(),
+                    att.getMimeType(), att.getFileSize()
+            );
+        }
+
+        return builder.build();
     }
 
     public void stop() {

@@ -1,6 +1,7 @@
 package com.safwat.hr.controller;
 
 
+import com.safwat.hr.notification.service.BackgroundServiceSimulator;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFButton;
@@ -43,6 +44,8 @@ public class MainViewController implements Initializable {
         setButtonsAction();
         HRNotificationBell bell = new HRNotificationBell();
         toolbar.getItems().add(bell);
+
+        new BackgroundServiceSimulator().start();
 
 
     }

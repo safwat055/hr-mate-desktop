@@ -1,16 +1,13 @@
 package com.safwat.hr.notification.ui;
 
-
 import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -22,166 +19,209 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Toast إشعار فوري يظهر في زاوية الشاشة ويختفي تلقائياً.
- * يدعم تراكم عدة Toasts في وقت واحد.
+ * Toast إشعار فوري.
+ * يدعم نوعين:
+ *   - إشعار نظام: أيقونة النوع + عنوان + رسالة
+ *   - رسالة مستخدم: صورة رمزية للمرسل + اسمه + معاينة
  */
 public class HRToast {
 
-    private static final int TOAST_WIDTH = 360;
-    private static final int DISPLAY_SECS = 5;
-    private static final int MAX_VISIBLE = 4;
+    private static final int    TOAST_WIDTH   = 370;
+    private static final int    DISPLAY_SECS  = 5;
+    private static final int    MAX_VISIBLE   = 4;
     private static final double BOTTOM_MARGIN = 24;
-    private static final double RIGHT_MARGIN = 24;
-    private static final double TOAST_HEIGHT = 76;
-    private static final double GAP = 10;
+    private static final double RIGHT_MARGIN  = 24;
+    private static final double TOAST_HEIGHT  = 80;
+    private static final double GAP           = 10;
 
-    // قائمة الـ Toasts الظاهرة حالياً
     private static final Deque<Popup> activeToasts = new ArrayDeque<>();
 
-    /**
-     * يُظهر Toast جديداً في الزاوية السفلية اليمنى.
-     */
     public static void show(Stage owner, HRNotification notification) {
         if (activeToasts.size() >= MAX_VISIBLE) {
-            // أزل الأقدم
             Popup oldest = activeToasts.pollFirst();
             if (oldest != null) oldest.hide();
         }
 
-        Popup popup = buildPopup(notification);
+        Popup popup = notification.isMessage()
+            ? buildMessageToast(notification)
+            : buildSystemToast(notification);
+
         popup.show(owner);
         activeToasts.addLast(popup);
         repositionAll(owner);
-        animateIn(popup, owner, notification);
+        animateIn(popup, owner);
     }
 
-    // ===================== بناء الـ Toast =====================
-    private static Popup buildPopup(HRNotification n) {
+    // ===================== Toast إشعار النظام =====================
+    private static Popup buildSystemToast(HRNotification n) {
         Popup popup = new Popup();
         popup.setAutoHide(false);
 
-        // الحاوية الرئيسية
-        HBox root = new HBox(12);
-        root.setAlignment(Pos.CENTER_LEFT);
-        root.setPrefWidth(TOAST_WIDTH);
-        root.setMinHeight(TOAST_HEIGHT);
-        root.setPadding(new Insets(12, 16, 12, 14));
-        root.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-background-radius: 10px;" +
-                        "-fx-border-color: " + n.getType().color + ";" +
-                        "-fx-border-width: 0 0 0 4px;" +
-                        "-fx-border-radius: 10px 0 0 10px;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 12, 0, 0, 4);"
-        );
+        String color = n.getType().color;
+        String bg    = n.getType().bgColor;
 
-        // نقطة الأهمية
-        Circle dot = new Circle(5);
-        dot.setFill(Color.web(n.getType().color));
-
-        // الأيقونة
-        StackPane iconBox = buildIcon(n);
+        // أيقونة النوع
+        Rectangle iconBg = new Rectangle(36, 36);
+        iconBg.setArcWidth(8); iconBg.setArcHeight(8);
+        iconBg.setFill(Color.web(bg));
+        Label iconLbl = new Label(getSystemIcon(n.getType()));
+        iconLbl.setStyle("-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:" + color + ";");
+        iconLbl.setMinSize(36, 36);
+        iconLbl.setMaxSize(36, 36);
+        iconLbl.setAlignment(Pos.CENTER);
+        StackPane iconBox = new StackPane(iconBg, iconLbl);
+        iconBox.setMinSize(36, 36);
+        iconBox.setMaxSize(36, 36);
 
         // النصوص
-        VBox texts = new VBox(3);
-        texts.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(texts, Priority.ALWAYS);
-
         Label titleLbl = new Label(n.getTitle());
-        titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:600;-fx-text-fill:#1a1a1a;");
-        titleLbl.setWrapText(false);
-        titleLbl.setMaxWidth(220);
-        titleLbl.setEllipsisString("...");
+        titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
+        titleLbl.setMaxWidth(240);
 
         Label msgLbl = new Label(n.getMessage());
         msgLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#555555;");
-        msgLbl.setWrapText(false);
-        msgLbl.setMaxWidth(220);
-        msgLbl.setEllipsisString("...");
+        msgLbl.setMaxWidth(240);
 
         Label timeLbl = new Label(n.getFormattedTime());
-        timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;");
+        timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;");
 
-        texts.getChildren().addAll(titleLbl, msgLbl, timeLbl);
+        VBox texts = new VBox(2, titleLbl, msgLbl, timeLbl);
+        texts.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(texts, Priority.ALWAYS);
 
-        // زر إغلاق
-        MFXButton closeBtn = new MFXButton("✕");
-        closeBtn.setStyle("-fx-background-color:transparent;-fx-text-fill:#aaa;-fx-font-size:14px;-fx-cursor:hand;");
-        closeBtn.setPrefSize(24, 24);
-        closeBtn.setOnAction(e -> dismissToast(popup));
+        MFXButton closeBtn = buildCloseBtn(popup);
 
-        root.getChildren().addAll(dot, iconBox, texts, closeBtn);
+        HBox root = new HBox(10, iconBox, texts, closeBtn);
+        root.setAlignment(Pos.CENTER_LEFT);
+        root.setPadding(new Insets(12, 14, 10, 12));
+        root.setPrefWidth(TOAST_WIDTH);
+        root.setMinHeight(TOAST_HEIGHT);
+        root.setStyle(
+            "-fx-background-color:#FFFFFF;" +
+            "-fx-background-radius:10px;" +
+            "-fx-border-color:" + color + ";" +
+            "-fx-border-width:0 0 0 4px;" +
+            "-fx-border-radius:10px 0 0 10px;" +
+            "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
+        );
 
-        // نوار تقدم الوقت
-        VBox wrapper = new VBox(0);
-        wrapper.getChildren().addAll(root, buildProgressBar(n));
-
+        VBox wrapper = new VBox(0, root, buildProgressBar(color));
         popup.getContent().add(wrapper);
         return popup;
     }
 
-    private static StackPane buildIcon(HRNotification n) {
-        Rectangle bg = new Rectangle(36, 36);
-        bg.setArcWidth(8);
-        bg.setArcHeight(8);
-        bg.setFill(Color.web(n.getType().bgColor));
+    // ===================== Toast رسالة المستخدم =====================
+    private static Popup buildMessageToast(HRNotification n) {
+        Popup popup = new Popup();
+        popup.setAutoHide(false);
 
-        Label icon = new Label(getIcon(n.getType()));
-        icon.setStyle("-fx-font-size:18px;");
+        // صورة رمزية
+        Circle avatarCircle = new Circle(18);
+        avatarCircle.setFill(Color.web("#0F6E56"));
+        Label avatarLbl = new Label(n.getAvatarInitials());
+        avatarLbl.setStyle(
+            "-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:white;"
+        );
+        StackPane avatarBox = new StackPane(avatarCircle, avatarLbl);
+        avatarBox.setMinSize(36, 36);
+        avatarBox.setMaxSize(36, 36);
 
-        StackPane box = new StackPane(bg, icon);
-        box.setMinSize(36, 36);
-        return box;
+        // اسم المرسل
+        Label senderLbl = new Label(
+            n.getSenderName() != null ? n.getSenderName() : "رسالة جديدة");
+        senderLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
+
+        // موضوع الرسالة
+        Label subjectLbl = new Label(n.getTitle());
+        subjectLbl.setStyle("-fx-font-size:12px;-fx-font-weight:600;-fx-text-fill:#1A1A1A;");
+        subjectLbl.setMaxWidth(220);
+
+        // معاينة المحتوى
+        Label previewLbl = new Label(n.getMessage());
+        previewLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#666666;");
+        previewLbl.setMaxWidth(220);
+
+        // مرفقات
+        HBox attachRow = new HBox(4);
+        if (n.hasAttachments()) {
+            Label att = new Label("[" + n.getAttachments().size() + " مرفق]");
+            att.setStyle("-fx-font-size:10px;-fx-text-fill:#0F6E56;");
+            attachRow.getChildren().add(att);
+        }
+
+        VBox texts = new VBox(2, senderLbl, subjectLbl, previewLbl, attachRow);
+        texts.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(texts, Priority.ALWAYS);
+
+        MFXButton closeBtn = buildCloseBtn(popup);
+
+        HBox root = new HBox(10, avatarBox, texts, closeBtn);
+        root.setAlignment(Pos.CENTER_LEFT);
+        root.setPadding(new Insets(12, 14, 10, 12));
+        root.setPrefWidth(TOAST_WIDTH);
+        root.setMinHeight(TOAST_HEIGHT);
+        root.setStyle(
+            "-fx-background-color:#FFFFFF;" +
+            "-fx-background-radius:10px;" +
+            "-fx-border-color:#0F6E56;" +
+            "-fx-border-width:0 0 0 4px;" +
+            "-fx-border-radius:10px 0 0 10px;" +
+            "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
+        );
+
+        VBox wrapper = new VBox(0, root, buildProgressBar("#0F6E56"));
+        popup.getContent().add(wrapper);
+        return popup;
     }
 
-    private static Rectangle buildProgressBar(HRNotification n) {
+    // ===================== مساعدات =====================
+    private static MFXButton buildCloseBtn(Popup popup) {
+        MFXButton btn = new MFXButton("x");
+        btn.setStyle(
+            "-fx-background-color:transparent;-fx-text-fill:#AAAAAA;" +
+            "-fx-font-size:13px;-fx-cursor:hand;"
+        );
+        btn.setPrefSize(24, 24);
+        btn.setOnAction(e -> dismissToast(popup));
+        return btn;
+    }
+
+    private static Rectangle buildProgressBar(String color) {
         Rectangle bar = new Rectangle(TOAST_WIDTH, 3);
-        bar.setFill(Color.web(n.getType().color));
+        bar.setFill(Color.web(color));
+        bar.setOpacity(0.4);
         bar.setArcWidth(3);
         bar.setArcHeight(3);
 
-        // يتقلص من اليمين إلى الشمال خلال مدة العرض
-        ScaleTransition scale = new ScaleTransition(
-                Duration.seconds(DISPLAY_SECS), bar);
+        ScaleTransition scale = new ScaleTransition(Duration.seconds(DISPLAY_SECS), bar);
         scale.setFromX(1.0);
         scale.setToX(0.0);
         scale.play();
-
         return bar;
     }
 
-    // ===================== الحركة =====================
-    private static void animateIn(Popup popup, Stage owner, HRNotification n) {
-        // Translate in من اليمين
+    private static void animateIn(Popup popup, Stage owner) {
         javafx.scene.Node root = popup.getContent().get(0);
         root.setTranslateX(TOAST_WIDTH + 30);
         root.setOpacity(0);
 
-        TranslateTransition slide = new TranslateTransition(
-                Duration.millis(280), root);
+        TranslateTransition slide = new TranslateTransition(Duration.millis(280), root);
         slide.setToX(0);
-
         FadeTransition fade = new FadeTransition(Duration.millis(280), root);
         fade.setToValue(1.0);
 
         ParallelTransition intro = new ParallelTransition(slide, fade);
-        intro.play();
-
-        // اختفاء تلقائي
         intro.setOnFinished(e -> {
             PauseTransition pause = new PauseTransition(Duration.seconds(DISPLAY_SECS));
             pause.setOnFinished(pe -> dismissToast(popup));
             pause.play();
         });
+        intro.play();
     }
 
     private static void dismissToast(Popup popup) {
-        javafx.scene.Node root = popup.getContent().isEmpty()
-                ? null : popup.getContent().get(0);
-        if (root == null) {
-            popup.hide();
-            return;
-        }
+        if (popup.getContent().isEmpty()) { popup.hide(); return; }
+        javafx.scene.Node root = popup.getContent().get(0);
 
         FadeTransition fade = new FadeTransition(Duration.millis(200), root);
         fade.setToValue(0);
@@ -196,11 +236,9 @@ public class HRToast {
         out.play();
     }
 
-    // ===================== إعادة تموضع الكل =====================
     private static void repositionAll(Stage owner) {
-        double screenX = owner.getX() + owner.getWidth() - TOAST_WIDTH - RIGHT_MARGIN;
+        double screenX = owner.getX() + owner.getWidth()  - TOAST_WIDTH - RIGHT_MARGIN;
         double screenY = owner.getY() + owner.getHeight();
-
         int i = 0;
         for (Popup p : activeToasts) {
             double y = screenY - BOTTOM_MARGIN - (TOAST_HEIGHT + GAP) * (i + 1);
@@ -210,15 +248,15 @@ public class HRToast {
         }
     }
 
-    // ===================== مساعد الأيقونات =====================
-    private static String getIcon(HRNotification.NotificationType type) {
+    private static String getSystemIcon(HRNotification.NotificationType type) {
         return switch (type) {
-            case EMPLOYEE -> "👤";
-            case SALARY -> "💰";
-            case LEAVE -> "📅";
-            case TRAINING -> "🎓";
-            case TASK -> "✅";
-            case SYSTEM -> "⚙️";
+            case EMPLOYEE -> "EMP";
+            case SALARY   -> "SAL";
+            case LEAVE    -> "LVE";
+            case TRAINING -> "TRN";
+            case TASK     -> "TSK";
+            case SYSTEM   -> "SYS";
+            case MESSAGE  -> "MSG";
         };
     }
 }
