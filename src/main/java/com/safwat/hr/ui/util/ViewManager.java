@@ -21,22 +21,35 @@ public class ViewManager {
     public static void openIndependentView(String fxmlFile, String cssPath) {
 
         try {
-            Parent view = FXMLLoader.load(Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
-            view.getStylesheets().add(cssPath);
+            Parent view = FXMLLoader.load(
+                    Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
+
+            if (cssPath != null && !cssPath.isBlank()) {
+                view.getStylesheets().add(
+                        Objects.requireNonNull(
+                                ViewManager.class.getResource(cssPath)
+                        ).toExternalForm()
+                );
+            }
+
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(view));
-            String iconPath = Objects.requireNonNull(ViewManager.class.getResource("/safwat/icons/123.png")).toString();
+            AppTheme.apply(stage.getScene());
+            String iconPath = Objects.requireNonNull(
+                            ViewManager.class.getResource("/com/safwat/hr/icons/logo.png"))
+                    .toExternalForm();
+
             stage.getIcons().add(new Image(iconPath));
             stage.setResizable(false);
             stage.setTitle("HR_MANAGEMENT");
             stage.show();
+
         } catch (IOException ex) {
-
+            ex.printStackTrace();
             SAFNotification.error(ex.getMessage());
-            log.error(ex.getMessage());
+            log.error(ex.getMessage(), ex);
         }
-
     }
 
     public static void openNoIndependentView(String fxmlFile, String cssPath) {
@@ -44,7 +57,13 @@ public class ViewManager {
         try {
             Parent view = FXMLLoader.load(Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
             Stage stage = new Stage();
-            view.getStylesheets().add(cssPath);
+            if (cssPath != null && !cssPath.isBlank()) {
+                view.getStylesheets().add(
+                        Objects.requireNonNull(
+                                ViewManager.class.getResource(cssPath)
+                        ).toExternalForm()
+                );
+            }
             String iconPath = Objects.requireNonNull(ViewManager.class.getResource("/safwat/icons/123.png")).toString();
             stage.getIcons().add(new Image(iconPath));
             stage.setTitle("HR_MANAGEMENT");
@@ -63,7 +82,13 @@ public class ViewManager {
         try {
             Parent view = FXMLLoader.load(Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
             Stage stage = new Stage();
-            view.getStylesheets().add(cssPath);
+            if (cssPath != null && !cssPath.isBlank()) {
+                view.getStylesheets().add(
+                        Objects.requireNonNull(
+                                ViewManager.class.getResource(cssPath)
+                        ).toExternalForm()
+                );
+            }
             String iconpath = Objects.requireNonNull(ViewManager.class.getResource("/safwat/icons/123.png")).toString();
             stage.getIcons().add(new Image(iconpath));
             stage.setTitle("HR_MANAGEMENT");

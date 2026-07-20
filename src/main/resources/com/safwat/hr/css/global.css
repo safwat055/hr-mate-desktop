@@ -1,0 +1,22 @@
+/*
+ * global.css — يطبّق على كل واجهات التطبيق عبر AppTheme.apply(scene)
+ * الخط "Cairo" بيدعم العربي والأرقام والرموز الخاصة (- / ,) بدون تشوه
+ */
+
+.root {
+    -fx-font-family: "Cairo";
+    -fx-font-size: 13px;
+}
+
+/* عناصر التحكم الأساسية تورث نفس الخط تلقائيًا من .root
+   لكن بعض الـ Controls (زي MFXButton) أحيانًا محتاجة تحديد صريح: */
+.label, .button, .text-field, .table-view, .table-cell,
+.mfx-button, .combo-box, .list-view, .list-cell {
+    -fx-font-family: "Cairo";
+}
+
+/* لتفادي أي اختلاف في سُمك الخط بين Bold/Regular عند التشغيل على أجهزة مختلفة */
+.text-bold {
+    -fx-font-family: "Cairo";
+    -fx-font-weight: bold;
+}

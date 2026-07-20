@@ -20,6 +20,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,27 +29,46 @@ import java.util.Optional;
  * SearchDialog — واجهة بحث عامة قابلة لإعادة الاستخدام
  * =====================================================
  * <p>
- * طريقة الاستخدام:
+ * أصبح الكلاس الآن generic (SearchDialog&lt;T&gt;) بحيث يقبل أي نوع بيانات:
  * <p>
+ * 1) الطريقة القديمة بدون أي تعديل (صفوف Object[]):
+ * <pre>
  * Optional<Object[]> result = SearchDialog.builder()
- * .title("بحث عن موظف")
- * .headers(new String[]{"الكود", "الاسم", "القسم", "الوظيفة"})
- * .data(employeeList)
- * .searchPlaceholder("اكتب اسم أو كود الموظف...")
- * .owner(primaryStage)
- * .show();
+ *      .title("بحث عن موظف")
+ *      .headers(new String[]{"الكود", "الاسم", "القسم", "الوظيفة"})
+ *      .data(employeeList) // List<Object[]>
+ *      .searchPlaceholder("اكتب اسم أو كود الموظف...")
+ *      .owner(primaryStage)
+ *      .show();
+ * </pre>
  * <p>
- * result.ifPresent(row -> {
- * String id   = row[0].toString();
- * String name = row[1].toString();
- * });
+ * 2) قائمة نصوص بسيطة (List&lt;String&gt;):
+ * <pre>
+ * Optional<String> result = SearchDialog.forStrings()
+ *      .title("اختر قسم")
+ *      .data(departmentNames) // List<String>
+ *      .owner(primaryStage)
+ *      .show();
+ * </pre>
+ * <p>
+ * 3) قائمة كائنات من أي كلاس (Generic):
+ * <pre>
+ * Optional<Employee> result = SearchDialog.builder(Employee.class)
+ *      .title("بحث عن موظف")
+ *      .column("الكود", Employee::getCode)
+ *      .column("الاسم", Employee::getName)
+ *      .column("القسم", Employee::getDepartment)
+ *      .data(employeeObjectsList) // List<Employee>
+ *      .owner(primaryStage)
+ *      .show();
+ * </pre>
  */
-public class SearchDialog {
+public class SearchDialog<T> {
 
+    private final List<Column<T>> columns = new ArrayList<>();
     // ===================== Builder =====================
     private String title = "بحث";
-    private String[] headers = {};
-    private List<Object[]> data = List.of();
+    private List<T> data = List.of();
     private String searchPlaceholder = "ابحث هنا...";
     private Stage owner = null;
     private double width = 750;
@@ -57,46 +77,111 @@ public class SearchDialog {
     private SearchDialog() {
     }
 
-    public static SearchDialog builder() {
-        return new SearchDialog();
+    /**
+     * الاستخدام القديم — متوافق تمامًا مع الكود الحالي (صفوف Object[])
+     */
+    public static SearchDialog<Object[]> builder() {
+        return new SearchDialog<>();
     }
 
-    public SearchDialog title(String v) {
+    /**
+     * استخدام عام جديد لأي كلاس: SearchDialog.builder(Employee.class)
+     */
+    public static <T> SearchDialog<T> builder(Class<T> type) {
+        return new SearchDialog<>();
+    }
+
+    // ---------- نقاط الدخول ----------
+
+    /**
+     * اختصار جاهز لقوائم النصوص البسيطة List&lt;String&gt;
+     */
+    public static SearchDialog<String> forStrings() {
+        SearchDialog<String> d = new SearchDialog<>();
+        d.column("قيم البحث", s -> s == null ? "" : s);
+        return d;
+    }
+
+    // ---------- إعدادات عامة ----------
+    public SearchDialog<T> title(String v) {
         this.title = v;
         return this;
     }
 
-    public SearchDialog headers(String[] v) {
-        this.headers = v;
-        return this;
-    }
-
-    public SearchDialog data(List<Object[]> v) {
+    public SearchDialog<T> data(List<T> v) {
         this.data = v;
         return this;
     }
 
-    public SearchDialog searchPlaceholder(String v) {
+    public SearchDialog<T> searchPlaceholder(String v) {
         this.searchPlaceholder = v;
         return this;
     }
 
-    public SearchDialog owner(Stage v) {
+    public SearchDialog<T> owner(Stage v) {
         this.owner = v;
         return this;
     }
 
-    public SearchDialog size(double w, double h) {
+    public SearchDialog<T> size(double w, double h) {
         this.width = w;
         this.height = h;
         return this;
     }
 
+    /**
+     * الطريقة العامة الجديدة لتعريف عمود بأي منطق استخراج
+     */
+    public SearchDialog<T> column(String header, ColumnValueExtractor<T> extractor) {
+        columns.add(new Column<>(header, extractor));
+        return this;
+    }
+
+    /**
+     * توافق مع الطريقة القديمة headers(String[]) — تفترض أن الصف Object[]
+     * تعمل فقط مع SearchDialog.builder() (بدون Class) حيث T = Object[]
+     */
+    @SuppressWarnings("unchecked")
+    public SearchDialog<T> headers(String[] v) {
+        columns.clear();
+        for (int i = 0; i < v.length; i++) {
+            final int idx = i;
+            columns.add(new Column<>(v[i], (T item) -> {
+                Object[] row = (Object[]) item;
+                if (row == null || idx >= row.length) return "";
+                Object val = row[idx];
+                return val == null ? "" : val.toString();
+            }));
+        }
+        return this;
+    }
+
     // ===================== العرض =====================
-    public Optional<Object[]> show() {
-        SearchDialogController controller =
-                new SearchDialogController(title, headers, data, searchPlaceholder, width, height);
+    public Optional<T> show() {
+        SearchDialogController<T> controller =
+                new SearchDialogController<>(title, columns, data, searchPlaceholder, width, height);
         return controller.showAndWait(owner);
+    }
+
+    /**
+     * دالة استخراج قيمة نصية من الصف لعمود معين
+     */
+    @FunctionalInterface
+    public interface ColumnValueExtractor<T> {
+        String extract(T item);
+    }
+
+    /**
+     * تعريف عمود: عنوان + طريقة استخراج القيمة
+     */
+    public static class Column<T> {
+        final String header;
+        final ColumnValueExtractor<T> extractor;
+
+        Column(String header, ColumnValueExtractor<T> extractor) {
+            this.header = header;
+            this.extractor = extractor;
+        }
     }
 }
 
@@ -104,35 +189,35 @@ public class SearchDialog {
 // =====================================================
 //  Controller داخلي — منفصل عن الـ Builder
 // =====================================================
-class SearchDialogController {
+class SearchDialogController<T> {
 
     private final String title;
-    private final String[] headers;
-    private final List<Object[]> data;
+    private final List<SearchDialog.Column<T>> columns;
+    private final List<T> data;
     private final String placeholder;
     private final double width, height;
 
     // الصف المحدد
-    private Object[] selectedRow = null;
+    private T selectedRow = null;
 
     // الجدول
-    private TableView<Object[]> table;
+    private TableView<T> table;
 
     // مربع البحث
     private TextField searchField;
 
-    SearchDialogController(String title, String[] headers,
-                           List<Object[]> data, String placeholder,
+    SearchDialogController(String title, List<SearchDialog.Column<T>> columns,
+                           List<T> data, String placeholder,
                            double width, double height) {
         this.title = title;
-        this.headers = headers;
+        this.columns = columns;
         this.data = data;
         this.placeholder = placeholder;
         this.width = width;
         this.height = height;
     }
 
-    Optional<Object[]> showAndWait(Stage owner) {
+    Optional<T> showAndWait(Stage owner) {
         Stage stage = buildStage(owner);
         stage.showAndWait();
         return Optional.ofNullable(selectedRow);
@@ -187,7 +272,6 @@ class SearchDialogController {
                         "-fx-border-width: 0 0 0.5 0;"
         );
 
-        // أيقونة البحث
         Label icon = new Label("🔍");
         icon.setStyle("-fx-font-size:16px;");
 
@@ -197,7 +281,6 @@ class SearchDialogController {
                         "-fx-text-fill:#1A1A1A;-fx-padding:0 0 0 8;"
         );
 
-        // عداد النتائج
         Label countLbl = new Label(data.size() + " نتيجة");
         countLbl.setStyle(
                 "-fx-font-size:12px;-fx-text-fill:#888888;" +
@@ -208,7 +291,6 @@ class SearchDialogController {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // زر الإغلاق
         Label closeBtn = new Label("✕");
         closeBtn.setStyle(
                 "-fx-font-size:16px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;" +
@@ -223,7 +305,6 @@ class SearchDialogController {
                                 "-fx-padding:4 8 4 8;-fx-background-radius:6px;"));
         closeBtn.setOnMouseClicked(e -> stage.close());
 
-        // سحب النافذة
         final double[] dragDelta = new double[2];
         bar.setOnMousePressed(e -> {
             dragDelta[0] = stage.getX() - e.getScreenX();
@@ -251,7 +332,6 @@ class SearchDialogController {
         searchField = new TextField();
         searchField.setPromptText(placeholder);
         searchField.setStyle("-fx-font-size:13px;");
-        // عرض مرن يملأ المساحة المتبقية
         HBox.setHgrow(searchField, Priority.ALWAYS);
         searchField.setMaxWidth(Double.MAX_VALUE);
 
@@ -260,7 +340,6 @@ class SearchDialogController {
                 "-fx-background-color:#F0F0F0;-fx-text-fill:#666666;" +
                         "-fx-font-size:12px;-fx-background-radius:6px;-fx-cursor:hand;"
         );
-        // عرض ثابت للزر
         clearBtn.setPrefWidth(60);
         clearBtn.setMinWidth(60);
         clearBtn.setMaxWidth(60);
@@ -274,28 +353,30 @@ class SearchDialogController {
     }
 
     // ===================== الجدول =====================
-    private TableView<Object[]> buildTable(Stage stage) {
+    private TableView<T> buildTable(Stage stage) {
         table = new TableView<>();
-        table.setStyle("-fx-background-color: transparent;-fx-font-size:13px;");
+        table.setStyle("""
+                    -fx-background-color: transparent;
+                    -fx-font-family: "DejaVu Sans";
+                    -fx-font-size: 13px;
+                """);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPlaceholder(buildEmptyState());
         VBox.setVgrow(table, Priority.ALWAYS);
 
-        // بناء الأعمدة ديناميكياً
-        for (int i = 0; i < headers.length; i++) {
+        // بناء الأعمدة ديناميكياً من تعريفات columns
+        for (int i = 0; i < columns.size(); i++) {
+            SearchDialog.Column<T> colDef = columns.get(i);
             final int colIndex = i;
-            TableColumn<Object[], String> col = new TableColumn<>(headers[i]);
+            TableColumn<T, String> col = new TableColumn<>(colDef.header);
             col.setCellValueFactory(param -> {
-                Object[] row = param.getValue();
-                if (row == null || colIndex >= row.length) return new SimpleStringProperty("");
-                Object val = row[colIndex];
-                return new SimpleStringProperty(val == null ? "" : val.toString());
+                T row = param.getValue();
+                String val = row == null ? "" : colDef.extractor.extract(row);
+                return new SimpleStringProperty(val == null ? "" : val);
             });
 
-            // العمود الأول (ID) أضيق
             if (i == 0) col.setPrefWidth(80);
 
-            // تنسيق الخلية
             col.setCellFactory(tc -> new TableCell<>() {
                 @Override
                 protected void updateItem(String item, boolean empty) {
@@ -305,7 +386,6 @@ class SearchDialogController {
                         setStyle("");
                     } else {
                         setText(item);
-                        // العمود الأول بولد
                         if (colIndex == 0) {
                             setStyle("-fx-font-weight:600;-fx-text-fill:#185FA5;");
                         } else {
@@ -319,18 +399,19 @@ class SearchDialogController {
         }
 
         // البيانات مع الفلترة
-        ObservableList<Object[]> observableData =
+        ObservableList<T> observableData =
                 FXCollections.observableArrayList(data);
-        FilteredList<Object[]> filteredData =
+        FilteredList<T> filteredData =
                 new FilteredList<>(observableData, p -> true);
 
-        // ربط مربع البحث بالفلتر
+        // ربط مربع البحث بالفلتر — يبحث في كل الأعمدة المعرّفة عبر extractor
         searchField.textProperty().addListener((obs, oldVal, newVal) -> {
             String query = newVal == null ? "" : newVal.trim().toLowerCase();
             filteredData.setPredicate(row -> {
                 if (query.isEmpty()) return true;
-                for (Object cell : row) {
-                    if (cell != null && cell.toString().toLowerCase().contains(query))
+                for (SearchDialog.Column<T> colDef : columns) {
+                    String cell = colDef.extractor.extract(row);
+                    if (cell != null && cell.toLowerCase().contains(query))
                         return true;
                 }
                 return false;
@@ -340,28 +421,24 @@ class SearchDialogController {
 
         table.setItems(filteredData);
 
-        // تمييز الصف عند التحديد
         table.getSelectionModel().selectedItemProperty().addListener(
                 (obs, old, row) -> selectedRow = row
         );
 
-        // دبل كليك يختار ويغلق
         table.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && selectedRow != null) {
                 stage.close();
             }
         });
 
-        // Enter يغلق لو في صف محدد
         table.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER && selectedRow != null) {
                 stage.close();
             }
         });
 
-        // تلوين الصفوف بالتناوب
         table.setRowFactory(tv -> {
-            TableRow<Object[]> row = new TableRow<>();
+            TableRow<T> row = new TableRow<>();
             row.itemProperty().addListener((obs, old, item) -> {
                 if (item == null) {
                     row.setStyle("");
@@ -388,7 +465,6 @@ class SearchDialogController {
                 }
             });
 
-            // hover
             row.setOnMouseEntered(e -> {
                 if (!row.isSelected() && row.getItem() != null)
                     row.setStyle("-fx-background-color:#EEF4FF;");
@@ -405,7 +481,6 @@ class SearchDialogController {
             return row;
         });
 
-        // فوكس على البحث عند الفتح
         searchField.sceneProperty().addListener((obs, old, scene) -> {
             if (scene != null) searchField.requestFocus();
         });

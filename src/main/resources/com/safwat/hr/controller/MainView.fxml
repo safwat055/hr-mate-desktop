@@ -45,7 +45,6 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
@@ -73,18 +72,30 @@
             <MenuItem mnemonicParsing="false" text="Quit" />
           </items>
         </Menu>
-        <Menu mnemonicParsing="false" text="Edit">
+        <Menu mnemonicParsing="false" text="عرض">
           <items>
-            <MenuItem mnemonicParsing="false" text="Undo" />
-            <MenuItem mnemonicParsing="false" text="Redo" />
-            <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Cut" />
-            <MenuItem mnemonicParsing="false" text="Copy" />
-            <MenuItem mnemonicParsing="false" text="Paste" />
-            <MenuItem mnemonicParsing="false" text="Delete" />
-            <SeparatorMenuItem mnemonicParsing="false" />
-            <MenuItem mnemonicParsing="false" text="Select All" />
-            <MenuItem mnemonicParsing="false" text="Unselect All" />
+                  <Menu mnemonicParsing="false" text="تقارير">
+                    <items>
+                  <MenuItem mnemonicParsing="false" text="تقارير تسويات" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#openPayrollReport" text="تقارير بيرول" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                      <MenuItem mnemonicParsing="false" text="تقارير اجازات" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" text="تقارير اجور" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                    </items>
+                  </Menu>
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <Menu mnemonicParsing="false" text="واجهات">
+                     <items>
+                        <MenuItem mnemonicParsing="false" text="تقارير تسويات" />
+                        <MenuItem mnemonicParsing="false" text="تقارير بيرول" />
+                        <MenuItem mnemonicParsing="false" text="تقارير اجازات" />
+                        <MenuItem mnemonicParsing="false" text="تقارير اجور" />
+                     </items>
+                  </Menu>
+                  <SeparatorMenuItem mnemonicParsing="false" />
           </items>
         </Menu>
         <Menu mnemonicParsing="false" text="Help">
@@ -102,7 +113,7 @@
                      <content>
                         <VBox fx:id="rightPanelContent" alignment="TOP_CENTER">
                            <children>
-                              <Label fx:id="lblParts" alignment="CENTER" prefHeight="38.0" prefWidth="176.0" text="الاقسام 📂" />
+                              <Label fx:id="lblParts" alignment="CENTER" prefHeight="38.0" prefWidth="176.0" text="الاقسام" />
                               <Accordion>
                                 <panes>
                                   <TitledPane alignment="CENTER" animated="false" contentDisplay="CENTER" expanded="false" text="استحقاقات" textAlignment="CENTER">
@@ -116,7 +127,7 @@
                                                 <Button layoutX="15.0" layoutY="131.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="شيت الادخال" />
                                                 <Button layoutX="15.0" layoutY="168.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="اضافة موظف" />
                                                 <Button layoutX="15.0" layoutY="241.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="مدير الاستحقاقات" />
-                                                <Button layoutX="15.0" layoutY="241.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="تقارير" />
+                                                <Button fx:id="btn_payReport" layoutX="15.0" layoutY="241.0" mnemonicParsing="false" onAction="#openPayrollReport" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="تقارير" />
                                                 <Button layoutX="15.0" layoutY="278.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="182.0" style="-fx-background-color: linear-gradient(to bottom, #090909, #191919, #262627, #343434, #424243, #414243, #404142, #404141, #313232, #232323, #151515, #000000);; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-border-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);" text="مدير التقارير" />
                                              </children>
                                              <padding>
@@ -223,14 +234,16 @@
                <children>
                   <VBox alignment="TOP_CENTER" layoutX="-4.0" layoutY="14.0" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <ToolBar fx:id="toolbar" orientation="VERTICAL" prefHeight="80.0" prefWidth="40.0" />
-                        <Button layoutX="20.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📩" />
-                        <Button layoutX="20.0" layoutY="57.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📸" />
-                        <Button layoutX="20.0" layoutY="94.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />
+                        <VBox fx:id="toolbar" prefHeight="53.0" prefWidth="60.0">
+                           <children>
+                              <Label fx:id="badge" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="20.0" prefWidth="20.0" />
+                              <Label fx:id="bellIcon" prefHeight="38.0" prefWidth="55.0" />
+                           </children>
+                        </VBox>
+                        <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />
+                        <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="50.0" text="📩" />
+                        <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📸" />
                      </children>
-                     <padding>
-                        <Insets left="10.0" right="10.0" top="10.0" />
-                     </padding>
                   </VBox>
                </children></AnchorPane>
       </items>

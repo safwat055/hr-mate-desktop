@@ -23,16 +23,16 @@ public class HRNotificationBell extends StackPane {
     private Popup panelPopup = null;
     private boolean panelVisible = false;
 
-    public HRNotificationBell() {
-        buildBell();
+    public HRNotificationBell(Label bellLabel, Label badge) {
+        buildBell(bellLabel, badge);
     }
 
-    private void buildBell() {
-        Label bellIcon = new Label("[B]");
+    private void buildBell(Label bellIcon, Label badge) {
+        // bellIcon = new Label("[B]");
         bellIcon.setStyle("-fx-font-size:20px;-fx-font-weight:700;" +
                 "-fx-text-fill:#555555;-fx-cursor:hand;");
 
-        Label badge = new Label();
+        //  Label badge = new Label();
         badge.textProperty().bind(
                 Bindings.when(service.unreadCountProperty().greaterThan(9))
                         .then("9+")
@@ -61,13 +61,11 @@ public class HRNotificationBell extends StackPane {
             }
         });
 
-        setOnMouseClicked(e ->
-        {
+        setOnMouseClicked(e -> {
             if (ownerStage == null)
                 ownerStage = (Stage) getScene().getWindow();
             togglePanel();
         });
-
     }
 
     private void togglePanel() {

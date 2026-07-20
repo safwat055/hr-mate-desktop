@@ -31,7 +31,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.web.WebView;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,8 +72,7 @@ public class PaymentsController implements Initializable {
     private TextField txt_searchValue;
     @FXML
     private TextField txt_startMonth;
-    @FXML
-    private RadioButton RB_show;
+
     @FXML
     private WebView webView;
     @FXML
@@ -199,18 +197,18 @@ public class PaymentsController implements Initializable {
 
     private void openPDF(Path targetPath) {
 
-            showWebView();
-            PDFView.showIN(targetPath.toString(), webView);
-            NotificationService.getInstance().send(
-                    HRNotification.builder()
-                            .type(HRNotification.NotificationType.SYSTEM)
-                            .priority(HRNotification.Priority.HIGH)
-                            .title("بطاقة اجر الاشتراك")
-                            .message(txt_empName.getText())
-                            .file(targetPath.toString())
-                            .sender("system")
-                            .build()
-            );
+        showWebView();
+        PDFView.showIN(targetPath.toString(), webView);
+        NotificationService.getInstance().send(
+                HRNotification.builder()
+                        .type(HRNotification.NotificationType.SYSTEM)
+                        .priority(HRNotification.Priority.NORMAL)
+                        .title("تقرير صرفيات")
+                        .message(txt_empName.getText())
+                        .file(targetPath.toString())
+                        .sender("system")
+                        .build()
+        );
     }
 
     private void showWebView() {
@@ -356,6 +354,7 @@ public class PaymentsController implements Initializable {
             }
         });
         table_payments.setStyle("""
+                    -fx-background-color: transparent;
                     -fx-font-family: "DejaVu Sans";
                     -fx-font-size: 13px;
                 """);

@@ -45,13 +45,9 @@ public class ChangeCardController implements Initializable {
     @FXML
     private TextField txt_empCode, txt_empName, txt_nationalID, txt_searchValue;
     @FXML
-    private ToggleGroup changeToggle;
-    @FXML
     private TextField txt_startMonth, txt_endMonth;
     @FXML
     private Label pathLabel;
-    @FXML
-    private RadioButton RB_show;
     @FXML
     private WebView webView;
     @FXML
@@ -395,9 +391,10 @@ public class ChangeCardController implements Initializable {
         NotificationService.getInstance().send(
                 HRNotification.builder()
                         .type(HRNotification.NotificationType.SYSTEM)
-                        .priority(HRNotification.Priority.HIGH)
+                        .priority(HRNotification.Priority.NORMAL)
                         .title("بطاقة اجر الاشتراك")
                         .message(txt_empName.getText())
+                        .messageBody("تم الانتهاء من تحميل التقرير.")
                         .file(targetPath.toString())
                         .sender("system")
                         .build()

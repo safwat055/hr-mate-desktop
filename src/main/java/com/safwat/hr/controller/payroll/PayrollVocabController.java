@@ -15,7 +15,6 @@ import com.safwat.hr.ui.util.SearchDialog;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.web.WebView;
@@ -52,8 +51,6 @@ public class PayrollVocabController implements Initializable {
     private TextField txt_search;
     @FXML
     private WebView webView;
-    @FXML
-    private CheckBox chk_open;
 
 
     @Override

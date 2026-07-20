@@ -1,6 +1,7 @@
 package com.safwat.hr.ui.icons;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -32,9 +33,21 @@ public class Icons {
 
         Pdf.setFitHeight(30);
         Pdf.setFitHeight(30);
-        Pdf.setPreserveRatio(true);
-        button.getStyleClass().clear();
+        // Pdf.setPreserveRatio(true);
+        // button.getStyleClass().clear();
         button.setGraphic(Pdf);
+
+    }
+
+    public void getBellmage(Label bellLabel) {
+        ImageView Pdf = new ImageView();
+        Pdf.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell50.png")).toExternalForm()));
+
+        Pdf.setFitHeight(40);
+        Pdf.setFitHeight(40);
+        Pdf.setPreserveRatio(true);
+        // button.getStyleClass().clear();
+        bellLabel.setGraphic(Pdf);
 
     }
 

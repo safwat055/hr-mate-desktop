@@ -1,14 +1,18 @@
 package com.safwat.hr.controller;
 
 
-import com.safwat.hr.notification.service.BackgroundServiceSimulator;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFButton;
+import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.TabManager;
+import com.safwat.hr.ui.util.ViewManager;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 
@@ -18,7 +22,7 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport;
     @FXML
     private TabPane tab;
     @FXML
@@ -35,18 +39,19 @@ public class MainViewController implements Initializable {
     @FXML
     private VBox rightPanelContent;
     @FXML
-    private ToolBar toolbar;
+    private VBox toolbar;
+    @FXML
+    private Label bellIcon, badge;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
         setMainViewIcon();
         setButtonsAction();
-        HRNotificationBell bell = new HRNotificationBell();
-        toolbar.getItems().add(bell);
-
-        new BackgroundServiceSimulator().start();
-
+        HRNotificationBell bell = new HRNotificationBell(bellIcon, badge);
+        toolbar.getChildren().add(bell);
+        Icons.getInstance().getBellmage(bellIcon);
+        //new BackgroundServiceSimulator().start();
 
     }
 
@@ -54,7 +59,7 @@ public class MainViewController implements Initializable {
      *
      */
     void setMainViewIcon() {
-        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab);
+        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport);
 
 
     }
@@ -93,5 +98,10 @@ public class MainViewController implements Initializable {
      */
     private void openPayVocab() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollVocab(), "مفردات مرتب", true);
+    }
+
+    @FXML
+    private void openPayrollReport() {
+        ViewManager.openIndependentView("/com/safwat/hr/controller/report/payroll/PayrollReport.fxml", null);
     }
 }

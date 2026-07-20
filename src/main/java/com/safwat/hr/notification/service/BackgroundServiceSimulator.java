@@ -3,6 +3,8 @@ package com.safwat.hr.notification.service;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.*;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -107,7 +109,9 @@ public class BackgroundServiceSimulator {
                     .sender("النظام")
                     .build()
     );
-
+    String workingDir = System.getProperty("user.dir");
+    Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
+    Path targetPath = tempDownloadsDir.resolve("PAYMENTS_REPORT1784512824309.pdf");
     // ===================== رسائل المستخدمين =====================
     private final List<HRNotification> messageSamples = List.of(
 
@@ -125,70 +129,10 @@ public class BackgroundServiceSimulator {
                     .sender("أحمد محمد")
                     .senderAvatar("أم")
                     .attachment("عقد_موظف_جديد.pdf",
-                            "/temp_downloads/عقد_موظف.pdf",
+                            targetPath.toString(),
                             "application/pdf", 1_200_000)
-                    .build(),
+                    .build());
 
-            HRNotification.builder()
-                    .category(NotificationCategory.MESSAGE)
-                    .priority(Priority.HIGH)
-                    .title("تقرير الحضور - أسبوع 3")
-                    .message("ترفق تقرير الحضور الأسبوعي للمراجعة والاعتماد...")
-                    .messageBody(
-                            "السلام عليكم،\n\n" +
-                                    "يرجى الاطلاع على تقرير الحضور والانصراف للأسبوع الثالث من يناير.\n\n" +
-                                    "ملاحظة: يوجد 3 موظفين بتأخيرات متكررة تحتاج مراجعة.\n\n" +
-                                    "مع التحية،\nفاطمة سعيد"
-                    )
-                    .sender("فاطمة سعيد")
-                    .senderAvatar("فس")
-                    .attachment("تقرير_حضور_اسبوع3.xlsx",
-                            "/temp_downloads/attendance_week3.xlsx",
-                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            540_000)
-                    .build(),
-
-            HRNotification.builder()
-                    .category(NotificationCategory.MESSAGE)
-                    .priority(Priority.NORMAL)
-                    .title("صور وثائق الموظف")
-                    .message("مرفق صور وثائق الموظف الجديد للأرشفة...")
-                    .messageBody(
-                            "مرحباً،\n\n" +
-                                    "مرفق صور وثائق الموظف الجديد خالد عمر للأرشفة في الملف.\n\n" +
-                                    "الوثائق تشمل: بطاقة الهوية، الشهادة الدراسية، شهادة الخبرة.\n\n" +
-                                    "خالد عمر"
-                    )
-                    .sender("خالد عمر")
-                    .senderAvatar("خع")
-                    .attachment("بطاقة_هوية.jpg",
-                            "/temp_downloads/id_card.jpg",
-                            "image/jpeg", 820_000)
-                    .attachment("شهادة_دراسية.pdf",
-                            "/temp_downloads/certificate.pdf",
-                            "application/pdf", 1_500_000)
-                    .attachment("شهادة_خبرة.pdf",
-                            "/temp_downloads/experience.pdf",
-                            "application/pdf", 980_000)
-                    .build(),
-
-            HRNotification.builder()
-                    .category(NotificationCategory.MESSAGE)
-                    .priority(Priority.LOW)
-                    .title("دعوة اجتماع - مراجعة الأداء")
-                    .message("يسعدنا دعوتكم لاجتماع مراجعة الأداء الربعي...")
-                    .messageBody(
-                            "السلام عليكم ورحمة الله،\n\n" +
-                                    "يسعدنا دعوتكم لاجتماع مراجعة الأداء الربعي Q1 2026.\n\n" +
-                                    "الموعد: الأحد 25 يناير 2026 الساعة 10 صباحاً\n" +
-                                    "المكان: قاعة الاجتماعات الرئيسية\n\n" +
-                                    "يرجى الإبلاغ بالتأكيد أو الاعتذار.\n\n" +
-                                    "منى عبدالرحمن\nمدير الموارد البشرية"
-                    )
-                    .sender("منى عبدالرحمن")
-                    .senderAvatar("مع")
-                    .build()
-    );
 
     // ===================== التشغيل =====================
     public void start() {

@@ -28,7 +28,6 @@ import javafx.stage.Stage;
  * الكل | إشعارات | رسائل | [أنواع النظام...]
  */
 public class HRNotificationPanel extends VBox {
-
     private final Stage owner;
     private final NotificationService service = NotificationService.getInstance();
     private final FilteredList<HRNotification> filteredList;
@@ -38,7 +37,6 @@ public class HRNotificationPanel extends VBox {
         this.owner = owner;
         filteredList = new FilteredList<>(service.getAll(), n -> true);
         build();
-
         setStyle(
                 "-fx-background-color:#FFFFFF;" +
                         "-fx-background-radius:12px;" +
@@ -263,7 +261,7 @@ public class HRNotificationPanel extends VBox {
         ListView<HRNotification> list = new ListView<>();
         list.setItems(filteredList);
         list.setPrefHeight(500);
-        list.setFixedCellSize(96);
+        list.setFixedCellSize(120);
         list.setCellFactory(lv -> new NotificationCell());
         list.setStyle("-fx-background-color:transparent;");
         list.setPlaceholder(buildEmptyState());
@@ -387,13 +385,13 @@ public class HRNotificationPanel extends VBox {
             titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:" +
                     (item.isRead() ? "400" : "700") + ";-fx-text-fill:#1A1A1A;");
             titleLbl.setMaxWidth(280);
-            titleLbl.setMinHeight(16);
+            titleLbl.setMinHeight(20);
 
             Label msgLbl = new Label(item.getMessage());
             msgLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#666666;");
             msgLbl.setMaxWidth(280);
             msgLbl.setWrapText(false);
-            msgLbl.setMinHeight(15);
+            msgLbl.setMinHeight(20);
 
             // الوقت + الإجراءات
             Label timeLbl = new Label(item.getFormattedTime());
@@ -459,7 +457,7 @@ public class HRNotificationPanel extends VBox {
             Label previewLbl = new Label(item.getMessage());
             previewLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;");
             previewLbl.setMaxWidth(280);
-            previewLbl.setMinHeight(14);
+            previewLbl.setMinHeight(20);
 
             // مرفقات + زر فتح
             HBox bottomRow = new HBox(8);
@@ -510,7 +508,7 @@ public class HRNotificationPanel extends VBox {
             HBox root = new HBox(10, dot, icon, texts);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(10, 14, 10, 12));
-            root.setPrefHeight(96);
+            root.setPrefHeight(120);
             root.setStyle(border + "-fx-background-color:" + bg + ";-fx-cursor:hand;");
             root.setOnMouseClicked(e -> service.markAsRead(item));
             return root;
@@ -526,7 +524,7 @@ public class HRNotificationPanel extends VBox {
                         "-fx-font-size:11px;-fx-text-fill:#185FA5;" +
                                 "-fx-background-color:transparent;-fx-cursor:hand;-fx-padding:0;"
                 );
-                btn.setMinHeight(14);
+                btn.setMinHeight(20);
                 btn.setOnAction(e -> {
                     e.consume();
                     service.markAsRead(item);
@@ -558,6 +556,7 @@ public class HRNotificationPanel extends VBox {
         }
 
         private void openMessageDetail(HRNotification item) {
+
             MessageDetailView.show(owner, item);
         }
 

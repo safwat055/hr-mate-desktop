@@ -3,6 +3,7 @@ package com.safwat.hr;
 import com.safwat.hr.service.auth.dto.LoginRequest;
 import com.safwat.hr.service.auth.dto.LoginResponse;
 import com.safwat.hr.service.auth.service.AuthService;
+import com.safwat.hr.ui.util.AppTheme;
 import com.safwat.hr.utils.ApiResponse;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -17,6 +18,7 @@ public class HR_Client extends Application {
 
         FXMLLoader fxmlLoader = new FXMLLoader(HR_Client.class.getResource("/com/safwat/hr/controller/MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
+        AppTheme.apply(scene);
         stage.setTitle("HR_Management");
         stage.setScene(scene);
         stage.show();
