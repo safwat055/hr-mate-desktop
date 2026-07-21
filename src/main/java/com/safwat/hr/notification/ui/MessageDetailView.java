@@ -243,9 +243,7 @@ public class MessageDetailView {
         );
 
         // اسم الملف — لو placeholder اعرض "مرفق"
-        String displayName = (att.getFileName() != null && !att.getFileName().isBlank()
-                && !att.getFileName().startsWith("مرفق "))
-                ? att.getFileName() : att.getFileName();
+        String displayName = att.getFileName();
         Label nameLbl = new Label(displayName);
         nameLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333333;");
         nameLbl.setMaxWidth(160);

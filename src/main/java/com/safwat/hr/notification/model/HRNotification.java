@@ -203,12 +203,12 @@ public class HRNotification {
         private final String downloadToken;
 
         public Attachment(String fileName, String filePath,
-                          String mimeType, long fileSize) {
+                          String mimeType, long fileSize, String downloadToken) {
             this.fileName = fileName;
             this.filePath = filePath;
             this.mimeType = mimeType;
             this.fileSize = fileSize;
-            this.downloadToken = UUID.randomUUID().toString();
+            this.downloadToken = downloadToken;
         }
 
         public String getFileName() {
@@ -315,13 +315,18 @@ public class HRNotification {
         public Builder file(String path) {
             String name = path.contains("/")
                     ? path.substring(path.lastIndexOf('/') + 1) : path;
-            n.attachments.add(new Attachment(name, path, guessMime(path), 0));
+            n.attachments.add(new Attachment(name, path, guessMime(path), 0, null));
             return this;
         }
 
         // مرفق كامل التفاصيل
+        public Builder attachment(String name, String path, String mime, long size, String downloadToken) {
+            n.attachments.add(new Attachment(name, path, mime, size, downloadToken));
+            return this;
+        }
+
         public Builder attachment(String name, String path, String mime, long size) {
-            n.attachments.add(new Attachment(name, path, mime, size));
+            n.attachments.add(new Attachment(name, path, mime, size, null));
             return this;
         }
 

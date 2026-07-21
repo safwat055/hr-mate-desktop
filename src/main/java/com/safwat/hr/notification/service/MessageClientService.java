@@ -123,7 +123,8 @@ public class MessageClientService {
                                 "مرفق " + (i + 1),
                                 "",  // المسار الحقيقي بيتحدد عند التحميل
                                 "application/octet-stream",
-                                0
+                                0,
+                                dto.downloadToken
                         );
                     }
                 }
@@ -239,6 +240,7 @@ public class MessageClientService {
                         "",
                         "application/octet-stream",
                         0
+
                 );
             }
         }
@@ -419,5 +421,6 @@ public class MessageClientService {
         public String preview;
         public int attachmentsCount;   // عدد المرفقات
         public LocalDateTime createdAt;
+        public String downloadToken;
     }
 }
