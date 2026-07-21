@@ -24,37 +24,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-/**
- * =====================================================
- * MessageClientService — خدمة الرسائل على جانب JavaFX
- * =====================================================
- * <p>
- * المسؤوليات:
- * 1. الاتصال بـ WebSocket واستقبال الرسائل الجديدة فوراً
- * 2. تحويل الرسالة الواردة إلى HRNotification وإرسالها للـ EventBus
- * 3. إرسال رسائل جديدة مع مرفقات عبر REST
- * 4. الرد على رسائل
- * 5. تحميل المرفقات
- * <p>
- * الاستخدام:
- * // بعد تسجيل الدخول مباشرة
- * MessageClientService.getInstance().connect();
- * <p>
- * // إرسال رسالة
- * MessageClientService.getInstance().sendMessage(
- * "ahmed", "موضوع", "نص الرسالة",
- * listOfFiles,
- * () -> showSuccess(),
- * err -> showError(err)
- * );
- */
 public class MessageClientService {
 
     private static final MessageClientService INSTANCE = new MessageClientService();
+
     private final NotificationService notifService = NotificationService.getInstance();
+
     private final ObjectMapper mapper = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private ApiClient.WebSocketClient wsClient;
     private boolean connected = false;
 
@@ -65,28 +44,27 @@ public class MessageClientService {
         return INSTANCE;
     }
 
-    // ===================== الاتصال =====================
+    // =====================================================================
+    //  الاتصال بـ WebSocket
+    // =====================================================================
 
     /**
-     * يُستدعى مرة واحدة بعد تسجيل الدخول.
-     * يتصل بـ WebSocket ويستمع للرسائل الواردة.
+     * يُستدعى بعد تسجيل الدخول مباشرة.
+     * يتصل بـ WebSocket ثم يحمّل الرسائل غير المقروءة من الخادم.
      */
     public void connect() {
-        if (connected) {
-            System.out.println("ℹ️ WebSocket متصل بالفعل");
-            return;
-        }
+        if (connected) return;
 
         String token = ApiClient.getAuthToken();
         String username = ApiClient.getUserName();
 
         if (token == null || token.isEmpty()) {
-            System.err.println("❌ لا يوجد token للاتصال");
+            System.err.println("[MessageClientService] لا يوجد token");
             scheduleReconnect();
             return;
         }
 
-        System.out.println("🔗 [WebSocket] محاولة الاتصال للمستخدم: " + username);
+        System.out.println("[MessageClientService] جاري الاتصال للمستخدم: " + username);
 
         wsClient = new ApiClient.WebSocketClient(
                 "",
@@ -99,204 +77,33 @@ public class MessageClientService {
         wsClient.connect()
                 .thenRun(() -> {
                     connected = true;
-                    System.out.println("✅ [WebSocket] متصل بنجاح للمستخدم: " + username);
-
+                    System.out.println("[MessageClientService] متصل بنجاح");
+                    // بعد الاتصال مباشرة: حمّل الرسائل غير المقروءة
+                    loadUnreadMessagesAndNotify();
                 })
                 .exceptionally(e -> {
-                    System.err.println("❌ [WebSocket] فشل الاتصال: " + e.getMessage());
+                    System.err.println("[MessageClientService] فشل الاتصال: " + e.getMessage());
                     scheduleReconnect();
                     return null;
                 });
     }
-// في MessageClientService.java
 
-    /**
-     * تحديث كل الرسائل (مقروء وغير مقروء) من الخادم
-     * ودمجها مع الإشعارات المحلية
-     */
-    public void refreshAllMessages() {
-        CompletableFuture.supplyAsync(() -> {
-            try {
-                // جلب كل الرسائل من الخادم
-                var response = ApiClient.get("/messages/inbox?page=0&size=100", MessageSummaryDTO[].class);
-                if (response.isSuccess() && response.getData() != null) {
-                    return Arrays.asList(response.getData());
-                }
-                return List.<MessageSummaryDTO>of();
-            } catch (Exception e) {
-                System.err.println("❌ فشل جلب الرسائل: " + e.getMessage());
-                return List.<MessageSummaryDTO>of();
-            }
-        }).thenAccept(messages -> {
-            Platform.runLater(() -> {
-                // إزالة جميع الرسائل القديمة من نوع MESSAGE
-                NotificationService.getInstance().getAll().removeIf(HRNotification::isMessage);
-
-                // إضافة الرسائل الجديدة كإشعارات
-                for (MessageSummaryDTO msg : messages) {
-                    HRNotification notification = HRNotification.builder()
-                            .category(NotificationCategory.MESSAGE)
-                            .type(NotificationType.MESSAGE)
-                            .title(msg.getSubject() != null ? msg.getSubject() : "رسالة جديدة")
-                            .message(msg.getPreview() != null ? msg.getPreview() : "")
-                            .sender(msg.getSenderDisplayName() != null ? msg.getSenderDisplayName() : msg.getSenderUsername())
-                            .timestamp(msg.getCreatedAt() != null ? msg.getCreatedAt() : LocalDateTime.now())
-                            .read(msg.isRead()) // مهم: نحافظ على حالة القراءة من الخادم
-                            .action("فتح الرسالة", "messages/" + msg.getId())
-                            .build();
-                    NotificationService.getInstance().send(notification);
-                }
-
-                // تحديث العداد
-                NotificationService.getInstance().updateUnreadCount();
-                System.out.println("✅ تم تحديث الرسائل: " + messages.size() + " رسالة");
-            });
-        });
+    public void disconnect() {
+        if (wsClient != null) wsClient.close();
+        connected = false;
     }
 
-    /**
-     * تحميل الرسائل غير المقروءة من قاعدة البيانات
-     */
-    public CompletableFuture<List<MessageSummaryDTO>> getUnreadMessages() {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                TypeReference<ApiResponse<List<MessageSummaryDTO>>> typeRef =
-                        new TypeReference<>() {
-                        };
+    // =====================================================================
+    //  استقبال رسائل WebSocket الفورية
+    // =====================================================================
 
-                var response = ApiClient.getWithTypeRef("/messages/inbox?page=0&size=100", typeRef);
-
-                System.out.println("📦 === RESPONSE ===");
-                System.out.println("Success: " + response.isSuccess());
-                System.out.println("Message: " + response.getMessage());
-
-                if (response.isSuccess() && response.getData() != null) {
-                    // ✅ هنا response.getData() هي القائمة مباشرة
-                    List<MessageSummaryDTO> allMessages = response.getData().getData();
-
-                    List<MessageSummaryDTO> unread = allMessages.stream()
-                            .filter(msg -> !msg.isRead())
-                            .collect(Collectors.toList());
-
-                    System.out.println("📬 Total messages: " + allMessages.size());
-                    System.out.println("📬 Unread messages: " + unread.size());
-                    return unread;
-                }
-                return List.of();
-            } catch (Exception e) {
-                System.err.println("❌ فشل جلب الرسائل غير المقروءة: " + e.getMessage());
-                e.printStackTrace();
-                return List.of();
-            }
-        });
-    }
-
-    public void testRawResponse() {
-        try {
-            // ✅ استخدم HttpClient مباشرة عشان تشوف الـ Response من غير تحويل
-            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(ApiClient.BASE_URL + "/messages/inbox?page=0&size=100"))
-                    .header("Authorization", "Bearer " + ApiClient.getAuthToken())
-                    .header("Accept", "application/json")
-                    .GET()
-                    .build();
-
-            java.net.http.HttpResponse<String> response = ApiClient.httpClient.send(
-                    request,
-                    java.net.http.HttpResponse.BodyHandlers.ofString()
-            );
-
-            System.out.println("📦 === RAW RESPONSE ===");
-            System.out.println("Status Code: " + response.statusCode());
-            System.out.println("Headers: " + response.headers().map());
-            System.out.println("Body: " + response.body());
-            System.out.println("======================");
-
-        } catch (Exception e) {
-            System.err.println("❌ خطأ: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * جلب إحصائيات الصندوق (عدد الرسائل غير المقروءة)
-     */
-    public CompletableFuture<InboxStatsDTO> getInboxStats() {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                var response = ApiClient.get("/messages/stats", InboxStatsDTO.class);
-                if (response.isSuccess() && response.getData() != null) {
-                    return response.getData();
-                }
-                return null;
-            } catch (Exception e) {
-                System.err.println("❌ فشل جلب الإحصائيات: " + e.getMessage());
-                return null;
-            }
-        });
-    }
-
-    /**
-     * تحميل وعرض جميع الرسائل غير المقروءة
-     */
-    public void loadUnreadMessagesAndNotify() {
-        getInboxStats().thenAccept(stats -> {
-            if (stats != null && stats.getUnreadCount() > 0) {
-                System.out.println("📬 " + stats.getUnreadCount() + " رسائل غير مقروءة للمستخدم: " + ApiClient.getUserName());
-
-                getUnreadMessages().thenAccept(messages -> {
-                    Platform.runLater(() -> {
-                        if (!messages.isEmpty()) {
-                            // عرض كل رسالة كإشعار
-                            for (MessageSummaryDTO msg : messages) {
-                                showMessageNotification(msg);
-                            }
-
-                            // تحديث عداد الجرس
-                            NotificationService.getInstance().updateUnreadCount((int) stats.getUnreadCount());
-                            System.out.println("✅ تم عرض " + messages.size() + " رسائل غير مقروءة");
-                        }
-                    });
-                });
-            } else {
-                System.out.println("📭 لا توجد رسائل غير مقروءة للمستخدم: " + ApiClient.getUserName());
-            }
-        });
-    }
-
-    /**
-     * عرض رسالة كإشعار
-     */
-    private void showMessageNotification(MessageSummaryDTO msg) {
-        // تحويل MessageSummaryDTO إلى HRNotification
-        HRNotification notification = HRNotification.builder()
-                .category(NotificationCategory.MESSAGE)
-                .type(NotificationType.MESSAGE)
-                .priority(Priority.NORMAL)
-                .title(msg.getSubject() != null ? msg.getSubject() : "رسالة جديدة")
-                .message(msg.getPreview() != null ? msg.getPreview() : "")
-                .sender(msg.getSenderDisplayName() != null ? msg.getSenderDisplayName() : msg.getSenderUsername())
-                .timestamp(msg.getCreatedAt() != null ? msg.getCreatedAt() : LocalDateTime.now())
-                .action("فتح الرسالة", "messages/" + msg.getId())
-                .build();
-
-        NotificationService.getInstance().send(notification);
-    }
-
-    public void printStatus() {
-        System.out.println("=== WebSocket Status ===");
-        System.out.println("Connected: " + connected);
-        System.out.println("Token: " + (ApiClient.getAuthToken() != null ? "✅" : "❌"));
-        System.out.println("=========================");
-    }
-
-    // ===================== استقبال رسائل WebSocket =====================
     private void onMessageReceived(String json) {
         try {
             MessageNotificationDTO dto = mapper.readValue(json, MessageNotificationDTO.class);
 
             Platform.runLater(() -> {
-                HRNotification notification = HRNotification.builder()
+                // بناء إشعار مع معلومات المرفقات لو موجودة
+                HRNotification.Builder builder = HRNotification.builder()
                         .category(NotificationCategory.MESSAGE)
                         .type(NotificationType.MESSAGE)
                         .priority(Priority.NORMAL)
@@ -306,10 +113,22 @@ public class MessageClientService {
                                 ? dto.senderDisplayName : dto.senderUsername)
                         .senderAvatar(buildAvatar(dto.senderDisplayName))
                         .timestamp(dto.createdAt != null ? dto.createdAt : LocalDateTime.now())
-                        .action("فتح الرسالة", "messages/" + dto.messageId)
-                        .build();
+                        .action("فتح الرسالة", "messages/" + dto.messageId);
 
-                notifService.send(notification);
+                // لو عنده مرفقات — أضف placeholder عشان يظهر العداد
+                // التفاصيل الحقيقية بتيجي لما المستخدم يفتح الرسالة
+                if (dto.attachmentsCount > 0) {
+                    for (int i = 0; i < dto.attachmentsCount; i++) {
+                        builder.attachment(
+                                "مرفق " + (i + 1),
+                                "",  // المسار الحقيقي بيتحدد عند التحميل
+                                "application/octet-stream",
+                                0
+                        );
+                    }
+                }
+
+                notifService.send(builder.build());
             });
 
         } catch (Exception e) {
@@ -338,16 +157,136 @@ public class MessageClientService {
         }, "ws-reconnect").start();
     }
 
-    // ===================== إرسال رسالة =====================
+    // =====================================================================
+    //  تحميل الرسائل عند تسجيل الدخول
+    // =====================================================================
 
     /**
-     * @param recipientUsername اسم المستخدم المستقبل
-     * @param subject           موضوع الرسالة
-     * @param body              نص الرسالة
-     * @param attachments       قائمة مسارات الملفات (يمكن أن تكون فارغة)
-     * @param onSuccess         يُنفَّذ على JavaFX Thread عند النجاح
-     * @param onError           يُنفَّذ على JavaFX Thread عند الخطأ
+     * يُحمّل الرسائل غير المقروءة من الخادم ويعرضها كإشعارات.
+     * يُستدعى تلقائياً بعد الاتصال بـ WebSocket.
      */
+    public void loadUnreadMessagesAndNotify() {
+        getInboxStats().thenAccept(stats -> {
+            if (stats != null && stats.getUnreadCount() > 0) {
+                System.out.println("[MessageClientService] " + stats.getUnreadCount() + " رسائل غير مقروءة");
+
+                getUnreadMessages().thenAccept(messages -> {
+                    Platform.runLater(() -> {
+                        for (MessageSummaryDTO msg : messages) {
+                            notifService.send(toNotification(msg));
+                        }
+                        notifService.updateUnreadCount((int) stats.getUnreadCount());
+                        System.out.println("[MessageClientService] تم عرض " + messages.size() + " رسائل");
+                    });
+                });
+            }
+        });
+    }
+
+    /**
+     * تحديث كل الرسائل (مقروء + غير مقروء) من الخادم.
+     * يُستدعى من زر التحديث في اللوحة.
+     */
+    public void refreshAllMessages() {
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                var response = ApiClient.get("/messages/inbox?page=0&size=100", MessageSummaryDTO[].class);
+                if (response.isSuccess() && response.getData() != null)
+                    return Arrays.asList(response.getData());
+                return List.<MessageSummaryDTO>of();
+            } catch (Exception e) {
+                System.err.println("[MessageClientService] فشل التحديث: " + e.getMessage());
+                return List.<MessageSummaryDTO>of();
+            }
+        }).thenAccept(messages -> {
+            Platform.runLater(() -> {
+                // أزل الرسائل القديمة وأضف الجديدة
+                notifService.getAll().removeIf(HRNotification::isMessage);
+                messages.forEach(msg -> notifService.send(toNotification(msg)));
+                notifService.updateUnreadCount();
+                System.out.println("[MessageClientService] تم تحديث " + messages.size() + " رسالة");
+            });
+        });
+    }
+
+    // =====================================================================
+    //  تحويل MessageSummaryDTO → HRNotification
+    // =====================================================================
+
+    /**
+     * يحول MessageSummaryDTO إلى HRNotification مع دعم المرفقات.
+     * المرفقات تُمثَّل كـ placeholders — التفاصيل تُحمَّل عند فتح الرسالة.
+     */
+    private HRNotification toNotification(MessageSummaryDTO msg) {
+        HRNotification.Builder builder = HRNotification.builder()
+                .category(NotificationCategory.MESSAGE)
+                .type(NotificationType.MESSAGE)
+                .priority(Priority.NORMAL)
+                .title(msg.getSubject() != null ? msg.getSubject() : "رسالة جديدة")
+                .message(msg.getPreview() != null ? msg.getPreview() : "")
+                .sender(msg.getSenderDisplayName() != null
+                        ? msg.getSenderDisplayName() : msg.getSenderUsername())
+                .senderAvatar(buildAvatar(msg.getSenderDisplayName()))
+                .timestamp(msg.getCreatedAt() != null ? msg.getCreatedAt() : LocalDateTime.now())
+                .read(msg.isRead())
+                .action("فتح الرسالة", "messages/" + msg.getId());
+
+        // إضافة placeholders للمرفقات عشان يظهر العداد في الخلية
+        if (msg.getAttachmentsCount() > 0) {
+            for (int i = 0; i < msg.getAttachmentsCount(); i++) {
+                builder.attachment(
+                        "مرفق " + (i + 1),
+                        "",
+                        "application/octet-stream",
+                        0
+                );
+            }
+        }
+
+        return builder.build();
+    }
+
+    // =====================================================================
+    //  REST API calls
+    // =====================================================================
+
+    public CompletableFuture<InboxStatsDTO> getInboxStats() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var response = ApiClient.get("/messages/stats", InboxStatsDTO.class);
+                if (response.isSuccess() && response.getData() != null)
+                    return response.getData();
+                return null;
+            } catch (Exception e) {
+                System.err.println("[MessageClientService] فشل جلب الإحصائيات: " + e.getMessage());
+                return null;
+            }
+        });
+    }
+
+    public CompletableFuture<List<MessageSummaryDTO>> getUnreadMessages() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TypeReference<ApiResponse<List<MessageSummaryDTO>>> typeRef = new TypeReference<>() {
+                };
+                var response = ApiClient.getWithTypeRef("/messages/inbox?page=0&size=100", typeRef);
+
+                if (response.isSuccess() && response.getData() != null) {
+                    List<MessageSummaryDTO> all = response.getData().getData();
+                    return all.stream().filter(m -> !m.isRead()).collect(Collectors.toList());
+                }
+                return List.of();
+            } catch (Exception e) {
+                System.err.println("[MessageClientService] فشل جلب الرسائل: " + e.getMessage());
+                return List.of();
+            }
+        });
+    }
+
+    // =====================================================================
+    //  إرسال رسالة جديدة
+    // =====================================================================
+
     public void sendMessage(String recipientUsername,
                             String subject,
                             String body,
@@ -357,24 +296,18 @@ public class MessageClientService {
 
         new Thread(() -> {
             try {
-                // دائماً استخدم multipart/form-data
                 Map<String, Object> formData = new java.util.HashMap<>();
-
-                // البيانات كـ Map (سيتم تحويلها إلى JSON في ApiClient.uploadFile)
                 Map<String, String> data = new java.util.HashMap<>();
                 data.put("recipientUsername", recipientUsername);
                 data.put("subject", subject != null ? subject : "");
                 data.put("body", body != null ? body : "");
                 formData.put("data", data);
 
-                // إضافة المرفقات إن وجدت
                 if (attachments != null && !attachments.isEmpty()) {
-                    for (int i = 0; i < attachments.size(); i++) {
-                        formData.put("files", attachments.get(i));
-                    }
+                    for (Path file : attachments)
+                        formData.put("files", file);
                 }
 
-                // دائماً استخدم uploadFile
                 var response = ApiClient.uploadFile("/messages", formData, Object.class);
                 handleResponse(response.isSuccess(), response.getMessage(), onSuccess, onError);
 
@@ -384,8 +317,12 @@ public class MessageClientService {
         }, "send-message").start();
     }
 
-    // ===================== الرد على رسالة =====================
+    // =====================================================================
+    //  الرد على رسالة
+    // =====================================================================
+
     public void replyToMessage(Long parentId,
+                               String subject,
                                String body,
                                List<Path> attachments,
                                Runnable onSuccess,
@@ -393,23 +330,18 @@ public class MessageClientService {
 
         new Thread(() -> {
             try {
-                // دائماً استخدم multipart/form-data
                 Map<String, Object> formData = new java.util.HashMap<>();
-
-                // البيانات
                 Map<String, Object> data = new java.util.HashMap<>();
                 data.put("parentId", parentId);
+                data.put("subject", subject != null ? subject : "");
                 data.put("body", body != null ? body : "");
                 formData.put("data", data);
 
-                // إضافة المرفقات إن وجدت
                 if (attachments != null && !attachments.isEmpty()) {
-                    for (Path file : attachments) {
+                    for (Path file : attachments)
                         formData.put("files", file);
-                    }
                 }
 
-                // دائماً استخدم uploadFile
                 var response = ApiClient.uploadFile("/messages/reply", formData, Object.class);
                 handleResponse(response.isSuccess(), response.getMessage(), onSuccess, onError);
 
@@ -419,22 +351,24 @@ public class MessageClientService {
         }, "reply-message").start();
     }
 
+    // =====================================================================
+    //  تعليم مقروء
+    // =====================================================================
+
     public CompletableFuture<Void> markMessageAsRead(Long messageId) {
         return CompletableFuture.runAsync(() -> {
             try {
-                var response = ApiClient.put("/messages/" + messageId + "/read", null, Void.class);
-                if (response.isSuccess()) {
-                    System.out.println("✅ تم تعليم الرسالة " + messageId + " كمقروءة");
-                } else {
-                    System.err.println("❌ فشل تعليم الرسالة كمقروءة: " + response.getMessage());
-                }
+                ApiClient.put("/messages/" + messageId + "/read", null, Void.class);
             } catch (Exception e) {
-                System.err.println("❌ خطأ في تعليم الرسالة كمقروءة: " + e.getMessage());
+                System.err.println("[MessageClientService] فشل تعليم مقروء: " + e.getMessage());
             }
         });
     }
 
-    // ===================== تحميل مرفق =====================
+    // =====================================================================
+    //  تحميل مرفق
+    // =====================================================================
+
     public void downloadAttachment(String token,
                                    Path targetPath,
                                    Runnable onSuccess,
@@ -451,7 +385,10 @@ public class MessageClientService {
                 });
     }
 
-    // ===================== مساعدات =====================
+    // =====================================================================
+    //  مساعدات
+    // =====================================================================
+
     private void handleResponse(boolean success, String errorMsg,
                                 Runnable onSuccess, Consumer<String> onError) {
         if (success) Platform.runLater(onSuccess);
@@ -465,7 +402,14 @@ public class MessageClientService {
         return "" + parts[0].charAt(0) + parts[1].charAt(0);
     }
 
-    // DTO داخلي لتحليل رسائل WebSocket الواردة
+    public void printStatus() {
+        System.out.println("=== WebSocket Status ===");
+        System.out.println("Connected: " + connected);
+        System.out.println("Token: " + (ApiClient.getAuthToken() != null ? "✅" : "❌"));
+        System.out.println("========================");
+    }
+
+    // DTO داخلي لتحليل رسائل WebSocket
     @JsonIgnoreProperties(ignoreUnknown = true)
     private static class MessageNotificationDTO {
         public Long messageId;
@@ -473,7 +417,7 @@ public class MessageClientService {
         public String senderDisplayName;
         public String subject;
         public String preview;
-        public int attachmentsCount;
+        public int attachmentsCount;   // عدد المرفقات
         public LocalDateTime createdAt;
     }
 }

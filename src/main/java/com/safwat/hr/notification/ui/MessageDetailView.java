@@ -5,11 +5,9 @@ import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.util.FileOpener;
 import io.github.palexdev.materialfx.controls.MFXButton;
-import io.github.palexdev.materialfx.controls.MFXTextField;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -26,36 +24,24 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * =====================================================
  * MessageDetailView — عرض الرسالة الكاملة
  * =====================================================
  * <p>
- * تُفتح عند الضغط على "فتح" في HRNotificationPanel أو HRToast.
- * <p>
- * تدعم:
- * - عرض نص الرسالة الكامل (messageBody)
- * - عرض المرفقات مع تحميل فردي أو جماعي
- * - الرد مع مرفقات
- * - تعليم مقروء تلقائياً عند الفتح
- * <p>
- * الاستخدام:
- * MessageDetailView.show(primaryStage, notification);
+ * التغييرات:
+ * - زر الرد يفتح ComposeMessageDialog مع اسم المرسل والموضوع مسبقاً
+ * - قسم المرفقات يظهر دائماً لو hasAttachments() == true
+ * - تحميل المرفقات عبر token من الخادم مع FileChooser لاختيار مكان الحفظ
  */
 public class MessageDetailView {
 
     private final HRNotification message;
     private final NotificationService notifService = NotificationService.getInstance();
-    private final MessageClientService msgService = MessageClientService.getInstance();
-    // مرفقات الرد المختارة
-    private final List<Path> replyAttachments = new ArrayList<>();
     private Stage stage;
-    private Label replyAttachCountLbl;
+    private Stage ownerStage;
 
     private MessageDetailView(HRNotification message) {
         this.message = message;
@@ -66,6 +52,7 @@ public class MessageDetailView {
     }
 
     private void showDialog(Stage owner) {
+        this.ownerStage = owner;
         stage = new Stage();
         stage.initStyle(StageStyle.UNDECORATED);
         stage.initModality(Modality.APPLICATION_MODAL);
@@ -86,19 +73,25 @@ public class MessageDetailView {
                 buildDivider(),
                 buildMessageBody(),
                 buildAttachmentsSection(),
-                buildReplySection()
+                buildActionBar()
         );
 
-        Scene scene = new Scene(root, 580, 600);  // ✅ ارتفاع أكبر قليلاً
+        Scene scene = new Scene(root, 580, 560);
         scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
 
         if (owner != null) {
             stage.setX(owner.getX() + (owner.getWidth() - 580) / 2);
-            stage.setY(owner.getY() + (owner.getHeight() - 600) / 2);
+            stage.setY(owner.getY() + (owner.getHeight() - 560) / 2);
         }
 
+        // تعليم مقروء محلياً وعلى الخادم
         notifService.markAsRead(message);
+        extractMessageId(message.getActionTarget(), id -> {
+            if (id != null)
+                MessageClientService.getInstance().markMessageAsRead(id);
+        });
+
         stage.show();
         animateIn(root);
     }
@@ -119,10 +112,7 @@ public class MessageDetailView {
         icon.setStyle("-fx-font-size:12px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
 
         Label title = new Label("رسالة");
-        title.setStyle(
-                "-fx-font-size:14px;-fx-font-weight:700;" +
-                        "-fx-text-fill:#1A1A1A;-fx-padding:0 0 0 8;"
-        );
+        title.setStyle("-fx-font-size:14px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;-fx-padding:0 0 0 8;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -131,7 +121,6 @@ public class MessageDetailView {
         styleCloseBtn(closeBtn);
         closeBtn.setOnMouseClicked(e -> stage.close());
 
-        // سحب النافذة
         final double[] drag = new double[2];
         bar.setOnMousePressed(e -> {
             drag[0] = stage.getX() - e.getScreenX();
@@ -152,7 +141,6 @@ public class MessageDetailView {
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(16, 20, 14, 20));
 
-        // صورة رمزية
         Circle avatarCircle = new Circle(24);
         avatarCircle.setFill(Color.web("#0F6E56"));
         Label avatarLbl = new Label(message.getAvatarInitials());
@@ -161,9 +149,7 @@ public class MessageDetailView {
         avatarBox.setMinSize(48, 48);
         avatarBox.setMaxSize(48, 48);
 
-        // تفاصيل المرسل
-        Label senderLbl = new Label(
-                message.getSenderName() != null ? message.getSenderName() : "مجهول");
+        Label senderLbl = new Label(message.getSenderName() != null ? message.getSenderName() : "مجهول");
         senderLbl.setStyle("-fx-font-size:15px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
 
         Label subjectLbl = new Label("الموضوع: " + message.getTitle());
@@ -186,10 +172,7 @@ public class MessageDetailView {
                 : message.getMessage();
 
         Label bodyLbl = new Label(body);
-        bodyLbl.setStyle(
-                "-fx-font-size:13px;-fx-text-fill:#333333;" +
-                        "-fx-line-spacing:4px;"
-        );
+        bodyLbl.setStyle("-fx-font-size:13px;-fx-text-fill:#333333;-fx-line-spacing:4px;");
         bodyLbl.setWrapText(true);
         bodyLbl.setMaxWidth(520);
 
@@ -198,14 +181,20 @@ public class MessageDetailView {
 
         ScrollPane scroll = new ScrollPane(wrapper);
         scroll.setFitToWidth(true);
-        scroll.setPrefHeight(160);        // ✅ ارتفاع مناسب
-        scroll.setMaxHeight(260);         // ✅ حد أقصى للارتفاع
+        scroll.setPrefHeight(180);
+        scroll.setMaxHeight(260);
         scroll.setStyle("-fx-background-color:transparent;-fx-border-color:transparent;");
         VBox.setVgrow(scroll, Priority.SOMETIMES);
         return scroll;
     }
 
     // ===================== قسم المرفقات =====================
+
+    /**
+     * المشكلة الأصلية: المرفقات كانت placeholders بمسارات فارغة.
+     * الحل: نعرض اسم المرفق وزر تحميل يستخدم downloadToken للتحميل من الخادم.
+     * لو downloadToken فارغ نفتح FileOpener مباشرة بالمسار المحلي.
+     */
     private VBox buildAttachmentsSection() {
         if (!message.hasAttachments()) return new VBox(0);
 
@@ -217,24 +206,17 @@ public class MessageDetailView {
                         "-fx-border-width:0.5 0 0.5 0;"
         );
 
-        Label title = new Label(
-                "المرفقات (" + message.getAttachments().size() + ")");
+        Label title = new Label("المرفقات (" + message.getAttachments().size() + ")");
         title.setStyle("-fx-font-size:12px;-fx-font-weight:700;-fx-text-fill:#555555;");
 
         FlowPane flow = new FlowPane(8, 8);
         flow.setPrefWrapLength(520);
-        flow.setHgap(8);
-        flow.setVgap(8);
-        // ✅ اجعل الـ FlowPane يأخذ مساحة كافية
-        flow.setMinHeight(Region.USE_COMPUTED_SIZE);
-        flow.setPrefHeight(Region.USE_COMPUTED_SIZE);
 
         message.getAttachments().forEach(att ->
                 flow.getChildren().add(buildAttachmentCard(att)));
 
         section.getChildren().addAll(title, flow);
 
-        // زر تحميل الكل
         if (message.getAttachments().size() > 1) {
             MFXButton downloadAll = new MFXButton("تحميل الكل");
             downloadAll.setStyle(
@@ -243,15 +225,12 @@ public class MessageDetailView {
                             "-fx-padding:5 14 5 14;-fx-cursor:hand;"
             );
             downloadAll.setOnAction(e ->
-                    message.getAttachments().forEach(this::downloadAndOpen)
-            );
+                    message.getAttachments().forEach(this::downloadAttachment));
             HBox btnRow = new HBox(downloadAll);
-            btnRow.setAlignment(Pos.CENTER);
+            btnRow.setAlignment(Pos.CENTER_LEFT);
             section.getChildren().add(btnRow);
         }
 
-        // ✅ اجعل القسم يأخذ مساحة مرنة
-        VBox.setVgrow(flow, Priority.ALWAYS);
         return section;
     }
 
@@ -262,11 +241,14 @@ public class MessageDetailView {
                         "-fx-background-color:#E6F5F1;-fx-background-radius:4px;" +
                         "-fx-padding:3 6 3 6;"
         );
-        iconLbl.setMinWidth(Region.USE_PREF_SIZE);
 
-        Label nameLbl = new Label(att.getFileName());
+        // اسم الملف — لو placeholder اعرض "مرفق"
+        String displayName = (att.getFileName() != null && !att.getFileName().isBlank()
+                && !att.getFileName().startsWith("مرفق "))
+                ? att.getFileName() : att.getFileName();
+        Label nameLbl = new Label(displayName);
         nameLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333333;");
-        nameLbl.setMaxWidth(150);  // ✅ حد أقصى للاسم
+        nameLbl.setMaxWidth(160);
 
         Label sizeLbl = new Label(att.getFormattedSize());
         sizeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
@@ -276,129 +258,147 @@ public class MessageDetailView {
                 "-fx-background-color:transparent;-fx-text-fill:#185FA5;" +
                         "-fx-font-size:11px;-fx-cursor:hand;-fx-padding:0;"
         );
-        dlBtn.setOnAction(e -> downloadAndOpen(att));
+        dlBtn.setOnAction(e -> downloadAttachment(att));
 
         VBox info = new VBox(2, nameLbl, sizeLbl);
         info.setAlignment(Pos.CENTER_LEFT);
 
         HBox card = new HBox(8, iconLbl, info, dlBtn);
         card.setAlignment(Pos.CENTER_LEFT);
-        card.setPadding(new Insets(6, 10, 6, 10));  // ✅ تقليل الحشو
+        card.setPadding(new Insets(6, 10, 6, 10));
         card.setStyle(
                 "-fx-background-color:#FFFFFF;-fx-background-radius:8px;" +
                         "-fx-border-color:#E0E0E0;-fx-border-width:0.5px;" +
                         "-fx-border-radius:8px;-fx-cursor:hand;"
         );
-        card.setMaxWidth(Region.USE_PREF_SIZE);  // ✅ لا تتمدد
-        card.setPrefWidth(Region.USE_COMPUTED_SIZE);
-
-        card.setOnMouseEntered(e ->
-                card.setStyle(card.getStyle().replace("#FFFFFF", "#F0FAF7")));
-        card.setOnMouseExited(e ->
-                card.setStyle(card.getStyle().replace("#F0FAF7", "#FFFFFF")));
-
+        card.setOnMouseEntered(e -> card.setStyle(card.getStyle().replace("#FFFFFF", "#F0FAF7")));
+        card.setOnMouseExited(e -> card.setStyle(card.getStyle().replace("#F0FAF7", "#FFFFFF")));
         return card;
     }
 
-    // ===================== قسم الرد =====================
-    private HBox buildReplySection() {
-        HBox replyBar = new HBox(8);
-        replyBar.setAlignment(Pos.CENTER_LEFT);
-        replyBar.setPadding(new Insets(10, 16, 12, 16));  // ✅ تقليل الحشو
-        replyBar.setStyle(
+    /**
+     * تحميل مرفق:
+     * - لو عنده downloadToken → حمّل من الخادم عبر API
+     * - لو عنده filePath محلي → افتح مباشرة
+     * - لو placeholder (مسار فارغ) → أظهر رسالة خطأ
+     */
+    private void downloadAttachment(HRNotification.Attachment att) {
+        String token = att.getDownloadToken();
+        String filePath = att.getFilePath();
+
+        // لو المسار محلي موجود — افتح مباشرة
+        if (filePath != null && !filePath.isBlank()) {
+            java.io.File localFile = new java.io.File(filePath);
+            if (localFile.exists()) {
+                FileOpener.open(filePath);
+                return;
+            }
+        }
+
+        // لو token موجود — حمّل من الخادم
+        if (token != null && !token.isBlank()) {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("حفظ المرفق");
+            chooser.setInitialFileName(att.getFileName());
+
+            String userHome = System.getProperty("user.home");
+            java.io.File docsDir = new java.io.File(userHome + "/Documents");
+            if (!docsDir.exists()) docsDir = new java.io.File(userHome);
+            chooser.setInitialDirectory(docsDir);
+
+            java.io.File targetFile = chooser.showSaveDialog(stage);
+            if (targetFile == null) return;
+
+            MessageClientService.getInstance().downloadAttachment(
+                    token,
+                    targetFile.toPath(),
+                    () -> {
+                        // نجاح
+                        showInfo("تم التحميل", "تم حفظ الملف في:\n" + targetFile.getAbsolutePath());
+                        FileOpener.open(targetFile.getAbsolutePath());
+                    },
+                    err -> showError("فشل التحميل", err)
+            );
+            return;
+        }
+
+        // placeholder بدون بيانات حقيقية
+        showError("تعذر التحميل",
+                "لم يتم تحديد رابط التحميل لهذا المرفق.\nأعد فتح الرسالة أو تحقق من الاتصال.");
+    }
+
+    // ===================== شريط الإجراءات (رد + إغلاق) =====================
+
+    /**
+     * زر الرد يفتح ComposeMessageDialog مع:
+     * - اسم المرسل مسبقاً في حقل المستقبل
+     * - "رد: [الموضوع الأصلي]" في حقل الموضوع
+     */
+    private HBox buildActionBar() {
+        HBox bar = new HBox(8);
+        bar.setAlignment(Pos.CENTER_LEFT);
+        bar.setPadding(new Insets(10, 16, 14, 16));
+        bar.setStyle(
                 "-fx-border-color:#EBEBEB transparent transparent transparent;" +
                         "-fx-border-width:0.5 0 0 0;"
         );
 
-        // حقل الرد
-        MFXTextField replyField = new MFXTextField();
-        replyField.setPromptText("اكتب ردك هنا...");
-        replyField.setPrefWidth(Double.MAX_VALUE);
-        replyField.setStyle("-fx-font-size:13px;");
-        HBox.setHgrow(replyField, Priority.ALWAYS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // زر إضافة مرفق
-        MFXButton attachBtn = new MFXButton("[+]");
-        attachBtn.setStyle(
-                "-fx-background-color:#F0F0F0;-fx-text-fill:#555555;" +
-                        "-fx-font-size:13px;-fx-font-weight:700;" +
-                        "-fx-background-radius:8px;-fx-cursor:hand;-fx-padding:6 10 6 10;"
+        MFXButton closeBtn2 = new MFXButton("إغلاق");
+        closeBtn2.setStyle(
+                "-fx-background-color:#F0F0F0;-fx-text-fill:#666666;" +
+                        "-fx-font-size:13px;-fx-background-radius:8px;" +
+                        "-fx-padding:8 18 8 18;-fx-cursor:hand;"
         );
-        attachBtn.setOnAction(e -> pickReplyAttachment());
+        closeBtn2.setOnAction(e -> stage.close());
 
-        // عداد المرفقات المختارة
-        replyAttachCountLbl = new Label();
-        replyAttachCountLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#0F6E56;");
-        replyAttachCountLbl.setVisible(false);
-        replyAttachCountLbl.setManaged(false);
-
-        // زر إرسال
-        MFXButton sendBtn = new MFXButton("إرسال");
-        sendBtn.setStyle(
+        MFXButton replyBtn = new MFXButton("رد ↩");
+        replyBtn.setStyle(
                 "-fx-background-color:#0F6E56;-fx-text-fill:white;" +
                         "-fx-font-size:13px;-fx-font-weight:700;" +
-                        "-fx-background-radius:8px;-fx-cursor:hand;-fx-padding:6 16 6 16;"
+                        "-fx-background-radius:8px;-fx-padding:8 22 8 22;-fx-cursor:hand;"
         );
-        sendBtn.disableProperty().bind(replyField.textProperty().isEmpty());
-        sendBtn.setOnAction(e -> sendReply(replyField, sendBtn));
+        replyBtn.setOnAction(e -> openReplyDialog());
 
-        replyBar.getChildren().addAll(
-                replyField, replyAttachCountLbl, attachBtn, sendBtn);
-        return replyBar;
+        bar.getChildren().addAll(spacer, closeBtn2, replyBtn);
+        return bar;
     }
 
-    private void pickReplyAttachment() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("اختر ملف للإرفاق");
-        java.io.File file = chooser.showOpenDialog(stage);
-        if (file != null) {
-            replyAttachments.add(Paths.get(file.getAbsolutePath()));
-            replyAttachCountLbl.setText("[" + replyAttachments.size() + " مرفق]");
-            replyAttachCountLbl.setVisible(true);
-            replyAttachCountLbl.setManaged(true);
+    /**
+     * يفتح ComposeMessageDialog مع بيانات الرسالة الأصلية مسبقة الملء.
+     */
+    private void openReplyDialog() {
+        stage.close();  // أغلق التفاصيل
+
+        String recipient = message.getSenderName() != null
+                ? message.getSenderName() : "";
+        String subject = "رد: " + (message.getTitle() != null ? message.getTitle() : "");
+        Long parentId = null;
+        String target = message.getActionTarget();
+        if (target != null) {
+            try {
+                parentId = Long.parseLong(target.substring(target.lastIndexOf('/') + 1));
+            } catch (NumberFormatException ignored) {
+            }
         }
-    }
 
-    private void sendReply(MFXTextField replyField, MFXButton sendBtn) {
-        String replyText = replyField.getText().trim();
-        if (replyText.isBlank()) return;
-
-        sendBtn.setText("جاري الإرسال...");
-
-        // استخرج message ID من actionTarget: "messages/123"
-        Long parentId = extractMessageId(message.getActionTarget());
-
-        msgService.replyToMessage(
-                parentId,
-                replyText,
-                new ArrayList<>(replyAttachments),
-                () -> {
-                    // نجاح
-                    replyField.clear();
-                    replyAttachments.clear();
-                    replyAttachCountLbl.setVisible(false);
-                    replyAttachCountLbl.setManaged(false);
-                    sendBtn.setText("إرسال");
-
-                    stage.close();
-                },
-                err -> {
-                    // خطأ
-                    sendBtn.setText("إرسال");
-
-                    showError("فشل الإرسال", err);
-                }
-        );
+        ComposeMessageDialog.showReply(ownerStage, recipient, subject, parentId);
     }
 
     // ===================== مساعدات =====================
-    private Long extractMessageId(String actionTarget) {
-        if (actionTarget == null) return null;
+
+    private void extractMessageId(String actionTarget, Consumer<Long> callback) {
+        if (actionTarget == null) {
+            callback.accept(null);
+            return;
+        }
         try {
-            String[] parts = actionTarget.split("/");
-            return Long.parseLong(parts[parts.length - 1]);
+            callback.accept(Long.parseLong(
+                    actionTarget.substring(actionTarget.lastIndexOf('/') + 1)));
         } catch (NumberFormatException e) {
-            return null;
+            callback.accept(null);
         }
     }
 
@@ -409,28 +409,27 @@ public class MessageDetailView {
     }
 
     private void styleCloseBtn(Label btn) {
-        btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;"
-        );
-        btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#CC3333;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;" +
-                        "-fx-background-color:#FFE8E8;"
-        ));
-        btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;"
-        ));
+        btn.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;");
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-font-size:14px;-fx-text-fill:#CC3333;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;-fx-background-color:#FFE8E8;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;"));
     }
 
     private void showError(String title, String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.initOwner(stage);
-        alert.show();
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.initOwner(stage);
+        a.show();
+    }
+
+    private void showInfo(String title, String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.initOwner(stage);
+        a.show();
     }
 
     private void animateIn(VBox root) {
@@ -441,58 +440,5 @@ public class MessageDetailView {
         TranslateTransition slide = new TranslateTransition(Duration.millis(200), root);
         slide.setToY(0);
         new ParallelTransition(fade, slide).play();
-    }
-
-    /**
-     * تحميل المرفق وحفظه في مكان يختاره المستخدم، ثم فتحه
-     */
-    private void downloadAndOpen(HRNotification.Attachment att) {
-        // اختيار مكان الحفظ
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("حفظ المرفق");
-        chooser.setInitialFileName(att.getFileName());
-
-        // تحديد المجلد الافتراضي (مجلد المستندات)
-        String userHome = System.getProperty("user.home");
-        chooser.setInitialDirectory(new java.io.File(userHome + "/Documents"));
-
-        java.io.File targetFile = chooser.showSaveDialog(stage);
-        if (targetFile == null) return; // المستخدم ألغى
-
-        Path targetPath = targetFile.toPath();
-
-        // بدء التحميل
-        String token = att.getDownloadToken();
-        if (token == null || token.isEmpty()) {
-            showError("خطأ", "لا يوجد رمز تحميل لهذا المرفق");
-            return;
-        }
-
-        // تغيير نص الزر إلى "جاري التحميل..."
-        // يمكننا إضافة تعطيل مؤقت للزر، لكننا سنكتفي بتغيير النص
-        MFXButton dlBtn = new MFXButton("جاري...");
-        dlBtn.setDisable(true);
-
-        msgService.downloadAttachment(
-                token,
-                targetPath,
-                () -> {
-                    // نجاح التحميل
-                    Platform.runLater(() -> {
-                        dlBtn.setText("فتح");
-                        dlBtn.setDisable(false);
-                        dlBtn.setOnAction(e -> FileOpener.open(targetPath.toString()));
-                        showError("تم التحميل", "تم تحميل الملف بنجاح");
-                    });
-                },
-                err -> {
-                    // فشل التحميل
-                    Platform.runLater(() -> {
-                        dlBtn.setText("تحميل");
-                        dlBtn.setDisable(false);
-                        showError("فشل التحميل", err);
-                    });
-                }
-        );
     }
 }

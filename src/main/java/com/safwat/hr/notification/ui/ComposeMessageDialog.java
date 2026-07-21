@@ -28,64 +28,94 @@ import java.util.List;
 
 /**
  * =====================================================
- * ComposeMessageDialog — واجهة إرسال رسالة جديدة
+ * ComposeMessageDialog — واجهة إرسال / رد رسالة
  * =====================================================
  * <p>
- * تدعم:
- * - إدخال اسم المستقبل
- * - إدخال الموضوع
- * - كتابة نص الرسالة
- * - إرفاق ملفات متعددة مع عرضها وحذفها
- * - مؤشر إرسال
+ * وضعان:
+ * 1. رسالة جديدة:  ComposeMessageDialog.show(stage)
+ * 2. رد على رسالة: ComposeMessageDialog.showReply(stage, recipient, subject, parentId)
  * <p>
- * الاستخدام:
- * ComposeMessageDialog.show(primaryStage);
- * // أو مع مستقبل محدد مسبقاً
- * ComposeMessageDialog.show(primaryStage, "ahmed");
+ * في وضع الرد:
+ * - حقل المستقبل والموضوع مملوءان ومقفلان
+ * - الإرسال يذهب لـ replyToMessage() مع parentId
  */
 public class ComposeMessageDialog {
 
     private final MessageClientService msgService = MessageClientService.getInstance();
     private final List<Path> attachments = new ArrayList<>();
+    // وضع الرد
+    private final Long parentId;   // null = رسالة جديدة
+    private final boolean isReply;
     private Stage stage;
     private FlowPane attachmentsPane;
     private Label attachCountLbl;
 
-    private ComposeMessageDialog() {
+    // ===================== Constructors =====================
+    private ComposeMessageDialog(Long parentId) {
+        this.parentId = parentId;
+        this.isReply = parentId != null;
     }
 
+    // ===================== Entry points =====================
+
+    /**
+     * رسالة جديدة فارغة
+     */
     public static void show(Stage owner) {
-        new ComposeMessageDialog().showDialog(owner, null);
+        new ComposeMessageDialog(null).showDialog(owner, null, null);
     }
 
+    /**
+     * رسالة جديدة مع مستقبل محدد
+     */
     public static void show(Stage owner, String recipientUsername) {
-        new ComposeMessageDialog().showDialog(owner, recipientUsername);
+        new ComposeMessageDialog(null).showDialog(owner, recipientUsername, null);
     }
 
-    private void showDialog(Stage owner, String prefilledRecipient) {
+    /**
+     * رد على رسالة — يُستدعى من MessageDetailView.
+     *
+     * @param recipientUsername اسم مرسل الرسالة الأصلية
+     * @param subject           "رد: [الموضوع الأصلي]"
+     * @param parentId          ID الرسالة الأصلية
+     */
+    public static void showReply(Stage owner, String recipientUsername,
+                                 String subject, Long parentId) {
+        new ComposeMessageDialog(parentId).showDialog(owner, recipientUsername, subject);
+    }
+
+    // ===================== بناء الواجهة =====================
+    private void showDialog(Stage owner, String prefilledRecipient, String prefilledSubject) {
         stage = new Stage();
         stage.initStyle(StageStyle.UNDECORATED);
         stage.initModality(Modality.APPLICATION_MODAL);
         if (owner != null) stage.initOwner(owner);
 
-        // ====== حقول الإدخال ======
+        // حقل المستقبل
         MFXTextField recipientField = new MFXTextField();
         recipientField.setPromptText("اسم المستخدم...");
         recipientField.setStyle("-fx-font-size:13px;");
         if (prefilledRecipient != null) recipientField.setText(prefilledRecipient);
+        // في وضع الرد — حقل المستقبل للقراءة فقط
+        if (isReply) recipientField.setEditable(false);
 
+        // حقل الموضوع
         MFXTextField subjectField = new MFXTextField();
         subjectField.setPromptText("موضوع الرسالة...");
         subjectField.setStyle("-fx-font-size:13px;");
+        if (prefilledSubject != null) subjectField.setText(prefilledSubject);
+        // في وضع الرد — الموضوع محدد ويمكن تعديله
+        if (isReply) subjectField.setEditable(true);
 
+        // منطقة النص
         TextArea bodyArea = new TextArea();
-        bodyArea.setPromptText("اكتب رسالتك هنا...");
-        bodyArea.setStyle("-fx-font-size:13px;-fx-font-family:'Segoe UI';");
+        bodyArea.setPromptText(isReply ? "اكتب ردك هنا..." : "اكتب رسالتك هنا...");
+        bodyArea.setStyle("-fx-font-size:13px;");
         bodyArea.setWrapText(true);
         bodyArea.setPrefHeight(180);
         VBox.setVgrow(bodyArea, Priority.ALWAYS);
 
-        // ====== المرفقات ======
+        // المرفقات
         attachmentsPane = new FlowPane(8, 8);
         attachmentsPane.setPrefWrapLength(500);
         attachmentsPane.setVisible(false);
@@ -96,7 +126,7 @@ public class ComposeMessageDialog {
         attachCountLbl.setVisible(false);
         attachCountLbl.setManaged(false);
 
-        // ====== بناء الواجهة ======
+        // بناء الـ root
         VBox root = new VBox(0,
                 buildTitleBar(),
                 buildFormRow("المستقبل", recipientField),
@@ -125,8 +155,9 @@ public class ComposeMessageDialog {
         stage.show();
         animateIn(root);
 
-        // فوكس على الأول حقل فاضي
-        if (prefilledRecipient != null) subjectField.requestFocus();
+        // فوكس على الحقل المناسب
+        if (isReply) bodyArea.requestFocus();
+        else if (prefilledRecipient != null) subjectField.requestFocus();
         else recipientField.requestFocus();
     }
 
@@ -142,14 +173,11 @@ public class ComposeMessageDialog {
                         "-fx-border-width:0 0 0.5 0;"
         );
 
-        Label icon = new Label("[+]");
+        Label icon = new Label(isReply ? "↩" : "[+]");
         icon.setStyle("-fx-font-size:14px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
 
-        Label title = new Label("رسالة جديدة");
-        title.setStyle(
-                "-fx-font-size:14px;-fx-font-weight:700;" +
-                        "-fx-text-fill:#1A1A1A;-fx-padding:0 0 0 8;"
-        );
+        Label title = new Label(isReply ? "رد على رسالة" : "رسالة جديدة");
+        title.setStyle("-fx-font-size:14px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;-fx-padding:0 0 0 8;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -158,7 +186,6 @@ public class ComposeMessageDialog {
         styleCloseBtn(closeBtn);
         closeBtn.setOnMouseClicked(e -> stage.close());
 
-        // سحب النافذة
         final double[] drag = new double[2];
         bar.setOnMousePressed(e -> {
             drag[0] = stage.getX() - e.getScreenX();
@@ -185,10 +212,7 @@ public class ComposeMessageDialog {
         HBox row = new HBox(10, lbl, field);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(8, 16, 6, 16));
-        row.setStyle(
-                "-fx-border-color:transparent transparent #F0F0F0 transparent;" +
-                        "-fx-border-width:0 0 0.5 0;"
-        );
+        row.setStyle("-fx-border-color:transparent transparent #F0F0F0 transparent;-fx-border-width:0 0 0.5 0;");
         return row;
     }
 
@@ -214,12 +238,8 @@ public class ComposeMessageDialog {
         HBox bar = new HBox(8);
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(10, 16, 14, 16));
-        bar.setStyle(
-                "-fx-border-color:#EBEBEB transparent transparent transparent;" +
-                        "-fx-border-width:0.5 0 0 0;"
-        );
+        bar.setStyle("-fx-border-color:#EBEBEB transparent transparent transparent;-fx-border-width:0.5 0 0 0;");
 
-        // زر إرفاق
         MFXButton attachBtn = new MFXButton("[+] إرفاق");
         attachBtn.setStyle(
                 "-fx-background-color:#F0F0F0;-fx-text-fill:#555555;" +
@@ -231,7 +251,6 @@ public class ComposeMessageDialog {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // زر إلغاء
         MFXButton cancelBtn = new MFXButton("إلغاء");
         cancelBtn.setStyle(
                 "-fx-background-color:#F0F0F0;-fx-text-fill:#666666;" +
@@ -240,21 +259,18 @@ public class ComposeMessageDialog {
         );
         cancelBtn.setOnAction(e -> stage.close());
 
-        // زر إرسال
-        MFXButton sendBtn = new MFXButton("إرسال");
+        MFXButton sendBtn = new MFXButton(isReply ? "إرسال الرد" : "إرسال");
         sendBtn.setStyle(
                 "-fx-background-color:#0F6E56;-fx-text-fill:white;" +
                         "-fx-font-size:13px;-fx-font-weight:700;" +
                         "-fx-background-radius:8px;-fx-padding:8 22 8 22;-fx-cursor:hand;"
         );
-        // تفعيل الزر فقط لما الحقول الأساسية مملوءة
         sendBtn.disableProperty().bind(
                 recipientField.textProperty().isEmpty()
                         .or(subjectField.textProperty().isEmpty())
                         .or(bodyArea.textProperty().isEmpty())
         );
-        sendBtn.setOnAction(e ->
-                doSend(recipientField, subjectField, bodyArea, sendBtn));
+        sendBtn.setOnAction(e -> doSend(recipientField, subjectField, bodyArea, sendBtn));
 
         bar.getChildren().addAll(attachBtn, spacer, cancelBtn, sendBtn);
         return bar;
@@ -289,16 +305,14 @@ public class ComposeMessageDialog {
     }
 
     private HBox buildAttachmentChip(String name, Path path) {
-        Label nameLbl = new Label(name.length() > 20
-                ? name.substring(0, 18) + "..." : name);
+        Label nameLbl = new Label(name.length() > 20 ? name.substring(0, 18) + "..." : name);
         nameLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#333333;");
 
         Label removeBtn = new Label(" x");
         removeBtn.setStyle("-fx-font-size:11px;-fx-text-fill:#AA3333;-fx-cursor:hand;");
         removeBtn.setOnMouseClicked(e -> {
             attachments.remove(path);
-            attachmentsPane.getChildren().remove(
-                    removeBtn.getParent());
+            attachmentsPane.getChildren().remove(removeBtn.getParent());
             if (attachments.isEmpty()) {
                 attachCountLbl.setVisible(false);
                 attachCountLbl.setManaged(false);
@@ -314,8 +328,7 @@ public class ComposeMessageDialog {
         chip.setPadding(new Insets(4, 8, 4, 8));
         chip.setStyle(
                 "-fx-background-color:#E6F5F1;-fx-background-radius:12px;" +
-                        "-fx-border-color:#0F6E56;-fx-border-width:0.5px;" +
-                        "-fx-border-radius:12px;"
+                        "-fx-border-color:#0F6E56;-fx-border-width:0.5px;-fx-border-radius:12px;"
         );
         return chip;
     }
@@ -333,46 +346,46 @@ public class ComposeMessageDialog {
         if (recipient.isBlank() || subject.isBlank() || body.isBlank()) return;
 
         sendBtn.setText("جاري الإرسال...");
+        sendBtn.setDisable(true);
 
-        msgService.sendMessage(
-                recipient, subject, body,
-                new ArrayList<>(attachments),
-                () -> {
-                    // نجاح — أغلق النافذة
-                    stage.close();
-                },
-                err -> {
-                   
-                    sendBtn.setText("إرسال");
-                    showError("فشل الإرسال", err);
-                }
-        );
+        Runnable onSuccess = () -> stage.close();
+        java.util.function.Consumer<String> onError = err -> {
+            sendBtn.setText(isReply ? "إرسال الرد" : "إرسال");
+            sendBtn.setDisable(false);
+            showError("فشل الإرسال", err);
+        };
+
+        if (isReply && parentId != null) {
+            // وضع الرد
+            msgService.replyToMessage(
+                    parentId, subject, body,
+                    new ArrayList<>(attachments),
+                    onSuccess, onError
+            );
+        } else {
+            // رسالة جديدة
+            msgService.sendMessage(
+                    recipient, subject, body,
+                    new ArrayList<>(attachments),
+                    onSuccess, onError
+            );
+        }
     }
 
     // ===================== مساعدات =====================
     private void styleCloseBtn(Label btn) {
-        btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;"
-        );
-        btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#CC3333;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;" +
-                        "-fx-background-color:#FFE8E8;"
-        ));
-        btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;" +
-                        "-fx-padding:4 8 4 8;-fx-background-radius:6px;"
-        ));
+        btn.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;");
+        btn.setOnMouseEntered(e -> btn.setStyle("-fx-font-size:14px;-fx-text-fill:#CC3333;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;-fx-background-color:#FFE8E8;"));
+        btn.setOnMouseExited(e -> btn.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;-fx-cursor:hand;-fx-padding:4 8 4 8;-fx-background-radius:6px;"));
     }
 
     private void showError(String title, String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.initOwner(stage);
-        alert.show();
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.initOwner(stage);
+        a.show();
     }
 
     private void animateIn(VBox root) {
