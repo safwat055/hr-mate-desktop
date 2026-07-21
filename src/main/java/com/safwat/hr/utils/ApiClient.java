@@ -40,17 +40,17 @@ import java.util.function.Consumer;
  */
 public class ApiClient {
 
+    // ── Jackson ObjectMapper (مكان Gson) ─────────────────────────────
+    public static final ObjectMapper mapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())                        // دعم Java 8 Date/Time
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)    // ISO-8601 بدل epoch
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // تجاهل حقول غير معروفة
     private static final Duration TIMEOUT = Duration.ofSeconds(30);
     public static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(TIMEOUT)
             .build();
-    // ── Jackson ObjectMapper (مكان Gson) ─────────────────────────────
-    private static final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())                        // دعم Java 8 Date/Time
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)    // ISO-8601 بدل epoch
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // تجاهل حقول غير معروفة
     public static String url = AppConfig.getString("connection", "url", "http://");
     public static String url2 = AppConfig.getString("connection", "url2", "ws://");
     public static String masterPC = AppConfig.getString("connection", "masterPC", "localhost");
@@ -700,6 +700,14 @@ public class ApiClient {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    public static String BASE_URL2() {
+        return BASE_URL2;
+    }
+
+    public static String getBaseUrl() {
+        return BASE_URL;
     }
 
 

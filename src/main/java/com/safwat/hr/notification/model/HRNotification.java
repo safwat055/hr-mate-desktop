@@ -6,32 +6,13 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * =====================================================
- * HRNotification — نموذج بيانات الإشعار
+ * HRNotification — نموذج بيانات الإشعار — النسخة المعدّلة
  * =====================================================
- * <p>
- * يمثل نوعين:
- * - SYSTEM  : إشعارات تلقائية من خدمات النظام (رواتب، إجازات...)
- * - MESSAGE : رسائل بين المستخدمين مع مرفقات
- * <p>
- * طريقة الإنشاء (Builder Pattern):
- * <p>
- * HRNotification n = HRNotification.builder()
- * .category(NotificationCategory.MESSAGE)
- * .type(NotificationType.MESSAGE)
- * .priority(Priority.NORMAL)
- * .title("موضوع الرسالة")
- * .message("معاينة قصيرة...")
- * .messageBody("النص الكامل للرسالة...")
- * .sender("أحمد محمد")
- * .senderAvatar("أم")
- * .attachment("ملف.pdf", "/path/to/file.pdf", "application/pdf", 1024000)
- * .build();
  */
 public class HRNotification {
 
@@ -47,7 +28,8 @@ public class HRNotification {
     private final ObjectProperty<LocalDateTime> timestamp = new SimpleObjectProperty<>(LocalDateTime.now());
     private final StringProperty actionLabel = new SimpleStringProperty();
     private final StringProperty actionTarget = new SimpleStringProperty();
-    private final StringProperty senderName = new SimpleStringProperty();
+    private final StringProperty senderName = new SimpleStringProperty();      // Display Name
+    private final StringProperty senderUsername = new SimpleStringProperty();  // ✅ جديد — Username
     private final StringProperty senderAvatar = new SimpleStringProperty();
     private final List<Attachment> attachments = new ArrayList<>();
 
@@ -57,6 +39,10 @@ public class HRNotification {
     // ===================== Builder =====================
     public static Builder builder() {
         return new Builder();
+    }
+
+    public List<Attachment> getAttachments() {
+        return attachments;
     }
 
     // ===================== Getters =====================
@@ -108,13 +94,14 @@ public class HRNotification {
         return senderName.get();
     }
 
+    public String getSenderUsername() {
+        return senderUsername.get();
+    }  // ✅ جديد
+
     public String getSenderAvatar() {
         return senderAvatar.get();
     }
 
-    public List<Attachment> getAttachments() {
-        return Collections.unmodifiableList(attachments);
-    }
 
     public boolean hasAttachments() {
         return !attachments.isEmpty();
@@ -164,13 +151,9 @@ public class HRNotification {
         return "" + parts[0].charAt(0) + parts[1].charAt(0);
     }
 
-    // ===================== التصنيف الرئيسي =====================
-    public enum NotificationCategory {
-        SYSTEM,   // إشعارات تلقائية من خدمات النظام
-        MESSAGE   // رسائل من مستخدمين
-    }
+    // ===================== Enums =====================
+    public enum NotificationCategory {SYSTEM, MESSAGE}
 
-    // ===================== نوع الإشعار =====================
     public enum NotificationType {
         EMPLOYEE("موظفون", "#185FA5", "#E6F1FB"),
         SALARY("رواتب", "#3B6D11", "#EAF3DE"),
@@ -180,9 +163,7 @@ public class HRNotification {
         SYSTEM("النظام", "#5F5E5A", "#F1EFE8"),
         MESSAGE("رسالة", "#0F6E56", "#E6F5F1");
 
-        public final String label;
-        public final String color;
-        public final String bgColor;
+        public final String label, color, bgColor;
 
         NotificationType(String label, String color, String bgColor) {
             this.label = label;
@@ -191,10 +172,9 @@ public class HRNotification {
         }
     }
 
-    // ===================== مستوى الأهمية =====================
     public enum Priority {LOW, NORMAL, HIGH, URGENT}
 
-    // ===================== المرفق =====================
+    // ===================== Attachment =====================
     public static class Attachment {
         private final String fileName;
         private final String filePath;
@@ -210,6 +190,7 @@ public class HRNotification {
             this.fileSize = fileSize;
             this.downloadToken = downloadToken;
         }
+
 
         public String getFileName() {
             return fileName;
@@ -242,8 +223,7 @@ public class HRNotification {
             if (mimeType == null) return "[FILE]";
             return switch (mimeType) {
                 case "application/pdf" -> "[PDF]";
-                case "image/jpeg",
-                     "image/png" -> "[IMG]";
+                case "image/jpeg", "image/png" -> "[IMG]";
                 case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                      "application/vnd.ms-excel" -> "[XLS]";
                 case "application/zip" -> "[ZIP]";
@@ -252,6 +232,7 @@ public class HRNotification {
         }
     }
 
+    // ===================== Builder =====================
     public static class Builder {
         private final HRNotification n = new HRNotification();
 
@@ -300,6 +281,12 @@ public class HRNotification {
             return this;
         }
 
+        // ✅ جديد
+        public Builder senderUsername(String username) {
+            n.senderUsername.set(username);
+            return this;
+        }
+
         public Builder senderAvatar(String avatar) {
             n.senderAvatar.set(avatar);
             return this;
@@ -311,7 +298,6 @@ public class HRNotification {
             return this;
         }
 
-        // مرفق واحد بسيط (مسار فقط)
         public Builder file(String path) {
             String name = path.contains("/")
                     ? path.substring(path.lastIndexOf('/') + 1) : path;
@@ -319,7 +305,6 @@ public class HRNotification {
             return this;
         }
 
-        // مرفق كامل التفاصيل
         public Builder attachment(String name, String path, String mime, long size, String downloadToken) {
             n.attachments.add(new Attachment(name, path, mime, size, downloadToken));
             return this;
@@ -331,14 +316,10 @@ public class HRNotification {
         }
 
         public HRNotification build() {
-            // لو category رسالة — type يكون MESSAGE تلقائياً
-            if (n.category.get() == NotificationCategory.MESSAGE
-                    && n.type.get() == null) {
+            if (n.category.get() == NotificationCategory.MESSAGE && n.type.get() == null) {
                 n.type.set(NotificationType.MESSAGE);
             }
-            // لو type نظام — category يكون SYSTEM تلقائياً
-            if (n.category.get() == NotificationCategory.SYSTEM
-                    && n.type.get() == null) {
+            if (n.category.get() == NotificationCategory.SYSTEM && n.type.get() == null) {
                 n.type.set(NotificationType.SYSTEM);
             }
             return n;
@@ -353,7 +334,5 @@ public class HRNotification {
             if (path.endsWith(".zip")) return "application/zip";
             return "application/octet-stream";
         }
-
-
     }
 }

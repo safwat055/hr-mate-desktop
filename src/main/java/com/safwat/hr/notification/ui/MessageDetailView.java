@@ -1,13 +1,17 @@
 package com.safwat.hr.notification.ui;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.model.HRNotification.Attachment;
 import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.util.FileOpener;
+import com.safwat.hr.utils.ApiClient;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -24,24 +28,22 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * =====================================================
- * MessageDetailView — عرض الرسالة الكاملة
+ * MessageDetailView — عرض الرسالة الكاملة — النسخة النهائية
  * =====================================================
- * <p>
- * التغييرات:
- * - زر الرد يفتح ComposeMessageDialog مع اسم المرسل والموضوع مسبقاً
- * - قسم المرفقات يظهر دائماً لو hasAttachments() == true
- * - تحميل المرفقات عبر token من الخادم مع FileChooser لاختيار مكان الحفظ
  */
 public class MessageDetailView {
 
     private final HRNotification message;
     private final NotificationService notifService = NotificationService.getInstance();
+    private final ObjectMapper mapper = new ObjectMapper();
     private Stage stage;
     private Stage ownerStage;
+    private String detailedBody = null;
 
     private MessageDetailView(HRNotification message) {
         this.message = message;
@@ -53,10 +55,112 @@ public class MessageDetailView {
 
     private void showDialog(Stage owner) {
         this.ownerStage = owner;
+
+        Long messageId = extractMessageId(message.getActionTarget());
+        if (messageId != null) {
+            // ✅ علّم مقروء
+            notifService.markAsRead(message);
+            // ✅ جيب التفاصيل
+            fetchMessageDetails(messageId);
+        } else {
+            buildAndShowUI();
+        }
+    }
+
+    // ✅ جديد — يجيب التفاصيل من الخادم
+    private void fetchMessageDetails(Long messageId) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                String rawJson = fetchRawJson(messageId);
+                System.out.println("[FETCH] Raw: " + rawJson);
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> root = mapper.readValue(rawJson, Map.class);
+                Object dataObj = root.get("data");
+
+                if (dataObj instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> data = (Map<String, Object>) dataObj;
+
+                    Platform.runLater(() -> {
+                        updateFromMap(data);
+                        buildAndShowUI();
+                    });
+                } else {
+                    Platform.runLater(this::buildAndShowUI);
+                }
+            } catch (Exception e) {
+                System.err.println("[FETCH] Error: " + e.getMessage());
+                Platform.runLater(this::buildAndShowUI);
+            }
+        });
+    }
+
+    // ✅ جديد — يجيب JSON خام
+    private String fetchRawJson(Long messageId) throws Exception {
+        String base = ApiClient.BASE_URL.replaceAll("/+$", "");
+        String url = base + "/messages/" + messageId;
+
+        System.out.println("[FETCH] URL: " + url);
+
+        java.net.URL u = new java.net.URL(url);
+        java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
+        c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
+        c.setRequestMethod("GET");
+
+        java.io.BufferedReader r = new java.io.BufferedReader(
+                new java.io.InputStreamReader(c.getInputStream()));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = r.readLine()) != null) sb.append(line);
+        r.close();
+
+        return sb.toString();
+    }
+
+    // ✅ جديد — يحدّث الرسالة من Map
+    @SuppressWarnings("unchecked")
+    private void updateFromMap(Map<String, Object> data) {
+        System.out.println("[UPDATE] Updating from map...");
+
+        // Body
+        String body = (String) data.get("body");
+        if (body != null && !body.isBlank()) {
+            this.detailedBody = body;
+            System.out.println("[UPDATE] Body updated");
+        }
+
+        // Attachments
+        Object atts = data.get("attachments");
+        if (atts instanceof java.util.List) {
+            System.out.println("[UPDATE] Clearing old attachments: " + message.getAttachments().size());
+            message.getAttachments().clear();
+
+            for (Object o : (java.util.List<?>) atts) {
+                if (o instanceof Map) {
+                    Map<String, Object> m = (Map<String, Object>) o;
+                    String name = (String) m.get("fileName");
+                    String token = (String) m.get("downloadToken");
+                    String mime = (String) m.get("mimeType");
+                    Object size = m.get("fileSize");
+                    long sz = size != null ? ((Number) size).longValue() : 0;
+
+                    System.out.println("[UPDATE] Adding attachment: " + name + " | token=" + token);
+
+                    message.getAttachments().add(new Attachment(name, "", mime, sz, token));
+                }
+            }
+
+            System.out.println("[UPDATE] Total attachments now: " + message.getAttachments().size());
+        }
+    }
+
+    // ===================== بناء UI =====================
+    private void buildAndShowUI() {
         stage = new Stage();
         stage.initStyle(StageStyle.UNDECORATED);
         stage.initModality(Modality.APPLICATION_MODAL);
-        if (owner != null) stage.initOwner(owner);
+        if (ownerStage != null) stage.initOwner(ownerStage);
 
         VBox root = new VBox(0);
         root.setStyle(
@@ -80,17 +184,10 @@ public class MessageDetailView {
         scene.setFill(Color.TRANSPARENT);
         stage.setScene(scene);
 
-        if (owner != null) {
-            stage.setX(owner.getX() + (owner.getWidth() - 580) / 2);
-            stage.setY(owner.getY() + (owner.getHeight() - 560) / 2);
+        if (ownerStage != null) {
+            stage.setX(ownerStage.getX() + (ownerStage.getWidth() - 580) / 2);
+            stage.setY(ownerStage.getY() + (ownerStage.getHeight() - 560) / 2);
         }
-
-        // تعليم مقروء محلياً وعلى الخادم
-        notifService.markAsRead(message);
-        extractMessageId(message.getActionTarget(), id -> {
-            if (id != null)
-                MessageClientService.getInstance().markMessageAsRead(id);
-        });
 
         stage.show();
         animateIn(root);
@@ -167,9 +264,11 @@ public class MessageDetailView {
 
     // ===================== نص الرسالة =====================
     private ScrollPane buildMessageBody() {
-        String body = (message.getMessageBody() != null && !message.getMessageBody().isBlank())
-                ? message.getMessageBody()
-                : message.getMessage();
+        String body = (detailedBody != null && !detailedBody.isBlank())
+                ? detailedBody
+                : (message.getMessageBody() != null && !message.getMessageBody().isBlank())
+                  ? message.getMessageBody()
+                  : message.getMessage();
 
         Label bodyLbl = new Label(body);
         bodyLbl.setStyle("-fx-font-size:13px;-fx-text-fill:#333333;-fx-line-spacing:4px;");
@@ -189,12 +288,6 @@ public class MessageDetailView {
     }
 
     // ===================== قسم المرفقات =====================
-
-    /**
-     * المشكلة الأصلية: المرفقات كانت placeholders بمسارات فارغة.
-     * الحل: نعرض اسم المرفق وزر تحميل يستخدم downloadToken للتحميل من الخادم.
-     * لو downloadToken فارغ نفتح FileOpener مباشرة بالمسار المحلي.
-     */
     private VBox buildAttachmentsSection() {
         if (!message.hasAttachments()) return new VBox(0);
 
@@ -234,7 +327,7 @@ public class MessageDetailView {
         return section;
     }
 
-    private HBox buildAttachmentCard(HRNotification.Attachment att) {
+    private HBox buildAttachmentCard(Attachment att) {
         Label iconLbl = new Label(att.getIcon());
         iconLbl.setStyle(
                 "-fx-font-size:10px;-fx-font-weight:700;-fx-text-fill:#0F6E56;" +
@@ -242,7 +335,6 @@ public class MessageDetailView {
                         "-fx-padding:3 6 3 6;"
         );
 
-        // اسم الملف — لو placeholder اعرض "مرفق"
         String displayName = att.getFileName();
         Label nameLbl = new Label(displayName);
         nameLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#333333;");
@@ -274,27 +366,19 @@ public class MessageDetailView {
         return card;
     }
 
-    /**
-     * تحميل مرفق:
-     * - لو عنده downloadToken → حمّل من الخادم عبر API
-     * - لو عنده filePath محلي → افتح مباشرة
-     * - لو placeholder (مسار فارغ) → أظهر رسالة خطأ
-     */
-    private void downloadAttachment(HRNotification.Attachment att) {
+    // ===================== تحميل مرفق =====================
+    private void downloadAttachment(Attachment att) {
+        System.out.println("[DOWNLOAD] محاولة تحميل: " + att.getFileName());
+        System.out.println("[DOWNLOAD] Token: " + att.getDownloadToken());
+        System.out.println("[DOWNLOAD] FilePath: " + att.getFilePath());
+
         String token = att.getDownloadToken();
         String filePath = att.getFilePath();
 
-        // لو المسار محلي موجود — افتح مباشرة
-        if (filePath != null && !filePath.isBlank()) {
-            java.io.File localFile = new java.io.File(filePath);
-            if (localFile.exists()) {
-                FileOpener.open(filePath);
-                return;
-            }
-        }
-
-        // لو token موجود — حمّل من الخادم
+        // ✅ أولوية: token من الخادم
         if (token != null && !token.isBlank()) {
+            System.out.println("[DOWNLOAD] Token موجود — هنحمّل من الخادم");
+
             FileChooser chooser = new FileChooser();
             chooser.setTitle("حفظ المرفق");
             chooser.setInitialFileName(att.getFileName());
@@ -311,8 +395,7 @@ public class MessageDetailView {
                     token,
                     targetFile.toPath(),
                     () -> {
-                        // نجاح
-                        showInfo("تم التحميل", "تم حفظ الملف في:\n" + targetFile.getAbsolutePath());
+                        showInfo("تم التحميل", "تم حفظ الملف في:\\n" + targetFile.getAbsolutePath());
                         FileOpener.open(targetFile.getAbsolutePath());
                     },
                     err -> showError("فشل التحميل", err)
@@ -320,18 +403,21 @@ public class MessageDetailView {
             return;
         }
 
-        // placeholder بدون بيانات حقيقية
+        // تاني أولوية: مسار محلي
+        if (filePath != null && !filePath.isBlank()) {
+            java.io.File localFile = new java.io.File(filePath);
+            if (localFile.exists()) {
+                FileOpener.open(filePath);
+                return;
+            }
+        }
+
+        // ❌ مفيش لا token ولا مسار
         showError("تعذر التحميل",
-                "لم يتم تحديد رابط التحميل لهذا المرفق.\nأعد فتح الرسالة أو تحقق من الاتصال.");
+                "لم يتم تحديد رابط التحميل لهذا المرفق.\\nأعد فتح الرسالة أو تحقق من الاتصال.");
     }
 
-    // ===================== شريط الإجراءات (رد + إغلاق) =====================
-
-    /**
-     * زر الرد يفتح ComposeMessageDialog مع:
-     * - اسم المرسل مسبقاً في حقل المستقبل
-     * - "رد: [الموضوع الأصلي]" في حقل الموضوع
-     */
+    // ===================== شريط الإجراءات =====================
     private HBox buildActionBar() {
         HBox bar = new HBox(8);
         bar.setAlignment(Pos.CENTER_LEFT);
@@ -364,39 +450,25 @@ public class MessageDetailView {
         return bar;
     }
 
-    /**
-     * يفتح ComposeMessageDialog مع بيانات الرسالة الأصلية مسبقة الملء.
-     */
+    // ✅ معدّل — الرد بيستخدم senderUsername
     private void openReplyDialog() {
-        stage.close();  // أغلق التفاصيل
+        stage.close();
 
-        String recipient = message.getSenderName() != null
-                ? message.getSenderName() : "";
+        String recipient = message.getSenderUsername() != null
+                ? message.getSenderUsername() : "";
         String subject = "رد: " + (message.getTitle() != null ? message.getTitle() : "");
-        Long parentId = null;
-        String target = message.getActionTarget();
-        if (target != null) {
-            try {
-                parentId = Long.parseLong(target.substring(target.lastIndexOf('/') + 1));
-            } catch (NumberFormatException ignored) {
-            }
-        }
+        Long parentId = extractMessageId(message.getActionTarget());
 
         ComposeMessageDialog.showReply(ownerStage, recipient, subject, parentId);
     }
 
     // ===================== مساعدات =====================
-
-    private void extractMessageId(String actionTarget, Consumer<Long> callback) {
-        if (actionTarget == null) {
-            callback.accept(null);
-            return;
-        }
+    private Long extractMessageId(String actionTarget) {
+        if (actionTarget == null || !actionTarget.startsWith("messages/")) return null;
         try {
-            callback.accept(Long.parseLong(
-                    actionTarget.substring(actionTarget.lastIndexOf('/') + 1)));
+            return Long.parseLong(actionTarget.substring(9));
         } catch (NumberFormatException e) {
-            callback.accept(null);
+            return null;
         }
     }
 

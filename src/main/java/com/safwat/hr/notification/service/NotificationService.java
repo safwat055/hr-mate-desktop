@@ -12,15 +12,8 @@ import java.util.stream.Collectors;
 
 /**
  * =====================================================
- * NotificationService — الخدمة المركزية للإشعارات
+ * NotificationService — الخدمة المركزية للإشعارات — معدّل
  * =====================================================
- * <p>
- * - تخزن كل الإشعارات في ObservableList (مرتبطة بالواجهة)
- * - تحسب عداد الغير مقروءة تلقائياً
- * - تستقبل من HREventBus وتضيف للقائمة
- * <p>
- * Singleton — استخدمها هكذا:
- * NotificationService.getInstance().send(notification);
  */
 public class NotificationService {
 
@@ -31,7 +24,6 @@ public class NotificationService {
     private final IntegerProperty unreadCount = new SimpleIntegerProperty(0);
 
     private NotificationService() {
-        // الاشتراك في EventBus لاستقبال كل الأحداث
         HREventBus.getInstance().subscribeAll(this::receive);
     }
 
@@ -41,36 +33,31 @@ public class NotificationService {
 
     // ===================== الاستقبال من EventBus =====================
     private void receive(HRNotification n) {
-        notifications.add(0, n);  // الأحدث أولاً
+        notifications.add(0, n);
         updateUnreadCount();
 
-        // تنظيف القديم
         if (notifications.size() > MAX_NOTIFICATIONS)
             notifications.remove(MAX_NOTIFICATIONS, notifications.size());
     }
 
     // ===================== الإرسال =====================
-
-    /**
-     * الطريقة الرئيسية لإرسال إشعار من أي مكان في التطبيق.
-     * آمنة من أي Thread.
-     */
     public void send(HRNotification notification) {
         HREventBus.getInstance().publish(notification);
     }
 
-    // ===================== العمليات =====================
+    // ===================== تعليم مقروء — معدّل =====================
     public void markAsRead(HRNotification notification) {
         if (!notification.isRead()) {
             notification.markAsRead();
-            // ✅ إذا كانت رسالة، أرسل طلباً إلى الخادم
+
+            // ✅ بس لو الرسالة ولسه متمسحش الـ actionTarget
             if (notification.isMessage() && notification.getActionTarget() != null) {
                 String target = notification.getActionTarget();
                 if (target.startsWith("messages/")) {
                     try {
-                        // استخراج المعرف الرقمي من "messages/123"
                         String idStr = target.substring(9);
                         Long id = Long.parseLong(idStr);
+                        // ✅ أرسل للخادم — بس مرة واحدة
                         MessageClientService.getInstance().markMessageAsRead(id);
                     } catch (NumberFormatException e) {
                         System.err.println("⚠️ معرف رسالة غير صالح: " + target);
@@ -84,6 +71,8 @@ public class NotificationService {
 
     public void markAllAsRead() {
         notifications.forEach(HRNotification::markAsRead);
+        // ✅ أرسل للخادم — mark all
+        // (اختياري — لو الخادم بيدعمها)
         unreadCount.set(0);
     }
 
@@ -135,7 +124,6 @@ public class NotificationService {
     }
 
     public void updateUnreadCount(int a) {
-
-        unreadCount.set((int) a);
+        unreadCount.set(a);
     }
 }

@@ -2,18 +2,14 @@ package com.safwat.hr.notification.util;
 
 import javafx.scene.control.Alert;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
 /**
  * =====================================================
- *  FileOpener — فتح الملفات والروابط الداخلية
+ * FileOpener — فتح الملفات والروابط الداخلية — معدّل
  * =====================================================
- *
- *  الاستخدام:
- *    FileOpener.open("/reports/salary.pdf");       // ملف
- *    FileOpener.open("employee/profile/123");      // رابط داخلي
  */
 public class FileOpener {
 
@@ -21,31 +17,32 @@ public class FileOpener {
         if (target == null || target.isBlank()) return;
 
         if (isFilePath(target)) openFile(target);
-        else                    navigateTo(target);
+        else navigateTo(target);
     }
 
+    // ✅ معدّل — استثنِ الـ API routes
     private static boolean isFilePath(String target) {
+        if (target == null || target.isBlank()) return false;
+
+        // ✅ استثنِ routes الـ API
+        if (target.startsWith("/api/") || target.startsWith("/messages/"))
+            return false;
+
         return target.startsWith("/")
-            || target.startsWith("./")
-            || target.contains(":\\")   // Windows path
-            || target.endsWith(".pdf")
-            || target.endsWith(".xlsx")
-            || target.endsWith(".xls")
-            || target.endsWith(".zip")
-            || target.endsWith(".jpg")
-            || target.endsWith(".png");
+                || target.startsWith("./")
+                || target.contains(":\\")
+                || target.matches(".*\\.(pdf|xlsx|xls|zip|jpg|jpeg|png|doc|docx)$");
     }
 
     private static void openFile(String path) {
         File file = new File(path);
 
-        // لو مسار نسبي — ابحث من مجلد التشغيل
         if (!file.isAbsolute())
             file = new File(System.getProperty("user.dir"), path);
 
         if (!file.exists()) {
             showError("الملف غير موجود",
-                "المسار: " + file.getAbsolutePath() + "\nتأكد من وجود الملف.");
+                    "المسار: " + file.getAbsolutePath() + "\nتأكد من وجود الملف.");
             return;
         }
 
@@ -56,17 +53,18 @@ public class FileOpener {
 
         final File finalFile = file;
         new Thread(() -> {
-            try { Desktop.getDesktop().open(finalFile); }
-            catch (IOException e) {
+            try {
+                Desktop.getDesktop().open(finalFile);
+            } catch (IOException e) {
                 javafx.application.Platform.runLater(() ->
-                    showError("فشل فتح الملف", e.getMessage()));
+                        showError("فشل فتح الملف", e.getMessage()));
             }
         }, "file-opener").start();
     }
 
     private static void navigateTo(String route) {
-        // في التطبيق الحقيقي: AppRouter.getInstance().navigate(route)
         System.out.println("[FileOpener] التنقل إلى: " + route);
+        // TODO: AppRouter.getInstance().navigate(route)
     }
 
     private static void showError(String title, String msg) {

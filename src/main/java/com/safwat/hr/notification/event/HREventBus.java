@@ -10,60 +10,47 @@ import java.util.function.Consumer;
 
 /**
  * =====================================================
- *  HREventBus — حافلة الأحداث المركزية
+ * HREventBus — حافلة الأحداث المركزية — معدّل
  * =====================================================
- *
- *  تستقبل الأحداث من أي Thread وتوزعها دائماً
- *  على JavaFX Application Thread عبر Platform.runLater().
- *
- *  طريقة الاستخدام:
- *
- *    // الاشتراك في نوع معين
- *    HREventBus.getInstance().subscribe(
- *        HRNotification.NotificationType.LEAVE,
- *        n -> refreshLeaveTable()
- *    );
- *
- *    // الاشتراك في كل الأنواع
- *    HREventBus.getInstance().subscribeAll(n -> updateBadge());
- *
- *    // نشر حدث (آمن من أي Thread)
- *    HREventBus.getInstance().publish(notification);
  */
 public class HREventBus {
 
     private static final HREventBus INSTANCE = new HREventBus();
-    public static HREventBus getInstance() { return INSTANCE; }
-
-    // طابور thread-safe
-    private final BlockingQueue<HRNotification> queue = new LinkedBlockingQueue<>(500);
-
-    // مشتركون حسب نوع الإشعار
+    // ✅ زوّد الحجم واستخدم put بدل offer
+    private final BlockingQueue<HRNotification> queue = new LinkedBlockingQueue<>(2000);
     private final Map<HRNotification.NotificationType, List<Consumer<HRNotification>>>
-        typeSubscribers = new ConcurrentHashMap<>();
-
-    // مشتركون لكل الأنواع
+            typeSubscribers = new ConcurrentHashMap<>();
     private final List<Consumer<HRNotification>> globalSubscribers = new CopyOnWriteArrayList<>();
-
     private final ExecutorService dispatcher = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "hr-event-dispatcher");
         t.setDaemon(true);
         return t;
     });
 
-    private HREventBus() { startDispatching(); }
+    private HREventBus() {
+        startDispatching();
+    }
 
-    // ===================== نشر =====================
+    public static HREventBus getInstance() {
+        return INSTANCE;
+    }
+
+    // ===================== نشر — معدّل =====================
     public void publish(HRNotification notification) {
-        queue.offer(notification);
+        try {
+            queue.put(notification);  // ✅ blocking — ما بيضيعش
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("[HREventBus] تم مقاطعة النشر: " + e.getMessage());
+        }
     }
 
     // ===================== الاشتراك =====================
     public void subscribe(HRNotification.NotificationType type,
                           Consumer<HRNotification> handler) {
         typeSubscribers
-            .computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
-            .add(handler);
+                .computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
+                .add(handler);
     }
 
     public void subscribeAll(Consumer<HRNotification> handler) {
@@ -97,11 +84,14 @@ public class HREventBus {
     }
 
     private void safeCall(Consumer<HRNotification> handler, HRNotification n) {
-        try { handler.accept(n); }
-        catch (Exception e) {
+        try {
+            handler.accept(n);
+        } catch (Exception e) {
             System.err.println("[HREventBus] خطأ في المعالج: " + e.getMessage());
         }
     }
 
-    public void shutdown() { dispatcher.shutdownNow(); }
+    public void shutdown() {
+        dispatcher.shutdownNow();
+    }
 }

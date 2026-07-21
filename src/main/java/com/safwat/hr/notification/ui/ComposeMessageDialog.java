@@ -346,12 +346,12 @@ public class ComposeMessageDialog {
         if (recipient.isBlank() || subject.isBlank() || body.isBlank()) return;
 
         sendBtn.setText("جاري الإرسال...");
-        sendBtn.setDisable(true);
+
 
         Runnable onSuccess = () -> stage.close();
         java.util.function.Consumer<String> onError = err -> {
             sendBtn.setText(isReply ? "إرسال الرد" : "إرسال");
-            sendBtn.setDisable(false);
+            
             showError("فشل الإرسال", err);
         };
 
