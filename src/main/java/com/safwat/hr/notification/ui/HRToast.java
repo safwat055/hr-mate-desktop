@@ -1,7 +1,6 @@
 package com.safwat.hr.notification.ui;
 
 import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.animation.*;
 import javafx.geometry.Insets;
@@ -19,10 +18,16 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * Toast إشعار فوري.
- * يدعم نوعين:
- *   - إشعار نظام: أيقونة النوع + عنوان + رسالة
- *   - رسالة مستخدم: صورة رمزية للمرسل + اسمه + معاينة
+ * =====================================================
+ *  HRToast — إشعار فوري منبثق
+ * =====================================================
+ *
+ *  يظهر في الزاوية السفلية اليمنى ويختفي تلقائياً.
+ *  يدعم تراكم حتى 4 إشعارات في وقت واحد.
+ *  يعرض نوعين: إشعار نظام، رسالة مستخدم.
+ *
+ *  الاستخدام:
+ *    HRToast.show(primaryStage, notification);
  */
 public class HRToast {
 
@@ -31,25 +36,22 @@ public class HRToast {
     private static final int    MAX_VISIBLE   = 4;
     private static final double BOTTOM_MARGIN = 24;
     private static final double RIGHT_MARGIN  = 24;
-    private static final double TOAST_HEIGHT  = 80;
+    private static final double TOAST_HEIGHT  = 82;
     private static final double GAP           = 10;
 
     private static final Deque<Popup> activeToasts = new ArrayDeque<>();
 
-    public static void show(Stage owner, HRNotification notification) {
+    public static void show(Stage owner, HRNotification n) {
         if (activeToasts.size() >= MAX_VISIBLE) {
             Popup oldest = activeToasts.pollFirst();
             if (oldest != null) oldest.hide();
         }
 
-        Popup popup = notification.isMessage()
-            ? buildMessageToast(notification)
-            : buildSystemToast(notification);
-
+        Popup popup = n.isMessage() ? buildMessageToast(n) : buildSystemToast(n);
         popup.show(owner);
         activeToasts.addLast(popup);
         repositionAll(owner);
-        animateIn(popup, owner);
+        animateIn(popup);
     }
 
     // ===================== Toast إشعار النظام =====================
@@ -65,7 +67,7 @@ public class HRToast {
         iconBg.setArcWidth(8); iconBg.setArcHeight(8);
         iconBg.setFill(Color.web(bg));
         Label iconLbl = new Label(getSystemIcon(n.getType()));
-        iconLbl.setStyle("-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:" + color + ";");
+        iconLbl.setStyle("-fx-font-size:10px;-fx-font-weight:700;-fx-text-fill:" + color + ";");
         iconLbl.setMinSize(36, 36);
         iconLbl.setMaxSize(36, 36);
         iconLbl.setAlignment(Pos.CENTER);
@@ -79,19 +81,17 @@ public class HRToast {
         titleLbl.setMaxWidth(240);
 
         Label msgLbl = new Label(n.getMessage());
-        msgLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#555555;");
+        msgLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#555555;");
         msgLbl.setMaxWidth(240);
 
         Label timeLbl = new Label(n.getFormattedTime());
-        timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;");
+        timeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
 
         VBox texts = new VBox(2, titleLbl, msgLbl, timeLbl);
         texts.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
-        MFXButton closeBtn = buildCloseBtn(popup);
-
-        HBox root = new HBox(10, iconBox, texts, closeBtn);
+        HBox root = new HBox(10, iconBox, texts, buildCloseBtn(popup));
         root.setAlignment(Pos.CENTER_LEFT);
         root.setPadding(new Insets(12, 14, 10, 12));
         root.setPrefWidth(TOAST_WIDTH);
@@ -115,13 +115,11 @@ public class HRToast {
         Popup popup = new Popup();
         popup.setAutoHide(false);
 
-        // صورة رمزية
+        // صورة رمزية للمرسل
         Circle avatarCircle = new Circle(18);
         avatarCircle.setFill(Color.web("#0F6E56"));
         Label avatarLbl = new Label(n.getAvatarInitials());
-        avatarLbl.setStyle(
-            "-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:white;"
-        );
+        avatarLbl.setStyle("-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:white;");
         StackPane avatarBox = new StackPane(avatarCircle, avatarLbl);
         avatarBox.setMinSize(36, 36);
         avatarBox.setMaxSize(36, 36);
@@ -131,31 +129,29 @@ public class HRToast {
             n.getSenderName() != null ? n.getSenderName() : "رسالة جديدة");
         senderLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
 
-        // موضوع الرسالة
+        // الموضوع
         Label subjectLbl = new Label(n.getTitle());
-        subjectLbl.setStyle("-fx-font-size:12px;-fx-font-weight:600;-fx-text-fill:#1A1A1A;");
+        subjectLbl.setStyle("-fx-font-size:12px;-fx-font-weight:500;-fx-text-fill:#1A1A1A;");
         subjectLbl.setMaxWidth(220);
 
-        // معاينة المحتوى
+        // معاينة
         Label previewLbl = new Label(n.getMessage());
         previewLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#666666;");
         previewLbl.setMaxWidth(220);
 
         // مرفقات
-        HBox attachRow = new HBox(4);
+        HBox extras = new HBox(6);
         if (n.hasAttachments()) {
-            Label att = new Label("[" + n.getAttachments().size() + " مرفق]");
-            att.setStyle("-fx-font-size:10px;-fx-text-fill:#0F6E56;");
-            attachRow.getChildren().add(att);
+            Label attLbl = new Label("[" + n.getAttachments().size() + " مرفق]");
+            attLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#0F6E56;");
+            extras.getChildren().add(attLbl);
         }
 
-        VBox texts = new VBox(2, senderLbl, subjectLbl, previewLbl, attachRow);
+        VBox texts = new VBox(2, senderLbl, subjectLbl, previewLbl, extras);
         texts.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
-        MFXButton closeBtn = buildCloseBtn(popup);
-
-        HBox root = new HBox(10, avatarBox, texts, closeBtn);
+        HBox root = new HBox(10, avatarBox, texts, buildCloseBtn(popup));
         root.setAlignment(Pos.CENTER_LEFT);
         root.setPadding(new Insets(12, 14, 10, 12));
         root.setPrefWidth(TOAST_WIDTH);
@@ -189,9 +185,8 @@ public class HRToast {
     private static Rectangle buildProgressBar(String color) {
         Rectangle bar = new Rectangle(TOAST_WIDTH, 3);
         bar.setFill(Color.web(color));
-        bar.setOpacity(0.4);
-        bar.setArcWidth(3);
-        bar.setArcHeight(3);
+        bar.setOpacity(0.35);
+        bar.setArcWidth(3); bar.setArcHeight(3);
 
         ScaleTransition scale = new ScaleTransition(Duration.seconds(DISPLAY_SECS), bar);
         scale.setFromX(1.0);
@@ -200,14 +195,14 @@ public class HRToast {
         return bar;
     }
 
-    private static void animateIn(Popup popup, Stage owner) {
+    private static void animateIn(Popup popup) {
         javafx.scene.Node root = popup.getContent().get(0);
         root.setTranslateX(TOAST_WIDTH + 30);
         root.setOpacity(0);
 
-        TranslateTransition slide = new TranslateTransition(Duration.millis(280), root);
+        TranslateTransition slide = new TranslateTransition(Duration.millis(260), root);
         slide.setToX(0);
-        FadeTransition fade = new FadeTransition(Duration.millis(280), root);
+        FadeTransition fade = new FadeTransition(Duration.millis(260), root);
         fade.setToValue(1.0);
 
         ParallelTransition intro = new ParallelTransition(slide, fade);
@@ -223,9 +218,9 @@ public class HRToast {
         if (popup.getContent().isEmpty()) { popup.hide(); return; }
         javafx.scene.Node root = popup.getContent().get(0);
 
-        FadeTransition fade = new FadeTransition(Duration.millis(200), root);
+        FadeTransition fade = new FadeTransition(Duration.millis(180), root);
         fade.setToValue(0);
-        TranslateTransition slide = new TranslateTransition(Duration.millis(200), root);
+        TranslateTransition slide = new TranslateTransition(Duration.millis(180), root);
         slide.setToX(TOAST_WIDTH + 30);
 
         ParallelTransition out = new ParallelTransition(fade, slide);

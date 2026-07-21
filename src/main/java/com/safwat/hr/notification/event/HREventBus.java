@@ -9,42 +9,51 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * حافلة الأحداث المركزية.
- * تستقبل الأحداث من الخدمات الخلفية وتوزعها على المشتركين.
+ * =====================================================
+ *  HREventBus — حافلة الأحداث المركزية
+ * =====================================================
+ *
+ *  تستقبل الأحداث من أي Thread وتوزعها دائماً
+ *  على JavaFX Application Thread عبر Platform.runLater().
+ *
+ *  طريقة الاستخدام:
+ *
+ *    // الاشتراك في نوع معين
+ *    HREventBus.getInstance().subscribe(
+ *        HRNotification.NotificationType.LEAVE,
+ *        n -> refreshLeaveTable()
+ *    );
+ *
+ *    // الاشتراك في كل الأنواع
+ *    HREventBus.getInstance().subscribeAll(n -> updateBadge());
+ *
+ *    // نشر حدث (آمن من أي Thread)
+ *    HREventBus.getInstance().publish(notification);
  */
 public class HREventBus {
 
-    // Singleton
     private static final HREventBus INSTANCE = new HREventBus();
-    // طابور الأحداث - thread-safe
-    private final BlockingQueue<HRNotification> queue =
-            new LinkedBlockingQueue<>(500);
-    // المشتركون مصنفون حسب نوع الإشعار
+    public static HREventBus getInstance() { return INSTANCE; }
+
+    // طابور thread-safe
+    private final BlockingQueue<HRNotification> queue = new LinkedBlockingQueue<>(500);
+
+    // مشتركون حسب نوع الإشعار
     private final Map<HRNotification.NotificationType, List<Consumer<HRNotification>>>
-            subscribers = new ConcurrentHashMap<>();
-    // مشتركون يستقبلون كل الأنواع
-    private final List<Consumer<HRNotification>> globalSubscribers =
-            new CopyOnWriteArrayList<>();
-    private final ExecutorService dispatcher =
-            Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r, "hr-event-dispatcher");
-                t.setDaemon(true);
-                return t;
-            });
+        typeSubscribers = new ConcurrentHashMap<>();
 
-    private HREventBus() {
-        startDispatching();
-    }
+    // مشتركون لكل الأنواع
+    private final List<Consumer<HRNotification>> globalSubscribers = new CopyOnWriteArrayList<>();
 
-    public static HREventBus getInstance() {
-        return INSTANCE;
-    }
+    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "hr-event-dispatcher");
+        t.setDaemon(true);
+        return t;
+    });
 
-    // ===================== نشر حدث =====================
+    private HREventBus() { startDispatching(); }
 
-    /**
-     * ينشر إشعاراً من أي thread - آمن تماماً.
-     */
+    // ===================== نشر =====================
     public void publish(HRNotification notification) {
         queue.offer(notification);
     }
@@ -52,8 +61,9 @@ public class HREventBus {
     // ===================== الاشتراك =====================
     public void subscribe(HRNotification.NotificationType type,
                           Consumer<HRNotification> handler) {
-        subscribers.computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
-                .add(handler);
+        typeSubscribers
+            .computeIfAbsent(type, k -> new CopyOnWriteArrayList<>())
+            .add(handler);
     }
 
     public void subscribeAll(Consumer<HRNotification> handler) {
@@ -62,7 +72,7 @@ public class HREventBus {
 
     public void unsubscribeAll(Consumer<HRNotification> handler) {
         globalSubscribers.remove(handler);
-        subscribers.values().forEach(list -> list.remove(handler));
+        typeSubscribers.values().forEach(list -> list.remove(handler));
     }
 
     // ===================== التوزيع =====================
@@ -70,8 +80,8 @@ public class HREventBus {
         dispatcher.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    HRNotification n = queue.take();  // ينتظر حتى يجد حدثاً
-                    dispatch(n);
+                    HRNotification n = queue.take();
+                    Platform.runLater(() -> dispatch(n));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -81,26 +91,17 @@ public class HREventBus {
     }
 
     private void dispatch(HRNotification n) {
-        // الإرسال دائماً على JavaFX thread
-        Platform.runLater(() -> {
-            // المشتركون العامون
-            globalSubscribers.forEach(h -> safeCall(h, n));
-
-            // المشتركون حسب النوع
-            List<Consumer<HRNotification>> typed = subscribers.get(n.getType());
-            if (typed != null) typed.forEach(h -> safeCall(h, n));
-        });
+        globalSubscribers.forEach(h -> safeCall(h, n));
+        List<Consumer<HRNotification>> typed = typeSubscribers.get(n.getType());
+        if (typed != null) typed.forEach(h -> safeCall(h, n));
     }
 
     private void safeCall(Consumer<HRNotification> handler, HRNotification n) {
-        try {
-            handler.accept(n);
-        } catch (Exception e) {
-            System.err.println("[HREventBus] خطأ في معالج الإشعار: " + e.getMessage());
+        try { handler.accept(n); }
+        catch (Exception e) {
+            System.err.println("[HREventBus] خطأ في المعالج: " + e.getMessage());
         }
     }
 
-    public void shutdown() {
-        dispatcher.shutdownNow();
-    }
+    public void shutdown() { dispatcher.shutdownNow(); }
 }

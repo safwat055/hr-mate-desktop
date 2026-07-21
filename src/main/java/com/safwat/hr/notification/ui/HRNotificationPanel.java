@@ -4,6 +4,7 @@ import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.Attachment;
 import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import com.safwat.hr.notification.model.HRNotification.NotificationType;
+import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.util.FileOpener;
 import io.github.palexdev.materialfx.controls.MFXButton;
@@ -14,6 +15,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -21,27 +23,35 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 /**
- * لوحة الإشعارات — تعرض إشعارات النظام والرسائل في مكان واحد.
- * كل نوع له خلية عرض مختلفة.
+ * =====================================================
+ * HRNotificationPanel — لوحة الإشعارات الكاملة
+ * =====================================================
+ * <p>
+ * تعرض إشعارات النظام والرسائل في مكان واحد.
+ * لكل نوع خلية عرض مختلفة.
  * <p>
  * التبويبات:
- * الكل | إشعارات | رسائل | [أنواع النظام...]
+ * الكل | إشعارات (+ أنواع فرعية) | رسائل
+ * <p>
+ * الاستخدام:
+ * HRNotificationPanel panel = new HRNotificationPanel(primaryStage);
+ * // ثم حطها في Popup
  */
 public class HRNotificationPanel extends VBox {
-    private final Stage owner;
+
     private final NotificationService service = NotificationService.getInstance();
     private final FilteredList<HRNotification> filteredList;
+    private final Stage owner;
     private TabFilter activeTab = TabFilter.ALL;
 
     public HRNotificationPanel(Stage owner) {
         this.owner = owner;
-        filteredList = new FilteredList<>(service.getAll(), n -> true);
+        this.filteredList = new FilteredList<>(service.getAll(), n -> true);
         build();
         setStyle(
                 "-fx-background-color:#FFFFFF;" +
                         "-fx-background-radius:12px;" +
-                        "-fx-border-color:#E0E0E0;" +
-                        "-fx-border-width:0.5px;" +
+                        "-fx-border-color:#E0E0E0;-fx-border-width:0.5px;" +
                         "-fx-border-radius:12px;" +
                         "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.18),20,0,0,6);"
         );
@@ -52,13 +62,15 @@ public class HRNotificationPanel extends VBox {
     private void build() {
         getChildren().addAll(
                 buildHeader(),
-                buildMainTabs(),
+                buildTabs(),
                 buildList(),
                 buildFooter()
         );
     }
 
     // ===================== الرأس =====================
+    // في HRNotificationPanel.java
+
     private HBox buildHeader() {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
@@ -74,7 +86,7 @@ public class HRNotificationPanel extends VBox {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // باج الكل
+        // badge (عدد الجديد)
         Label badge = new Label();
         badge.textProperty().bind(
                 Bindings.when(service.unreadCountProperty().greaterThan(0))
@@ -89,6 +101,19 @@ public class HRNotificationPanel extends VBox {
                         "-fx-background-radius:10px;-fx-padding:2 8 2 8;"
         );
 
+        // ✅ زر التحديث (Refresh)
+        MFXButton refreshBtn = new MFXButton("🔄تحديث");
+        refreshBtn.setStyle(
+                "-fx-font-size:14px;-fx-text-fill:#185FA5;" +
+                        "-fx-background-color:transparent;-fx-cursor:hand;-fx-padding:0 4 0 4;"
+        );
+        refreshBtn.setOnAction(e -> {
+            // جلب كل الرسائل من الخادم وتحديث القائمة
+            MessageClientService.getInstance().refreshAllMessages();
+        });
+        refreshBtn.setTooltip(new Tooltip("تحديث الرسائل"));
+
+        // زر تعليم الكل مقروء
         MFXButton markAllBtn = new MFXButton("تعليم الكل مقروء");
         markAllBtn.setStyle(
                 "-fx-font-size:12px;-fx-text-fill:#185FA5;" +
@@ -98,12 +123,12 @@ public class HRNotificationPanel extends VBox {
         markAllBtn.visibleProperty().bind(service.unreadCountProperty().greaterThan(0));
         markAllBtn.managedProperty().bind(markAllBtn.visibleProperty());
 
-        header.getChildren().addAll(title, spacer, badge, markAllBtn);
+        header.getChildren().addAll(title, spacer, badge, refreshBtn, markAllBtn);
         return header;
     }
 
-    // ===================== التبويبات الرئيسية =====================
-    private VBox buildMainTabs() {
+    // ===================== التبويبات =====================
+    private VBox buildTabs() {
         VBox wrapper = new VBox(0);
         wrapper.setStyle(
                 "-fx-border-color:transparent transparent #EBEBEB transparent;" +
@@ -115,12 +140,12 @@ public class HRNotificationPanel extends VBox {
         mainRow.setPadding(new Insets(10, 12, 6, 12));
         mainRow.setAlignment(Pos.CENTER_LEFT);
 
-        Label tabAll = buildTab("الكل", "#185FA5", "#E6F1FB", TabFilter.ALL, mainRow, null);
-        Label tabSys = buildTab("إشعارات", "#5F5E5A", "#F1EFE8", TabFilter.SYSTEM_ALL, mainRow, null);
-        Label tabMsg = buildTab("رسائل", "#0F6E56", "#E6F5F1", TabFilter.MESSAGES, mainRow, null);
+        Label tabAll = buildMainTab("الكل", "#185FA5", "#E6F1FB", TabFilter.ALL, mainRow);
+        Label tabSys = buildMainTab("إشعارات", "#5F5E5A", "#F1EFE8", TabFilter.SYSTEM_ALL, mainRow);
+        Label tabMsg = buildMainTab("رسائل", "#0F6E56", "#E6F5F1", TabFilter.MESSAGES, mainRow);
         mainRow.getChildren().addAll(tabAll, tabSys, tabMsg);
 
-        // الصف الثاني: أنواع النظام (يظهر فقط لما تبويب إشعارات نشط)
+        // الصف الثاني: أنواع النظام الفرعية
         HBox subRow = new HBox(4);
         subRow.setPadding(new Insets(0, 12, 8, 12));
         subRow.setAlignment(Pos.CENTER_LEFT);
@@ -129,31 +154,24 @@ public class HRNotificationPanel extends VBox {
 
         for (NotificationType type : NotificationType.values()) {
             if (type == NotificationType.MESSAGE) continue;
-            TabFilter tf = switch (type) {
-                case EMPLOYEE -> TabFilter.EMPLOYEE;
-                case SALARY -> TabFilter.SALARY;
-                case LEAVE -> TabFilter.LEAVE;
-                case TRAINING -> TabFilter.TRAINING;
-                case TASK -> TabFilter.TASK;
-                default -> TabFilter.SYSTEM_TYPE;
-            };
-            Label sub = buildSmallTab(type.label, type.color, type.bgColor, tf, subRow);
+            TabFilter tf = typeToFilter(type);
+            Label sub = buildSubTab(type.label, type.color, type.bgColor, tf, subRow);
             subRow.getChildren().add(sub);
         }
 
-        // إظهار/إخفاء الصف الثاني حسب التبويب النشط
+        // سلوك تبويب الإشعارات — يظهر الصف الفرعي
         tabSys.setOnMouseClicked(e -> {
-            setActiveTab(TabFilter.SYSTEM_ALL, mainRow, null);
+            setActiveMainTab(TabFilter.SYSTEM_ALL, mainRow);
             subRow.setVisible(true);
             subRow.setManaged(true);
         });
         tabAll.setOnMouseClicked(e -> {
-            setActiveTab(TabFilter.ALL, mainRow, null);
+            setActiveMainTab(TabFilter.ALL, mainRow);
             subRow.setVisible(false);
             subRow.setManaged(false);
         });
         tabMsg.setOnMouseClicked(e -> {
-            setActiveTab(TabFilter.MESSAGES, mainRow, null);
+            setActiveMainTab(TabFilter.MESSAGES, mainRow);
             subRow.setVisible(false);
             subRow.setManaged(false);
         });
@@ -162,84 +180,81 @@ public class HRNotificationPanel extends VBox {
         return wrapper;
     }
 
-    private void setActiveTab(TabFilter filter, HBox container, HBox subContainer) {
-        activeTab = filter;
-        applyFilter();
-        // تحديث مظهر التبويبات في الـ container
-        container.getChildren().forEach(node -> {
-            if (node instanceof Label lbl && lbl.getUserData() instanceof TabFilter tf) {
-                boolean active = tf == filter;
-                String[] data = (String[]) lbl.getProperties().get("colors");
-                if (data != null)
-                    applyTabStyle(lbl, active, data[0], data[1]);
-            }
-        });
-    }
-
-    private Label buildTab(String text, String color, String bg,
-                           TabFilter filter, HBox container, HBox subRow) {
+    private Label buildMainTab(String text, String color, String bg,
+                               TabFilter filter, HBox container) {
         Label tab = new Label(text);
         tab.setUserData(filter);
-        tab.getProperties().put("colors", new String[]{color, bg});
-        applyTabStyle(tab, filter == TabFilter.ALL, color, bg);
+        tab.getProperties().put("color", color);
+        tab.getProperties().put("bg", bg);
+        applyMainTabStyle(tab, filter == TabFilter.ALL, color, bg);
         tab.setPrefHeight(28);
         return tab;
     }
 
-    private Label buildSmallTab(String text, String color, String bg,
-                                TabFilter filter, HBox container) {
+    private Label buildSubTab(String text, String color, String bg,
+                              TabFilter filter, HBox container) {
         Label tab = new Label(text);
         tab.setUserData(filter);
-        tab.getProperties().put("colors", new String[]{color, bg});
-        applySmallTabStyle(tab, false, color, bg);
+        tab.getProperties().put("color", color);
+        tab.getProperties().put("bg", bg);
+        applySubTabStyle(tab, false, color, bg);
 
         tab.setOnMouseClicked(e -> {
             activeTab = filter;
             applyFilter();
             container.getChildren().forEach(node -> {
                 if (node instanceof Label lbl && lbl.getUserData() instanceof TabFilter tf) {
-                    String[] data = (String[]) lbl.getProperties().get("colors");
-                    if (data != null)
-                        applySmallTabStyle(lbl, tf == filter, data[0], data[1]);
+                    String c = (String) lbl.getProperties().get("color");
+                    String b = (String) lbl.getProperties().get("bg");
+                    applySubTabStyle(lbl, tf == filter, c, b);
                 }
             });
         });
         return tab;
     }
 
-    private void applyTabStyle(Label tab, boolean active, String color, String bg) {
-        if (active) {
+    private void setActiveMainTab(TabFilter filter, HBox container) {
+        activeTab = filter;
+        applyFilter();
+        container.getChildren().forEach(node -> {
+            if (node instanceof Label lbl && lbl.getUserData() instanceof TabFilter tf) {
+                String c = (String) lbl.getProperties().get("color");
+                String b = (String) lbl.getProperties().get("bg");
+                applyMainTabStyle(lbl, tf == filter, c, b);
+            }
+        });
+    }
+
+    private void applyMainTabStyle(Label tab, boolean active, String color, String bg) {
+        if (active)
             tab.setStyle(
-                    "-fx-background-color:" + bg + ";" +
-                            "-fx-text-fill:" + color + ";" +
+                    "-fx-background-color:" + bg + ";-fx-text-fill:" + color + ";" +
                             "-fx-font-size:13px;-fx-font-weight:700;" +
                             "-fx-background-radius:8px;-fx-padding:5 14 5 14;-fx-cursor:hand;"
             );
-        } else {
+        else
             tab.setStyle(
                     "-fx-background-color:transparent;-fx-text-fill:#666666;" +
                             "-fx-font-size:13px;-fx-background-radius:8px;" +
                             "-fx-padding:5 14 5 14;-fx-cursor:hand;" +
                             "-fx-border-color:#E0E0E0;-fx-border-width:0.5px;-fx-border-radius:8px;"
             );
-        }
     }
 
-    private void applySmallTabStyle(Label tab, boolean active, String color, String bg) {
-        if (active) {
+    private void applySubTabStyle(Label tab, boolean active, String color, String bg) {
+        if (active)
             tab.setStyle(
                     "-fx-background-color:" + bg + ";-fx-text-fill:" + color + ";" +
                             "-fx-font-size:11px;-fx-font-weight:600;" +
                             "-fx-background-radius:6px;-fx-padding:3 8 3 8;-fx-cursor:hand;"
             );
-        } else {
+        else
             tab.setStyle(
                     "-fx-background-color:transparent;-fx-text-fill:#888888;" +
                             "-fx-font-size:11px;-fx-background-radius:6px;" +
                             "-fx-padding:3 8 3 8;-fx-cursor:hand;" +
                             "-fx-border-color:#E8E8E8;-fx-border-width:0.5px;-fx-border-radius:6px;"
             );
-        }
     }
 
     private void applyFilter() {
@@ -256,12 +271,23 @@ public class HRNotificationPanel extends VBox {
         });
     }
 
+    private TabFilter typeToFilter(NotificationType type) {
+        return switch (type) {
+            case EMPLOYEE -> TabFilter.EMPLOYEE;
+            case SALARY -> TabFilter.SALARY;
+            case LEAVE -> TabFilter.LEAVE;
+            case TRAINING -> TabFilter.TRAINING;
+            case TASK -> TabFilter.TASK;
+            default -> TabFilter.SYSTEM_TYPE;
+        };
+    }
+
     // ===================== القائمة =====================
     private ListView<HRNotification> buildList() {
         ListView<HRNotification> list = new ListView<>();
         list.setItems(filteredList);
         list.setPrefHeight(500);
-        list.setFixedCellSize(120);
+        list.setFixedCellSize(96);
         list.setCellFactory(lv -> new NotificationCell());
         list.setStyle("-fx-background-color:transparent;");
         list.setPlaceholder(buildEmptyState());
@@ -288,9 +314,7 @@ public class HRNotificationPanel extends VBox {
         Label countLbl = new Label();
         countLbl.textProperty().bind(
                 Bindings.createStringBinding(
-                        () -> filteredList.size() + " عنصر",
-                        filteredList
-                )
+                        () -> filteredList.size() + " عنصر", filteredList)
         );
         countLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#AAAAAA;");
 
@@ -309,7 +333,7 @@ public class HRNotificationPanel extends VBox {
                 case SYSTEM_ALL -> service.getAll().removeIf(n ->
                         n.getCategory() == NotificationCategory.SYSTEM);
                 default -> {
-                    NotificationType target = resolveType(activeTab);
+                    NotificationType target = filterToType(activeTab);
                     if (target != null)
                         service.getAll().removeIf(n -> n.getType() == target);
                 }
@@ -320,7 +344,7 @@ public class HRNotificationPanel extends VBox {
         return footer;
     }
 
-    private NotificationType resolveType(TabFilter f) {
+    private NotificationType filterToType(TabFilter f) {
         return switch (f) {
             case EMPLOYEE -> NotificationType.EMPLOYEE;
             case SALARY -> NotificationType.SALARY;
@@ -332,13 +356,13 @@ public class HRNotificationPanel extends VBox {
         };
     }
 
-    // تصفية مركبة: category + type
+    // تصفية مركبة
     private enum TabFilter {
         ALL, SYSTEM_ALL, MESSAGES,
         EMPLOYEE, SALARY, LEAVE, TRAINING, TASK, SYSTEM_TYPE
     }
 
-    // ===================== خلية الإشعار (مصنع) =====================
+    // ===================== خلية الإشعار =====================
     private class NotificationCell extends ListCell<HRNotification> {
 
         @Override
@@ -350,29 +374,24 @@ public class HRNotificationPanel extends VBox {
                 setStyle("-fx-background-color:transparent;");
                 return;
             }
-            // اختار الخلية المناسبة حسب النوع
             setGraphic(item.isMessage()
                     ? buildMessageCell(item)
                     : buildSystemCell(item));
         }
 
-        // =================== خلية إشعار النظام ===================
+        // ========== خلية إشعار النظام ==========
         private HBox buildSystemCell(HRNotification item) {
-            // نقطة القراءة
-            Circle dot = new Circle(5);
-            dot.setFill(item.isRead()
-                    ? Color.TRANSPARENT : Color.web(item.getType().color));
-            dot.setStroke(item.isRead() ? Color.web("#CCCCCC") : Color.TRANSPARENT);
-            dot.setStrokeWidth(item.isRead() ? 1.5 : 0);
+            Circle dot = buildDot(item.isRead(), item.getType().color);
 
-            // أيقونة النوع
             Rectangle iconBg = new Rectangle(38, 38);
             iconBg.setArcWidth(8);
             iconBg.setArcHeight(8);
             iconBg.setFill(Color.web(item.getType().bgColor));
             Label iconLbl = new Label(getSystemIcon(item.getType()));
-            iconLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;" +
-                    "-fx-text-fill:" + item.getType().color + ";");
+            iconLbl.setStyle(
+                    "-fx-font-size:11px;-fx-font-weight:700;" +
+                            "-fx-text-fill:" + item.getType().color + ";"
+            );
             iconLbl.setMinSize(38, 38);
             iconLbl.setMaxSize(38, 38);
             iconLbl.setAlignment(Pos.CENTER);
@@ -380,109 +399,92 @@ public class HRNotificationPanel extends VBox {
             iconBox.setMinSize(38, 38);
             iconBox.setMaxSize(38, 38);
 
-            // النصوص
             Label titleLbl = new Label(item.getTitle());
-            titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:" +
-                    (item.isRead() ? "400" : "700") + ";-fx-text-fill:#1A1A1A;");
-            titleLbl.setMaxWidth(280);
-            titleLbl.setMinHeight(20);
+            titleLbl.setStyle(
+                    "-fx-font-size:13px;-fx-font-weight:" +
+                            (item.isRead() ? "400" : "700") + ";-fx-text-fill:#1A1A1A;"
+            );
+            titleLbl.setMaxWidth(260);
+            titleLbl.setMinHeight(16);
 
             Label msgLbl = new Label(item.getMessage());
-            msgLbl.setStyle("-fx-font-size:12px;-fx-text-fill:#666666;");
-            msgLbl.setMaxWidth(280);
-            msgLbl.setWrapText(false);
-            msgLbl.setMinHeight(20);
+            msgLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#666666;");
+            msgLbl.setMaxWidth(260);
+            msgLbl.setMinHeight(14);
 
-            // الوقت + الإجراءات
             Label timeLbl = new Label(item.getFormattedTime());
-            timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;");
+            timeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
 
-            HBox actions = buildSystemActions(item);
-
-            HBox meta = new HBox(8, timeLbl, actions);
+            HBox actionsBox = buildSystemActions(item);
+            HBox meta = new HBox(8, timeLbl, actionsBox);
             meta.setAlignment(Pos.CENTER_LEFT);
 
-            // المرفقات (لو في مرفق واحد بسيط)
-            HBox attachRow = buildAttachmentsRow(item, 260);
-
             VBox texts = new VBox(2, titleLbl, msgLbl, meta);
-            if (item.hasAttachments()) texts.getChildren().add(attachRow);
+            if (item.hasAttachments())
+                texts.getChildren().add(buildAttachmentsRow(item));
             texts.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(texts, Priority.ALWAYS);
 
-            return buildRootCell(item, dot, iconBox, texts);
+            return buildRoot(item, dot, iconBox, texts);
         }
 
-        // =================== خلية رسالة المستخدم ===================
+        // ========== خلية رسالة المستخدم ==========
         private HBox buildMessageCell(HRNotification item) {
-            // نقطة القراءة
-            Circle dot = new Circle(5);
-            dot.setFill(item.isRead()
-                    ? Color.TRANSPARENT : Color.web("#0F6E56"));
-            dot.setStroke(item.isRead() ? Color.web("#CCCCCC") : Color.TRANSPARENT);
-            dot.setStrokeWidth(item.isRead() ? 1.5 : 0);
+            Circle dot = buildDot(item.isRead(), "#0F6E56");
 
-            // صورة رمزية للمرسل
             Circle avatarCircle = new Circle(19);
             avatarCircle.setFill(Color.web("#0F6E56"));
             Label avatarLbl = new Label(item.getAvatarInitials());
-            avatarLbl.setStyle(
-                    "-fx-font-size:12px;-fx-font-weight:700;-fx-text-fill:white;"
-            );
+            avatarLbl.setStyle("-fx-font-size:12px;-fx-font-weight:700;-fx-text-fill:white;");
             StackPane avatarBox = new StackPane(avatarCircle, avatarLbl);
             avatarBox.setMinSize(38, 38);
             avatarBox.setMaxSize(38, 38);
 
-            // اسم المرسل + الوقت في نفس الصف
-            Label senderLbl = new Label(item.getSenderName() != null
-                    ? item.getSenderName() : "مجهول");
-            senderLbl.setStyle("-fx-font-size:13px;-fx-font-weight:" +
-                    (item.isRead() ? "400" : "700") + ";-fx-text-fill:#1A1A1A;");
-
+            // اسم المرسل + وقت في نفس الصف
+            Label senderLbl = new Label(
+                    item.getSenderName() != null ? item.getSenderName() : "مجهول");
+            senderLbl.setStyle(
+                    "-fx-font-size:13px;-fx-font-weight:" +
+                            (item.isRead() ? "400" : "700") + ";-fx-text-fill:#1A1A1A;"
+            );
             Region rowSpacer = new Region();
             HBox.setHgrow(rowSpacer, Priority.ALWAYS);
-
             Label timeLbl = new Label(item.getFormattedTime());
-            timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;");
-
+            timeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
             HBox topRow = new HBox(4, senderLbl, rowSpacer, timeLbl);
             topRow.setAlignment(Pos.CENTER_LEFT);
-            topRow.setMaxWidth(280);
+            topRow.setMaxWidth(270);
 
-            // موضوع + معاينة
             Label subjectLbl = new Label(item.getTitle());
             subjectLbl.setStyle("-fx-font-size:12px;-fx-font-weight:500;-fx-text-fill:#333333;");
-            subjectLbl.setMaxWidth(280);
+            subjectLbl.setMaxWidth(270);
+            subjectLbl.setMinHeight(14);
 
             Label previewLbl = new Label(item.getMessage());
             previewLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;");
-            previewLbl.setMaxWidth(280);
-            previewLbl.setMinHeight(20);
+            previewLbl.setMaxWidth(270);
+            previewLbl.setMinHeight(13);
 
-            // مرفقات + زر فتح
-            HBox bottomRow = new HBox(8);
+            // أسفل: مرفقات + زر فتح
+            HBox bottomRow = new HBox(6);
             bottomRow.setAlignment(Pos.CENTER_LEFT);
-
             if (item.hasAttachments()) {
-                Label attachLbl = new Label(
-                        "[" + item.getAttachments().size() + " مرفق]");
-                attachLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#0F6E56;");
-                bottomRow.getChildren().add(attachLbl);
+                Label attLbl = new Label("[" + item.getAttachments().size() + " مرفق]");
+                attLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#0F6E56;");
+                bottomRow.getChildren().add(attLbl);
             }
-
             Region bSpacer = new Region();
             HBox.setHgrow(bSpacer, Priority.ALWAYS);
-
-            MFXButton openBtn = new MFXButton("فتح الرسالة >");
+            MFXButton openBtn = new MFXButton("فتح >");
             openBtn.setStyle(
                     "-fx-font-size:11px;-fx-text-fill:#0F6E56;" +
                             "-fx-background-color:#E6F5F1;-fx-background-radius:6px;" +
-                            "-fx-cursor:hand;-fx-padding:3 8 3 8;"
+                            "-fx-cursor:hand;-fx-padding:2 8 2 8;"
             );
             openBtn.setOnAction(e -> {
                 e.consume();
                 service.markAsRead(item);
-                openMessageDetail(item);
+                MessageDetailView.show(owner, item);
             });
             bottomRow.getChildren().addAll(bSpacer, openBtn);
 
@@ -490,25 +492,34 @@ public class HRNotificationPanel extends VBox {
             texts.setAlignment(Pos.CENTER_LEFT);
             HBox.setHgrow(texts, Priority.ALWAYS);
 
-            return buildRootCell(item, dot, avatarBox, texts);
+            return buildRoot(item, dot, avatarBox, texts);
         }
 
-        // =================== مشترك ===================
-        private HBox buildRootCell(HRNotification item,
-                                   Circle dot, StackPane icon, VBox texts) {
+        // ========== مشترك ==========
+        private Circle buildDot(boolean isRead, String color) {
+            Circle dot = new Circle(5);
+            dot.setFill(isRead ? Color.TRANSPARENT : Color.web(color));
+            dot.setStroke(isRead ? Color.web("#CCCCCC") : Color.TRANSPARENT);
+            dot.setStrokeWidth(isRead ? 1.5 : 0);
+            return dot;
+        }
+
+        private HBox buildRoot(HRNotification item, Circle dot,
+                               StackPane icon, VBox texts) {
             String border = (item.getPriority() == HRNotification.Priority.URGENT)
                     ? "-fx-border-color:#A32D2D transparent #F2F2F2 transparent;" +
                     "-fx-border-width:0 0 0.5 3;"
                     : "-fx-border-color:transparent transparent #F2F2F2 transparent;" +
                     "-fx-border-width:0 0 0.5 0;";
 
-            String bg = item.isRead() ? "#FFFFFF" : "#F8F5FF";
-            if (item.isMessage() && !item.isRead()) bg = "#F0FAF7";
+            String bg = item.isRead()
+                    ? "#FFFFFF"
+                    : (item.isMessage() ? "#F0FAF7" : "#F8F5FF");
 
             HBox root = new HBox(10, dot, icon, texts);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(10, 14, 10, 12));
-            root.setPrefHeight(120);
+            root.setPrefHeight(96);
             root.setStyle(border + "-fx-background-color:" + bg + ";-fx-cursor:hand;");
             root.setOnMouseClicked(e -> service.markAsRead(item));
             return root;
@@ -517,28 +528,26 @@ public class HRNotificationPanel extends VBox {
         private HBox buildSystemActions(HRNotification item) {
             HBox actions = new HBox(8);
             actions.setAlignment(Pos.CENTER_LEFT);
-
             if (item.getActionLabel() != null && !item.getActionLabel().isBlank()) {
                 MFXButton btn = new MFXButton("< " + item.getActionLabel());
                 btn.setStyle(
                         "-fx-font-size:11px;-fx-text-fill:#185FA5;" +
                                 "-fx-background-color:transparent;-fx-cursor:hand;-fx-padding:0;"
                 );
-                btn.setMinHeight(20);
+                btn.setMinHeight(14);
                 btn.setOnAction(e -> {
                     e.consume();
                     service.markAsRead(item);
+                    FileOpener.open(item.getActionTarget());
                 });
                 actions.getChildren().add(btn);
             }
             return actions;
         }
 
-        private HBox buildAttachmentsRow(HRNotification item, double maxWidth) {
+        private HBox buildAttachmentsRow(HRNotification item) {
             HBox row = new HBox(6);
             row.setAlignment(Pos.CENTER_LEFT);
-            row.setMaxWidth(maxWidth);
-
             for (Attachment att : item.getAttachments()) {
                 MFXButton btn = new MFXButton(att.getIcon() + " " + att.getFileName());
                 btn.setStyle(
@@ -553,11 +562,6 @@ public class HRNotificationPanel extends VBox {
                 row.getChildren().add(btn);
             }
             return row;
-        }
-
-        private void openMessageDetail(HRNotification item) {
-
-            MessageDetailView.show(owner, item);
         }
 
         private String getSystemIcon(NotificationType type) {

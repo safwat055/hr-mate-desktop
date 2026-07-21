@@ -1,77 +1,72 @@
 package com.safwat.hr.notification.util;
 
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
-import javafx.stage.FileChooser;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 
 /**
- * أداة لفتح الملفات والروابط من الإشعارات.
- * تدعم PDF, Excel, ZIP وروابط التطبيق الداخلية.
+ * =====================================================
+ *  FileOpener — فتح الملفات والروابط الداخلية
+ * =====================================================
+ *
+ *  الاستخدام:
+ *    FileOpener.open("/reports/salary.pdf");       // ملف
+ *    FileOpener.open("employee/profile/123");      // رابط داخلي
  */
 public class FileOpener {
 
-    /**
-     * فتح ملف أو رابط.
-     *
-     * @param target مسار ملف أو رابط داخلي (مثل: "employee/profile/123")
-     */
     public static void open(String target) {
         if (target == null || target.isBlank()) return;
 
-        if (target.startsWith("/") || target.contains(":\\")) {
-            // مسار ملف حقيقي
-            openFile(target);
-        } else {
-            // رابط تنقل داخلي
-            navigateTo(target);
-        }
+        if (isFilePath(target)) openFile(target);
+        else                    navigateTo(target);
+    }
+
+    private static boolean isFilePath(String target) {
+        return target.startsWith("/")
+            || target.startsWith("./")
+            || target.contains(":\\")   // Windows path
+            || target.endsWith(".pdf")
+            || target.endsWith(".xlsx")
+            || target.endsWith(".xls")
+            || target.endsWith(".zip")
+            || target.endsWith(".jpg")
+            || target.endsWith(".png");
     }
 
     private static void openFile(String path) {
         File file = new File(path);
+
+        // لو مسار نسبي — ابحث من مجلد التشغيل
+        if (!file.isAbsolute())
+            file = new File(System.getProperty("user.dir"), path);
+
         if (!file.exists()) {
-            showError("الملف غير موجود", "المسار: " + path +
-                    "\nتأكد من وجود الملف أو أعد التنزيل.");
+            showError("الملف غير موجود",
+                "المسار: " + file.getAbsolutePath() + "\nتأكد من وجود الملف.");
             return;
         }
 
         if (!Desktop.isDesktopSupported()) {
-            showError("غير مدعوم",
-                    "لا يدعم النظام فتح الملفات تلقائياً.\nالمسار: " + path);
+            showError("غير مدعوم", "لا يدعم النظام فتح الملفات تلقائياً.\nالمسار: " + path);
             return;
         }
 
+        final File finalFile = file;
         new Thread(() -> {
-            try {
-                Desktop.getDesktop().open(file);
-            } catch (IOException e) {
-                Platform.runLater(() ->
-                        showError("فشل فتح الملف", e.getMessage()));
+            try { Desktop.getDesktop().open(finalFile); }
+            catch (IOException e) {
+                javafx.application.Platform.runLater(() ->
+                    showError("فشل فتح الملف", e.getMessage()));
             }
         }, "file-opener").start();
     }
 
     private static void navigateTo(String route) {
-        // في التطبيق الحقيقي: ربط بـ Router أو NavigationService
+        // في التطبيق الحقيقي: AppRouter.getInstance().navigate(route)
         System.out.println("[FileOpener] التنقل إلى: " + route);
-        // مثال: AppRouter.getInstance().navigate(route);
-    }
-
-    /**
-     * فتح ملف باختيار المستخدم إذا لم يكن المسار محدداً.
-     */
-    public static void openWithDialog(String extension, String description) {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("فتح ملف");
-        chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter(description, "*." + extension)
-        );
-        File file = chooser.showOpenDialog(null);
-        if (file != null) openFile(file.getAbsolutePath());
     }
 
     private static void showError(String title, String msg) {

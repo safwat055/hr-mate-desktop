@@ -240,7 +240,7 @@
                               <Label fx:id="bellIcon" prefHeight="38.0" prefWidth="55.0" />
                            </children>
                         </VBox>
-                        <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />
+                        <Button fx:id="btn_sendMSG" mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="💰" textFill="#e12323" />
                         <Button mnemonicParsing="false" prefHeight="25.0" prefWidth="50.0" text="📩" />
                         <Button mnemonicParsing="false" prefHeight="26.0" prefWidth="50.0" text="📸" />
                      </children>
