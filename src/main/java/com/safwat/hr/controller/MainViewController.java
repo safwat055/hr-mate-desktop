@@ -55,7 +55,8 @@ public class MainViewController implements Initializable {
         setButtonsAction();
         Platform.runLater(() -> {
             Stage stage = (Stage) toolbar.getScene().getWindow();
-            HRNotificationBell bell = new HRNotificationBell(stage);
+
+            HRNotificationBell bell = new HRNotificationBell(stage, bellIcon, badge);
             toolbar.getChildren().add(bell);
         });
         Icons.getInstance().getBellmage(bellIcon);

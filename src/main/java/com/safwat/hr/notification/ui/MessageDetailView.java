@@ -103,6 +103,7 @@ public class MessageDetailView {
 
         System.out.println("[FETCH] URL: " + url);
 
+        
         java.net.URL u = new java.net.URL(url);
         java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
         c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
