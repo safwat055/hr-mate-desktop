@@ -48,6 +48,7 @@ public class HR_Client extends Application {
 
     }
 
+
     @Override
     public void init() throws Exception {
 

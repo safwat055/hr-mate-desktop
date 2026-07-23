@@ -130,6 +130,13 @@ public class ApiClient {
         return apiResponse;
     }
 
+    public static <T> ApiResponse<T> getWithTypeRef(String path,
+                                                    Map<String, String> queryParams,
+                                                    TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequestWithTypeRef(appendQueryParams(path, queryParams), "GET", null, null, responseType);
+    }
+
     public static <T> ApiResponse<T> get(String path,
                                          Map<String, String> queryParams,
                                          Class<T> responseType)

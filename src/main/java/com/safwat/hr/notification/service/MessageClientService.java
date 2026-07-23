@@ -19,6 +19,9 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -35,6 +38,9 @@ public class MessageClientService {
     private ApiClient.WebSocketClient wsClient;
     private boolean connected = false;
 
+    // ✅ لتتبع آخر messageId تم إضافته (لمنع التكرار)
+    private Long lastProcessedMessageId = null;
+
     private MessageClientService() {
     }
 
@@ -43,7 +49,6 @@ public class MessageClientService {
     }
 
     private String buildApiUrl(String path) {
-        // ✅ بس نضف الـ path — ApiClient هيتعامل مع BASE_URL
         path = path.trim();
         if (!path.startsWith("/")) path = "/" + path;
         path = path.replaceAll("//+", "/");
@@ -88,14 +93,60 @@ public class MessageClientService {
                     scheduleReconnect();
                     return null;
                 });
+
+        startPolling();
+
+        System.out.println("[MessageClientService] WebSocket URL: " + wsUrl);
+        System.out.println("[MessageClientService] Token: " + (token != null ? "YES" : "NO"));
+        System.out.println("[MessageClientService] Username: " + username);
+    }
+
+    // ✅ جديد — polling بس للرسائل غير المقروءة الجديدة
+    private void startPolling() {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                pollUnreadMessages();
+            } catch (Exception e) {
+                System.err.println("[Poll] Error: " + e.getMessage());
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+    }
+
+    // ✅ جديد — تجيب بس الرسائل غير المقروءة الجديدة
+    private void pollUnreadMessages() {
+        getUnreadMessages().thenAccept(messages -> {
+            if (messages == null || messages.isEmpty()) return;
+
+            Platform.runLater(() -> {
+                Set<Long> existingIds = notifService.getAll().stream()
+                        .filter(HRNotification::isMessage)
+                        .map(n -> extractId(n.getActionTarget()))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+
+                // ✅ بس الرسائل **الجديدة** (مش موجودة قبل كده)
+                List<MessageSummaryDTO> newMessages = messages.stream()
+                        .filter(msg -> !existingIds.contains(msg.getId()))
+                        .toList();
+
+                if (newMessages.isEmpty()) return;
+
+
+                // ✅ ضيف الرسائل الجديدة للـ list
+                for (MessageSummaryDTO msg : newMessages) {
+                    notifService.getAll().add(0, toNotification(msg));
+                }
+
+                notifService.updateUnreadCount();
+                System.out.println("[POLL] Added " + newMessages.size() + " new unread messages");
+            });
+        });
     }
 
     private String getWebSocketUrl() {
-        String baseUrl = ApiClient.BASE_URL2;  // "ws://localhost:8080/ws"
-
-        // ✅ تأكد إن مفيش / trailing
+        String baseUrl = ApiClient.BASE_URL2;
         baseUrl = baseUrl.replaceAll("/+$", "");
-
         return baseUrl;
     }
 
@@ -110,39 +161,63 @@ public class MessageClientService {
 
     private void onMessageReceived(String json) {
         try {
+            System.out.println("[WS RECEIVED] Raw: " + json);
             MessageNotificationDTO dto = mapper.readValue(json, MessageNotificationDTO.class);
+// ✅ تأكد إن الرسالة مش موجودة قبل كده
+            boolean exists = notifService.getAll().stream()
+                    .filter(HRNotification::isMessage)
+                    .anyMatch(n -> {
+                        Long id = extractId(n.getActionTarget());
+                        return id != null && id.equals(dto.messageId);
+                    });
 
-            Platform.runLater(() -> {
-                HRNotification.Builder builder = HRNotification.builder()
-                        .category(NotificationCategory.MESSAGE)
-                        .type(NotificationType.MESSAGE)
-                        .priority(Priority.NORMAL)
-                        .title(dto.subject != null ? dto.subject : "رسالة جديدة")
-                        .message(dto.preview != null ? dto.preview : "")
-                        .sender(dto.senderDisplayName != null
-                                ? dto.senderDisplayName : dto.senderUsername)
-                        .senderUsername(dto.senderUsername)
-                        .senderAvatar(buildAvatar(dto.senderDisplayName))
-                        .timestamp(dto.createdAt != null ? dto.createdAt : LocalDateTime.now())
-                        .action("فتح الرسالة", "messages/" + dto.messageId);
+            if (exists) {
+                System.out.println("[WS] Message " + dto.messageId + " already exists — ignoring");
+                return;
+            }
+            String currentUser = ApiClient.getUserName();
+            System.out.println("[WS RECEIVED] msgId=" + dto.messageId +
+                    ", recipient=" + dto.recipientUsername +
+                    ", sender=" + dto.senderUsername +
+                    ", currentUser=" + currentUser);
 
-                if (dto.attachmentTokens != null && !dto.attachmentTokens.isEmpty()) {
-                    for (int i = 0; i < dto.attachmentTokens.size(); i++) {
-                        builder.attachment(
-                                "مرفق " + (i + 1),
-                                "",
-                                "application/octet-stream",
-                                0,
-                                dto.attachmentTokens.get(i)
-                        );
+            if (currentUser != null && currentUser.equals(dto.recipientUsername)) {
+                Platform.runLater(() -> {
+                    HRNotification.Builder builder = HRNotification.builder()
+                            .category(NotificationCategory.MESSAGE)
+                            .type(NotificationType.MESSAGE)
+                            .priority(Priority.NORMAL)
+                            .title(dto.subject != null ? dto.subject : "رسالة جديدة")
+                            .message(dto.preview != null ? dto.preview : "")
+                            .sender(dto.senderDisplayName != null
+                                    ? dto.senderDisplayName : dto.senderUsername)
+                            .senderUsername(dto.senderUsername)
+                            .senderAvatar(buildAvatar(dto.senderDisplayName))
+                            .timestamp(dto.createdAt != null ? dto.createdAt : LocalDateTime.now())
+                            .action("فتح الرسالة", "messages/" + dto.messageId);
+
+                    if (dto.attachmentTokens != null && !dto.attachmentTokens.isEmpty()) {
+                        for (int i = 0; i < dto.attachmentTokens.size(); i++) {
+                            builder.attachment(
+                                    "مرفق " + (i + 1),
+                                    "",
+                                    "application/octet-stream",
+                                    0,
+                                    dto.attachmentTokens.get(i)
+                            );
+                        }
                     }
-                }
 
-                notifService.send(builder.build());
-            });
-
+                    notifService.send(builder.build());
+                    notifService.updateUnreadCount();
+                    System.out.println("[WS RECEIVED] ✅ Notification added for message " + dto.messageId);
+                });
+            } else {
+                System.out.println("[WS RECEIVED] ❌ Not for me — ignoring");
+            }
         } catch (Exception e) {
-            System.err.println("[MessageClientService] خطأ في تحليل الرسالة: " + e.getMessage());
+            System.err.println("[WS] Error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -168,23 +243,24 @@ public class MessageClientService {
     }
 
     // =====================================================================
-    //  Load Messages
+    //  Load Messages — في البداية بس
     // =====================================================================
 
     public void loadUnreadMessagesAndNotify() {
         getInboxStats().thenAccept(stats -> {
-            if (stats != null && stats.getUnreadCount() > 0) {
-                getUnreadMessages().thenAccept(messages -> {
-                    Platform.runLater(() -> {
-                        for (MessageSummaryDTO msg : messages) {
-                            notifService.send(toNotification(msg));
-                        }
-                        notifService.updateUnreadCount((int) stats.getUnreadCount());
-                    });
+            if (stats != null) {
+                Platform.runLater(() -> {
+                    int unread = stats.getUnreadCount() > 0 ? (int) stats.getUnreadCount() : 0;
+                    notifService.updateUnreadCount(unread);
+                    System.out.println("[LOAD] " + unread + " unread messages — badge updated");
                 });
             }
         });
     }
+
+    // =====================================================================
+    //  Refresh — لما المستخدم يدوس "تحديث"
+    // =====================================================================
 
     public void refreshAllMessages() {
         CompletableFuture.supplyAsync(() -> {
@@ -199,17 +275,22 @@ public class MessageClientService {
             }
         }).thenAccept(messages -> {
             Platform.runLater(() -> {
+                // ✅ احتفظ بالـ IDs الموجودة
                 Set<Long> existingIds = notifService.getAll().stream()
                         .filter(HRNotification::isMessage)
                         .map(n -> extractId(n.getActionTarget()))
                         .filter(Objects::nonNull)
                         .collect(Collectors.toSet());
 
-                messages.stream()
-                        .filter(msg -> !existingIds.contains(msg.getId()))
-                        .forEach(msg -> notifService.send(toNotification(msg)));
+                // ✅ ضيف **كل** الرسائل (مقروءة وغير مقروءة) اللي مش موجودة
+                for (MessageSummaryDTO msg : messages) {
+                    if (!existingIds.contains(msg.getId())) {
+                        notifService.getAll().add(toNotification(msg));
+                    }
+                }
 
                 notifService.updateUnreadCount();
+                System.out.println("[REFRESH] Loaded " + messages.size() + " messages");
             });
         });
     }
@@ -293,14 +374,12 @@ public class MessageClientService {
         });
     }
 
-    // ✅ معدّل — يجيب تفاصيل الرسالة
     public CompletableFuture<Map<String, Object>> getMessageDetails(Long messageId) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String url = buildApiUrl("/messages/" + messageId);
                 System.out.println("[CLIENT] جاري جلب تفاصيل الرسالة: " + messageId);
 
-                // جيب JSON خام
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
                 c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
@@ -316,7 +395,6 @@ public class MessageClientService {
                 String rawJson = sb.toString();
                 System.out.println("[CLIENT] Raw: " + rawJson);
 
-                // حوّل لـ Map
                 @SuppressWarnings("unchecked")
                 Map<String, Object> root = mapper.readValue(rawJson, Map.class);
                 Object data = root.get("data");
@@ -415,7 +493,7 @@ public class MessageClientService {
     }
 
     // =====================================================================
-    //  Download Attachment — معدّل
+    //  Download Attachment
     // =====================================================================
 
     public void downloadAttachment(String token,
@@ -450,7 +528,7 @@ public class MessageClientService {
 
     private String buildAvatar(String displayName) {
         if (displayName == null || displayName.isBlank()) return "؟";
-        String[] parts = displayName.trim().split("\\s+");
+        String[] parts = displayName.trim().split("\s+");
         if (parts.length == 1) return String.valueOf(parts[0].charAt(0));
         return "" + parts[0].charAt(0) + parts[1].charAt(0);
     }
@@ -471,6 +549,7 @@ public class MessageClientService {
         public Long messageId;
         public String senderUsername;
         public String senderDisplayName;
+        public String recipientUsername;
         public String subject;
         public String preview;
         public int attachmentsCount;

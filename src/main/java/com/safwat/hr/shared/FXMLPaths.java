@@ -9,4 +9,6 @@ public class FXMLPaths {
     private final String payrollVocab = "/com/safwat/hr/controller/payroll/PayrollVocab.fxml";
 
     private final String payrollReport = "/com/safwat/hr/controller/report/payroll/PayrollReport.fxml";
+    private final String chat = "/com/safwat/hr/chat/ChatView.fxml";
+
 }

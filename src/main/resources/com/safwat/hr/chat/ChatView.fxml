@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<HBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" prefHeight="700" prefWidth="1100"
+      xmlns="http://javafx.com/javafx/26" fx:controller="com.safwat.hr.chat.ChatViewController">
+    <!-- ══════════════════════════
+         الجانب الأيسر — المحادثات
+    ══════════════════════════ -->
+    <VBox maxWidth="340" minWidth="260" prefWidth="300" styleClass="chat-sidebar">
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="8" styleClass="sidebar-header">
+            <padding>
+                <Insets bottom="16" left="16" right="16" top="16"/>
+            </padding>
+            <Label styleClass="sidebar-title" text="الرسائل"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnNewConversation" onAction="#onNewConversation" styleClass="btn-new-chat" text="+"/>
+        </HBox>
+
+        <!-- بحث -->
+        <HBox alignment="CENTER_LEFT" styleClass="search-box">
+            <padding>
+                <Insets bottom="8" left="12" right="12" top="0"/>
+            </padding>
+            <TextField fx:id="searchField" onKeyReleased="#onSearchConversations" promptText="بحث في المحادثات"
+                       styleClass="chat-search-field" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- قائمة المحادثات -->
+        <ListView fx:id="conversationList" onMouseClicked="#onConversationSelected" styleClass="conversation-list"
+                  VBox.vgrow="ALWAYS"/>
+
+    </VBox>
+
+    <!-- فاصل -->
+    <Separator orientation="VERTICAL" styleClass="chat-divider"/>
+
+    <!-- ══════════════════════════
+         الجانب الأيمن — الشات
+    ══════════════════════════ -->
+    <VBox fx:id="chatArea" styleClass="chat-area" HBox.hgrow="ALWAYS">
+
+        <!-- حالة فارغة -->
+        <VBox fx:id="emptyState" alignment="CENTER" spacing="12" styleClass="empty-state" VBox.vgrow="ALWAYS">
+            <Label style="-fx-font-size: 48px;" text=""/>
+            <Label styleClass="empty-state-text" text="اختر محادثة لتبدأ"/>
+        </VBox>
+
+        <!-- محتوى الشات — مخفي في البداية -->
+        <VBox fx:id="chatContent" visible="true" VBox.vgrow="ALWAYS">
+
+            <!-- Chat Header -->
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="chat-header">
+                <padding>
+                    <Insets bottom="14" left="14" right="14" top="14"/>
+                </padding>
+
+                <StackPane fx:id="headerAvatar" styleClass="conv-avatar-header">
+                    <Label fx:id="headerAvatarInitials" styleClass="avatar-initials-header"/>
+                </StackPane>
+
+                <VBox spacing="2">
+                    <Label fx:id="headerConvName" styleClass="header-conv-name"/>
+                    <Label fx:id="headerConvMeta" styleClass="header-conv-meta"/>
+                </VBox>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Button fx:id="btnConvInfo" managed="false" onAction="#onShowConvInfo" styleClass="btn-icon" text=""
+                        visible="false"/>
+            </HBox>
+
+            <Separator styleClass="header-divider"/>
+
+            <!-- منطقة الرسائل -->
+            <ScrollPane fx:id="messagesScroll" fitToWidth="true" hbarPolicy="NEVER" styleClass="messages-scroll"
+                        vbarPolicy="AS_NEEDED" VBox.vgrow="ALWAYS">
+                <content>
+                    <VBox fx:id="messagesContainer" spacing="4" styleClass="messages-container">
+                        <padding>
+                            <Insets bottom="8" left="16" right="16" top="16"/>
+                        </padding>
+                    </VBox>
+                </content>
+            </ScrollPane>
+
+            <!-- Loading -->
+            <HBox fx:id="messagesLoading" alignment="CENTER" managed="false" styleClass="messages-loading"
+                  visible="false">
+                <padding>
+                    <Insets bottom="8" left="8" right="8" top="8"/>
+                </padding>
+                <ProgressIndicator prefHeight="24" prefWidth="24"/>
+                <Label styleClass="loading-text" text="  جاري التحميل"/>
+            </HBox>
+
+            <!-- Input -->
+            <HBox alignment="BOTTOM_CENTER" spacing="8" styleClass="chat-input-area">
+                <padding>
+                    <Insets bottom="14" left="14" right="14" top="10"/>
+                </padding>
+
+                <Button fx:id="btnAttach" onAction="#onAttachFile" styleClass="btn-icon" text=""/>
+
+                <TextArea fx:id="messageInput" maxHeight="120" prefRowCount="1" promptText="اكتب رسالتك..."
+                          styleClass="message-input" wrapText="true" HBox.hgrow="ALWAYS"/>
+
+                <Button fx:id="btnSend" defaultButton="true" onAction="#onSendMessage" styleClass="btn-send"
+                        text="إرسال"/>
+            </HBox>
+
+        </VBox>
+
+    </VBox>
+
+</HBox>

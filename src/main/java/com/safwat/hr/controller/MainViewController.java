@@ -1,7 +1,6 @@
 package com.safwat.hr.controller;
 
 
-import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.ui.ComposeMessageDialog;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
@@ -90,7 +89,6 @@ public class MainViewController implements Initializable {
         });
 
 
-        MessageClientService.getInstance().loadUnreadMessagesAndNotify();
     }
 
 
@@ -121,6 +119,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     private void openPayrollReport() {
-        ViewManager.openIndependentView("/com/safwat/hr/controller/report/payroll/PayrollReport.fxml", null);
+        //ViewManager.openIndependentView("/com/safwat/hr/controller/report/payroll/PayrollReport.fxml", null);
+        ViewManager.openIndependentView("/com/safwat/hr/chat/ChatView.fxml", null);
     }
 }

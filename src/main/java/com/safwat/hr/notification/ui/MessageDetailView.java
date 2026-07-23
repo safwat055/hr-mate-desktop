@@ -103,7 +103,7 @@ public class MessageDetailView {
 
         System.out.println("[FETCH] URL: " + url);
 
-        
+
         java.net.URL u = new java.net.URL(url);
         java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
         c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
@@ -396,8 +396,12 @@ public class MessageDetailView {
                     token,
                     targetFile.toPath(),
                     () -> {
-                        showInfo("تم التحميل", "تم حفظ الملف في:\\n" + targetFile.getAbsolutePath());
-                        FileOpener.open(targetFile.getAbsolutePath());
+                        Platform.runLater(() -> {
+
+                            FileOpener.open(targetFile.getAbsolutePath());
+                        });
+
+
                     },
                     err -> showError("فشل التحميل", err)
             );
@@ -457,7 +461,12 @@ public class MessageDetailView {
 
         String recipient = message.getSenderUsername() != null
                 ? message.getSenderUsername() : "";
-        String subject = "رد: " + (message.getTitle() != null ? message.getTitle() : "");
+
+        // ✅ نظف الموضوع من "رد:" المكررة
+        String originalTitle = message.getTitle() != null ? message.getTitle() : "";
+        String cleanTitle = originalTitle.replaceAll("^(رد:\\s*)+", "").trim();
+        String subject = "رد: " + (cleanTitle.isBlank() ? "(بدون موضوع)" : cleanTitle);
+
         Long parentId = extractMessageId(message.getActionTarget());
 
         ComposeMessageDialog.showReply(ownerStage, recipient, subject, parentId);
