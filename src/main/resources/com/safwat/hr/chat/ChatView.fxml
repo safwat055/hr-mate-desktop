@@ -45,7 +45,7 @@
 
         <!-- حالة فارغة -->
         <VBox fx:id="emptyState" alignment="CENTER" spacing="12" styleClass="empty-state" VBox.vgrow="ALWAYS">
-            <Label style="-fx-font-size: 48px;" text=""/>
+            <Label style="-fx-font-size: 48px;" text="--"/>
             <Label styleClass="empty-state-text" text="اختر محادثة لتبدأ"/>
         </VBox>
 

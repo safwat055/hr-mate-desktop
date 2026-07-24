@@ -1,6 +1,6 @@
 pluginManagement {
     plugins {
-        id 'org.jetbrains.kotlin.jvm' version '2.4.0'
+       
     }
 }
 rootProject.name = "HR_Management_Desktop"

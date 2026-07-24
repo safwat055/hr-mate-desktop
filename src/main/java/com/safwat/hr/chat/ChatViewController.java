@@ -2,6 +2,7 @@ package com.safwat.hr.chat;
 
 
 import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.utils.ApiClient;
 import javafx.application.Platform;
 import javafx.collections.transformation.FilteredList;
@@ -22,19 +23,16 @@ import java.util.ResourceBundle;
 
 public class ChatViewController implements Initializable {
 
-    // ── FXML ──────────────────────────────────────────────────────────
     @FXML
     private ListView<ChatDTOs.ConversationSummaryDTO> conversationList;
     @FXML
     private TextField searchField;
     @FXML
     private Button btnNewConversation;
-
     @FXML
     private VBox emptyState;
     @FXML
     private VBox chatContent;
-
     @FXML
     private StackPane headerAvatar;
     @FXML
@@ -45,14 +43,12 @@ public class ChatViewController implements Initializable {
     private Label headerConvMeta;
     @FXML
     private Button btnConvInfo;
-
     @FXML
     private ScrollPane messagesScroll;
     @FXML
     private VBox messagesContainer;
     @FXML
     private HBox messagesLoading;
-
     @FXML
     private TextArea messageInput;
     @FXML
@@ -60,28 +56,26 @@ public class ChatViewController implements Initializable {
     @FXML
     private Button btnAttach;
 
-    // ── State ─────────────────────────────────────────────────────────
     private ChatService chatService;
     private FilteredList<ChatDTOs.ConversationSummaryDTO> filteredConversations;
     private ChatDTOs.ConversationSummaryDTO currentConversation;
-
-    // ═════════════════════════════════════════════════════════════════
-    //  Initialize
-    // ═════════════════════════════════════════════════════════════════
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         chatService = ChatService.getInstance();
 
-        // ١. Init ChatService (WebSocket + conversations)
+        // ١. Init ChatService
         chatService.init(
                 ApiClient.getUserName(),
-                err -> HRNotification.builder()
-                        .title("خطأ في الاتصال")
-                        .message(err)
-                        .type(HRNotification.NotificationType.SYSTEM)
-                        .build()
-
+                err -> Platform.runLater(() ->
+                        NotificationService.getInstance().send(
+                                HRNotification.builder()
+                                        .title("خطأ في الاتصال")
+                                        .message(err)
+                                        .type(HRNotification.NotificationType.SYSTEM)
+                                        .build()
+                        )
+                )
         );
 
         // ٢. Bind conversations list
@@ -89,12 +83,12 @@ public class ChatViewController implements Initializable {
         conversationList.setItems(filteredConversations);
         conversationList.setCellFactory(lv -> new ConversationCell());
 
-        // ٣. Bind messages → UI
+        // ٣. Bind messages → UI — ✅ مش commented
         chatService.getMessages().addListener(
                 (javafx.collections.ListChangeListener<ChatDTOs.ChatMessageDTO>) change -> {
                     while (change.next()) {
                         if (change.wasAdded()) {
-                            // change.getAddedSubList().forEach(this::addMessageBubble);
+                            change.getAddedSubList().forEach(this::addMessageBubble);
                         }
                     }
                 }
@@ -103,7 +97,7 @@ public class ChatViewController implements Initializable {
         // ٤. Scroll لأسفل لما تيجي رسالة جديدة
         chatService.setOnNewMessageInOpenConv(this::scrollToBottom);
 
-        // ٥. Enter يرسل الرسالة (Shift+Enter سطر جديد)
+        // ٥. Enter يرسل، Shift+Enter سطر جديد
         messageInput.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ENTER && !event.isShiftDown()) {
                 event.consume();
@@ -112,12 +106,12 @@ public class ChatViewController implements Initializable {
         });
 
         // ٦. حالة أولية
-        showEmptyState();
+        Platform.runLater(this::showEmptyState);
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  Conversation Selection
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onConversationSelected() {
@@ -131,22 +125,24 @@ public class ChatViewController implements Initializable {
 
     private void showChatContent(ChatDTOs.ConversationSummaryDTO conv) {
         // Header
-        headerAvatarInitials.setText(conv.getAvatarInitials());
-        headerAvatar.setStyle("-fx-background-color: " + conv.getAvatarColor() + ";");
-        headerConvName.setText(conv.getName());
-        headerConvMeta.setText(conv.getType().equals("PRIVATE") ? "محادثة خاصة" :
-                conv.getType().equals("GROUP") ? "مجموعة" : "بث عام");
+        headerAvatarInitials.setText(conv.getAvatarInitials() != null ? conv.getAvatarInitials() : "?");
+        String color = conv.getAvatarColor() != null ? conv.getAvatarColor() : "#185FA5";
+        headerAvatar.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 20;");
+        headerConvName.setText(conv.getName() != null ? conv.getName() : "");
+        headerConvMeta.setText(
+                "PRIVATE".equals(conv.getType()) ? "محادثة خاصة" :
+                        "GROUP".equals(conv.getType()) ? "مجموعة" : "بث عام"
+        );
 
-        // إظهار زر التفاصيل للمجموعات فقط
-        boolean isGroup = !conv.getType().equals("PRIVATE");
+        boolean isGroup = !"PRIVATE".equals(conv.getType());
         btnConvInfo.setVisible(isGroup);
         btnConvInfo.setManaged(isGroup);
 
-        // Switch visibility
+        // ✅ setManaged ضروري عشان الـ layout يتعدل
         emptyState.setVisible(false);
-
+        emptyState.setManaged(false);
         chatContent.setVisible(true);
-
+        chatContent.setManaged(true);
 
         messagesContainer.getChildren().clear();
     }
@@ -156,35 +152,29 @@ public class ChatViewController implements Initializable {
 
         chatService.openConversation(convId, () -> {
             setMessagesLoading(false);
-            // الرسائل اتحملت — addMessageBubble اتستدعت تلقائياً عبر الـ listener
             scrollToBottom();
         });
     }
 
     private void showEmptyState() {
+        // ✅ setManaged ضروري
         emptyState.setVisible(true);
-
+        emptyState.setManaged(true);
         chatContent.setVisible(false);
-
+        chatContent.setManaged(false);
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  Messages
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
-    /**
-     * يضيف MessageBubble في الـ messagesContainer.
-     * يُستدعى من الـ listener على chatService.getMessages().
-     */
     private void addMessageBubble(ChatDTOs.ChatMessageDTO msg) {
         MessageBubble bubble = new MessageBubble(msg);
         messagesContainer.getChildren().add(bubble);
     }
 
     private void scrollToBottom() {
-        Platform.runLater(() ->
-                messagesScroll.setVvalue(1.0)
-        );
+        Platform.runLater(() -> messagesScroll.setVvalue(1.0));
     }
 
     private void setMessagesLoading(boolean loading) {
@@ -192,9 +182,9 @@ public class ChatViewController implements Initializable {
         messagesLoading.setManaged(loading);
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  Send Message
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onSendMessage() {
@@ -206,22 +196,24 @@ public class ChatViewController implements Initializable {
         btnSend.setDisable(true);
 
         chatService.sendMessage(content, err -> {
-            btnSend.setDisable(false);
-            HRNotification.builder()
-                    .title("فشل الإرسال")
-                    .message(err)
-                    .type(HRNotification.NotificationType.SYSTEM)
-                    .build()
-            ;
+            Platform.runLater(() -> {
+                btnSend.setDisable(false);
+                NotificationService.getInstance().send(
+                        HRNotification.builder()
+                                .title("فشل الإرسال")
+                                .message(err)
+                                .type(HRNotification.NotificationType.SYSTEM)
+                                .build()
+                );
+            });
         });
 
-        // إعادة تفعيل الزر بعد ثانية (لو الرسالة وصلت والـ WS رد)
         Platform.runLater(() -> btnSend.setDisable(false));
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  Attach File
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onAttachFile() {
@@ -247,86 +239,119 @@ public class ChatViewController implements Initializable {
                 .thenAccept(res -> Platform.runLater(() -> {
                     btnAttach.setDisable(false);
                     if (!res.isSuccess()) {
-                        HRNotification.builder()
-                                .title("فشل إرسال الملف")
-                                .message(res.getMessage())
-                                .type(HRNotification.NotificationType.SYSTEM)
-                                .build()
-                        ;
+                        NotificationService.getInstance().send(
+                                HRNotification.builder()
+                                        .title("فشل إرسال الملف")
+                                        .message(res.getMessage())
+                                        .type(HRNotification.NotificationType.SYSTEM)
+                                        .build()
+                        );
                     }
                 }));
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  New Conversation
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onNewConversation() {
-        // SearchDialog للبحث عن مستخدمين
         NewConversationDialog dialog = new NewConversationDialog(
                 btnNewConversation.getScene().getWindow()
         );
-        dialog.showAndWait().ifPresent(userId -> {
-            chatService.startPrivateConversation(
-                    userId,
-                    convId -> {
-                        // ابحث عن المحادثة في القائمة وافتحها
-                        chatService.getConversations().stream()
-                                .filter(c -> c.getId().equals(convId))
-                                .findFirst()
-                                .ifPresent(conv -> {
-                                    conversationList.getSelectionModel().select(conv);
-                                    currentConversation = conv;
-                                    showChatContent(conv);
-                                    loadConversation(convId);
-                                });
-                    },
-                    err -> HRNotification.builder()
-                            .title("خطأ")
-                            .message(err)
-                            .type(HRNotification.NotificationType.SYSTEM)
-                            .build()
-
-            );
-        });
+        dialog.showAndWait().ifPresent(userId ->
+                chatService.startPrivateConversation(
+                        userId,
+                        convId -> Platform.runLater(() -> openConversationById(convId)),
+                        err -> Platform.runLater(() ->
+                                NotificationService.getInstance().send(
+                                        HRNotification.builder()
+                                                .title("خطأ")
+                                                .message(err)
+                                                .type(HRNotification.NotificationType.SYSTEM)
+                                                .build()
+                                )
+                        )
+                )
+        );
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  Search Conversations
-    // ═════════════════════════════════════════════════════════════════
+    private void openConversationById(long convId) {
+        ChatDTOs.ConversationSummaryDTO existing = chatService.getConversations().stream()
+                .filter(c -> c.getId() != null && c.getId().equals(convId))
+                .findFirst()
+                .orElse(null);
+
+        if (existing != null) {
+            conversationList.getSelectionModel().select(existing);
+            currentConversation = existing;
+            showChatContent(existing);
+            loadConversation(convId);
+            return;
+        }
+
+        // placeholder لو القائمة لسه ما اتحدثتش
+        ChatDTOs.ConversationSummaryDTO placeholder = new ChatDTOs.ConversationSummaryDTO();
+        placeholder.setId(convId);
+        placeholder.setName("جاري التحميل...");
+        placeholder.setType("PRIVATE");
+        placeholder.setAvatarInitials("?");
+        placeholder.setAvatarColor("#185FA5");
+
+        currentConversation = placeholder;
+        showChatContent(placeholder);
+        loadConversation(convId);
+
+        javafx.collections.ListChangeListener<ChatDTOs.ConversationSummaryDTO> listener =
+                new javafx.collections.ListChangeListener<>() {
+                    @Override
+                    public void onChanged(Change<? extends ChatDTOs.ConversationSummaryDTO> change) {
+                        chatService.getConversations().stream()
+                                .filter(c -> c.getId() != null && c.getId().equals(convId))
+                                .findFirst()
+                                .ifPresent(conv -> Platform.runLater(() -> {
+                                    chatService.getConversations().removeListener(this);
+                                    currentConversation = conv;
+                                    headerConvName.setText(conv.getName());
+                                    headerAvatarInitials.setText(conv.getAvatarInitials());
+                                    String color = conv.getAvatarColor() != null
+                                            ? conv.getAvatarColor() : "#185FA5";
+                                    headerAvatar.setStyle("-fx-background-color: " + color
+                                            + "; -fx-background-radius: 20;");
+                                    conversationList.getSelectionModel().select(conv);
+                                }));
+                    }
+                };
+        chatService.getConversations().addListener(listener);
+        chatService.refreshConversations();
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  Search
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onSearchConversations() {
         String query = searchField.getText().toLowerCase().trim();
-        if (query.isEmpty()) {
-            filteredConversations.setPredicate(p -> true);
-        } else {
-            filteredConversations.setPredicate(conv ->
-                    conv.getName() != null &&
-                            conv.getName().toLowerCase().contains(query)
-            );
-        }
+        filteredConversations.setPredicate(query.isEmpty() ? p -> true :
+                conv -> conv.getName() != null &&
+                        conv.getName().toLowerCase().contains(query));
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  Conv Info (للمجموعات)
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
+    //  Conv Info
+    // ══════════════════════════════════════════════════════
 
     @FXML
     private void onShowConvInfo() {
         if (currentConversation == null) return;
-        // TODO: عرض dialog بتفاصيل المجموعة والمشاركين
+        // TODO: dialog تفاصيل المجموعة
     }
 
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
     //  Cleanup
-    // ═════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════
 
-    /**
-     * يُستدعى لما الـ view يُغلق.
-     * اربطه بـ stage.setOnCloseRequest أو بزر الخروج.
-     */
     public void onClose() {
         chatService.shutdown();
     }

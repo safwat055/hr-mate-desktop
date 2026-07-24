@@ -8,6 +8,7 @@ import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
+import com.safwat.hr.utils.ApiClient;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -32,7 +33,7 @@ public class MainViewController implements Initializable {
     @FXML
     private Tab mainTab;
     @FXML
-    private Label lblParts;
+    private Label lblParts, leftLable;
 
     @FXML
     private AnchorPane leftPane;
@@ -60,6 +61,8 @@ public class MainViewController implements Initializable {
         });
         Icons.getInstance().getBellmage(bellIcon);
         //new BackgroundServiceSimulator().start();
+
+        leftLable.setText(ApiClient.getUserName());
 
     }
 

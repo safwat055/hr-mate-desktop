@@ -119,8 +119,8 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
 
         // Icon حسب نوع المحادثة
         String typeIcon = switch (conv.getType() != null ? conv.getType() : "") {
-            case "GROUP" -> "👥 ";
-            case "BROADCAST" -> "📢 ";
+            case "GROUP" -> "[G] ";
+            case "BROADCAST" -> "[B] ";
             default -> "";
         };
         if (!typeIcon.isEmpty() && conv.getName() != null) {

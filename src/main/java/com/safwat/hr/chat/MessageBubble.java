@@ -69,7 +69,7 @@ public class MessageBubble extends HBox {
 
         // نص الرسالة
         if (msg.isDeleted()) {
-            Label deleted = new Label("🚫 تم حذف هذه الرسالة");
+            Label deleted = new Label("[محذوف] تم حذف هذه الرسالة");
             deleted.getStyleClass().add("msg-deleted");
             bubble.getChildren().add(deleted);
         } else {
@@ -136,7 +136,7 @@ public class MessageBubble extends HBox {
 
         // نص الرسالة
         if (msg.isDeleted()) {
-            Label deleted = new Label("🚫 تم حذف هذه الرسالة");
+            Label deleted = new Label("[محذوف] تم حذف هذه الرسالة");
             deleted.getStyleClass().add("msg-deleted");
             bubble.getChildren().add(deleted);
         } else {
@@ -194,7 +194,7 @@ public class MessageBubble extends HBox {
         HBox.setHgrow(info, Priority.ALWAYS);
 
         // زر تحميل
-        Button downloadBtn = new Button("⬇");
+        Button downloadBtn = new Button("[Down]");
         downloadBtn.getStyleClass().add("btn-download-attachment");
         downloadBtn.setOnAction(e -> downloadAttachment(att, downloadBtn));
 
@@ -226,14 +226,14 @@ public class MessageBubble extends HBox {
     }
 
     private String getFileIcon(String mimeType) {
-        if (mimeType == null) return "📄";
-        if (mimeType.startsWith("image/")) return "🖼";
-        if (mimeType.startsWith("video/")) return "🎬";
-        if (mimeType.startsWith("audio/")) return "🎵";
-        if (mimeType.contains("pdf")) return "📕";
-        if (mimeType.contains("word") || mimeType.contains("document")) return "📝";
-        if (mimeType.contains("sheet") || mimeType.contains("excel")) return "📊";
-        if (mimeType.contains("zip") || mimeType.contains("compressed")) return "🗜";
-        return "📄";
+        if (mimeType == null) return "[F]";
+        if (mimeType.startsWith("image/")) return "[IMG]";
+        if (mimeType.startsWith("video/")) return "[VID]";
+        if (mimeType.startsWith("audio/")) return "[AUD]";
+        if (mimeType.contains("pdf")) return "[PDF]";
+        if (mimeType.contains("word") || mimeType.contains("document")) return "[DOC]";
+        if (mimeType.contains("sheet") || mimeType.contains("excel")) return "[XLS]";
+        if (mimeType.contains("zip") || mimeType.contains("compressed")) return "[ZIP]";
+        return "[F]";
     }
 }

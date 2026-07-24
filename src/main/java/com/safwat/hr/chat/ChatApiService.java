@@ -36,12 +36,10 @@ public class ChatApiService {
      * بحث عن مستخدمين — يحتاج حرفين على الأقل
      */
     public static CompletableFuture<ApiResponse<List<ChatDTOs.UserSearchDTO>>> searchUsers(String query) {
-        Map<String, String> params = Map.of("q", query);
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return ApiClient.getWithTypeRef(
-                        BASE + "/users/search",
-                        params,
+                        BASE + "/users/search?q=" + java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8),
                         new TypeReference<List<ChatDTOs.UserSearchDTO>>() {
                         }
                 );
@@ -142,15 +140,10 @@ public class ChatApiService {
     public static CompletableFuture<ApiResponse<List<ChatDTOs.ChatMessageDTO>>> getMessages(
             long conversationId, int page) {
 
-        Map<String, String> params = Map.of(
-                "page", String.valueOf(page),
-                "size", "100"
-        );
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return ApiClient.getWithTypeRef(
-                        BASE + "/conversations/" + conversationId + "/messages",
-                        params,
+                        BASE + "/conversations/" + conversationId + "/messages?page=" + page + "&size=100",
                         new TypeReference<List<ChatDTOs.ChatMessageDTO>>() {
                         }
                 );
@@ -265,28 +258,6 @@ public class ChatApiService {
     // ═════════════════════════════════════════════════════════════════
     //  Helpers — ApiClient methods لـ TypeReference
     // ═════════════════════════════════════════════════════════════════
-
-    /**
-     * امتداد لـ ApiClient.get يقبل TypeReference — لأن ApiClient.get(path, TypeRef) مش موجود
-     */
-    private static <T> ApiResponse<T> get(String path, TypeReference<T> ref)
-            throws Exception {
-        return ApiClient.getWithTypeRef(path, ref);
-    }
-
-    private static <T> ApiResponse<T> get(String path,
-                                          Map<String, String> params,
-                                          TypeReference<T> ref)
-            throws Exception {
-        // نبني الـ query string يدوياً لأن ApiClient.get(path, params, TypeRef) مش موجود
-        StringBuilder sb = new StringBuilder(path);
-        if (!params.isEmpty()) {
-            sb.append("?");
-            params.forEach((k, v) -> sb.append(k).append("=").append(v).append("&"));
-            sb.deleteCharAt(sb.length() - 1);
-        }
-        return ApiClient.getWithTypeRef(sb.toString(), ref);
-    }
 
     private static <T> ApiResponse<T> errorResponse(Exception e) {
         ApiResponse<T> err = new ApiResponse<>();
