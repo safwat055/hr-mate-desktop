@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<SplitPane xmlns:fx="http://javafx.com/fxml/1"
+           xmlns="http://javafx.com/javafx/17"
+           fx:controller="com.safwat.hr.notification.ui.MessageInboxController"
+           dividerPositions="0.32"
+           prefHeight="650.0" prefWidth="950.0"
+           style="-fx-background-color:#FFFFFF;">
+
+    <!-- Right: Thread List -->
+    <VBox spacing="10" style="-fx-background-color:#FFFFFF;">
+        <padding>
+            <Insets top="16" right="12" bottom="12" left="12"/>
+        </padding>
+
+        <!-- Header -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="📧 الرسائل" style="-fx-font-size:16px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="✉️ جديد" onAction="#onComposeNew"
+                    style="-fx-background-color:#0F6E56;-fx-text-fill:white;-fx-font-size:12px;-fx-font-weight:600;-fx-background-radius:8px;-fx-padding:6 14;"/>
+        </HBox>
+
+        <!-- Search -->
+        <TextField fx:id="searchField" promptText="🔍 البحث في الرسائل..."
+                   style="-fx-font-size:13px;-fx-background-radius:8px;-fx-padding:8 12;"/>
+
+        <!-- Thread List -->
+        <ListView fx:id="threadList" VBox.vgrow="ALWAYS"
+                  style="-fx-background-color:transparent;-fx-border-color:transparent;"/>
+    </VBox>
+
+    <!-- Left: Conversation View -->
+    <VBox fx:id="conversationContainer" spacing="0"
+          style="-fx-background-color:#FAFAFA;"/>
+
+</SplitPane>

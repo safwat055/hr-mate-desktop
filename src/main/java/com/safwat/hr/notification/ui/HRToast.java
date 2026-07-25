@@ -6,7 +6,10 @@ import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -19,25 +22,25 @@ import java.util.Deque;
 
 /**
  * =====================================================
- *  HRToast — إشعار فوري منبثق
+ * HRToast — إشعار فوري منبثق
  * =====================================================
- *
- *  يظهر في الزاوية السفلية اليمنى ويختفي تلقائياً.
- *  يدعم تراكم حتى 4 إشعارات في وقت واحد.
- *  يعرض نوعين: إشعار نظام، رسالة مستخدم.
- *
- *  الاستخدام:
- *    HRToast.show(primaryStage, notification);
+ * <p>
+ * يظهر في الزاوية السفلية اليمنى ويختفي تلقائياً.
+ * يدعم تراكم حتى 4 إشعارات في وقت واحد.
+ * يعرض نوعين: إشعار نظام، رسالة مستخدم.
+ * <p>
+ * الاستخدام:
+ * HRToast.show(primaryStage, notification);
  */
 public class HRToast {
 
-    private static final int    TOAST_WIDTH   = 370;
-    private static final int    DISPLAY_SECS  = 5;
-    private static final int    MAX_VISIBLE   = 4;
+    private static final int TOAST_WIDTH = 370;
+    private static final int DISPLAY_SECS = 5;
+    private static final int MAX_VISIBLE = 2;
     private static final double BOTTOM_MARGIN = 24;
-    private static final double RIGHT_MARGIN  = 24;
-    private static final double TOAST_HEIGHT  = 82;
-    private static final double GAP           = 10;
+    private static final double RIGHT_MARGIN = 24;
+    private static final double TOAST_HEIGHT = 82;
+    private static final double GAP = 10;
 
     private static final Deque<Popup> activeToasts = new ArrayDeque<>();
 
@@ -60,11 +63,12 @@ public class HRToast {
         popup.setAutoHide(false);
 
         String color = n.getType().color;
-        String bg    = n.getType().bgColor;
+        String bg = n.getType().bgColor;
 
         // أيقونة النوع
         Rectangle iconBg = new Rectangle(36, 36);
-        iconBg.setArcWidth(8); iconBg.setArcHeight(8);
+        iconBg.setArcWidth(8);
+        iconBg.setArcHeight(8);
         iconBg.setFill(Color.web(bg));
         Label iconLbl = new Label(getSystemIcon(n.getType()));
         iconLbl.setStyle("-fx-font-size:10px;-fx-font-weight:700;-fx-text-fill:" + color + ";");
@@ -97,12 +101,12 @@ public class HRToast {
         root.setPrefWidth(TOAST_WIDTH);
         root.setMinHeight(TOAST_HEIGHT);
         root.setStyle(
-            "-fx-background-color:#FFFFFF;" +
-            "-fx-background-radius:10px;" +
-            "-fx-border-color:" + color + ";" +
-            "-fx-border-width:0 0 0 4px;" +
-            "-fx-border-radius:10px 0 0 10px;" +
-            "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
+                "-fx-background-color:#FFFFFF;" +
+                        "-fx-background-radius:10px;" +
+                        "-fx-border-color:" + color + ";" +
+                        "-fx-border-width:0 0 0 4px;" +
+                        "-fx-border-radius:10px 0 0 10px;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
         );
 
         VBox wrapper = new VBox(0, root, buildProgressBar(color));
@@ -126,7 +130,7 @@ public class HRToast {
 
         // اسم المرسل
         Label senderLbl = new Label(
-            n.getSenderName() != null ? n.getSenderName() : "رسالة جديدة");
+                n.getSenderName() != null ? n.getSenderName() : "رسالة جديدة");
         senderLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
 
         // الموضوع
@@ -157,12 +161,12 @@ public class HRToast {
         root.setPrefWidth(TOAST_WIDTH);
         root.setMinHeight(TOAST_HEIGHT);
         root.setStyle(
-            "-fx-background-color:#FFFFFF;" +
-            "-fx-background-radius:10px;" +
-            "-fx-border-color:#0F6E56;" +
-            "-fx-border-width:0 0 0 4px;" +
-            "-fx-border-radius:10px 0 0 10px;" +
-            "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
+                "-fx-background-color:#FFFFFF;" +
+                        "-fx-background-radius:10px;" +
+                        "-fx-border-color:#0F6E56;" +
+                        "-fx-border-width:0 0 0 4px;" +
+                        "-fx-border-radius:10px 0 0 10px;" +
+                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.15),12,0,0,4);"
         );
 
         VBox wrapper = new VBox(0, root, buildProgressBar("#0F6E56"));
@@ -174,8 +178,8 @@ public class HRToast {
     private static MFXButton buildCloseBtn(Popup popup) {
         MFXButton btn = new MFXButton("x");
         btn.setStyle(
-            "-fx-background-color:transparent;-fx-text-fill:#AAAAAA;" +
-            "-fx-font-size:13px;-fx-cursor:hand;"
+                "-fx-background-color:transparent;-fx-text-fill:#AAAAAA;" +
+                        "-fx-font-size:13px;-fx-cursor:hand;"
         );
         btn.setPrefSize(24, 24);
         btn.setOnAction(e -> dismissToast(popup));
@@ -186,7 +190,8 @@ public class HRToast {
         Rectangle bar = new Rectangle(TOAST_WIDTH, 3);
         bar.setFill(Color.web(color));
         bar.setOpacity(0.35);
-        bar.setArcWidth(3); bar.setArcHeight(3);
+        bar.setArcWidth(3);
+        bar.setArcHeight(3);
 
         ScaleTransition scale = new ScaleTransition(Duration.seconds(DISPLAY_SECS), bar);
         scale.setFromX(1.0);
@@ -215,7 +220,10 @@ public class HRToast {
     }
 
     private static void dismissToast(Popup popup) {
-        if (popup.getContent().isEmpty()) { popup.hide(); return; }
+        if (popup.getContent().isEmpty()) {
+            popup.hide();
+            return;
+        }
         javafx.scene.Node root = popup.getContent().get(0);
 
         FadeTransition fade = new FadeTransition(Duration.millis(180), root);
@@ -232,7 +240,7 @@ public class HRToast {
     }
 
     private static void repositionAll(Stage owner) {
-        double screenX = owner.getX() + owner.getWidth()  - TOAST_WIDTH - RIGHT_MARGIN;
+        double screenX = owner.getX() + owner.getWidth() - TOAST_WIDTH - RIGHT_MARGIN;
         double screenY = owner.getY() + owner.getHeight();
         int i = 0;
         for (Popup p : activeToasts) {
@@ -246,12 +254,12 @@ public class HRToast {
     private static String getSystemIcon(HRNotification.NotificationType type) {
         return switch (type) {
             case EMPLOYEE -> "EMP";
-            case SALARY   -> "SAL";
-            case LEAVE    -> "LVE";
+            case SALARY -> "SAL";
+            case LEAVE -> "LVE";
             case TRAINING -> "TRN";
-            case TASK     -> "TSK";
-            case SYSTEM   -> "SYS";
-            case MESSAGE  -> "MSG";
+            case TASK -> "TSK";
+            case SYSTEM -> "SYS";
+            case MESSAGE -> "MSG";
         };
     }
 }

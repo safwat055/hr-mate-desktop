@@ -22,6 +22,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import java.util.function.Consumer;
+
 /**
  * =====================================================
  * HRNotificationPanel — لوحة الإشعارات الكاملة
@@ -43,6 +45,7 @@ public class HRNotificationPanel extends VBox {
     private final FilteredList<HRNotification> filteredList;
     private final Stage owner;
     private TabFilter activeTab = TabFilter.ALL;
+    private Consumer<HRNotification> onOpenMessage;
 
     public HRNotificationPanel(Stage owner) {
         this.owner = owner;
@@ -57,6 +60,10 @@ public class HRNotificationPanel extends VBox {
         );
         setPrefWidth(440);
         setMaxHeight(700);
+    }
+
+    public void setOnOpenMessage(Consumer<HRNotification> callback) {
+        this.onOpenMessage = callback;
     }
 
     private void build() {
@@ -484,7 +491,11 @@ public class HRNotificationPanel extends VBox {
             openBtn.setOnAction(e -> {
                 e.consume();
                 service.markAsRead(item);
-                MessageDetailView.show(owner, item);
+                if (onOpenMessage != null) {
+                    onOpenMessage.accept(item);  // ✅ يفتح التاب
+                } else {
+                    //  MessageDetailView.show(owner, item); // fallback
+                }
             });
             bottomRow.getChildren().addAll(bSpacer, openBtn);
 

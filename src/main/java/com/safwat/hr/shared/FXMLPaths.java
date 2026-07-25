@@ -10,5 +10,5 @@ public class FXMLPaths {
 
     private final String payrollReport = "/com/safwat/hr/controller/report/payroll/PayrollReport.fxml";
     private final String chat = "/com/safwat/hr/chat/ChatView.fxml";
-
+    private final String MessageInboxView = "/com/safwat/hr/notification/ui/MessageInboxView.fxml";
 }
