@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport, btn_sendMSG;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport, btn_mail, btn_chat;
     @FXML
     private TabPane tab;
     @FXML
@@ -52,10 +52,11 @@ public class MainViewController implements Initializable {
     // ✅ جديد — نحتفظ بـ reference للـ Inbox Controller
     private MessageInboxController inboxController;
     private Tab messagesTab;
+    private Icons icons;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
+        icons = Icons.getInstance();
         setMainViewIcon();
         setButtonsAction();
         Platform.runLater(() -> {
@@ -95,7 +96,9 @@ public class MainViewController implements Initializable {
 
             toolbar.getChildren().add(bell);
         });
-        Icons.getInstance().getBellmage(bellIcon);
+        icons.getBellmage(bellIcon);
+        icons.getChatImage(btn_chat);
+        icons.getMailImage(btn_mail);
 
         leftLable.setText(ApiClient.getUserName());
     }
@@ -114,7 +117,7 @@ public class MainViewController implements Initializable {
         btn_PayrollVocab.setOnAction(_ -> openPayVocab());
 
         // ✅ جديد — فتح التاب مع الـ Controller
-        btn_sendMSG.setOnAction(e -> openMessagesTab());
+        btn_mail.setOnAction(e -> openMessagesTab());
     }
 
     /**
@@ -164,6 +167,12 @@ public class MainViewController implements Initializable {
 
     @FXML
     private void openPayrollReport() {
-        ViewManager.openIndependentView("/com/safwat/hr/chat/ChatView.fxml", null);
+        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport(), null);
+    }
+
+    @FXML
+    void openChatView() {
+       
+        TabManager.loadFXMLInTab(tab, "/com/safwat/hr/chat/ChatView.fxml", "محادثات", true);
     }
 }

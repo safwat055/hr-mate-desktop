@@ -28,26 +28,26 @@ public class Icons {
      * @param button
      */
     public void getPDFImage(Button button) {
-        ImageView Pdf = new ImageView();
-        Pdf.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/pdf2.png")).toExternalForm()));
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/pdf2.png")).toExternalForm()));
 
-        Pdf.setFitHeight(30);
-        Pdf.setFitHeight(30);
+        imag.setFitHeight(30);
+        imag.setFitHeight(30);
         // Pdf.setPreserveRatio(true);
         // button.getStyleClass().clear();
-        button.setGraphic(Pdf);
+        button.setGraphic(imag);
 
     }
 
     public void getBellmage(Label bellLabel) {
-        ImageView Pdf = new ImageView();
-        Pdf.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell50.png")).toExternalForm()));
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell50.png")).toExternalForm()));
 
-        Pdf.setFitHeight(40);
-        Pdf.setFitHeight(40);
-        Pdf.setPreserveRatio(true);
+        imag.setFitHeight(40);
+        imag.setFitHeight(40);
+        imag.setPreserveRatio(true);
         // button.getStyleClass().clear();
-        bellLabel.setGraphic(Pdf);
+        bellLabel.setGraphic(imag);
 
     }
 
@@ -56,14 +56,38 @@ public class Icons {
      * @param button
      */
     public void getSaveImage(Button button) {
-        ImageView Pdf = new ImageView();
-        Pdf.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/save2.png")).toExternalForm()));
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/save2.png")).toExternalForm()));
 
-        Pdf.setFitHeight(30);
-        Pdf.setFitHeight(30);
-        Pdf.setPreserveRatio(true);
+        imag.setFitHeight(30);
+        imag.setFitHeight(30);
+        imag.setPreserveRatio(true);
         button.getStyleClass().clear();
-        button.setGraphic(Pdf);
+        button.setGraphic(imag);
+
+    }
+
+    public void getMailImage(Button button) {
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/mail.png")).toExternalForm()));
+
+        imag.setFitHeight(35);
+        imag.setFitHeight(35);
+        imag.setPreserveRatio(true);
+        button.getStyleClass().clear();
+        button.setGraphic(imag);
+
+    }
+
+    public void getChatImage(Button button) {
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/chat.png")).toExternalForm()));
+
+        imag.setFitHeight(35);
+        imag.setFitHeight(35);
+        imag.setPreserveRatio(true);
+        button.getStyleClass().clear();
+        button.setGraphic(imag);
 
     }
 

@@ -106,7 +106,7 @@ public class ChatViewController implements Initializable {
         });
 
         // ٦. حالة أولية
-        Platform.runLater(this::showEmptyState);
+        //Platform.runLater(this::showEmptyState);
     }
 
     // ══════════════════════════════════════════════════════
