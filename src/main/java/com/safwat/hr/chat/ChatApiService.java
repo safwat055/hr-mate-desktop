@@ -259,6 +259,39 @@ public class ChatApiService {
     //  Helpers — ApiClient methods لـ TypeReference
     // ═════════════════════════════════════════════════════════════════
 
+
+    public static CompletableFuture<ApiResponse<ChatDTOs.ConversationDetailDTO>> createBroadcastConversation(
+            String name, Long targetDepartmentId) {
+
+        ChatDTOs.CreateConversationRequest req = new ChatDTOs.CreateConversationRequest();
+        req.setType("BROADCAST");
+        req.setName(name);
+        req.setTargetDepartmentId(targetDepartmentId);
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.post(BASE + "/conversations", req,
+                        ChatDTOs.ConversationDetailDTO.class);
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        });
+    }
+
+    public static CompletableFuture<ApiResponse<List<ChatDTOs.DepartmentDTO>>> getDepartments() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.getWithTypeRef(
+                        "/departments",
+                        new TypeReference<List<ChatDTOs.DepartmentDTO>>() {
+                        }
+                );
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        });
+    }
+
     private static <T> ApiResponse<T> errorResponse(Exception e) {
         ApiResponse<T> err = new ApiResponse<>();
         err.setSuccess(false);

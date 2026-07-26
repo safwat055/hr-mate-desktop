@@ -41,10 +41,10 @@ public class Icons {
 
     public void getBellmage(Label bellLabel) {
         ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell50.png")).toExternalForm()));
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell55.png")).toExternalForm()));
 
-        imag.setFitHeight(40);
-        imag.setFitHeight(40);
+        imag.setFitHeight(45);
+        imag.setFitHeight(45);
         imag.setPreserveRatio(true);
         // button.getStyleClass().clear();
         bellLabel.setGraphic(imag);
@@ -69,10 +69,10 @@ public class Icons {
 
     public void getMailImage(Button button) {
         ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/mail.png")).toExternalForm()));
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/mail2.png")).toExternalForm()));
 
-        imag.setFitHeight(35);
-        imag.setFitHeight(35);
+        imag.setFitHeight(45);
+        imag.setFitHeight(45);
         imag.setPreserveRatio(true);
         button.getStyleClass().clear();
         button.setGraphic(imag);
@@ -81,10 +81,10 @@ public class Icons {
 
     public void getChatImage(Button button) {
         ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/chat.png")).toExternalForm()));
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/chat2.png")).toExternalForm()));
 
-        imag.setFitHeight(35);
-        imag.setFitHeight(35);
+        imag.setFitHeight(45);
+        imag.setFitHeight(45);
         imag.setPreserveRatio(true);
         button.getStyleClass().clear();
         button.setGraphic(imag);

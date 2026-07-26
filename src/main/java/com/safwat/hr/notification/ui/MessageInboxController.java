@@ -3,6 +3,7 @@ package com.safwat.hr.notification.ui;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
+import com.safwat.hr.ui.util.MultiSelectSearchDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,32 +17,47 @@ import javafx.scene.layout.VBox;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
 /**
- * =====================================================
- * MessageInboxController — Controller الواجهة الرئيسية
- * =====================================================
+ * =====================================================================
+ * MessageInboxController
+ * =====================================================================
+ * المتحكم الرئيسي لواجهة صندوق الرسائل.
+ * يدير ثلاثة أقسام رئيسية:
+ * 1. قائمة المحادثات (اليسار): عرض وتصفية المحادثات
+ * 2. منطقة المحادثة (الوسط): عرض الرسائل والردود
+ * 3. محرر الرسائل (الأسفل): كتابة رد أو رسالة جديدة
+ * <p>
+ * يتعامل مع أحداث المستخدم مثل اختيار محادثة، إرسال رد، البحث، وإرفاق ملفات.
  */
 public class MessageInboxController implements Initializable {
-
+    private static final DateTimeFormatter SERVER_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final MessageClientService msgService = MessageClientService.getInstance();
     private final NotificationService notifService = NotificationService.getInstance();
     private final ObservableList<MessageThread> threads = FXCollections.observableArrayList();
+
     @FXML
     private TextField searchField;
     @FXML
     private ListView<MessageThread> threadList;
     @FXML
     private VBox conversationContainer;
-    private FilteredList<MessageThread> filteredThreads;
 
+    private FilteredList<MessageThread> filteredThreads;
     private MessageConversationView conversationView;
     private MessageComposer composer;
     private MessageThread selectedThread;
 
+    /**
+     * تهيئة الواجهة عند تحميل الـ FXML.
+     * تُنشئ القوائم، وتُعد منطقة المحادثة، وتُفعّل البحث، وتُحمّل المحادثات.
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         setupThreadList();
@@ -56,6 +72,9 @@ public class MessageInboxController implements Initializable {
     //  Setup
     // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * إعداد قائمة المحادثات مع الفلترة وخلية العرض المخصصة.
+     */
     private void setupThreadList() {
         filteredThreads = new FilteredList<>(threads, t -> true);
         threadList.setItems(filteredThreads);
@@ -68,6 +87,9 @@ public class MessageInboxController implements Initializable {
         });
     }
 
+    /**
+     * إعداد منطقة المحادثة والمحرر وإضافتهما للحاوية.
+     */
     private void setupConversationArea() {
         conversationView = new MessageConversationView();
         composer = new MessageComposer();
@@ -76,6 +98,9 @@ public class MessageInboxController implements Initializable {
         VBox.setVgrow(conversationView, Priority.ALWAYS);
     }
 
+    /**
+     * إعداد مستمع البحث لتصفية المحادثات حسب الموضوع أو المرسل أو المعاينة.
+     */
     private void setupSearch() {
         searchField.textProperty().addListener((obs, old, query) -> {
             filteredThreads.setPredicate(t -> {
@@ -89,8 +114,10 @@ public class MessageInboxController implements Initializable {
         });
     }
 
+    /**
+     * إعداد محرر الرسائل وتعيين callbacks للرد والرسائل الجديدة والإرفاق.
+     */
     private void setupComposer() {
-        // === Reply mode ===
         composer.setOnReply(content -> {
             if (selectedThread == null) return;
 
@@ -113,13 +140,18 @@ public class MessageInboxController implements Initializable {
             );
         });
 
-        // === New message mode ===
-        composer.setOnNewMessage((recipient, content) -> {
+        composer.setOnNewMessage(content -> {
+            List<String> recipients = composer.getRecipientUsernames();
             String subject = composer.getSubject();
             List<Path> attachments = composer.getAttachments();
 
-            msgService.sendMessage(
-                    recipient,
+            if (recipients.isEmpty()) {
+                System.err.println("[Inbox] No recipients selected");
+                return;
+            }
+
+            msgService.sendMessageToMultiple(
+                    recipients,
                     subject,
                     content,
                     attachments.isEmpty() ? null : attachments,
@@ -135,7 +167,6 @@ public class MessageInboxController implements Initializable {
             );
         });
 
-        // === Attach ===
         composer.setOnAttach(() -> {
             javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
             chooser.setTitle("اختر ملف للإرفاق");
@@ -144,12 +175,65 @@ public class MessageInboxController implements Initializable {
                 files.forEach(f -> composer.addAttachment(f.toPath()));
             }
         });
+
+        composer.setOnSearchRecipients(() -> {
+            javafx.scene.control.Alert loadingAlert = new javafx.scene.control.Alert(
+                    javafx.scene.control.Alert.AlertType.INFORMATION);
+            loadingAlert.setTitle("جاري التحميل");
+            loadingAlert.setHeaderText(null);
+            loadingAlert.setContentText("جاري جلب قائمة المستخدمين...");
+            loadingAlert.getDialogPane().lookupButton(javafx.scene.control.ButtonType.OK).setVisible(false);
+            loadingAlert.show();
+
+            msgService.getAllUsers().thenAccept(users -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+
+                    if (users == null || users.isEmpty()) {
+                        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                                javafx.scene.control.Alert.AlertType.WARNING);
+                        alert.setTitle("تنبيه");
+                        alert.setHeaderText(null);
+                        alert.setContentText("لم يتم العثور على مستخدمين أو فشل الاتصال بالسيرفر.");
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    MultiSelectSearchDialog<UserInfo> dialog = MultiSelectSearchDialog.<UserInfo>builder(UserInfo.class)
+                            .title("اختر المستلمين")
+                            .column("اسم الموظف", UserInfo::getDisplayName)
+                            .column("اسم المستخدم", UserInfo::getUsername)
+                            .data(users)
+                            .searchPlaceholder("ابحث باسم الموظف أو اسم المستخدم...")
+                            .owner((javafx.stage.Stage) threadList.getScene().getWindow());
+
+                    List<UserInfo> selected = dialog.showAndWait();
+                    if (selected != null && !selected.isEmpty()) {
+                        composer.setRecipients(selected);
+                    }
+                });
+            }).exceptionally(e -> {
+                Platform.runLater(() -> {
+                    loadingAlert.close();
+                    javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                            javafx.scene.control.Alert.AlertType.ERROR);
+                    alert.setTitle("خطأ");
+                    alert.setHeaderText(null);
+                    alert.setContentText("فشل جلب المستخدمين: " + e.getMessage());
+                    alert.showAndWait();
+                });
+                return null;
+            });
+        });
     }
 
     // ═════════════════════════════════════════════════════════════════
     //  Load / Update Threads
     // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * تحميل المحادثات من خدمة الإشعارات إلى القائمة.
+     */
     private void loadThreads() {
         threads.clear();
         for (HRNotification n : notifService.getAll()) {
@@ -159,6 +243,9 @@ public class MessageInboxController implements Initializable {
         }
     }
 
+    /**
+     * إضافة مستمع لتغيرات قائمة الإشعارات لإضافة الرسائل الجديدة تلقائياً.
+     */
     private void listenForNewMessages() {
         notifService.getAll().addListener((javafx.collections.ListChangeListener<HRNotification>) c -> {
             while (c.next()) {
@@ -173,6 +260,11 @@ public class MessageInboxController implements Initializable {
         });
     }
 
+    /**
+     * إضافة محادثة جديدة أو تحديث موجودة عند وصول إشعار.
+     *
+     * @param notification الإشعار الجديد
+     */
     private void addOrUpdateThread(HRNotification notification) {
         Long id = extractId(notification.getActionTarget());
         if (id == null) return;
@@ -194,10 +286,15 @@ public class MessageInboxController implements Initializable {
     //  Open Thread
     // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * فتح محادثة محددة وتحميل تفاصيلها من الخادم.
+     * يتم تعليمها كمقروءة وعرضها في منطقة المحادثة.
+     *
+     * @param thread المحادثة المختارة
+     */
     private void openThread(MessageThread thread) {
         selectedThread = thread;
 
-        // Mark as read
         if (!thread.isRead()) {
             Long id = thread.getId();
             if (id != null) {
@@ -211,7 +308,6 @@ public class MessageInboxController implements Initializable {
             }
         }
 
-        // Load thread (parent + replies)
         Long msgId = thread.getId();
         if (msgId != null) {
             msgService.getThread(msgId).thenAccept(threadDTO -> {
@@ -238,11 +334,13 @@ public class MessageInboxController implements Initializable {
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * ✅ يحدّث الـ thread من MessageThreadDTO (parent + replies)
+     * تحديث محتوى المحادثة من بيانات الخادم (parent + replies).
+     *
+     * @param thread    كائن المحادثة المحلي
+     * @param threadDTO بيانات المحادثة من الخادم
      */
     @SuppressWarnings("unchecked")
     private void updateThreadFromDTO(MessageThread thread, Map<String, Object> threadDTO) {
-        // Parent message
         Object parentObj = threadDTO.get("parent");
         if (parentObj instanceof Map) {
             Map<String, Object> parent = (Map<String, Object>) parentObj;
@@ -250,7 +348,6 @@ public class MessageInboxController implements Initializable {
             thread.setRootMessage(updatedRoot);
         }
 
-        // Replies
         Object repliesObj = threadDTO.get("replies");
         if (repliesObj instanceof List) {
             thread.getReplies().clear();
@@ -267,7 +364,11 @@ public class MessageInboxController implements Initializable {
     }
 
     /**
-     * ✅ يبني HRNotification من Map (للـ parent أو reply)
+     * تحويل Map قادم من الخادم إلى كائن HRNotification.
+     * يتعامل مع تحليل التاريخ بصيغة السيرفر.
+     *
+     * @param data Map بالبيانات
+     * @return كائن HRNotification
      */
     @SuppressWarnings("unchecked")
     private HRNotification mapToNotification(Map<String, Object> data) {
@@ -276,7 +377,8 @@ public class MessageInboxController implements Initializable {
         String senderUsername = (String) data.get("senderUsername");
         String senderDisplayName = (String) data.get("senderDisplayName");
         Object id = data.get("id");
-        Object createdAt = data.get("createdAt");
+
+        LocalDateTime createdAt = parseDateTime(data.get("createdAt"));
 
         HRNotification.Builder builder = HRNotification.builder()
                 .category(HRNotification.NotificationCategory.MESSAGE)
@@ -286,9 +388,9 @@ public class MessageInboxController implements Initializable {
                 .sender(senderDisplayName != null ? senderDisplayName : senderUsername)
                 .senderUsername(senderUsername)
                 .senderAvatar(buildAvatar(senderDisplayName))
+                .timestamp(createdAt != null ? createdAt : LocalDateTime.now())
                 .action("فتح الرسالة", "messages/" + id);
 
-        // Attachments
         Object atts = data.get("attachments");
         if (atts instanceof List) {
             for (Object o : (List<?>) atts) {
@@ -307,6 +409,41 @@ public class MessageInboxController implements Initializable {
         return builder.build();
     }
 
+    /**
+     * تحليل قيمة التاريخ من أي صيغة (String بصيغة السيرفر أو ISO أو List).
+     *
+     * @param value قيمة التاريخ من JSON
+     * @return LocalDateTime أو null
+     */
+    private LocalDateTime parseDateTime(Object value) {
+        if (value == null) return null;
+        try {
+            if (value instanceof String) {
+                String s = (String) value;
+                if (s.contains("T")) {
+                    return LocalDateTime.parse(s, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+                return LocalDateTime.parse(s, SERVER_FORMAT);
+            }
+            if (value instanceof List) {
+                List<?> list = (List<?>) value;
+                if (list.size() >= 6) {
+                    return LocalDateTime.of(
+                            ((Number) list.get(0)).intValue(),
+                            ((Number) list.get(1)).intValue(),
+                            ((Number) list.get(2)).intValue(),
+                            ((Number) list.get(3)).intValue(),
+                            ((Number) list.get(4)).intValue(),
+                            ((Number) list.get(5)).intValue()
+                    );
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[TIME] Failed to parse: " + value + " — " + e.getMessage());
+        }
+        return null;
+    }
+
     private String buildAvatar(String displayName) {
         if (displayName == null || displayName.isBlank()) return "؟";
         String[] parts = displayName.trim().split("\s+");
@@ -315,19 +452,20 @@ public class MessageInboxController implements Initializable {
     }
 
     /**
-     * Fallback — يحدّث الـ thread من getMessageDetails (single message)
+     * تحديث المحادثة من getMessageDetails (رسالة واحدة) كبديل.
+     *
+     * @param thread المحادثة المحلية
+     * @param data   بيانات الرسالة من الخادم
      */
     @SuppressWarnings("unchecked")
     private void updateThreadFromDetails(MessageThread thread, Map<String, Object> data) {
         HRNotification root = thread.getRootMessage();
 
-        // Body
-        String body = (String) data.get("body");
-        if (body != null && !body.isBlank()) {
-            // HRNotification messageBody is read-only
+        LocalDateTime createdAt = parseDateTime(data.get("createdAt"));
+        if (createdAt != null) {
+            // Note: timestamp is set during initial creation
         }
 
-        // Attachments
         Object atts = data.get("attachments");
         if (atts instanceof List) {
             root.getAttachments().clear();
@@ -354,6 +492,11 @@ public class MessageInboxController implements Initializable {
     //  Refresh Thread
     // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * تحديث محادثة محددة من الخادم بعد إرسال رد.
+     *
+     * @param messageId معرف الرسالة
+     */
     private void refreshThread(Long messageId) {
         msgService.getThread(messageId).thenAccept(data -> {
             if (data != null) {
@@ -367,7 +510,6 @@ public class MessageInboxController implements Initializable {
                 });
             }
         }).exceptionally(e -> {
-            // Fallback
             msgService.getMessageDetails(messageId).thenAccept(data2 -> {
                 if (data2 != null) {
                     Platform.runLater(() -> {
@@ -388,6 +530,10 @@ public class MessageInboxController implements Initializable {
     //  Actions
     // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * فتح وضع كتابة رسالة جديدة.
+     * يمسح التحديد ويفرغ منطقة المحادثة ويُفعّل وضع الرسالة الجديدة في المحرر.
+     */
     @FXML
     private void onComposeNew() {
         selectedThread = null;
@@ -397,7 +543,10 @@ public class MessageInboxController implements Initializable {
     }
 
     /**
-     * فتح رسالة معينة من بره (من الـ Notification Panel)
+     * فتح رسالة محددة من الإشعارات.
+     * إذا كانت المحادثة موجودة يتم تحديدها، وإلا تُنشأ محادثة جديدة.
+     *
+     * @param notification الإشعار المرتبط بالرسالة
      */
     public void openMessage(HRNotification notification) {
         Long id = extractId(notification.getActionTarget());

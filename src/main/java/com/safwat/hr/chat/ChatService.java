@@ -120,10 +120,21 @@ public class ChatService {
         ChatStompClient.getInstance().subscribeToConversation(conversationId, wsMsg -> {
             // رسالة جديدة وصلت عبر WebSocket
             if (wsMsg.getMessage() != null && wsMsg.getConversationId() == conversationId) {
-                messages.add(wsMsg.getMessage());
-                // تحديث قائمة المحادثات (unread count + lastMessage)
+                ChatDTOs.ChatMessageDTO msg = wsMsg.getMessage();
+
+                // ✅ نحسب mine محلياً — لأن الباك إند بيبعت mine=true للمرسل فقط
+                // بس نفس الـ dto بيوصل لكل المشاركين
+                String me = getCurrentUsername();
+                msg.setMine(me != null && me.equals(msg.getSenderUsername()));
+
+                messages.add(msg);
                 refreshConversations();
-                if (onNewMessageInOpenConv != null) onNewMessageInOpenConv.run();
+                // ✅ double runLater عشان الـ scroll يحصل بعد الـ layout pass
+                if (onNewMessageInOpenConv != null) {
+                    Platform.runLater(() ->
+                            Platform.runLater(() -> onNewMessageInOpenConv.run())
+                    );
+                }
             }
         });
 
@@ -131,6 +142,10 @@ public class ChatService {
         ChatApiService.getMessages(conversationId, 0).thenAccept(res -> {
             Platform.runLater(() -> {
                 if (res.isSuccess() && res.getData() != null) {
+                    String me = getCurrentUsername();
+                    res.getData().forEach(msg ->
+                            msg.setMine(me != null && me.equals(msg.getSenderUsername()))
+                    );
                     messages.setAll(res.getData());
                 }
                 if (onLoaded != null) onLoaded.run();
@@ -181,22 +196,51 @@ public class ChatService {
     //  Create Conversation
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * بدء محادثة خاصة مع مستخدم — لو موجودة يفتحها، لو جديدة يُنشئها
-     */
     public void startPrivateConversation(long userId,
                                          Consumer<Long> onSuccess,
                                          Consumer<String> onError) {
-        ChatApiService.createPrivateConversation(userId).thenAccept(res -> {
-            Platform.runLater(() -> {
-                if (res.isSuccess() && res.getData() != null) {
-                    refreshConversations();
-                    if (onSuccess != null) onSuccess.accept(res.getData().getId());
-                } else {
-                    if (onError != null) onError.accept(res.getMessage());
-                }
-            });
-        });
+        ChatApiService.createPrivateConversation(userId).thenAccept(res ->
+                Platform.runLater(() -> {
+                    if (res.isSuccess() && res.getData() != null) {
+                        refreshConversations();
+                        if (onSuccess != null) onSuccess.accept(res.getData().getId());
+                    } else {
+                        if (onError != null) onError.accept(res.getMessage());
+                    }
+                })
+        );
+    }
+
+    public void startGroupConversation(String name,
+                                       java.util.List<Long> participantIds,
+                                       Consumer<Long> onSuccess,
+                                       Consumer<String> onError) {
+        ChatApiService.createGroupConversation(name, participantIds).thenAccept(res ->
+                Platform.runLater(() -> {
+                    if (res.isSuccess() && res.getData() != null) {
+                        refreshConversations();
+                        if (onSuccess != null) onSuccess.accept(res.getData().getId());
+                    } else {
+                        if (onError != null) onError.accept(res.getMessage());
+                    }
+                })
+        );
+    }
+
+    public void startBroadcast(String name,
+                               Long targetDepartmentId,
+                               Consumer<Long> onSuccess,
+                               Consumer<String> onError) {
+        ChatApiService.createBroadcastConversation(name, targetDepartmentId).thenAccept(res ->
+                Platform.runLater(() -> {
+                    if (res.isSuccess() && res.getData() != null) {
+                        refreshConversations();
+                        if (onSuccess != null) onSuccess.accept(res.getData().getId());
+                    } else {
+                        if (onError != null) onError.accept(res.getMessage());
+                    }
+                })
+        );
     }
 
     // ═════════════════════════════════════════════════════════════════

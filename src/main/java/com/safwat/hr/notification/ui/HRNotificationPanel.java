@@ -25,19 +25,19 @@ import javafx.stage.Stage;
 import java.util.function.Consumer;
 
 /**
- * =====================================================
- * HRNotificationPanel — لوحة الإشعارات الكاملة
- * =====================================================
+ * =====================================================================
+ * HRNotificationPanel
+ * =====================================================================
+ * لوحة الإشعارات الكاملة التي تظهر عند الضغط على زر الجرس.
+ * تعرض إشعارات النظام والرسائل في مكان واحد مع إمكانية التصفية حسب النوع.
  * <p>
- * تعرض إشعارات النظام والرسائل في مكان واحد.
- * لكل نوع خلية عرض مختلفة.
- * <p>
- * التبويبات:
- * الكل | إشعارات (+ أنواع فرعية) | رسائل
+ * التبويبات المتاحة:
+ * - الكل
+ * - إشعارات (مع أنواع فرعية: موظفون، رواتب، إجازات، تدريب، مهام، النظام)
+ * - رسائل
  * <p>
  * الاستخدام:
  * HRNotificationPanel panel = new HRNotificationPanel(primaryStage);
- * // ثم حطها في Popup
  */
 public class HRNotificationPanel extends VBox {
 
@@ -47,6 +47,11 @@ public class HRNotificationPanel extends VBox {
     private TabFilter activeTab = TabFilter.ALL;
     private Consumer<HRNotification> onOpenMessage;
 
+    /**
+     * إنشاء لوحة الإشعارات.
+     *
+     * @param owner النافذة الأم
+     */
     public HRNotificationPanel(Stage owner) {
         this.owner = owner;
         this.filteredList = new FilteredList<>(service.getAll(), n -> true);
@@ -62,6 +67,11 @@ public class HRNotificationPanel extends VBox {
         setMaxHeight(700);
     }
 
+    /**
+     * تعيين callback عند فتح رسالة من اللوحة.
+     *
+     * @param callback الدالة المستدعاة
+     */
     public void setOnOpenMessage(Consumer<HRNotification> callback) {
         this.onOpenMessage = callback;
     }
@@ -75,9 +85,11 @@ public class HRNotificationPanel extends VBox {
         );
     }
 
-    // ===================== الرأس =====================
-    // في HRNotificationPanel.java
-
+    /**
+     * بناء رأس اللوحة يحتوي على العنوان وعدد الجديد وزر التحديث وتعليم الكل مقروء.
+     *
+     * @return HBox الرأس
+     */
     private HBox buildHeader() {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
@@ -93,7 +105,6 @@ public class HRNotificationPanel extends VBox {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // badge (عدد الجديد)
         Label badge = new Label();
         badge.textProperty().bind(
                 Bindings.when(service.unreadCountProperty().greaterThan(0))
@@ -108,19 +119,16 @@ public class HRNotificationPanel extends VBox {
                         "-fx-background-radius:10px;-fx-padding:2 8 2 8;"
         );
 
-        // ✅ زر التحديث (Refresh)
         MFXButton refreshBtn = new MFXButton("🔄تحديث");
         refreshBtn.setStyle(
                 "-fx-font-size:14px;-fx-text-fill:#185FA5;" +
                         "-fx-background-color:transparent;-fx-cursor:hand;-fx-padding:0 4 0 4;"
         );
         refreshBtn.setOnAction(e -> {
-            // جلب كل الرسائل من الخادم وتحديث القائمة
             MessageClientService.getInstance().refreshAllMessages();
         });
         refreshBtn.setTooltip(new Tooltip("تحديث الرسائل"));
 
-        // زر تعليم الكل مقروء
         MFXButton markAllBtn = new MFXButton("تعليم الكل مقروء");
         markAllBtn.setStyle(
                 "-fx-font-size:12px;-fx-text-fill:#185FA5;" +
@@ -134,7 +142,11 @@ public class HRNotificationPanel extends VBox {
         return header;
     }
 
-    // ===================== التبويبات =====================
+    /**
+     * بناء منطقة التبويبات الرئيسية والفرعية.
+     *
+     * @return VBox يحتوي على صفوف التبويبات
+     */
     private VBox buildTabs() {
         VBox wrapper = new VBox(0);
         wrapper.setStyle(
@@ -142,7 +154,6 @@ public class HRNotificationPanel extends VBox {
                         "-fx-border-width:0 0 0.5 0;"
         );
 
-        // الصف الأول: الكل | إشعارات | رسائل
         HBox mainRow = new HBox(6);
         mainRow.setPadding(new Insets(10, 12, 6, 12));
         mainRow.setAlignment(Pos.CENTER_LEFT);
@@ -152,7 +163,6 @@ public class HRNotificationPanel extends VBox {
         Label tabMsg = buildMainTab("رسائل", "#0F6E56", "#E6F5F1", TabFilter.MESSAGES, mainRow);
         mainRow.getChildren().addAll(tabAll, tabSys, tabMsg);
 
-        // الصف الثاني: أنواع النظام الفرعية
         HBox subRow = new HBox(4);
         subRow.setPadding(new Insets(0, 12, 8, 12));
         subRow.setAlignment(Pos.CENTER_LEFT);
@@ -166,7 +176,6 @@ public class HRNotificationPanel extends VBox {
             subRow.getChildren().add(sub);
         }
 
-        // سلوك تبويب الإشعارات — يظهر الصف الفرعي
         tabSys.setOnMouseClicked(e -> {
             setActiveMainTab(TabFilter.SYSTEM_ALL, mainRow);
             subRow.setVisible(true);
@@ -264,6 +273,9 @@ public class HRNotificationPanel extends VBox {
             );
     }
 
+    /**
+     * تطبيق فلتر التبويب النشط على قائمة الإشعارات.
+     */
     private void applyFilter() {
         filteredList.setPredicate(n -> switch (activeTab) {
             case ALL -> true;
@@ -289,7 +301,11 @@ public class HRNotificationPanel extends VBox {
         };
     }
 
-    // ===================== القائمة =====================
+    /**
+     * بناء قائمة الإشعارات مع خلية عرض مخصصة.
+     *
+     * @return ListView جاهز
+     */
     private ListView<HRNotification> buildList() {
         ListView<HRNotification> list = new ListView<>();
         list.setItems(filteredList);
@@ -308,7 +324,11 @@ public class HRNotificationPanel extends VBox {
         return new StackPane(msg);
     }
 
-    // ===================== التذييل =====================
+    /**
+     * بناء تذييل اللوحة يحتوي على عدد العناصر وزر مسح الكل.
+     *
+     * @return HBox التذييل
+     */
     private HBox buildFooter() {
         HBox footer = new HBox();
         footer.setPadding(new Insets(10, 16, 10, 16));
@@ -363,13 +383,15 @@ public class HRNotificationPanel extends VBox {
         };
     }
 
-    // تصفية مركبة
     private enum TabFilter {
         ALL, SYSTEM_ALL, MESSAGES,
         EMPLOYEE, SALARY, LEAVE, TRAINING, TASK, SYSTEM_TYPE
     }
 
-    // ===================== خلية الإشعار =====================
+    /**
+     * خلية عرض مخصصة للإشعار داخل القائمة.
+     * تدعم نوعين: إشعار النظام ورسالة المستخدم.
+     */
     private class NotificationCell extends ListCell<HRNotification> {
 
         @Override
@@ -386,7 +408,6 @@ public class HRNotificationPanel extends VBox {
                     : buildSystemCell(item));
         }
 
-        // ========== خلية إشعار النظام ==========
         private HBox buildSystemCell(HRNotification item) {
             Circle dot = buildDot(item.isRead(), item.getType().color);
 
@@ -435,7 +456,6 @@ public class HRNotificationPanel extends VBox {
             return buildRoot(item, dot, iconBox, texts);
         }
 
-        // ========== خلية رسالة المستخدم ==========
         private HBox buildMessageCell(HRNotification item) {
             Circle dot = buildDot(item.isRead(), "#0F6E56");
 
@@ -447,7 +467,6 @@ public class HRNotificationPanel extends VBox {
             avatarBox.setMinSize(38, 38);
             avatarBox.setMaxSize(38, 38);
 
-            // اسم المرسل + وقت في نفس الصف
             Label senderLbl = new Label(
                     item.getSenderName() != null ? item.getSenderName() : "مجهول");
             senderLbl.setStyle(
@@ -472,7 +491,6 @@ public class HRNotificationPanel extends VBox {
             previewLbl.setMaxWidth(270);
             previewLbl.setMinHeight(13);
 
-            // أسفل: مرفقات + زر فتح
             HBox bottomRow = new HBox(6);
             bottomRow.setAlignment(Pos.CENTER_LEFT);
             if (item.hasAttachments()) {
@@ -492,9 +510,7 @@ public class HRNotificationPanel extends VBox {
                 e.consume();
                 service.markAsRead(item);
                 if (onOpenMessage != null) {
-                    onOpenMessage.accept(item);  // ✅ يفتح التاب
-                } else {
-                    //  MessageDetailView.show(owner, item); // fallback
+                    onOpenMessage.accept(item);
                 }
             });
             bottomRow.getChildren().addAll(bSpacer, openBtn);
@@ -506,7 +522,6 @@ public class HRNotificationPanel extends VBox {
             return buildRoot(item, dot, avatarBox, texts);
         }
 
-        // ========== مشترك ==========
         private Circle buildDot(boolean isRead, String color) {
             Circle dot = new Circle(5);
             dot.setFill(isRead ? Color.TRANSPARENT : Color.web(color));

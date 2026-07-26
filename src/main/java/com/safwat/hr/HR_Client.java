@@ -31,7 +31,7 @@ public class HR_Client extends Application {
         stage.setScene(scene);
         stage.show();
 // ✅ إضافة مستمع للإشعارات الجديدة
-        NotificationService.getInstance(); // Singleton يتم إنشاؤه
+
         NotificationService.getInstance().getAll().addListener(
                 (ListChangeListener<HRNotification>) change -> {
                     while (change.next()) {

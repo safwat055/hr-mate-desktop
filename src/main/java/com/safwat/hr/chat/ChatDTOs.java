@@ -204,4 +204,17 @@ public class ChatDTOs {
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
     }
+
+    /**
+     * قسم — للـ broadcast dialog
+     */
+    @Data
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DepartmentDTO {
+        private Long id;
+        private String name;
+        private String code;
+    }
+
 }

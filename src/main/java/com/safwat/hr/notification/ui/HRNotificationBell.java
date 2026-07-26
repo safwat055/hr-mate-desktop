@@ -12,17 +12,17 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * =====================================================
- * HRNotificationBell — زر الجرس في الـ Toolbar
- * =====================================================
- * <p>
- * - يعرض badge بعدد الإشعارات غير المقروءة
- * - يهتز عند وصول إشعار جديد
- * - يفتح HRNotificationPanel عند الضغط
- * - يبني Panel جديد في كل مرة لتجنب bug الـ scene graph
+ * =====================================================================
+ * HRNotificationBell
+ * =====================================================================
+ * زر الجرس في شريط الأدوات العلوي.
+ * يعرض عدد الإشعارات غير المقروءة داخل شارة (badge).
+ * يهتز عند وصول إشعار جديد.
+ * يفتح لوحة الإشعارات (HRNotificationPanel) عند الضغط.
+ * يتم بناء اللوحة من جديد في كل مرة لتجنب مشاكل scene graph.
  * <p>
  * الاستخدام:
- * toolbar.getChildren().add(new HRNotificationBell(primaryStage));
+ * toolbar.getChildren().add(new HRNotificationBell(primaryStage, bellIcon, badge));
  */
 public class HRNotificationBell extends StackPane {
 
@@ -31,13 +31,26 @@ public class HRNotificationBell extends StackPane {
     private Popup panelPopup = null;
     private boolean panelVisible = false;
 
+    /**
+     * إنشاء زر الجرس.
+     *
+     * @param ownerStage النافذة الرئيسية
+     * @param bellIcon   عنصر Label يمثل أيقونة الجرس
+     * @param badge      عنصر Label يمثل شارة العدد
+     */
     public HRNotificationBell(Stage ownerStage, Label bellIcon, Label badge) {
         this.ownerStage = ownerStage;
         buildBell(bellIcon, badge);
     }
 
+    /**
+     * بناء واجهة زر الجرس وربطها بخدمة الإشعارات.
+     * تضيف مستمع لتغير عدد الإشعارات لتحريك الجرس عند وصول إشعار جديد.
+     *
+     * @param bellIcon عنصر أيقونة الجرس
+     * @param badge    عنصر شارة العدد
+     */
     private void buildBell(Label bellIcon, Label badge) {
-
         bellIcon.setStyle(
                 "-fx-font-size:20px;-fx-font-weight:700;" +
                         "-fx-text-fill:#555555;-fx-cursor:hand;"
@@ -63,7 +76,6 @@ public class HRNotificationBell extends StackPane {
         setPadding(new Insets(6));
         setStyle("-fx-cursor:hand;");
 
-        // هزة + bounce عند إشعار جديد
         service.unreadCountProperty().addListener((obs, old, nw) -> {
             if (nw.intValue() > old.intValue()) {
                 shake(bellIcon);
@@ -74,6 +86,10 @@ public class HRNotificationBell extends StackPane {
         setOnMouseClicked(e -> togglePanel());
     }
 
+    /**
+     * فتح أو إغلاق لوحة الإشعارات.
+     * إذا كانت مفتوحة تغلقها، وإذا كانت مغلقة تنشئ لوحة جديدة وتعرضها.
+     */
     private void togglePanel() {
         if (panelVisible && panelPopup != null) {
             panelPopup.hide();
@@ -82,7 +98,6 @@ public class HRNotificationBell extends StackPane {
             return;
         }
 
-        // بناء جديد في كل مرة — يحل bug scene graph في JavaFX 25
         HRNotificationPanel freshPanel = new HRNotificationPanel(ownerStage);
         panelPopup = new Popup();
         panelPopup.setAutoHide(true);
@@ -99,6 +114,11 @@ public class HRNotificationBell extends StackPane {
         animatePanelIn(freshPanel);
     }
 
+    /**
+     * تشغيل حركة ظهور اللوحة (تلاشي + انزلاق من الأعلى).
+     *
+     * @param panel لوحة الإشعارات المراد تحريكها
+     */
     private void animatePanelIn(HRNotificationPanel panel) {
         panel.setOpacity(0);
         panel.setTranslateY(-10);
@@ -111,6 +131,11 @@ public class HRNotificationBell extends StackPane {
         new ParallelTransition(fade, slide).play();
     }
 
+    /**
+     * تشغيل حركة اهتزاز أيقونة الجرس.
+     *
+     * @param bell عنصر أيقونة الجرس
+     */
     private void shake(Label bell) {
         RotateTransition r = new RotateTransition(Duration.millis(80), bell);
         r.setByAngle(15);
@@ -119,6 +144,11 @@ public class HRNotificationBell extends StackPane {
         r.play();
     }
 
+    /**
+     * تشغيل حركة تكبير شارة العدد مؤقتاً.
+     *
+     * @param badge عنصر شارة العدد
+     */
     private void bounceBadge(Label badge) {
         ScaleTransition s = new ScaleTransition(Duration.millis(150), badge);
         s.setFromX(1.0);

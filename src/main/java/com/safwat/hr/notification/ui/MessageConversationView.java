@@ -15,10 +15,18 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
- * =====================================================
- * MessageConversationView — عرض المحادثة متراكمة (Gmail-style)
- * =====================================================
+ * =====================================================================
+ * MessageConversationView
+ * =====================================================================
+ * عرض المحادثة بشكل متراكك (Gmail-style).
+ * يعرض الرسالة الأساسية ثم الردود تحتها.
+ * يدعم عرض المرفقات مع التحقق من وجودها قبل التحميل.
+ * يميز بين الرسائل الواردة والصادرة بالألوان والمحاذاة.
  */
 public class MessageConversationView extends VBox {
 
@@ -26,16 +34,17 @@ public class MessageConversationView extends VBox {
     private final ScrollPane scrollPane;
     private final Label emptyLabel;
 
+    /**
+     * إنشاء منطقة عرض المحادثة.
+     */
     public MessageConversationView() {
         setSpacing(0);
         setFillWidth(true);
         setStyle("-fx-background-color:#FAFAFA;");
 
-        // Empty state
         emptyLabel = new Label("اختر رسالة لعرضها");
         emptyLabel.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;");
 
-        // Messages container
         messagesContainer = new VBox(16);
         messagesContainer.setPadding(new Insets(20));
         messagesContainer.setFillWidth(true);
@@ -51,17 +60,17 @@ public class MessageConversationView extends VBox {
     }
 
     /**
-     * عرض thread كامل (root + replies)
+     * عرض محادثة كاملة (الرسالة الأساسية + الردود).
+     *
+     * @param thread كائن المحادثة
      */
     public void displayThread(MessageThread thread) {
         messagesContainer.getChildren().clear();
         emptyLabel.setVisible(false);
         emptyLabel.setManaged(false);
 
-        // Root message
         messagesContainer.getChildren().add(buildMessageBubble(thread.getRootMessage(), false));
 
-        // Separator
         if (!thread.getReplies().isEmpty()) {
             Label sep = new Label("الردود");
             sep.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;-fx-padding:8 0 0 0;");
@@ -70,7 +79,6 @@ public class MessageConversationView extends VBox {
             messagesContainer.getChildren().add(sep);
         }
 
-        // Replies
         for (HRNotification reply : thread.getReplies()) {
             messagesContainer.getChildren().add(buildMessageBubble(reply, true));
         }
@@ -78,6 +86,9 @@ public class MessageConversationView extends VBox {
         scrollToBottom();
     }
 
+    /**
+     * إفراغ منطقة العرض وإظهار حالة الفراغ.
+     */
     public void clear() {
         messagesContainer.getChildren().clear();
         emptyLabel.setVisible(true);
@@ -85,12 +96,15 @@ public class MessageConversationView extends VBox {
     }
 
     /**
-     * بناء bubble للرسالة
+     * بناء فقاعة رسالة (bubble) لعرضها في المحادثة.
+     *
+     * @param msg     كائن الرسالة
+     * @param isReply true إذا كانت رداً
+     * @return HBox يمثل الفقاعة
      */
     private HBox buildMessageBubble(HRNotification msg, boolean isReply) {
         boolean isFromMe = isFromCurrentUser(msg);
 
-        // Header: Avatar + Name + Time
         Circle avatar = new Circle(16);
         avatar.setFill(Color.web(isFromMe ? "#185FA5" : "#0F6E56"));
         Label avatarLbl = new Label(msg.getAvatarInitials());
@@ -99,20 +113,28 @@ public class MessageConversationView extends VBox {
         avatarBox.setMinSize(32, 32);
         avatarBox.setMaxSize(32, 32);
 
-        Label nameLbl = new Label(
-                msg.getSenderName() != null ? msg.getSenderName() : "مجهول");
+        String displayName = msg.getSenderName() != null ? msg.getSenderName() : "مجهول";
+        Label nameLbl = new Label(displayName);
         nameLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
 
-        Label timeLbl = new Label(msg.getFormattedTime());
+        String senderUsername = msg.getSenderUsername();
+        VBox nameBox = new VBox(1, nameLbl);
+        if (senderUsername != null && !senderUsername.isBlank() && !senderUsername.equals(displayName)) {
+            Label usernameLbl = new Label("@" + senderUsername);
+            usernameLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#888888;");
+            nameBox.getChildren().add(usernameLbl);
+        }
+
+        String timeText = formatMessageTime(msg.getTimestamp());
+        Label timeLbl = new Label(timeText);
         timeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox header = new HBox(8, avatarBox, nameLbl, spacer, timeLbl);
+        HBox header = new HBox(8, avatarBox, nameBox, spacer, timeLbl);
         header.setAlignment(Pos.CENTER_LEFT);
 
-        // Body
         String bodyText = msg.getMessageBody() != null && !msg.getMessageBody().isBlank()
                 ? msg.getMessageBody()
                 : msg.getMessage();
@@ -123,7 +145,6 @@ public class MessageConversationView extends VBox {
 
         VBox bubbleContent = new VBox(8, header, bodyLbl);
 
-        // Attachments
         if (msg.hasAttachments()) {
             VBox attBox = new VBox(6);
             for (Attachment att : msg.getAttachments()) {
@@ -147,7 +168,6 @@ public class MessageConversationView extends VBox {
                         "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,2);"
         );
 
-        // Align right if from me
         HBox wrapper = new HBox(bubbleContent);
         wrapper.setAlignment(isFromMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
         HBox.setHgrow(wrapper, Priority.ALWAYS);
@@ -156,6 +176,12 @@ public class MessageConversationView extends VBox {
         return wrapper;
     }
 
+    /**
+     * بناء صف مرفق مع أيقونة واسم وحجم وزر تحميل.
+     *
+     * @param att كائن المرفق
+     * @return HBox يمثل صف المرفق
+     */
     private HBox buildAttachmentRow(Attachment att) {
         Label icon = new Label(att.getIcon());
         icon.setStyle("-fx-font-size:10px;-fx-font-weight:700;-fx-text-fill:#185FA5;" +
@@ -168,14 +194,13 @@ public class MessageConversationView extends VBox {
         Label size = new Label(att.getFormattedSize());
         size.setStyle("-fx-font-size:10px;-fx-text-fill:#888888;");
 
-        // ✅ زر تحميل واضح
         io.github.palexdev.materialfx.controls.MFXButton dlBtn =
                 new io.github.palexdev.materialfx.controls.MFXButton("⬇ تحميل");
         dlBtn.setStyle(
                 "-fx-background-color:transparent;-fx-text-fill:#185FA5;" +
                         "-fx-font-size:11px;-fx-cursor:hand;-fx-padding:0 4;"
         );
-        dlBtn.setOnAction(e -> downloadAttachment(att));
+        dlBtn.setOnAction(e -> startDownloadWithCheck(att));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -185,32 +210,92 @@ public class MessageConversationView extends VBox {
         row.setStyle("-fx-background-color:#F8F8F8;-fx-background-radius:6px;-fx-padding:6 10;-fx-cursor:hand;");
         row.setMaxWidth(480);
 
-        // Hover effect
         row.setOnMouseEntered(_ -> row.setStyle(row.getStyle().replace("#F8F8F8", "#E6F1FB")));
         row.setOnMouseExited(e -> row.setStyle(row.getStyle().replace("#E6F1FB", "#F8F8F8")));
-        row.setOnMouseClicked(e -> downloadAttachment(att));
+        row.setOnMouseClicked(e -> startDownloadWithCheck(att));
 
         return row;
     }
 
+    /**
+     * التحقق مما إذا كانت الرسالة من المستخدم الحالي.
+     *
+     * @param msg كائن الرسالة
+     * @return true إذا كانت من المستخدم الحالي
+     */
     private boolean isFromCurrentUser(HRNotification msg) {
         String currentUser = ApiClient.getUserName();
         return currentUser != null && currentUser.equals(msg.getSenderUsername());
     }
 
+    /**
+     * التمرير لأسفل منطقة المحادثة.
+     */
     public void scrollToBottom() {
         javafx.application.Platform.runLater(() -> scrollPane.setVvalue(1.0));
     }
 
     /**
-     * ✅ تحميل مرفق — بيستخدم token من السيرفر
+     * تنسيق وقت الرسالة للعرض.
+     * - اليوم: الساعة فقط
+     * - الأمس: "أمس" + الساعة
+     * - أقدم: التاريخ الكامل
+     *
+     * @param timestamp وقت الرسالة
+     * @return النص المنسق
      */
-    private void downloadAttachment(Attachment att) {
+    private String formatMessageTime(LocalDateTime timestamp) {
+        if (timestamp == null) return "";
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+        LocalDate msgDate = timestamp.toLocalDate();
+
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
+
+        if (msgDate.equals(today)) {
+            return timestamp.format(timeFmt);
+        } else if (msgDate.equals(today.minusDays(1))) {
+            return "أمس " + timestamp.format(timeFmt);
+        } else {
+            return timestamp.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+    }
+
+    /**
+     * التحقق من وجود الملف على الخادم قبل عرض خيارات الحفظ.
+     *
+     * @param att كائن المرفق
+     */
+    private void startDownloadWithCheck(Attachment att) {
         if (att.getDownloadToken() == null || att.getDownloadToken().isBlank()) {
-            System.err.println("[Conversation] No download token for: " + att.getFileName());
+            showError("لا يوجد رابط تحميل لهذا الملف");
             return;
         }
 
+        MessageClientService.getInstance().checkAttachmentExists(att.getDownloadToken())
+                .thenAccept(exists -> {
+                    javafx.application.Platform.runLater(() -> {
+                        if (exists) {
+                            showDownloadDialog(att);
+                        } else {
+                            showError("الملف غير موجود على السيرفر أو تم حذفه");
+                        }
+                    });
+                })
+                .exceptionally(e -> {
+                    javafx.application.Platform.runLater(() ->
+                            showError("تعذر التحقق من وجود الملف: " + e.getMessage()));
+                    return null;
+                });
+    }
+
+    /**
+     * عرض حوار حفظ الملف.
+     *
+     * @param att كائن المرفق
+     */
+    private void showDownloadDialog(Attachment att) {
         javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
         chooser.setTitle("حفظ المرفق");
         chooser.setInitialFileName(att.getFileName());
@@ -230,8 +315,7 @@ public class MessageConversationView extends VBox {
                 targetFile.toPath(),
                 () -> {
                     javafx.application.Platform.runLater(() -> {
-                        System.out.println("[Conversation] ✅ Downloaded: " + att.getFileName());
-                        // Optional: open file
+                        System.out.println("[Conversation] Downloaded: " + att.getFileName());
                         try {
                             java.awt.Desktop.getDesktop().open(targetFile);
                         } catch (Exception ignored) {
@@ -240,9 +324,19 @@ public class MessageConversationView extends VBox {
                 },
                 err -> {
                     javafx.application.Platform.runLater(() -> {
-                        System.err.println("[Conversation] ❌ Download failed: " + err);
+                        System.err.println("[Conversation] Download failed: " + err);
+                        showError("فشل التحميل: " + err);
                     });
                 }
         );
+    }
+
+    private void showError(String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle("خطأ");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

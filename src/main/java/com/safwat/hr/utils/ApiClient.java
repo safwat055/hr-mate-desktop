@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.safwat.hr.shared.AppConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,12 +41,17 @@ import java.util.function.Consumer;
  * - إدارة التوكن (للصلاحيات).
  */
 public class ApiClient {
-
+    private static final DateTimeFormatter SERVER_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // ── Jackson ObjectMapper (مكان Gson) ─────────────────────────────
     public static final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())                        // دعم Java 8 Date/Time
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)    // ISO-8601 بدل epoch
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // تجاهل حقول غير معروفة
+            .registerModule(new JavaTimeModule()
+                    .addDeserializer(java.time.LocalDateTime.class,
+                            new LocalDateTimeDeserializer(SERVER_DATE_FORMAT))
+            )
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private static final Duration TIMEOUT = Duration.ofSeconds(30);
     public static final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)

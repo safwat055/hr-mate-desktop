@@ -10,13 +10,24 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * =====================================================
- * HRNotification — نموذج بيانات الإشعار — النسخة المعدّلة
- * =====================================================
+ * =====================================================================
+ * HRNotification
+ * =====================================================================
+ * نموذج بيانات الإشعار المركزي في النظام.
+ * يمثل أي إشعار (نظام أو رسالة) مع كل خصائصه مثل العنوان والمحتوى والمرسل والوقت.
+ * يستخدم JavaFX Properties لدعم الربط التلقائي مع واجهة المستخدم.
+ * يدعم نمط البناء (Builder Pattern) لتسهيل إنشاء الكائنات.
+ * يحتوي على كلاس داخلي Attachment لتمثيل المرفقات.
+ * <p>
+ * الأقسام الرئيسية:
+ * - خصائص الإشعار (Properties)
+ * - Builder للبناء
+ * - Enums: NotificationCategory, NotificationType, Priority
+ * - Attachment: بيانات الملف المرفق
  */
 public class HRNotification {
 
-    // ===================== الحقول =====================
+    // ===================== خصائص الإشعار =====================
     private final StringProperty id = new SimpleStringProperty(UUID.randomUUID().toString());
     private final StringProperty title = new SimpleStringProperty();
     private final StringProperty message = new SimpleStringProperty();
@@ -28,24 +39,34 @@ public class HRNotification {
     private final ObjectProperty<LocalDateTime> timestamp = new SimpleObjectProperty<>(LocalDateTime.now());
     private final StringProperty actionLabel = new SimpleStringProperty();
     private final StringProperty actionTarget = new SimpleStringProperty();
-    private final StringProperty senderName = new SimpleStringProperty();      // Display Name
-    private final StringProperty senderUsername = new SimpleStringProperty();  // ✅ جديد — Username
+    private final StringProperty senderName = new SimpleStringProperty();
+    private final StringProperty senderUsername = new SimpleStringProperty();
     private final StringProperty senderAvatar = new SimpleStringProperty();
     private final List<Attachment> attachments = new ArrayList<>();
 
     private HRNotification() {
     }
 
-    // ===================== Builder =====================
+    /**
+     * إنشاء Builder جديد لبناء كائن HRNotification.
+     *
+     * @return Builder فارغ
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * ترجع قائمة المرفقات المرتبطة بالإشعار.
+     *
+     * @return قائمة المرفقات
+     */
     public List<Attachment> getAttachments() {
         return attachments;
     }
 
     // ===================== Getters =====================
+
     public String getId() {
         return id.get();
     }
@@ -96,13 +117,17 @@ public class HRNotification {
 
     public String getSenderUsername() {
         return senderUsername.get();
-    }  // ✅ جديد
+    }
 
     public String getSenderAvatar() {
         return senderAvatar.get();
     }
 
-
+    /**
+     * التحقق من وجود مرفقات.
+     *
+     * @return true إذا كان الإشعار يحتوي على مرفقات
+     */
     public boolean hasAttachments() {
         return !attachments.isEmpty();
     }
@@ -111,23 +136,50 @@ public class HRNotification {
         return read;
     }
 
-    // للتوافق مع الكود القديم
+    /**
+     * للتوافق مع الكود القديم.
+     *
+     * @return true إذا كان يحتوي على ملف
+     */
     public boolean hasFile() {
         return !attachments.isEmpty();
     }
 
+    /**
+     * ترجع مسار أول ملف مرفق.
+     *
+     * @return مسار الملف أو null
+     */
     public String getFilePath() {
         return attachments.isEmpty() ? null : attachments.get(0).getFilePath();
     }
 
+    /**
+     * التحقق مما إذا كان الإشعار من نوع رسالة.
+     *
+     * @return true إذا كانت الفئة MESSAGE
+     */
     public boolean isMessage() {
         return category.get() == NotificationCategory.MESSAGE;
     }
 
+    /**
+     * تعليم الإشعار كمقروء.
+     */
     public void markAsRead() {
         read.set(true);
     }
 
+    /**
+     * تنسيق وقت الإشعار للعرض.
+     * - أقل من دقيقة: "الآن"
+     * - أقل من ساعة: "منذ X دقيقة"
+     * - أقل من يوم: "منذ X ساعة"
+     * - أقل من أسبوع: "منذ X يوم"
+     * - أقدم: "dd/MM/yyyy"
+     *
+     * @return النص المنسق للوقت
+     */
     public String getFormattedTime() {
         LocalDateTime now = LocalDateTime.now();
         Duration dur = Duration.between(timestamp.get(), now);
@@ -141,6 +193,12 @@ public class HRNotification {
         return timestamp.get().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
+    /**
+     * ترجع الحروف الأولى من اسم المرسل لعرضها كصورة رمزية.
+     * إذا كان الاسم مكون من كلمة واحدة ترجع أول حرف، وإذا كان من كلمتين ترجع أول حرف من كل واحدة.
+     *
+     * @return الحروف الأولى أو "؟" إذا لم يوجد اسم
+     */
     public String getAvatarInitials() {
         if (senderAvatar.get() != null && !senderAvatar.get().isBlank())
             return senderAvatar.get();
@@ -152,8 +210,15 @@ public class HRNotification {
     }
 
     // ===================== Enums =====================
+
+    /**
+     * فئات الإشعارات الرئيسية.
+     */
     public enum NotificationCategory {SYSTEM, MESSAGE}
 
+    /**
+     * أنواع الإشعارات مع ألوانها وخلفياتها.
+     */
     public enum NotificationType {
         EMPLOYEE("موظفون", "#185FA5", "#E6F1FB"),
         SALARY("رواتب", "#3B6D11", "#EAF3DE"),
@@ -172,9 +237,16 @@ public class HRNotification {
         }
     }
 
+    /**
+     * مستويات أولوية الإشعار.
+     */
     public enum Priority {LOW, NORMAL, HIGH, URGENT}
 
     // ===================== Attachment =====================
+
+    /**
+     * يمثل ملفاً مرفقاً برسالة أو إشعار.
+     */
     public static class Attachment {
         private final String fileName;
         private final String filePath;
@@ -182,6 +254,15 @@ public class HRNotification {
         private final long fileSize;
         private final String downloadToken;
 
+        /**
+         * إنشاء مرفق جديد.
+         *
+         * @param fileName      اسم الملف
+         * @param filePath      مسار الملف
+         * @param mimeType      نوع MIME
+         * @param fileSize      حجم الملف بالبايت
+         * @param downloadToken رمز التحميل من الخادم
+         */
         public Attachment(String fileName, String filePath,
                           String mimeType, long fileSize, String downloadToken) {
             this.fileName = fileName;
@@ -190,7 +271,6 @@ public class HRNotification {
             this.fileSize = fileSize;
             this.downloadToken = downloadToken;
         }
-
 
         public String getFileName() {
             return fileName;
@@ -212,6 +292,11 @@ public class HRNotification {
             return downloadToken;
         }
 
+        /**
+         * تنسيق حجم الملف للعرض (B, KB, MB).
+         *
+         * @return النص المنسق للحجم
+         */
         public String getFormattedSize() {
             if (fileSize <= 0) return "—";
             if (fileSize < 1024) return fileSize + " B";
@@ -219,6 +304,11 @@ public class HRNotification {
             return String.format("%.1f MB", fileSize / (1024.0 * 1024));
         }
 
+        /**
+         * ترجع أيقونة نصية حسب نوع الملف.
+         *
+         * @return أيقونة الملف
+         */
         public String getIcon() {
             if (mimeType == null) return "[FILE]";
             return switch (mimeType) {
@@ -233,6 +323,10 @@ public class HRNotification {
     }
 
     // ===================== Builder =====================
+
+    /**
+     * Builder لبناء كائن HRNotification بسهولة.
+     */
     public static class Builder {
         private final HRNotification n = new HRNotification();
 
@@ -281,7 +375,6 @@ public class HRNotification {
             return this;
         }
 
-        // ✅ جديد
         public Builder senderUsername(String username) {
             n.senderUsername.set(username);
             return this;
@@ -315,6 +408,11 @@ public class HRNotification {
             return this;
         }
 
+        /**
+         * بناء الكائن النهائي مع تعيين الأنواع الافتراضية إذا لم تُحدد.
+         *
+         * @return كائن HRNotification جاهز
+         */
         public HRNotification build() {
             if (n.category.get() == NotificationCategory.MESSAGE && n.type.get() == null) {
                 n.type.set(NotificationType.MESSAGE);

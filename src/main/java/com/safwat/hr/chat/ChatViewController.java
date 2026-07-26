@@ -15,6 +15,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 import java.io.File;
 import java.net.URL;
@@ -106,7 +107,7 @@ public class ChatViewController implements Initializable {
         });
 
         // ٦. حالة أولية
-        //Platform.runLater(this::showEmptyState);
+        //  showEmptyState();
     }
 
     // ══════════════════════════════════════════════════════
@@ -174,7 +175,10 @@ public class ChatViewController implements Initializable {
     }
 
     private void scrollToBottom() {
-        Platform.runLater(() -> messagesScroll.setVvalue(1.0));
+        // runLater مرتين: الأولى تضيف الـ nodes، الثانية بعد الـ layout pass
+        Platform.runLater(() ->
+                Platform.runLater(() -> messagesScroll.setVvalue(1.0))
+        );
     }
 
     private void setMessagesLoading(boolean loading) {
@@ -256,23 +260,52 @@ public class ChatViewController implements Initializable {
 
     @FXML
     private void onNewConversation() {
-        NewConversationDialog dialog = new NewConversationDialog(
-                btnNewConversation.getScene().getWindow()
-        );
-        dialog.showAndWait().ifPresent(userId ->
-                chatService.startPrivateConversation(
-                        userId,
+        Window window = btnNewConversation.getScene().getWindow();
+
+        // ١. اختار نوع المحادثة
+        new NewConversationTypeDialog(window).showAndWait().ifPresent(type -> {
+            switch (type) {
+                case "PRIVATE" -> openPrivateDialog(window);
+                case "GROUP" -> openGroupDialog(window);
+                case "BROADCAST" -> openBroadcastDialog(window);
+            }
+        });
+    }
+
+    private void openPrivateDialog(Window window) {
+        new NewConversationDialog(window).showAndWait().ifPresent(userId ->
+                chatService.startPrivateConversation(userId,
                         convId -> Platform.runLater(() -> openConversationById(convId)),
-                        err -> Platform.runLater(() ->
-                                NotificationService.getInstance().send(
-                                        HRNotification.builder()
-                                                .title("خطأ")
-                                                .message(err)
-                                                .type(HRNotification.NotificationType.SYSTEM)
-                                                .build()
-                                )
-                        )
+                        err -> showError("خطأ", err)
                 )
+        );
+    }
+
+    private void openGroupDialog(Window window) {
+        new NewGroupDialog(window).showAndWait().ifPresent(req ->
+                chatService.startGroupConversation(req.name(), req.participantIds(),
+                        convId -> Platform.runLater(() -> openConversationById(convId)),
+                        err -> showError("خطأ في إنشاء المجموعة", err)
+                )
+        );
+    }
+
+    private void openBroadcastDialog(Window window) {
+        new NewBroadcastDialog(window).showAndWait().ifPresent(req ->
+                chatService.startBroadcast(req.name(), req.targetDepartmentId(),
+                        convId -> Platform.runLater(() -> openConversationById(convId)),
+                        err -> showError("خطأ في إرسال الرسالة", err)
+                )
+        );
+    }
+
+    private void showError(String title, String msg) {
+        NotificationService.getInstance().send(
+                HRNotification.builder()
+                        .title(title)
+                        .message(msg)
+                        .type(HRNotification.NotificationType.SYSTEM)
+                        .build()
         );
     }
 

@@ -21,13 +21,12 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 /**
- * =====================================================
- * HRToast — إشعار فوري منبثق
- * =====================================================
- * <p>
- * يظهر في الزاوية السفلية اليمنى ويختفي تلقائياً.
- * يدعم تراكم حتى 4 إشعارات في وقت واحد.
- * يعرض نوعين: إشعار نظام، رسالة مستخدم.
+ * =====================================================================
+ * HRToast
+ * =====================================================================
+ * إشعار فوري منبثق يظهر في الزاوية السفلية اليمنى للشاشة ويختفي تلقائياً.
+ * يدعم تراكم عدد محدد من الإشعارات في وقت واحد.
+ * يعرض نوعين من الإشعارات: إشعارات النظام، ورسائل المستخدمين.
  * <p>
  * الاستخدام:
  * HRToast.show(primaryStage, notification);
@@ -44,6 +43,13 @@ public class HRToast {
 
     private static final Deque<Popup> activeToasts = new ArrayDeque<>();
 
+    /**
+     * عرض إشعار منبثق جديد.
+     * إذا وصل عدد الإشعارات المعروضة للحد الأقصى، يتم إخفاء الأقدم.
+     *
+     * @param owner النافذة الأم التي يظهر الإشعار فوقها
+     * @param n     كائن الإشعار المراد عرضه
+     */
     public static void show(Stage owner, HRNotification n) {
         if (activeToasts.size() >= MAX_VISIBLE) {
             Popup oldest = activeToasts.pollFirst();
@@ -57,7 +63,13 @@ public class HRToast {
         animateIn(popup);
     }
 
-    // ===================== Toast إشعار النظام =====================
+    /**
+     * بناء واجهة إشعار النظام.
+     * تحتوي على أيقونة النوع، العنوان، الرسالة، والوقت.
+     *
+     * @param n كائن إشعار النظام
+     * @return Popup جاهز للعرض
+     */
     private static Popup buildSystemToast(HRNotification n) {
         Popup popup = new Popup();
         popup.setAutoHide(false);
@@ -65,7 +77,6 @@ public class HRToast {
         String color = n.getType().color;
         String bg = n.getType().bgColor;
 
-        // أيقونة النوع
         Rectangle iconBg = new Rectangle(36, 36);
         iconBg.setArcWidth(8);
         iconBg.setArcHeight(8);
@@ -79,7 +90,6 @@ public class HRToast {
         iconBox.setMinSize(36, 36);
         iconBox.setMaxSize(36, 36);
 
-        // النصوص
         Label titleLbl = new Label(n.getTitle());
         titleLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
         titleLbl.setMaxWidth(240);
@@ -114,12 +124,17 @@ public class HRToast {
         return popup;
     }
 
-    // ===================== Toast رسالة المستخدم =====================
+    /**
+     * بناء واجهة رسالة المستخدم.
+     * تحتوي على صورة رمزية للمرسل، الاسم، الموضوع، المعاينة، والمرفقات.
+     *
+     * @param n كائن رسالة المستخدم
+     * @return Popup جاهز للعرض
+     */
     private static Popup buildMessageToast(HRNotification n) {
         Popup popup = new Popup();
         popup.setAutoHide(false);
 
-        // صورة رمزية للمرسل
         Circle avatarCircle = new Circle(18);
         avatarCircle.setFill(Color.web("#0F6E56"));
         Label avatarLbl = new Label(n.getAvatarInitials());
@@ -128,22 +143,18 @@ public class HRToast {
         avatarBox.setMinSize(36, 36);
         avatarBox.setMaxSize(36, 36);
 
-        // اسم المرسل
         Label senderLbl = new Label(
                 n.getSenderName() != null ? n.getSenderName() : "رسالة جديدة");
         senderLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#0F6E56;");
 
-        // الموضوع
         Label subjectLbl = new Label(n.getTitle());
         subjectLbl.setStyle("-fx-font-size:12px;-fx-font-weight:500;-fx-text-fill:#1A1A1A;");
         subjectLbl.setMaxWidth(220);
 
-        // معاينة
         Label previewLbl = new Label(n.getMessage());
         previewLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#666666;");
         previewLbl.setMaxWidth(220);
 
-        // مرفقات
         HBox extras = new HBox(6);
         if (n.hasAttachments()) {
             Label attLbl = new Label("[" + n.getAttachments().size() + " مرفق]");
@@ -174,7 +185,12 @@ public class HRToast {
         return popup;
     }
 
-    // ===================== مساعدات =====================
+    /**
+     * إنشاء زر إغلاق للإشعار.
+     *
+     * @param popup النافذة المنبثقة المرتبطة بالزر
+     * @return زر الإغلاق
+     */
     private static MFXButton buildCloseBtn(Popup popup) {
         MFXButton btn = new MFXButton("x");
         btn.setStyle(
@@ -186,6 +202,12 @@ public class HRToast {
         return btn;
     }
 
+    /**
+     * إنشاء شريط تقدم يتقلص تلقائياً حتى انتهاء مدة عرض الإشعار.
+     *
+     * @param color لون الشريط
+     * @return مستطيل الشريط
+     */
     private static Rectangle buildProgressBar(String color) {
         Rectangle bar = new Rectangle(TOAST_WIDTH, 3);
         bar.setFill(Color.web(color));
@@ -200,6 +222,11 @@ public class HRToast {
         return bar;
     }
 
+    /**
+     * تشغيل حركة دخول الإشعار (انزلاق + تلاشي).
+     *
+     * @param popup النافذة المنبثقة المراد تحريكها
+     */
     private static void animateIn(Popup popup) {
         javafx.scene.Node root = popup.getContent().get(0);
         root.setTranslateX(TOAST_WIDTH + 30);
@@ -219,6 +246,11 @@ public class HRToast {
         intro.play();
     }
 
+    /**
+     * إخفاء الإشعار مع حركة خروج (تلاشي + انزلاق).
+     *
+     * @param popup النافذة المنبثقة المراد إخفاؤها
+     */
     private static void dismissToast(Popup popup) {
         if (popup.getContent().isEmpty()) {
             popup.hide();
@@ -239,6 +271,11 @@ public class HRToast {
         out.play();
     }
 
+    /**
+     * إعادة ترتيب الإشعارات المعروضة على الشاشة بعد إضافة إشعار جديد.
+     *
+     * @param owner النافذة الأم
+     */
     private static void repositionAll(Stage owner) {
         double screenX = owner.getX() + owner.getWidth() - TOAST_WIDTH - RIGHT_MARGIN;
         double screenY = owner.getY() + owner.getHeight();
@@ -251,6 +288,12 @@ public class HRToast {
         }
     }
 
+    /**
+     * ترجع النص المختصر لأيقونة نوع الإشعار.
+     *
+     * @param type نوع الإشعار
+     * @return النص المختصر (مثل EMP, SAL, MSG)
+     */
     private static String getSystemIcon(HRNotification.NotificationType type) {
         return switch (type) {
             case EMPLOYEE -> "EMP";
