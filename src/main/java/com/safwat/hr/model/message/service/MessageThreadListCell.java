@@ -1,4 +1,4 @@
-package com.safwat.hr.notification.ui;
+package com.safwat.hr.model.message.service;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

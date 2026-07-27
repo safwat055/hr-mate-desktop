@@ -1,10 +1,10 @@
 package com.safwat.hr.notification.ui;
 
+import com.safwat.hr.model.message.service.MessageClientService;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.Attachment;
 import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import com.safwat.hr.notification.model.HRNotification.NotificationType;
-import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.util.FileOpener;
 import io.github.palexdev.materialfx.controls.MFXButton;
@@ -30,12 +30,10 @@ import java.util.function.Consumer;
  * =====================================================================
  * لوحة الإشعارات الكاملة التي تظهر عند الضغط على زر الجرس.
  * تعرض إشعارات النظام والرسائل في مكان واحد مع إمكانية التصفية حسب النوع.
- * <p>
  * التبويبات المتاحة:
  * - الكل
  * - إشعارات (مع أنواع فرعية: موظفون، رواتب، إجازات، تدريب، مهام، النظام)
  * - رسائل
- * <p>
  * الاستخدام:
  * HRNotificationPanel panel = new HRNotificationPanel(primaryStage);
  */
@@ -49,8 +47,9 @@ public class HRNotificationPanel extends VBox {
 
     /**
      * إنشاء لوحة الإشعارات.
+     * تقوم بتهيئة الفلتر، بناء الواجهة، وتطبيق الأنماط.
      *
-     * @param owner النافذة الأم
+     * @param owner النافذة الأم التي تظهر اللوحة فوقها
      */
     public HRNotificationPanel(Stage owner) {
         this.owner = owner;
@@ -68,14 +67,17 @@ public class HRNotificationPanel extends VBox {
     }
 
     /**
-     * تعيين callback عند فتح رسالة من اللوحة.
+     * تعيين callback يتم استدعاؤه عند الضغط على "فتح" لرسالة.
      *
-     * @param callback الدالة المستدعاة
+     * @param callback الدالة المستدعاة مع الإشعار المختار
      */
     public void setOnOpenMessage(Consumer<HRNotification> callback) {
         this.onOpenMessage = callback;
     }
 
+    /**
+     * بناء أقسام اللوحة الأربعة: الرأس، التبويبات، القائمة، التذييل.
+     */
     private void build() {
         getChildren().addAll(
                 buildHeader(),
@@ -86,9 +88,11 @@ public class HRNotificationPanel extends VBox {
     }
 
     /**
-     * بناء رأس اللوحة يحتوي على العنوان وعدد الجديد وزر التحديث وتعليم الكل مقروء.
+     * بناء رأس اللوحة.
+     * يحتوي على عنوان "المركز"، شارة بعدد الإشعارات الجديدة،
+     * زر تحديث الرسائل من الخادم، وزر تعليم الكل مقروء.
      *
-     * @return HBox الرأس
+     * @return HBox يمثل رأس اللوحة
      */
     private HBox buildHeader() {
         HBox header = new HBox();
@@ -119,7 +123,7 @@ public class HRNotificationPanel extends VBox {
                         "-fx-background-radius:10px;-fx-padding:2 8 2 8;"
         );
 
-        MFXButton refreshBtn = new MFXButton("🔄تحديث");
+        MFXButton refreshBtn = new MFXButton("🔄 تحديث");
         refreshBtn.setStyle(
                 "-fx-font-size:14px;-fx-text-fill:#185FA5;" +
                         "-fx-background-color:transparent;-fx-cursor:hand;-fx-padding:0 4 0 4;"
@@ -143,7 +147,9 @@ public class HRNotificationPanel extends VBox {
     }
 
     /**
-     * بناء منطقة التبويبات الرئيسية والفرعية.
+     * بناء منطقة التبويبات.
+     * تحتوي على صف رئيسي (الكل، إشعارات، رسائل) وصف فرعي يظهر عند اختيار "إشعارات"
+     * ويحتوي على أنواع الإشعارات الفرعية.
      *
      * @return VBox يحتوي على صفوف التبويبات
      */
@@ -196,6 +202,16 @@ public class HRNotificationPanel extends VBox {
         return wrapper;
     }
 
+    /**
+     * إنشاء تبويب رئيسي (الكل، إشعارات، رسائل).
+     *
+     * @param text      نص التبويب
+     * @param color     لون النص عند التفعيل
+     * @param bg        لون الخلفية عند التفعيل
+     * @param filter    قيمة الفلتر المرتبطة
+     * @param container الحاوية التي يُضاف إليها التبويب
+     * @return Label يمثل التبويب
+     */
     private Label buildMainTab(String text, String color, String bg,
                                TabFilter filter, HBox container) {
         Label tab = new Label(text);
@@ -207,6 +223,16 @@ public class HRNotificationPanel extends VBox {
         return tab;
     }
 
+    /**
+     * إنشاء تبويب فرعي (نوع إشعار محدد).
+     *
+     * @param text      نص التبويب
+     * @param color     لون النص عند التفعيل
+     * @param bg        لون الخلفية عند التفعيل
+     * @param filter    قيمة الفلتر المرتبطة
+     * @param container الحاوية التي يُضاف إليها التبويب
+     * @return Label يمثل التبويب الفرعي
+     */
     private Label buildSubTab(String text, String color, String bg,
                               TabFilter filter, HBox container) {
         Label tab = new Label(text);
@@ -215,7 +241,7 @@ public class HRNotificationPanel extends VBox {
         tab.getProperties().put("bg", bg);
         applySubTabStyle(tab, false, color, bg);
 
-        tab.setOnMouseClicked(e -> {
+        tab.setOnMouseClicked(_ -> {
             activeTab = filter;
             applyFilter();
             container.getChildren().forEach(node -> {
@@ -229,6 +255,12 @@ public class HRNotificationPanel extends VBox {
         return tab;
     }
 
+    /**
+     * تفعيل تبويب رئيسي محدد وتحديث أنماط التبويبات.
+     *
+     * @param filter    الفلتر المراد تفعيله
+     * @param container الحاوية التي تحتوي على التبويبات
+     */
     private void setActiveMainTab(TabFilter filter, HBox container) {
         activeTab = filter;
         applyFilter();
@@ -241,6 +273,14 @@ public class HRNotificationPanel extends VBox {
         });
     }
 
+    /**
+     * تطبيق النمط البصري على تبويب رئيسي.
+     *
+     * @param tab    عنصر التبويب
+     * @param active true إذا كان التبويب نشطاً
+     * @param color  لون النص
+     * @param bg     لون الخلفية
+     */
     private void applyMainTabStyle(Label tab, boolean active, String color, String bg) {
         if (active)
             tab.setStyle(
@@ -257,6 +297,14 @@ public class HRNotificationPanel extends VBox {
             );
     }
 
+    /**
+     * تطبيق النمط البصري على تبويب فرعي.
+     *
+     * @param tab    عنصر التبويب
+     * @param active true إذا كان التبويب نشطاً
+     * @param color  لون النص
+     * @param bg     لون الخلفية
+     */
     private void applySubTabStyle(Label tab, boolean active, String color, String bg) {
         if (active)
             tab.setStyle(
@@ -275,6 +323,7 @@ public class HRNotificationPanel extends VBox {
 
     /**
      * تطبيق فلتر التبويب النشط على قائمة الإشعارات.
+     * يحدد أي الإشعارات تُعرض حسب التبويب المختار.
      */
     private void applyFilter() {
         filteredList.setPredicate(n -> switch (activeTab) {
@@ -290,6 +339,12 @@ public class HRNotificationPanel extends VBox {
         });
     }
 
+    /**
+     * تحويل NotificationType إلى TabFilter المقابل.
+     *
+     * @param type نوع الإشعار
+     * @return قيمة TabFilter
+     */
     private TabFilter typeToFilter(NotificationType type) {
         return switch (type) {
             case EMPLOYEE -> TabFilter.EMPLOYEE;
@@ -304,13 +359,13 @@ public class HRNotificationPanel extends VBox {
     /**
      * بناء قائمة الإشعارات مع خلية عرض مخصصة.
      *
-     * @return ListView جاهز
+     * @return ListView جاهز للعرض
      */
     private ListView<HRNotification> buildList() {
         ListView<HRNotification> list = new ListView<>();
         list.setItems(filteredList);
         list.setPrefHeight(500);
-        list.setFixedCellSize(96);
+        list.setFixedCellSize(130);
         list.setCellFactory(lv -> new NotificationCell());
         list.setStyle("-fx-background-color:transparent;");
         list.setPlaceholder(buildEmptyState());
@@ -318,6 +373,11 @@ public class HRNotificationPanel extends VBox {
         return list;
     }
 
+    /**
+     * بناء حالة الفراغ التي تظهر عند عدم وجود إشعارات.
+     *
+     * @return StackPane يحتوي على رسالة الفراغ
+     */
     private StackPane buildEmptyState() {
         Label msg = new Label("لا توجد إشعارات");
         msg.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;");
@@ -325,9 +385,10 @@ public class HRNotificationPanel extends VBox {
     }
 
     /**
-     * بناء تذييل اللوحة يحتوي على عدد العناصر وزر مسح الكل.
+     * بناء تذييل اللوحة.
+     * يحتوي على عدد العناصر المعروضة وزر مسح الكل.
      *
-     * @return HBox التذييل
+     * @return HBox يمثل التذييل
      */
     private HBox buildFooter() {
         HBox footer = new HBox();
@@ -353,7 +414,7 @@ public class HRNotificationPanel extends VBox {
                 "-fx-font-size:12px;-fx-text-fill:#AA3333;" +
                         "-fx-background-color:transparent;-fx-cursor:hand;"
         );
-        clearBtn.setOnAction(e -> {
+        clearBtn.setOnAction(_ -> {
             switch (activeTab) {
                 case ALL -> service.clearAll();
                 case MESSAGES -> service.getAll().removeIf(HRNotification::isMessage);
@@ -371,6 +432,12 @@ public class HRNotificationPanel extends VBox {
         return footer;
     }
 
+    /**
+     * تحويل TabFilter إلى NotificationType المقابل.
+     *
+     * @param f قيمة الفلتر
+     * @return نوع الإشعار أو null
+     */
     private NotificationType filterToType(TabFilter f) {
         return switch (f) {
             case EMPLOYEE -> NotificationType.EMPLOYEE;
@@ -383,17 +450,26 @@ public class HRNotificationPanel extends VBox {
         };
     }
 
+    /**
+     * أنواع الفلاتر المتاحة للتبويبات.
+     */
     private enum TabFilter {
         ALL, SYSTEM_ALL, MESSAGES,
         EMPLOYEE, SALARY, LEAVE, TRAINING, TASK, SYSTEM_TYPE
     }
 
     /**
-     * خلية عرض مخصصة للإشعار داخل القائمة.
-     * تدعم نوعين: إشعار النظام ورسالة المستخدم.
+     * خلية عرض مخصصة للإشعار داخل قائمة الإشعارات.
+     * تدعم نوعين من العرض: إشعار النظام ورسالة المستخدم.
      */
     private class NotificationCell extends ListCell<HRNotification> {
 
+        /**
+         * تحديث محتوى الخلية عند تغير العنصر.
+         *
+         * @param item  الإشعار المراد عرضه
+         * @param empty true إذا كانت الخلية فارغة
+         */
         @Override
         protected void updateItem(HRNotification item, boolean empty) {
             super.updateItem(item, empty);
@@ -408,6 +484,13 @@ public class HRNotificationPanel extends VBox {
                     : buildSystemCell(item));
         }
 
+        /**
+         * بناء خلية إشعار النظام.
+         * تحتوي على نقطة القراءة، أيقونة النوع، العنوان، الرسالة، الوقت، والإجراءات.
+         *
+         * @param item إشعار النظام
+         * @return HBox يمثل خلية الإشعار
+         */
         private HBox buildSystemCell(HRNotification item) {
             Circle dot = buildDot(item.isRead(), item.getType().color);
 
@@ -456,6 +539,13 @@ public class HRNotificationPanel extends VBox {
             return buildRoot(item, dot, iconBox, texts);
         }
 
+        /**
+         * بناء خلية رسالة المستخدم.
+         * تحتوي على نقطة القراءة، الصورة الرمزية، اسم المرسل، الموضوع، المعاينة، والوقت.
+         *
+         * @param item رسالة المستخدم
+         * @return HBox يمثل خلية الرسالة
+         */
         private HBox buildMessageCell(HRNotification item) {
             Circle dot = buildDot(item.isRead(), "#0F6E56");
 
@@ -522,6 +612,14 @@ public class HRNotificationPanel extends VBox {
             return buildRoot(item, dot, avatarBox, texts);
         }
 
+        /**
+         * إنشاء نقطة القراءة (dot).
+         * ملونة إذا كانت غير مقروءة، وشفافة مع حافة إذا كانت مقروءة.
+         *
+         * @param isRead حالة القراءة
+         * @param color  لون النقطة عند عدم القراءة
+         * @return Circle يمثل نقطة القراءة
+         */
         private Circle buildDot(boolean isRead, String color) {
             Circle dot = new Circle(5);
             dot.setFill(isRead ? Color.TRANSPARENT : Color.web(color));
@@ -530,6 +628,16 @@ public class HRNotificationPanel extends VBox {
             return dot;
         }
 
+        /**
+         * بناء الجذر المشترك لخلية الإشعار.
+         * يحدد الخلفية والحدود حسب حالة القراءة والأولوية.
+         *
+         * @param item  الإشعار
+         * @param dot   نقطة القراءة
+         * @param icon  أيقونة/صورة رمزية
+         * @param texts محتوى النصوص
+         * @return HBox الجذر النهائي للخلية
+         */
         private HBox buildRoot(HRNotification item, Circle dot,
                                StackPane icon, VBox texts) {
             String border = (item.getPriority() == HRNotification.Priority.URGENT)
@@ -545,12 +653,19 @@ public class HRNotificationPanel extends VBox {
             HBox root = new HBox(10, dot, icon, texts);
             root.setAlignment(Pos.CENTER_LEFT);
             root.setPadding(new Insets(10, 14, 10, 12));
-            root.setPrefHeight(96);
+            root.setPrefHeight(130);
             root.setStyle(border + "-fx-background-color:" + bg + ";-fx-cursor:hand;");
             root.setOnMouseClicked(e -> service.markAsRead(item));
             return root;
         }
 
+        /**
+         * بناء صف الإجراءات لإشعار النظام.
+         * يحتوي على زر الإجراء المرتبط بالإشعار (مثل "فتح" أو "عرض").
+         *
+         * @param item إشعار النظام
+         * @return HBox يحتوي على أزرار الإجراءات
+         */
         private HBox buildSystemActions(HRNotification item) {
             HBox actions = new HBox(8);
             actions.setAlignment(Pos.CENTER_LEFT);
@@ -571,6 +686,13 @@ public class HRNotificationPanel extends VBox {
             return actions;
         }
 
+        /**
+         * بناء صف المرفقات لإشعار معين.
+         * يعرض كل مرفق كزر قابل للضغط لفتحه.
+         *
+         * @param item الإشعار الذي يحتوي على المرفقات
+         * @return HBox يحتوي على أزرار المرفقات
+         */
         private HBox buildAttachmentsRow(HRNotification item) {
             HBox row = new HBox(6);
             row.setAlignment(Pos.CENTER_LEFT);
@@ -590,6 +712,12 @@ public class HRNotificationPanel extends VBox {
             return row;
         }
 
+        /**
+         * ترجع النص المختصر لأيقونة نوع الإشعار.
+         *
+         * @param type نوع الإشعار
+         * @return النص المختصر (مثل EMP, SAL, MSG)
+         */
         private String getSystemIcon(NotificationType type) {
             return switch (type) {
                 case EMPLOYEE -> "EMP";

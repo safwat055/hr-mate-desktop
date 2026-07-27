@@ -1,5 +1,6 @@
-package com.safwat.hr.notification.ui;
+package com.safwat.hr.model.message.service;
 
+import com.safwat.hr.model.message.UserInfo;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

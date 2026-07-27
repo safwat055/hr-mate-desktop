@@ -1,4 +1,4 @@
-package com.safwat.hr.notification.service;
+package com.safwat.hr.model.message.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,17 +7,17 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.safwat.hr.model.message.InboxStatsDTO;
+import com.safwat.hr.model.message.MessageSummaryDTO;
+import com.safwat.hr.model.message.UserInfo;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import com.safwat.hr.notification.model.HRNotification.NotificationType;
 import com.safwat.hr.notification.model.HRNotification.Priority;
-import com.safwat.hr.notification.ui.UserInfo;
-import com.safwat.hr.notification.util.InboxStatsDTO;
-import com.safwat.hr.notification.util.MessageSummaryDTO;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiResponse;
 import javafx.application.Platform;
-
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;

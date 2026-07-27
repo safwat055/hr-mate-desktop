@@ -1,7 +1,12 @@
-package com.safwat.hr.notification.ui;
+package com.safwat.hr.controller.main;
 
+import com.safwat.hr.model.message.MessageConversationView;
+import com.safwat.hr.model.message.UserInfo;
+import com.safwat.hr.model.message.service.MessageClientService;
+import com.safwat.hr.model.message.service.MessageComposer;
+import com.safwat.hr.model.message.service.MessageThread;
+import com.safwat.hr.model.message.service.MessageThreadListCell;
 import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.ui.util.MultiSelectSearchDialog;
 import javafx.application.Platform;

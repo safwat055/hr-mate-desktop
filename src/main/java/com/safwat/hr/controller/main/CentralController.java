@@ -1,4 +1,4 @@
-package com.safwat.hr.controller;
+package com.safwat.hr.controller.main;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,7 +1,6 @@
-package com.safwat.hr.controller;
+package com.safwat.hr.controller.main;
 
 import com.safwat.hr.notification.ui.HRNotificationBell;
-import com.safwat.hr.notification.ui.MessageInboxController;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.icons.Icons;
@@ -172,7 +171,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     void openChatView() {
-       
+
         TabManager.loadFXMLInTab(tab, "/com/safwat/hr/chat/ChatView.fxml", "محادثات", true);
     }
 }

@@ -1,7 +1,7 @@
 package com.safwat.hr;
 
+import com.safwat.hr.model.message.service.MessageClientService;
 import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.service.MessageClientService;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.ui.HRToast;
 import com.safwat.hr.service.auth.dto.LoginRequest;

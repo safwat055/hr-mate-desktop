@@ -1,6 +1,6 @@
-package com.safwat.hr.notification.service;
+package com.safwat.hr.model.message.service;
 
-import com.safwat.hr.notification.util.MessageSummaryDTO;
+import com.safwat.hr.model.message.MessageSummaryDTO;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;

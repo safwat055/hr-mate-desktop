@@ -1,5 +1,5 @@
 // MessageSummaryDTO.java
-package com.safwat.hr.notification.util;
+package com.safwat.hr.model.message;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
