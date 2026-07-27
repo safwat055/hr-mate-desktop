@@ -1,6 +1,9 @@
 package com.safwat.hr.chat;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.safwat.hr.utils.ApiClient;
 import javafx.application.Platform;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -13,51 +16,43 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * STOMP client للشات — يتعامل مع:
- * <p>
- * /topic/conversation/{id}         ← رسائل المحادثة المفتوحة
- * /user/{username}/queue/chat      ← إشعارات رسائل جديدة من محادثات تانية
- * <p>
- * الاستخدام:
- * <pre>
- *   ChatStompClient.getInstance().connect(
- *       username,
- *       notification -> { ... },   // إشعار رسالة جديدة
- *       error -> { ... }           // خطأ في الاتصال
- *   );
- *
- *   // لما المستخدم يفتح محادثة
- *   ChatStompClient.getInstance().subscribeToConversation(convId, msg -> { ... });
- *
- *   // لما يسيب المحادثة
- *   ChatStompClient.getInstance().unsubscribeFromConversation(convId);
- * </pre>
+ * STOMP client للشات.
  */
 public class ChatStompClient {
 
-    // ── Singleton ─────────────────────────────────────────────────────
+    private static final int MAX_RECONNECT_ATTEMPTS = 10;
+    private static final long INITIAL_RECONNECT_DELAY_MS = 1000;
+    private static final long MAX_RECONNECT_DELAY_MS = 30000;
+
     private static volatile ChatStompClient instance;
+
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final AtomicBoolean connecting = new AtomicBoolean(false);
-    /**
-     * subscriptions نشطة: conversationId → StompSession.Subscription
-     */
     private final Map<Long, StompSession.Subscription> convSubscriptions = new ConcurrentHashMap<>();
-    private final ObjectMapper mapper = ApiClient.mapper;
-    // ── State ─────────────────────────────────────────────────────────
+    private final AtomicInteger reconnectAttempts = new AtomicInteger(0);
+    private final AtomicBoolean shouldReconnect = new AtomicBoolean(true);
+    private final Map<Long, StompSession.Subscription> typingSubscriptions = new ConcurrentHashMap<>();
+
+    // ✅ تم الإصلاح: ObjectMapper منفصل للـ WebSocket بيدعم ISO format
+    private final ObjectMapper stompMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     private WebSocketStompClient stompClient;
     private StompSession session;
     private ThreadPoolTaskScheduler scheduler;
-    /**
-     * subscription إشعارات المستخدم
-     */
     private StompSession.Subscription notificationSub;
+    private ScheduledExecutorService reconnectScheduler;
 
-    // Callbacks
     private Consumer<ChatDTOs.WsNotificationDTO> onNotification;
     private Consumer<String> onError;
     private String currentUsername;
@@ -78,14 +73,6 @@ public class ChatStompClient {
     //  Connect / Disconnect
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * يبني الاتصال مع الـ STOMP server.
-     * آمن للاستدعاء من أي thread — الـ callbacks بترجع على JavaFX thread.
-     *
-     * @param username       اسم المستخدم الحالي (للـ subscription الخاصة)
-     * @param onNotification callback لما تيجي إشعار رسالة جديدة
-     * @param onError        callback لما يحصل خطأ
-     */
     public void connect(String username,
                         Consumer<ChatDTOs.WsNotificationDTO> onNotification,
                         Consumer<String> onError) {
@@ -98,24 +85,35 @@ public class ChatStompClient {
         this.currentUsername = username;
         this.onNotification = onNotification;
         this.onError = onError;
+        this.shouldReconnect.set(true);
+        this.reconnectAttempts.set(0);
 
-        // Scheduler للـ heartbeat
+        if (reconnectScheduler == null || reconnectScheduler.isShutdown()) {
+            reconnectScheduler = new ScheduledThreadPoolExecutor(1, r -> {
+                Thread t = new Thread(r, "stomp-reconnect");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+
+        doConnect();
+    }
+
+    private void doConnect() {
         scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(1);
         scheduler.setThreadNamePrefix("stomp-heartbeat-");
         scheduler.initialize();
 
-        // بناء الـ STOMP client
         StandardWebSocketClient wsClient = new StandardWebSocketClient();
         stompClient = new WebSocketStompClient(wsClient);
         stompClient.setTaskScheduler(scheduler);
 
-        // Jackson converter — نفس الـ mapper بتاع ApiClient
+        // ✅ تم الإصلاح: استخدام stompMapper (ISO format) بدل ApiClient.mapper
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
-        converter.setObjectMapper(mapper);
+        converter.setObjectMapper(stompMapper);
         stompClient.setMessageConverter(converter);
 
-        // Headers — Authorization
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String token = ApiClient.getAuthToken();
         if (token != null && !token.isEmpty()) {
@@ -133,10 +131,11 @@ public class ChatStompClient {
                 session = s;
                 connected.set(true);
                 connecting.set(false);
+                reconnectAttempts.set(0);
                 System.out.println("[ChatStompClient] ✅ Connected");
 
-                // Subscribe لإشعارات المستخدم
                 subscribeToUserNotifications();
+                resubscribeConversations();
             }
 
             @Override
@@ -155,14 +154,42 @@ public class ChatStompClient {
                 connecting.set(false);
                 System.err.println("[ChatStompClient] ❌ Transport error: " + exception.getMessage());
                 notifyError("Connection lost: " + exception.getMessage());
+                scheduleReconnect();
             }
         });
     }
 
-    /**
-     * قطع الاتصال وتنظيف كل الـ subscriptions
-     */
+    private void scheduleReconnect() {
+        if (!shouldReconnect.get()) return;
+
+        int attempt = reconnectAttempts.incrementAndGet();
+        if (attempt > MAX_RECONNECT_ATTEMPTS) {
+            System.err.println("[ChatStompClient] Max reconnection attempts reached. Giving up.");
+            notifyError("فشل الاتصال بعد " + MAX_RECONNECT_ATTEMPTS + " محاولات. يرجى التحقق من الشبكة.");
+            return;
+        }
+
+        long delay = Math.min(INITIAL_RECONNECT_DELAY_MS * (1L << (attempt - 1)), MAX_RECONNECT_DELAY_MS);
+        System.out.println("[ChatStompClient] ⏳ Reconnecting in " + delay + "ms (attempt " + attempt + "/" + MAX_RECONNECT_ATTEMPTS + ")");
+
+        reconnectScheduler.schedule(() -> {
+            if (shouldReconnect.get() && !connected.get()) {
+                Platform.runLater(() -> {
+                    connecting.set(false);
+                    doConnect();
+                });
+            }
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+
     public void disconnect() {
+        shouldReconnect.set(false);
+
+        if (reconnectScheduler != null) {
+            reconnectScheduler.shutdownNow();
+            reconnectScheduler = null;
+        }
+
         convSubscriptions.values().forEach(sub -> {
             try {
                 sub.unsubscribe();
@@ -170,6 +197,14 @@ public class ChatStompClient {
             }
         });
         convSubscriptions.clear();
+
+        typingSubscriptions.values().forEach(sub -> {
+            try {
+                sub.unsubscribe();
+            } catch (Exception ignored) {
+            }
+        });
+        typingSubscriptions.clear();
 
         if (notificationSub != null) {
             try {
@@ -199,6 +234,7 @@ public class ChatStompClient {
 
         connected.set(false);
         connecting.set(false);
+        reconnectAttempts.set(0);
         System.out.println("[ChatStompClient] 🔌 Disconnected");
     }
 
@@ -206,10 +242,6 @@ public class ChatStompClient {
     //  Subscriptions
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * Subscribe لإشعارات المستخدم الخاصة.
-     * يُستدعى تلقائياً بعد الاتصال.
-     */
     private void subscribeToUserNotifications() {
         if (!isReady()) return;
 
@@ -235,13 +267,6 @@ public class ChatStompClient {
         System.out.println("[ChatStompClient] 📡 Subscribed to: " + destination);
     }
 
-    /**
-     * Subscribe لرسائل محادثة معينة.
-     * يُستدعى لما المستخدم يفتح المحادثة.
-     *
-     * @param conversationId ID المحادثة
-     * @param onMessage      callback لكل رسالة جديدة
-     */
     public void subscribeToConversation(long conversationId,
                                         Consumer<ChatDTOs.WsMessageDTO> onMessage) {
         if (!isReady()) {
@@ -249,7 +274,6 @@ public class ChatStompClient {
             return;
         }
 
-        // إلغاء الـ subscription القديمة لو موجودة
         unsubscribeFromConversation(conversationId);
 
         String destination = "/topic/conversation/" + conversationId;
@@ -273,10 +297,37 @@ public class ChatStompClient {
         System.out.println("[ChatStompClient] 📡 Subscribed to: " + destination);
     }
 
-    /**
-     * إلغاء الـ subscription من محادثة.
-     * يُستدعى لما المستخدم يسيب المحادثة أو يفتح محادثة تانية.
-     */
+    public void subscribeToTyping(long conversationId, Consumer<ChatDTOs.WsMessageDTO> onTypingEvent) {
+        if (!isReady()) return;
+
+        StompSession.Subscription oldSub = typingSubscriptions.remove(conversationId);
+        if (oldSub != null) {
+            try {
+                oldSub.unsubscribe();
+            } catch (Exception ignored) {
+            }
+        }
+
+        String destination = "/topic/conversation/" + conversationId + "/typing";
+
+        StompSession.Subscription sub = session.subscribe(destination, new StompFrameHandler() {
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return ChatDTOs.WsMessageDTO.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                if (payload instanceof ChatDTOs.WsMessageDTO dto) {
+                    Platform.runLater(() -> onTypingEvent.accept(dto));
+                }
+            }
+        });
+
+        typingSubscriptions.put(conversationId, sub);
+        System.out.println("[ChatStompClient] 📡 Subscribed to typing: " + destination);
+    }
+
     public void unsubscribeFromConversation(long conversationId) {
         StompSession.Subscription sub = convSubscriptions.remove(conversationId);
         if (sub != null) {
@@ -287,6 +338,18 @@ public class ChatStompClient {
                 System.err.println("[ChatStompClient] Error unsubscribing: " + e.getMessage());
             }
         }
+
+        StompSession.Subscription typingSub = typingSubscriptions.remove(conversationId);
+        if (typingSub != null) {
+            try {
+                typingSub.unsubscribe();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void resubscribeConversations() {
+        // Called after reconnection — ChatService handles resubscription
     }
 
     // ═════════════════════════════════════════════════════════════════

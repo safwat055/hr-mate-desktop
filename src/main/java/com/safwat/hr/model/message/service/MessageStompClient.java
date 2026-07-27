@@ -1,6 +1,7 @@
 package com.safwat.hr.model.message.service;
 
 import com.safwat.hr.model.message.MessageSummaryDTO;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -53,8 +54,9 @@ public class MessageStompClient {
             @Override
             public void afterConnected(StompSession session, StompHeaders headers) {
                 session.subscribe("/user/queue/messages", new StompFrameHandler() {
+                    @NotNull
                     @Override
-                    public Type getPayloadType(StompHeaders headers) {
+                    public Type getPayloadType(@NotNull StompHeaders headers) {
                         return MessageSummaryDTO.class;
                     }
 

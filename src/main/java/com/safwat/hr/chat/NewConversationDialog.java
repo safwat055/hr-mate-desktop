@@ -99,10 +99,13 @@ public class NewConversationDialog extends Dialog<Long> {
             );
         });
 
-        // Double-click يختار مباشرة
+        // ✅ تم الإصلاح: Double-click يختار مباشرة
         resultList.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && resultList.getSelectionModel().getSelectedItem() != null) {
-                getDialogPane().lookupButton(startBtn);
+                javafx.scene.Node btn = getDialogPane().lookupButton(startBtn);
+                if (btn instanceof Button b && !b.isDisabled()) {
+                    b.fire();
+                }
             }
         });
     }

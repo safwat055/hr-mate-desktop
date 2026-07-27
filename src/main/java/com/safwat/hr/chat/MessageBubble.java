@@ -5,6 +5,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
@@ -17,33 +19,22 @@ import java.util.List;
 
 /**
  * فقاعة رسالة في واجهة الشات.
- * <p>
- * رسائلي  → يمين (HBox.alignment = CENTER_RIGHT)
- * رسائل غيري → يسار مع صورة رمزية
- * <p>
- * التصميم:
- * <p>
- * رسالة واردة:
- * [AV] ┌─────────────────┐
- * │  نص الرسالة     │
- * │  📎 اسم ملف ↓  │
- * └─────────────────┘
- * 11:30 AM
- * <p>
- * رسالة صادرة:
- * ┌─────────────────┐
- * │  نص الرسالة    │
- * └─────────────────┘
- * 11:30 AM ✓
  */
 public class MessageBubble extends HBox {
 
     private static final double MAX_BUBBLE_WIDTH = 420;
+    private static final double MAX_IMAGE_WIDTH = 300;
+    private static final double MAX_IMAGE_HEIGHT = 250;
+
+    private ChatDTOs.ChatMessageDTO message;
+    private Label statusLabel;
+    private VBox bubble;
+    private boolean mine;
 
     public MessageBubble(ChatDTOs.ChatMessageDTO msg) {
         super(8);
-
-        boolean mine = msg.isMine();
+        this.message = msg;
+        this.mine = msg.isMine();
 
         if (mine) {
             buildOutgoing(msg);
@@ -51,8 +42,48 @@ public class MessageBubble extends HBox {
             buildIncoming(msg);
         }
 
-        // padding بين الفقاعات
         setMargin(this, new Insets(2, 0, 2, 0));
+    }
+
+    public Long getMessageId() {
+        return message != null ? message.getId() : null;
+    }
+
+    /**
+     * ✅ جديد: تحديث الـ bubble بالـ DTO الجديد (edit/delete/status)
+     */
+    public void refreshMessage(ChatDTOs.ChatMessageDTO newMsg) {
+        this.message = newMsg;
+        getChildren().clear();
+        if (bubble != null) {
+            bubble.getChildren().clear();
+        }
+        statusLabel = null;
+
+        if (mine) {
+            buildOutgoing(newMsg);
+        } else {
+            buildIncoming(newMsg);
+        }
+    }
+
+    public void updateStatus(ChatDTOs.MessageStatus status) {
+        if (statusLabel == null || message == null || !mine) return;
+
+        String statusText = switch (status) {
+            case SENDING -> "⏳";
+            case SENT -> "✓";
+            case DELIVERED -> "✓✓";
+            case READ -> "✓✓";
+        };
+
+        String color = switch (status) {
+            case READ -> "-fx-text-fill: #34B7F1;";
+            default -> "-fx-text-fill: #9CA3AF;";
+        };
+
+        statusLabel.setText(statusText);
+        statusLabel.setStyle(color);
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -62,12 +93,11 @@ public class MessageBubble extends HBox {
     private void buildOutgoing(ChatDTOs.ChatMessageDTO msg) {
         setAlignment(Pos.CENTER_RIGHT);
 
-        VBox bubble = new VBox(4);
+        bubble = new VBox(4);
         bubble.setMaxWidth(MAX_BUBBLE_WIDTH);
         bubble.getStyleClass().addAll("message-bubble", "bubble-outgoing");
         bubble.setPadding(new Insets(8, 12, 8, 12));
 
-        // نص الرسالة
         if (msg.isDeleted()) {
             Label deleted = new Label("[محذوف] تم حذف هذه الرسالة");
             deleted.getStyleClass().add("msg-deleted");
@@ -79,17 +109,26 @@ public class MessageBubble extends HBox {
                 content.getStyleClass().add("msg-content");
                 bubble.getChildren().add(content);
             }
-
-            // مرفقات
             addAttachments(bubble, msg.getAttachments());
         }
 
-        // وقت + علامة إرسال
         HBox timeRow = new HBox(4);
         timeRow.setAlignment(Pos.CENTER_RIGHT);
-        Label timeLabel = new Label((msg.getTimeAgo() != null ? msg.getTimeAgo() : "") + " ✓");
+
+        if (msg.isEdited()) {
+            Label editedLabel = new Label("(مُعدّلة)");
+            editedLabel.getStyleClass().add("msg-edited-indicator");
+            timeRow.getChildren().add(editedLabel);
+        }
+
+        Label timeLabel = new Label(msg.getTimeAgo() != null ? msg.getTimeAgo() : "");
         timeLabel.getStyleClass().add("msg-time");
-        timeRow.getChildren().add(timeLabel);
+
+        statusLabel = new Label();
+        statusLabel.getStyleClass().add("msg-status");
+        updateStatus(msg.getStatus() != null ? msg.getStatus() : ChatDTOs.MessageStatus.SENT);
+
+        timeRow.getChildren().addAll(timeLabel, statusLabel);
         bubble.getChildren().add(timeRow);
 
         getChildren().add(bubble);
@@ -102,7 +141,6 @@ public class MessageBubble extends HBox {
     private void buildIncoming(ChatDTOs.ChatMessageDTO msg) {
         setAlignment(Pos.CENTER_LEFT);
 
-        // صورة رمزية المرسل
         StackPane avatar = new StackPane();
         avatar.setPrefSize(36, 36);
         avatar.setMinSize(36, 36);
@@ -120,13 +158,11 @@ public class MessageBubble extends HBox {
         avatar.getChildren().add(initials);
         avatar.setAlignment(Pos.BOTTOM_CENTER);
 
-        // Bubble
-        VBox bubble = new VBox(4);
+        bubble = new VBox(4);
         bubble.setMaxWidth(MAX_BUBBLE_WIDTH);
         bubble.getStyleClass().addAll("message-bubble", "bubble-incoming");
         bubble.setPadding(new Insets(8, 12, 8, 12));
 
-        // اسم المرسل (في المجموعات)
         String senderName = msg.getSenderDisplayName() != null
                 ? msg.getSenderDisplayName() : msg.getSenderUsername();
         Label senderLabel = new Label(senderName);
@@ -134,7 +170,6 @@ public class MessageBubble extends HBox {
         senderLabel.setStyle("-fx-text-fill: " + color + ";");
         bubble.getChildren().add(senderLabel);
 
-        // نص الرسالة
         if (msg.isDeleted()) {
             Label deleted = new Label("[محذوف] تم حذف هذه الرسالة");
             deleted.getStyleClass().add("msg-deleted");
@@ -146,14 +181,23 @@ public class MessageBubble extends HBox {
                 content.getStyleClass().add("msg-content");
                 bubble.getChildren().add(content);
             }
-
             addAttachments(bubble, msg.getAttachments());
         }
 
-        // وقت
+        HBox timeRow = new HBox(4);
+        timeRow.setAlignment(Pos.CENTER_LEFT);
+
         Label timeLabel = new Label(msg.getTimeAgo() != null ? msg.getTimeAgo() : "");
         timeLabel.getStyleClass().add("msg-time");
-        bubble.getChildren().add(timeLabel);
+        timeRow.getChildren().add(timeLabel);
+
+        if (msg.isEdited()) {
+            Label editedLabel = new Label("(مُعدّلة)");
+            editedLabel.getStyleClass().add("msg-edited-indicator");
+            timeRow.getChildren().add(editedLabel);
+        }
+
+        bubble.getChildren().add(timeRow);
 
         getChildren().addAll(avatar, bubble);
     }
@@ -166,9 +210,63 @@ public class MessageBubble extends HBox {
         if (attachments == null || attachments.isEmpty()) return;
 
         for (ChatDTOs.ChatAttachmentDTO att : attachments) {
-            HBox attRow = buildAttachmentRow(att);
-            bubble.getChildren().add(attRow);
+            if (att.getMimeType() != null && att.getMimeType().startsWith("image/")) {
+                bubble.getChildren().add(buildImagePreview(att));
+            } else {
+                bubble.getChildren().add(buildAttachmentRow(att));
+            }
         }
+    }
+
+    private javafx.scene.Node buildImagePreview(ChatDTOs.ChatAttachmentDTO att) {
+        VBox previewBox = new VBox(4);
+        previewBox.setAlignment(Pos.CENTER);
+
+        StackPane imageContainer = new StackPane();
+        imageContainer.setStyle("-fx-background-color: #F3F4F6; -fx-background-radius: 8;");
+        imageContainer.setPrefSize(MAX_IMAGE_WIDTH, 180);
+
+        Label loadingLabel = new Label("⏳ جاري التحميل...");
+        loadingLabel.setStyle("-fx-text-fill: #9CA3AF;");
+        imageContainer.getChildren().add(loadingLabel);
+
+        if (att.getThumbnailUrl() != null) {
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    Image image = new Image(att.getThumbnailUrl(), MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, true, true, true);
+                    image.progressProperty().addListener((obs, old, newVal) -> {
+                        if (newVal.doubleValue() >= 1.0) {
+                            ImageView imageView = new ImageView(image);
+                            imageView.setFitWidth(MAX_IMAGE_WIDTH);
+                            imageView.setPreserveRatio(true);
+                            imageView.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
+
+                            imageView.setOnMouseClicked(e -> {
+                                if (att.getDownloadUrl() != null) {
+                                    try {
+                                        java.awt.Desktop.getDesktop().browse(new java.net.URI(att.getDownloadUrl()));
+                                    } catch (Exception ex) {
+                                        System.err.println("Failed to open image: " + ex.getMessage());
+                                    }
+                                }
+                            });
+
+                            imageContainer.getChildren().clear();
+                            imageContainer.getChildren().add(imageView);
+                            imageContainer.setPrefSize(-1, -1);
+                        }
+                    });
+                } catch (Exception e) {
+                    loadingLabel.setText("❌ فشل التحميل");
+                }
+            });
+        }
+
+        Label nameLabel = new Label(att.getFileName());
+        nameLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
+
+        previewBox.getChildren().addAll(imageContainer, nameLabel);
+        return previewBox;
     }
 
     private HBox buildAttachmentRow(ChatDTOs.ChatAttachmentDTO att) {
@@ -177,12 +275,10 @@ public class MessageBubble extends HBox {
         row.getStyleClass().add("attachment-row");
         row.setPadding(new Insets(6, 8, 6, 8));
 
-        // Icon حسب نوع الملف
         String icon = getFileIcon(att.getMimeType());
         Label iconLabel = new Label(icon);
         iconLabel.getStyleClass().add("attachment-icon");
 
-        // اسم + حجم
         VBox info = new VBox(2);
         Label nameLabel = new Label(att.getFileName() != null ? att.getFileName() : "ملف");
         nameLabel.getStyleClass().add("attachment-name");
@@ -193,8 +289,7 @@ public class MessageBubble extends HBox {
         info.getChildren().addAll(nameLabel, sizeLabel);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        // زر تحميل
-        Button downloadBtn = new Button("[Down]");
+        Button downloadBtn = new Button("⬇️");
         downloadBtn.getStyleClass().add("btn-download-attachment");
         downloadBtn.setOnAction(e -> downloadAttachment(att, downloadBtn));
 
@@ -217,7 +312,6 @@ public class MessageBubble extends HBox {
                     btn.setDisable(false);
                     if (success) {
                         btn.setText("✅");
-                        // فتح الملف مباشرة بعد التحميل
                         FileOpener.open(targetPath.toString());
                     } else {
                         btn.setText("❌");
@@ -226,14 +320,14 @@ public class MessageBubble extends HBox {
     }
 
     private String getFileIcon(String mimeType) {
-        if (mimeType == null) return "[F]";
-        if (mimeType.startsWith("image/")) return "[IMG]";
-        if (mimeType.startsWith("video/")) return "[VID]";
-        if (mimeType.startsWith("audio/")) return "[AUD]";
-        if (mimeType.contains("pdf")) return "[PDF]";
-        if (mimeType.contains("word") || mimeType.contains("document")) return "[DOC]";
-        if (mimeType.contains("sheet") || mimeType.contains("excel")) return "[XLS]";
-        if (mimeType.contains("zip") || mimeType.contains("compressed")) return "[ZIP]";
-        return "[F]";
+        if (mimeType == null) return "📄";
+        if (mimeType.startsWith("image/")) return "🖼️";
+        if (mimeType.startsWith("video/")) return "🎬";
+        if (mimeType.startsWith("audio/")) return "🎵";
+        if (mimeType.contains("pdf")) return "📕";
+        if (mimeType.contains("word") || mimeType.contains("document")) return "📝";
+        if (mimeType.contains("sheet") || mimeType.contains("excel")) return "📊";
+        if (mimeType.contains("zip") || mimeType.contains("compressed")) return "🗜️";
+        return "📎";
     }
 }

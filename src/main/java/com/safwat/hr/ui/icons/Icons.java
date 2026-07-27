@@ -39,17 +39,6 @@ public class Icons {
 
     }
 
-    public void getBellmage(Label bellLabel) {
-        ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/bell55.png")).toExternalForm()));
-
-        imag.setFitHeight(45);
-        imag.setFitHeight(45);
-        imag.setPreserveRatio(true);
-        // button.getStyleClass().clear();
-        bellLabel.setGraphic(imag);
-
-    }
 
     /**
      *
@@ -68,27 +57,66 @@ public class Icons {
     }
 
     public void getMailImage(Button button) {
-        ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/mail2.png")).toExternalForm()));
+        ImageView imageView = new ImageView(
+                new Image(Objects.requireNonNull(
+                        getClass().getResource("/com/safwat/hr/icons/mail.png")
+                ).toExternalForm())
+        );
 
-        imag.setFitHeight(45);
-        imag.setFitHeight(45);
-        imag.setPreserveRatio(true);
+        imageView.setFitWidth(55);
+        imageView.setFitHeight(55);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+
         button.getStyleClass().clear();
-        button.setGraphic(imag);
-
+        button.setGraphic(imageView);
     }
+
 
     public void getChatImage(Button button) {
-        ImageView imag = new ImageView();
-        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/chat2.png")).toExternalForm()));
+        ImageView imageView = new ImageView(
+                new Image(Objects.requireNonNull(
+                        getClass().getResource("/com/safwat/hr/icons/chat.png")
+                ).toExternalForm())
+        );
 
-        imag.setFitHeight(45);
-        imag.setFitHeight(45);
-        imag.setPreserveRatio(true);
+        imageView.setFitWidth(55);
+        imageView.setFitHeight(55);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+
         button.getStyleClass().clear();
-        button.setGraphic(imag);
-
+        button.setGraphic(imageView);
     }
 
+    public void getReportImage(Button button) {
+        ImageView imageView = new ImageView(
+                new Image(Objects.requireNonNull(
+                        getClass().getResource("/com/safwat/hr/icons/task_report.png")
+                ).toExternalForm())
+        );
+
+        imageView.setFitWidth(55);
+        imageView.setFitHeight(55);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+
+        button.getStyleClass().clear();
+        button.setGraphic(imageView);
+    }
+
+    public void getBellImage(Label bellLabel) {
+        ImageView imageView = new ImageView(
+                new Image(Objects.requireNonNull(
+                        getClass().getResource("/com/safwat/hr/icons/bell50.png")
+                ).toExternalForm())
+        );
+
+        imageView.setFitWidth(45);
+        imageView.setFitHeight(45);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+
+        bellLabel.setGraphic(imageView);
+    }
 }
