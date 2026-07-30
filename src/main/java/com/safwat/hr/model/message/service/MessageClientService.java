@@ -1,5 +1,6 @@
 package com.safwat.hr.model.message.service;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -936,6 +937,7 @@ public class MessageClientService {
         public String preview;
         public int attachmentsCount;
         public List<String> attachmentTokens;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")  // ✅ حدد التنسيق
         public LocalDateTime createdAt;
     }
 }

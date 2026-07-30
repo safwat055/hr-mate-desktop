@@ -27,7 +27,7 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport, btn_mail, btn_chat;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport, btn_mail, btn_chat, btn_report;
     @FXML
     private TabPane tab;
     @FXML
@@ -95,9 +95,10 @@ public class MainViewController implements Initializable {
 
             toolbar.getChildren().add(bell);
         });
-        icons.getBellmage(bellIcon);
+        icons.getBellImage(bellIcon);
         icons.getChatImage(btn_chat);
         icons.getMailImage(btn_mail);
+        icons.getReportImage(btn_report);
 
         leftLable.setText(ApiClient.getUserName());
     }
@@ -116,7 +117,7 @@ public class MainViewController implements Initializable {
         btn_PayrollVocab.setOnAction(_ -> openPayVocab());
 
         // ✅ جديد — فتح التاب مع الـ Controller
-        btn_mail.setOnAction(e -> openMessagesTab());
+        btn_mail.setOnAction(_ -> openMessagesTab());
     }
 
     /**

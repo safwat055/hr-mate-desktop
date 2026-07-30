@@ -91,6 +91,8 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
         // صورة رمزية
         avatarLabel.setText(conv.getAvatarInitials() != null ? conv.getAvatarInitials() : "?");
         String color = conv.getAvatarColor() != null ? conv.getAvatarColor() : "#185FA5";
+        // ✅ استخدم CSS class بدل inline style
+        avatarBox.getStyleClass().removeIf(s -> s.startsWith("avatar-color-"));
         avatarBox.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 22;");
 
         // اسم + وقت
@@ -108,23 +110,30 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
             unreadBadge.setVisible(true);
             unreadBadge.setManaged(true);
             // Bold اسم المحادثة لو فيه رسائل جديدة
-            nameLabel.setStyle("-fx-font-weight: bold;");
-            lastMsgLabel.setStyle("-fx-font-weight: bold;");
+            nameLabel.getStyleClass().add("unread");
+            lastMsgLabel.getStyleClass().add("unread");
         } else {
             unreadBadge.setVisible(false);
             unreadBadge.setManaged(false);
-            nameLabel.setStyle("-fx-font-weight: normal;");
-            lastMsgLabel.setStyle("-fx-font-weight: normal;");
+            nameLabel.getStyleClass().remove("unread");
+            lastMsgLabel.getStyleClass().remove("unread");
         }
 
         // Icon حسب نوع المحادثة
         String typeIcon = switch (conv.getType() != null ? conv.getType() : "") {
-            case "GROUP" -> "[G] ";
-            case "BROADCAST" -> "[B] ";
+            case "GROUP" -> "👥 ";
+            case "BROADCAST" -> "📢 ";
             default -> "";
         };
         if (!typeIcon.isEmpty() && conv.getName() != null) {
             nameLabel.setText(typeIcon + conv.getName());
+        }
+
+        // ✅ highlight للمحادثة المختارة
+        if (isSelected()) {
+            root.getStyleClass().add("selected");
+        } else {
+            root.getStyleClass().remove("selected");
         }
 
         setGraphic(root);

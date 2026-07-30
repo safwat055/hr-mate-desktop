@@ -1,40 +1,41 @@
 package com.safwat.hr.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiResponse;
-
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * كل REST calls الخاصة بنظام الشات.
  * كل الـ methods async — بترجع CompletableFuture.
  * <p>
- * الاستخدام:
- * <pre>
- *   ChatApiService.getConversations()
- *       .thenAccept(res -> Platform.runLater(() -> {
- *           if (res.isSuccess()) list.setAll(res.getData());
- *       }));
- * </pre>
+ * ملاحظة: ApiClient.BASE_URL = "http://host:port/api"
+ * فـ BASE = "/chat" → الـ URL النهائي = "/api/chat/..."
  */
 public class ChatApiService {
 
+    // ✅ تم الإصلاح: BASE = "/chat" (ApiClient بيضيف "/api" أصلاً)
     private static final String BASE = "/chat";
+
+    private static final ExecutorService IO_EXECUTOR = Executors.newCachedThreadPool(
+            r -> {
+                Thread t = new Thread(r, "chat-io-" + System.currentTimeMillis());
+                t.setDaemon(true);
+                return t;
+            }
+    );
 
     // ═════════════════════════════════════════════════════════════════
     //  Users
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * بحث عن مستخدمين — يحتاج حرفين على الأقل
-     */
     public static CompletableFuture<ApiResponse<List<ChatDTOs.UserSearchDTO>>> searchUsers(String query) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -46,16 +47,13 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
     // ═════════════════════════════════════════════════════════════════
     //  Conversations
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * قائمة محادثات المستخدم الحالي
-     */
     public static CompletableFuture<ApiResponse<List<ChatDTOs.ConversationSummaryDTO>>> getConversations() {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -67,12 +65,9 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * تفاصيل محادثة واحدة مع المشاركين
-     */
     public static CompletableFuture<ApiResponse<ChatDTOs.ConversationDetailDTO>> getConversationDetail(long id) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -83,12 +78,9 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * إنشاء محادثة خاصة مع مستخدم آخر
-     */
     public static CompletableFuture<ApiResponse<ChatDTOs.ConversationDetailDTO>> createPrivateConversation(long otherUserId) {
         ChatDTOs.CreateConversationRequest req = new ChatDTOs.CreateConversationRequest(
                 "PRIVATE", List.of(otherUserId)
@@ -103,12 +95,9 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * إنشاء محادثة جماعية (يحتاج صلاحية MANAGER أو ADMIN)
-     */
     public static CompletableFuture<ApiResponse<ChatDTOs.ConversationDetailDTO>> createGroupConversation(
             String name, List<Long> participantIds) {
 
@@ -127,7 +116,27 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
+    }
+
+    // ✅ جديد: addMembers — كانت ناقصة خالص
+    public static CompletableFuture<ApiResponse<Void>> addMembers(
+            long conversationId, List<Long> userIds) {
+
+        ChatDTOs.AddMembersRequest req = new ChatDTOs.AddMembersRequest();
+        req.setUserIds(userIds);
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.put(
+                        BASE + "/conversations/" + conversationId + "/members",
+                        req,
+                        Void.class
+                );
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        }, IO_EXECUTOR);
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -135,35 +144,31 @@ public class ChatApiService {
     // ═════════════════════════════════════════════════════════════════
 
     /**
-     * رسائل محادثة مع pagination — page=0 أول صفحة (100 رسالة)
+     * ✅ تم الإصلاح: إضافة size parameter
      */
     public static CompletableFuture<ApiResponse<List<ChatDTOs.ChatMessageDTO>>> getMessages(
-            long conversationId, int page) {
+            long conversationId, int page, int size) {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return ApiClient.getWithTypeRef(
-                        BASE + "/conversations/" + conversationId + "/messages?page=" + page + "&size=100",
+                        BASE + "/conversations/" + conversationId + "/messages?page=" + page + "&size=" + size,
                         new TypeReference<List<ChatDTOs.ChatMessageDTO>>() {
                         }
                 );
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * إرسال رسالة نصية بدون مرفقات
-     */
     public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> sendTextMessage(
             long conversationId, String content) {
 
         ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(content);
 
-        // multipart مع JSON part فقط (بدون files)
         Map<String, Object> formData = new HashMap<>();
-        formData.put("data", req);  // ApiClient.uploadFile بيـ serialize الـ objects كـ JSON
+        formData.put("data", req);
 
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -175,23 +180,25 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
     /**
-     * إرسال رسالة مع مرفقات
+     * ✅ تم الإصلاح: multiple files بيتبعتوا صح
      */
     public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> sendMessageWithFiles(
             long conversationId, String content, List<Path> files) {
 
         ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(
-                content.isBlank() ? "📎 ملف" : content
+                content == null || content.isBlank() ? "📎 ملف" : content
         );
 
         Map<String, Object> formData = new HashMap<>();
         formData.put("data", req);
+
+        // ✅ تم الإصلاح: نستخدم keys مختلفة لكل file عشان Map.put ما يoverwriteش
         for (int i = 0; i < files.size(); i++) {
-            formData.put("files", files.get(i)); // Spring بيستقبل "files" as List
+            formData.put("files_" + i, files.get(i));
         }
 
         return CompletableFuture.supplyAsync(() -> {
@@ -204,12 +211,9 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * حذف رسالة (المرسل فقط)
-     */
     public static CompletableFuture<ApiResponse<Void>> deleteMessage(long messageId) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -220,12 +224,56 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
-    /**
-     * تعليم رسائل المحادثة كمقروءة — يُستدعى لما المستخدم يفتح المحادثة
-     */
+    public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> editMessage(
+            long messageId, String newContent) {
+
+        ChatDTOs.EditMessageRequest req = new ChatDTOs.EditMessageRequest();
+        req.setContent(newContent);
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.put(
+                        BASE + "/messages/" + messageId,
+                        req,
+                        ChatDTOs.ChatMessageDTO.class
+                );
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        }, IO_EXECUTOR);
+    }
+
+    public static CompletableFuture<ApiResponse<Void>> deleteConversation(
+            long conversationId, boolean forEveryone) {
+
+        String url = BASE + "/conversations/" + conversationId + "/delete?forEveryone=" + forEveryone;
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.delete(url, Void.class);
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        }, IO_EXECUTOR);
+    }
+
+    public static CompletableFuture<ApiResponse<Void>> markAllAsRead() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.put(
+                        BASE + "/conversations/read-all",
+                        null,
+                        Void.class
+                );
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        }, IO_EXECUTOR);
+    }
+
     public static CompletableFuture<ApiResponse<Void>> markAsRead(long conversationId) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -237,16 +285,33 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
+    }
+
+    /**
+     * ✅ تم الإصلاح: شلنا conversationId من الـ body (موجود في الـ URL)
+     */
+    public static CompletableFuture<ApiResponse<Void>> sendTypingIndicator(long conversationId, boolean typing) {
+        ChatDTOs.TypingRequest req = new ChatDTOs.TypingRequest();
+        req.setTyping(typing);
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return ApiClient.post(
+                        BASE + "/conversations/" + conversationId + "/typing",
+                        req,
+                        Void.class
+                );
+            } catch (Exception e) {
+                return errorResponse(e);
+            }
+        }, IO_EXECUTOR);
     }
 
     // ═════════════════════════════════════════════════════════════════
     //  Attachments
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * تحميل مرفق إلى مسار معين
-     */
     public static CompletableFuture<Boolean> downloadAttachment(String downloadToken, Path targetPath) {
         return ApiClient.downloadFileAsync(
                 BASE + "/attachments/" + downloadToken,
@@ -256,9 +321,8 @@ public class ChatApiService {
     }
 
     // ═════════════════════════════════════════════════════════════════
-    //  Helpers — ApiClient methods لـ TypeReference
+    //  Broadcast & Departments
     // ═════════════════════════════════════════════════════════════════
-
 
     public static CompletableFuture<ApiResponse<ChatDTOs.ConversationDetailDTO>> createBroadcastConversation(
             String name, Long targetDepartmentId) {
@@ -275,9 +339,14 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
+    /**
+     * ✅ تم الإصلاح: "/departments" بدون BASE
+     * لأن DepartmentController عنده @RequestMapping("/api/departments")
+     * فالـ URL = BASE_URL + "/departments" = ".../api/departments"
+     */
     public static CompletableFuture<ApiResponse<List<ChatDTOs.DepartmentDTO>>> getDepartments() {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -289,7 +358,7 @@ public class ChatApiService {
             } catch (Exception e) {
                 return errorResponse(e);
             }
-        });
+        }, IO_EXECUTOR);
     }
 
     private static <T> ApiResponse<T> errorResponse(Exception e) {
