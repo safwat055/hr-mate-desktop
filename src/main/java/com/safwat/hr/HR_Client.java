@@ -29,7 +29,6 @@ public class HR_Client extends Application {
         AppTheme.apply(scene);
         stage.setTitle("HR_Management");
         stage.setScene(scene);
-
         stage.show();
 // ✅ إضافة مستمع للإشعارات الجديدة
 
@@ -65,7 +64,6 @@ public class HR_Client extends Application {
         if (!response.isSuccess()) {
             throw new RuntimeException(response.getMessage());
         }
-
         ApiClient.setAuthToken(response.getData().getToken());
         ApiClient.setUserName(response.getData().getUsername());
         MessageClientService.getInstance().connect();

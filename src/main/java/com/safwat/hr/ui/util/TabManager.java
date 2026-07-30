@@ -51,7 +51,6 @@ public class TabManager {
             loadedTabs.put(fxmlPath, tab);
 
         } catch (IOException e) {
-            e.printStackTrace();
             SAFNotification.error(e.getMessage());
         }
     }

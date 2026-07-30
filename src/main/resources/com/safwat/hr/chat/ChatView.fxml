@@ -17,8 +17,6 @@
             </padding>
             <Label styleClass="sidebar-title" text="الرسائل"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="btnMarkAllRead" onAction="#onMarkAllAsRead" styleClass="btn-icon" text="✓✓"
-            />
             <Button fx:id="btnNewConversation" onAction="#onNewConversation" styleClass="btn-new-chat" text="+"/>
         </HBox>
 
@@ -47,11 +45,11 @@
 
         <!-- حالة فارغة -->
         <VBox fx:id="emptyState" alignment="CENTER" spacing="12" styleClass="empty-state" VBox.vgrow="ALWAYS">
-            <Label style="-fx-font-size: 48px;" text="💬"/>
+            <Label style="-fx-font-size: 48px;" text="--"/>
             <Label styleClass="empty-state-text" text="اختر محادثة لتبدأ"/>
         </VBox>
 
-        <!-- محتوى الشات — ظاهر في البداية (زي الأصل) -->
+        <!-- محتوى الشات — مخفي في البداية -->
         <VBox fx:id="chatContent" visible="true" VBox.vgrow="ALWAYS">
 
             <!-- Chat Header -->
@@ -61,12 +59,12 @@
                 </padding>
 
                 <StackPane fx:id="headerAvatar" styleClass="conv-avatar-header">
-                    <Label fx:id="headerAvatarInitials" styleClass="avatar-initials-header" text="?"/>
+                    <Label fx:id="headerAvatarInitials" styleClass="avatar-initials-header"/>
                 </StackPane>
 
                 <VBox spacing="2">
-                    <Label fx:id="headerConvName" styleClass="header-conv-name" text=""/>
-                    <Label fx:id="headerConvMeta" styleClass="header-conv-meta" text=""/>
+                    <Label fx:id="headerConvName" styleClass="header-conv-name"/>
+                    <Label fx:id="headerConvMeta" styleClass="header-conv-meta"/>
                 </VBox>
 
                 <Region HBox.hgrow="ALWAYS"/>
@@ -99,20 +97,13 @@
                 <Label styleClass="loading-text" text="  جاري التحميل"/>
             </HBox>
 
-            <!-- Typing Indicator -->
-            <HBox fx:id="typingIndicator" alignment="CENTER_LEFT" managed="false" spacing="6"
-                  style="-fx-padding: 4 16 4 16; -fx-background-color: transparent;" visible="false">
-                <Label text="💬" style="-fx-font-size: 12px;"/>
-                <Label fx:id="typingLabel" style="-fx-font-size: 12px; -fx-text-fill: #6B7280;" text=""/>
-            </HBox>
-
             <!-- Input -->
             <HBox alignment="BOTTOM_CENTER" spacing="8" styleClass="chat-input-area">
                 <padding>
                     <Insets bottom="14" left="14" right="14" top="10"/>
                 </padding>
 
-                <Button fx:id="btnAttach" onAction="#onAttachFile" styleClass="btn-icon" text="📎"/>
+                <Button fx:id="btnAttach" onAction="#onAttachFile" styleClass="btn-icon" text=""/>
 
                 <TextArea fx:id="messageInput" maxHeight="120" prefRowCount="1" promptText="اكتب رسالتك..."
                           styleClass="message-input" wrapText="true" HBox.hgrow="ALWAYS"/>

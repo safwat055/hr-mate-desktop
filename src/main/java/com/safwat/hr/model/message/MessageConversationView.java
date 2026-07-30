@@ -4,7 +4,6 @@ import com.safwat.hr.model.message.service.MessageClientService;
 import com.safwat.hr.model.message.service.MessageThread;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.Attachment;
-import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.utils.ApiClient;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -319,7 +318,7 @@ public class MessageConversationView extends VBox {
                     javafx.application.Platform.runLater(() -> {
                         System.out.println("[Conversation] Downloaded: " + att.getFileName());
                         try {
-                            SAFNotification.withAction("Do you want open this FILE ?", targetFile);
+                            java.awt.Desktop.getDesktop().open(targetFile);
                         } catch (Exception ignored) {
                         }
                     });

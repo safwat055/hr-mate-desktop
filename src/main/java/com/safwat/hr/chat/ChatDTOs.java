@@ -7,25 +7,30 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 /**
  * نسخة JavaFX من ChatDTOs الخاصة بالباك إند.
  * يجب أن تطابق الحقول تماماً لأن Jackson بيعمل deserialization تلقائي.
+ * <p>
+ * ملاحظة: استخدمنا @Data + @NoArgsConstructor بدل @Builder
+ * لأن Jackson محتاج default constructor.
  */
 public class ChatDTOs {
 
-    public enum MessageStatus {
-        SENDING, SENT, DELIVERED, READ
-    }
+    // ─────────────────────────────────────────────────────────────────
+    //  Response DTOs
+    // ─────────────────────────────────────────────────────────────────
 
+    /**
+     * ملخص المحادثة في القائمة الجانبية
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ConversationSummaryDTO {
         private Long id;
         private String name;
-        private String type;
+        private String type;            // PRIVATE / GROUP / BROADCAST
         private String avatarInitials;
         private String avatarColor;
         private String lastMessage;
@@ -38,6 +43,9 @@ public class ChatDTOs {
         private boolean muted;
     }
 
+    /**
+     * تفاصيل المحادثة مع المشاركين
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -52,6 +60,9 @@ public class ChatDTOs {
         private LocalDateTime createdAt;
     }
 
+    /**
+     * مشارك في المحادثة
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -63,10 +74,13 @@ public class ChatDTOs {
         private String departmentName;
         private String avatarInitials;
         private String avatarColor;
-        private String role;
+        private String role;           // MEMBER / ADMIN
         private boolean online;
     }
 
+    /**
+     * رسالة شات واحدة
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -79,7 +93,7 @@ public class ChatDTOs {
         private String senderAvatarInitials;
         private String senderAvatarColor;
         private String content;
-        private String messageType;
+        private String messageType;    // TEXT / FILE / SYSTEM
         private boolean deleted;
         private List<ChatAttachmentDTO> attachments;
 
@@ -87,15 +101,12 @@ public class ChatDTOs {
         private LocalDateTime createdAt;
 
         private String timeAgo;
-        private boolean mine;
-        private MessageStatus status = MessageStatus.SENT;
-        private Set<Long> readBy;
-        private boolean edited;
-
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        private LocalDateTime editedAt;
+        private boolean mine;           // هل الرسالة من المستخدم الحالي؟
     }
 
+    /**
+     * مرفق
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -107,9 +118,11 @@ public class ChatDTOs {
         private String formattedSize;
         private String downloadToken;
         private String downloadUrl;
-        private String thumbnailUrl;
     }
 
+    /**
+     * نتيجة بحث مستخدم
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -123,6 +136,13 @@ public class ChatDTOs {
         private String avatarColor;
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  Request DTOs
+    // ─────────────────────────────────────────────────────────────────
+
+    /**
+     * إنشاء محادثة جديدة
+     */
     @Data
     @NoArgsConstructor
     public static class CreateConversationRequest {
@@ -137,11 +157,14 @@ public class ChatDTOs {
         }
     }
 
+    /**
+     * إرسال رسالة — يُرسل كـ JSON part داخل multipart
+     */
     @Data
     @NoArgsConstructor
     public static class SendMessageRequest {
         private String content;
-        private String messageType;
+        private String messageType;  // TEXT / FILE
 
         public SendMessageRequest(String content) {
             this.content = content;
@@ -149,58 +172,25 @@ public class ChatDTOs {
         }
     }
 
-    @Data
-    @NoArgsConstructor
-    public static class EditMessageRequest {
-        private String content;
-    }
-
-    @Data
-    @NoArgsConstructor
-    public static class DeleteConversationRequest {
-        private Long conversationId;
-        private boolean forEveryone;
-    }
+    // ─────────────────────────────────────────────────────────────────
+    //  WebSocket DTOs
+    // ─────────────────────────────────────────────────────────────────
 
     /**
-     * ✅ تم الإصلاح: شُل conversationId (موجود في الـ URL)
+     * رسالة WebSocket واردة من /topic/conversation/{id}
      */
-    @Data
-    @NoArgsConstructor
-    public static class TypingRequest {
-        private String username;
-        private boolean typing;
-    }
-
-    @Data
-    @NoArgsConstructor
-    public static class AddMembersRequest {
-        private List<Long> userIds;
-    }
-
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WsMessageDTO {
-        private String type;
+        private String type;            // "NEW_MESSAGE" / "USER_JOINED" / "USER_LEFT"
         private Long conversationId;
         private ChatMessageDTO message;
-
-        private String username;
-        private boolean typing;
-
-        private Long messageId;
-        private MessageStatus newStatus;
-        private Set<Long> readBy;
-
-        private String newContent;
-       
-        private LocalDateTime editedAt;
-
-        private boolean forEveryone;
-        private String deletedBy;
     }
 
+    /**
+     * إشعار WebSocket وارد من /user/{username}/queue/chat
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -215,6 +205,9 @@ public class ChatDTOs {
         private LocalDateTime createdAt;
     }
 
+    /**
+     * قسم — للـ broadcast dialog
+     */
     @Data
     @NoArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -223,4 +216,5 @@ public class ChatDTOs {
         private String name;
         private String code;
     }
+
 }
