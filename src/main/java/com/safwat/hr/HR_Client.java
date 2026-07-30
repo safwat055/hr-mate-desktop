@@ -56,8 +56,8 @@ public class HR_Client extends Application {
         super.init();
 
         LoginRequest request = new LoginRequest();
-        request.setUsername("admin");
-        request.setPassword("admin");
+        request.setUsername("safwat055");
+        request.setPassword("safwat055");
 
         ApiResponse<LoginResponse> response =
                 AuthService.login(request);

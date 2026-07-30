@@ -23,6 +23,9 @@ import java.util.ResourceBundle;
 
 public class ChatViewController implements Initializable {
 
+    // ✅ جديد: حد أقصى لحجم الملف على الفرونت (بنفس قيمة الباك إند) — نمنع
+    // محاولة الرفع من الأساس بدل ما ننتظر رد فشل من السيرفر
+    private static final long MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB
     @FXML
     private ListView<ChatDTOs.ConversationSummaryDTO> conversationList;
     @FXML
@@ -57,20 +60,16 @@ public class ChatViewController implements Initializable {
     private Button btnSend;
     @FXML
     private Button btnAttach;
-
     @FXML
     private HBox typingIndicator;
     @FXML
     private Label typingLabel;
-
     private ChatService chatService;
     private FilteredList<ChatDTOs.ConversationSummaryDTO> filteredConversations;
     private ChatDTOs.ConversationSummaryDTO currentConversation;
-
     private javafx.collections.ListChangeListener<ChatDTOs.ChatMessageDTO> messagesListener;
     private javafx.collections.ListChangeListener<String> typingListener;
     private javafx.event.EventHandler<KeyEvent> escapeHandler;
-
     private boolean userScrolledUp = false;
     private double lastVvalue = 1.0;
     private ChatDTOs.ChatMessageDTO editingMessage = null;
@@ -460,21 +459,42 @@ public class ChatViewController implements Initializable {
         if (chatService.getOpenConversationId() == null) return;
 
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("اختر ملفاً للإرسال");
+        chooser.setTitle("اختر ملف أو أكتر للإرسال");
         chooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("كل الملفات", "*.*"),
                 new FileChooser.ExtensionFilter("صور", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"),
                 new FileChooser.ExtensionFilter("مستندات", "*.pdf", "*.docx", "*.xlsx")
         );
 
-        File file = chooser.showOpenDialog(btnAttach.getScene().getWindow());
-        if (file == null) return;
+        // ✅ جديد: اختيار أكتر من ملف مرة واحدة زي واتساب
+        List<File> selected = chooser.showOpenMultipleDialog(btnAttach.getScene().getWindow());
+        if (selected == null || selected.isEmpty()) return;
+
+        List<File> oversized = selected.stream()
+                .filter(f -> f.length() > MAX_ATTACHMENT_SIZE_BYTES)
+                .toList();
+        if (!oversized.isEmpty()) {
+            String names = oversized.stream()
+                    .map(File::getName)
+                    .reduce((a, b) -> a + "، " + b)
+                    .orElse("");
+            NotificationService.getInstance().send(
+                    HRNotification.builder()
+                            .title("الملف كبير جداً")
+                            .message("الحد الأقصى 50 ميجابايت لكل ملف: " + names)
+                            .type(HRNotification.NotificationType.SYSTEM)
+                            .build()
+            );
+            return;
+        }
 
         String caption = messageInput.getText().trim();
         messageInput.clear();
         btnAttach.setDisable(true);
 
-        chatService.sendMessageWithFiles(caption, List.of(file.toPath()), err -> {
+        List<java.nio.file.Path> paths = selected.stream().map(File::toPath).toList();
+
+        chatService.sendMessageWithFiles(caption, paths, err -> {
             Platform.runLater(() -> {
                 btnAttach.setDisable(false);
                 if (err != null) {

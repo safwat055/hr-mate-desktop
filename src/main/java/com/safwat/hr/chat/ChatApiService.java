@@ -189,14 +189,18 @@ public class ChatApiService {
     public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> sendMessageWithFiles(
             long conversationId, String content, List<Path> files) {
 
+        String defaultCaption = files.size() > 1 ? "📎 " + files.size() + " مرفقات" : "📎 ملف";
         ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(
-                content == null || content.isBlank() ? "📎 ملف" : content
+                content == null || content.isBlank() ? defaultCaption : content
         );
 
         Map<String, Object> formData = new HashMap<>();
         formData.put("data", req);
 
-        // ✅ تم الإصلاح: نستخدم keys مختلفة لكل file عشان Map.put ما يoverwriteش
+        // ملاحظة: كل ملف بيتبعت بمفتاح مختلف (files_0, files_1...) عشان
+        // Map مش بيقبل نفس المفتاح مرتين من نفس الـ Map. الباك إند
+        // (ChatController) بيقرأ كل أجزاء الملفات دي بشكل يدوي بغض النظر
+        // عن اسم كل جزء، فمفيش داعي إن الأسماء دي تبقى "files" بالظبط.
         for (int i = 0; i < files.size(); i++) {
             formData.put("files_" + i, files.get(i));
         }

@@ -14,7 +14,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -218,6 +220,15 @@ public class MessageBubble extends HBox {
         }
     }
 
+    /**
+     * ✅ تم الإصلاح: الصور كانت مش بتظهر أبداً لأن الكود كان بيحمّلها مباشرة
+     * برابط نسبي (مش فيه http://host:port) ومن غير الـ Authorization header
+     * بتاع الـ API، فأي طلب كان بيفشل فوراً (❌ فشل التحميل).
+     * الحل: نحمّل الصورة أولاً بشكل آمن عن طريق ChatApiService (اللي أصلاً
+     * بيبعت التوثيق صح — نفس الطريقة المستخدمة في زر التحميل)، ونحفظها في
+     * كاش محلي، وبعدين نعرضها من الملف المحلي. نفس الأسلوب بنستخدمه لما
+     * المستخدم يدوس على الصورة، بدل محاولة فتحها كرابط نسبي في المتصفح.
+     */
     private javafx.scene.Node buildImagePreview(ChatDTOs.ChatAttachmentDTO att) {
         VBox previewBox = new VBox(4);
         previewBox.setAlignment(Pos.CENTER);
@@ -230,36 +241,41 @@ public class MessageBubble extends HBox {
         loadingLabel.setStyle("-fx-text-fill: #9CA3AF;");
         imageContainer.getChildren().add(loadingLabel);
 
-        if (att.getThumbnailUrl() != null) {
-            javafx.application.Platform.runLater(() -> {
-                try {
-                    Image image = new Image(att.getThumbnailUrl(), MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, true, true, true);
-                    image.progressProperty().addListener((obs, old, newVal) -> {
-                        if (newVal.doubleValue() >= 1.0) {
-                            ImageView imageView = new ImageView(image);
-                            imageView.setFitWidth(MAX_IMAGE_WIDTH);
-                            imageView.setPreserveRatio(true);
-                            imageView.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
+        Path cacheFile = attachmentCachePath(att);
 
-                            imageView.setOnMouseClicked(e -> {
-                                if (att.getDownloadUrl() != null) {
-                                    try {
-                                        java.awt.Desktop.getDesktop().browse(new java.net.URI(att.getDownloadUrl()));
-                                    } catch (Exception ex) {
-                                        System.err.println("Failed to open image: " + ex.getMessage());
-                                    }
-                                }
-                            });
+        Runnable renderFromDisk = () -> javafx.application.Platform.runLater(() -> {
+            try {
+                Image image = new Image(cacheFile.toUri().toString(),
+                        MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, true, true, false);
 
-                            imageContainer.getChildren().clear();
-                            imageContainer.getChildren().add(imageView);
-                            imageContainer.setPrefSize(-1, -1);
+                ImageView imageView = new ImageView(image);
+                imageView.setFitWidth(MAX_IMAGE_WIDTH);
+                imageView.setPreserveRatio(true);
+                imageView.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
+                imageView.setOnMouseClicked(e -> FileOpener.open(cacheFile.toString()));
+
+                imageContainer.getChildren().clear();
+                imageContainer.getChildren().add(imageView);
+                imageContainer.setPrefSize(-1, -1);
+            } catch (Exception e) {
+                loadingLabel.setText("❌ فشل عرض الصورة");
+            }
+        });
+
+        if (Files.exists(cacheFile)) {
+            renderFromDisk.run();
+        } else if (att.getDownloadToken() != null) {
+            ChatApiService.downloadAttachment(att.getDownloadToken(), cacheFile)
+                    .thenAccept(success -> {
+                        if (success) {
+                            renderFromDisk.run();
+                        } else {
+                            javafx.application.Platform.runLater(() ->
+                                    loadingLabel.setText("❌ فشل التحميل"));
                         }
                     });
-                } catch (Exception e) {
-                    loadingLabel.setText("❌ فشل التحميل");
-                }
-            });
+        } else {
+            loadingLabel.setText("❌ الملف غير متاح");
         }
 
         Label nameLabel = new Label(att.getFileName());
@@ -267,6 +283,21 @@ public class MessageBubble extends HBox {
 
         previewBox.getChildren().addAll(imageContainer, nameLabel);
         return previewBox;
+    }
+
+    /**
+     * كاش محلي مؤقت للصور المحمّلة، عشان ما نعيدش تحميل نفس الصورة كل مرة يتعاد فيها رسم الفقاعة.
+     */
+    private Path attachmentCachePath(ChatDTOs.ChatAttachmentDTO att) {
+        Path dir = Paths.get(System.getProperty("java.io.tmpdir"), "hr_chat_cache");
+        try {
+            Files.createDirectories(dir);
+        } catch (Exception ignored) {
+        }
+        String safeName = att.getFileName() != null
+                ? att.getFileName().replaceAll("[\\\\/:*?\"<>|]", "_")
+                : "file";
+        return dir.resolve(att.getDownloadToken() + "_" + safeName);
     }
 
     private HBox buildAttachmentRow(ChatDTOs.ChatAttachmentDTO att) {
