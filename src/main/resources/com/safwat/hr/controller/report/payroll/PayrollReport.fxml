@@ -96,7 +96,7 @@
         <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="785.0" spacing="10.0" style="-fx-border-color: gray;">
             <children>
                 <Button layoutX="735.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="70.0" text="نسخ" />
-                <Button layoutX="665.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="70.0" text="تقديم" />
+                <Button fx:id="btnDoReport" layoutX="665.0" layoutY="17.0" mnemonicParsing="false" onAction="#doReport" prefHeight="30.0" prefWidth="70.0" text="تقديم" />
             </children>
             <padding>
                 <Insets right="10.0" />

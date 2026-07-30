@@ -159,7 +159,7 @@ public class PaymentsController implements Initializable {
                 return;
             }
             showWebView();
-            PayrollRequest request = new PayrollRequest();
+            PayrollRequest request = PayrollRequest.builder().build();
 
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
@@ -373,7 +373,7 @@ public class PaymentsController implements Initializable {
             SAFNotification.error("ادخل قيمة للبحث لا تقل عن حرفين او رقمين");
             return;
         }
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setSearchValue(txt_searchValue.getText());
         List<SearchEmp> data = paymentsService.searchInEmployees(request).getData();
 
@@ -417,7 +417,7 @@ public class PaymentsController implements Initializable {
 
             showPaymentsTable();
 
-            PayrollRequest request = new PayrollRequest();
+            PayrollRequest request = PayrollRequest.builder().build();
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
             request.setEndDate(DateUtils.getLastDayOfMonth(txt_endMonth.getText()));
@@ -457,7 +457,7 @@ public class PaymentsController implements Initializable {
      * @return .
      */
     private Integer updateNote(PaymentsResult row) {
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setNationalId(txt_nationalID.getText());
         request.setPayGroup(convertArabicToEnglishNumbers(row.getPayGroup()));
         request.setStartDate(DateUtils.fromArabicMonthYear(row.getMonth()));
@@ -470,7 +470,7 @@ public class PaymentsController implements Initializable {
     }
 
     private Integer deleteOneEmployeeRecord(PaymentsResult row) {
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setNationalId(txt_nationalID.getText());
         request.setPayGroup(convertArabicToEnglishNumbers(row.getPayGroup()));
         request.setStartDate(DateUtils.fromArabicMonthYear(row.getMonth()));

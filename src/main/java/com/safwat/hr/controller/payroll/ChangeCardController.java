@@ -230,7 +230,7 @@ public class ChangeCardController implements Initializable {
     }
 
     private int updateNote(changeCardResult row) {
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setNationalId(txt_nationalID.getText());
 
         request.setStartDate(DateUtils.fromArabicMonthYearFlexible(row.getMonth()));
@@ -243,7 +243,7 @@ public class ChangeCardController implements Initializable {
     }
 
     private int deleteOneEmployeeRecord(changeCardResult row) {
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setNationalId(txt_nationalID.getText());
 
         request.setStartDate(DateUtils.fromArabicMonthYearFlexible(row.getMonth()));
@@ -260,7 +260,7 @@ public class ChangeCardController implements Initializable {
             return;
         }
 
-        PayrollRequest request = new PayrollRequest();
+        PayrollRequest request = PayrollRequest.builder().build();
         request.setSearchValue(txt_searchValue.getText());
         List<SearchEmp> data = changeService.searchInEmployee(request).getData();
 
@@ -301,7 +301,7 @@ public class ChangeCardController implements Initializable {
 
         try {
             showResultTable();
-            PayrollRequest request = new PayrollRequest();
+            PayrollRequest request = PayrollRequest.builder().build();
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));
             request.setEndDate(DateUtils.getLastDayOfMonth(txt_endMonth.getText()));
@@ -350,7 +350,7 @@ public class ChangeCardController implements Initializable {
             }
 
             showWebView();
-            PayrollRequest request = new PayrollRequest();
+            PayrollRequest request = PayrollRequest.builder().build();
 
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_startMonth.getText()));

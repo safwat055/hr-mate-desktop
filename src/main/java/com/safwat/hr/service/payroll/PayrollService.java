@@ -36,8 +36,11 @@ public class PayrollService {
 
     public List<String> getManagement() {
         try {
-            PayrollRequest request = new PayrollRequest();
-            request.setSearchValue("management");
+
+            PayrollRequest request = PayrollRequest.builder()
+                    .searchValue("management")
+                    .build();
+
             return ApiClient.post(
                     ApiEndpoints.PayrollYearly.PAY_MANAGEMENT_LIST,
                     request,

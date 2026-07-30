@@ -87,9 +87,12 @@ public class PayrollVocabController implements Initializable {
             SAFNotification.error("ادخل الشهر المطلوب اولا  (شهر سنة 2025 6)");
             return;
         }
-        PayrollRequest request = new PayrollRequest();
-        request.setSearchValue(txt_search.getText());
-        request.setStartDate(DateUtils.getFirstDayOfMonth(txt_month.getText()));
+
+
+        PayrollRequest request = PayrollRequest.builder().
+                searchValue(txt_search.getText()).
+                startDate(DateUtils.getFirstDayOfMonth(txt_month.getText())).build();
+
 
         List<DTO.searchVocab> data = vocabService.searchVocab(request).getData();
         System.out.println(data.size());
@@ -128,7 +131,7 @@ public class PayrollVocabController implements Initializable {
                 return;
 
             }
-            PayrollRequest request = new PayrollRequest();
+            PayrollRequest request = PayrollRequest.builder().build();
 
             request.setNationalId(txt_nationalID.getText());
             request.setStartDate(DateUtils.getFirstDayOfMonth(txt_month.getText()));

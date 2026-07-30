@@ -8,12 +8,12 @@ import java.io.IOException;
 
 public class PayrollReportService {
 
-    
+
     public Long doYearlyReport(PayrollRequest request) {
 
         try {
             return ApiClient.post(
-                    ApiEndpoints.PayrollYearly.yearlyExpenses,
+                    ApiEndpoints.PayrollYearly.YEARLY_EXPENSES,
                     request,
                     Long.class
             ).getData();

@@ -28,12 +28,15 @@ public final class ApiEndpoints {
 
     public static class PayrollYearly {
         public static final String BASE = "/payrollYearly";
-        public static final String yearlyExpenses = "/payrollYearly/get/yearlyExpenses";
+
         public static final String SEARCH = "/payrollYearly/get/searchEmployee";
         public static final String EMPLOYEE_RECORD = "/payrollYearly/get/employeeYearly";
         public static final String DOWNLOAD_PAYMENTS = "/payrollYearly/get/download-payments";
         public static final String UPDATE_EMPLOYEE_NOTE = "/payrollYearly/update-employee-note";
         public static final String DELETE_ONE_EMPLOYEE_RECORD = "/payrollYearly/delete-employee-record";
+        //report
+        public static final String YEARLY_EXPENSES = "/payrollYearly/get/yearlyExpenses";
+        public static final String PAYROLL_SUMMARY = "/payrollYearly/get/monthSummary";
 
         public static final String PAY_GROUP_LIST = "/payrollYearly/allPayGroup";
         public static final String PAY_MANAGEMENT_LIST = "/payrollIndex/get-indexInfo";
