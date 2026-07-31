@@ -11,7 +11,7 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.utils.ApiEndpoints;
 
 @PayrollReport(
-        code = "employeePayments",
+        code = "PAYMENTS_REPORT",
         displayName = "تقرير صرفيات موظف",
         category = "main_direct",
         mainReport = "main_direct"
@@ -20,7 +20,7 @@ public class EmployeePayments implements ReportStrategy {
 
     @Override
     public String getCode() {
-        return "employeePayments";
+        return "PAYMENTS_REPORT";
     }
 
     @Override

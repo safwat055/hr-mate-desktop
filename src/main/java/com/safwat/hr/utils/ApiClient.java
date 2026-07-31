@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.utils.dto.AvailableReportInfo;
+import com.safwat.hr.utils.dto.ReportStatusResponse;
+import com.safwat.hr.utils.dto.ReportSubmissionResult;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +28,7 @@ import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -723,7 +727,83 @@ public class ApiClient {
     public static String getBaseUrl() {
         return BASE_URL;
     }
+    // ═════════════════════════════════════════════════════════════════
+    //  New Report Manager (Unified Endpoint)
+    // ═════════════════════════════════════════════════════════════════
 
+    /**
+     * إرسال تقرير للنظام الجديد (POST /api/reports)
+     * يقبل أي Object (مثل PayrollRequest) ويحوله لـ JSON.
+     */
+    /**
+     * إرسال تقرير للنظام الجديد (POST /api/reports)
+     * الـ Backend بيرجع ReportSubmissionResult مباشرة (مش ApiResponse)
+     */
+    public static ApiResponse<ReportSubmissionResult> submitReport(Object requestBody)
+            throws IOException, InterruptedException {
+        return post("/reports", requestBody, ReportSubmissionResult.class);
+    }
+
+    /**
+     * جلب حالة تقرير (GET /api/reports/{reportId})
+     */
+    public static ApiResponse<ReportStatusResponse> getReportStatus(Long reportId)
+            throws IOException, InterruptedException {
+        return get("/reports/" + reportId, ReportStatusResponse.class);
+    }
+
+    /**
+     * إلغاء تقرير (POST /api/reports/{reportId}/cancel)
+     */
+    public static ApiResponse<Void> cancelReport(Long reportId)
+            throws IOException, InterruptedException {
+        return post("/reports/" + reportId + "/cancel", null, Void.class);
+    }
+
+    /**
+     * قائمة التقارير المتاحة للمستخدم (GET /api/reports/available)
+     */
+    public static ApiResponse<List<AvailableReportInfo>> getAvailableReports()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/available", new TypeReference<List<AvailableReportInfo>>() {
+        });
+    }
+
+    public static ApiResponse<Map<String, Object>> getReportPayload(Long reportId)
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/" + reportId + "/payload", new TypeReference<Map<String, Object>>() {
+        });
+    }
+
+    /**
+     * متابعة التقرير حتى الاكتمال (Polling)
+     *
+     * @param reportId            معرف التقرير
+     * @param pollIntervalSeconds فترة الانتظار بين كل استعلام
+     * @param maxAttempts         عدد المحاولات القصوى
+     * @return الحالة النهائية
+     */
+    public static ReportStatusResponse pollReportUntilDone(Long reportId,
+                                                           int pollIntervalSeconds,
+                                                           int maxAttempts)
+            throws IOException, InterruptedException {
+        for (int i = 0; i < maxAttempts; i++) {
+            ApiResponse<ReportStatusResponse> response = getReportStatus(reportId);
+            if (!response.isSuccess() || response.getData() == null) {
+                throw new IOException("Failed to get report status: " + response.getMessage());
+            }
+
+            ReportStatusResponse status = response.getData();
+            String currentStatus = status.getStatus();
+
+            if ("COMPLETED".equals(currentStatus) || "FAILED".equals(currentStatus) || "CANCELLED".equals(currentStatus)) {
+                return status;
+            }
+
+            Thread.sleep(pollIntervalSeconds * 1000L);
+        }
+        throw new IOException("Report polling timed out after " + maxAttempts + " attempts");
+    }
 
     public static class WebSocketClient {
         private final URI serverUri;
@@ -831,6 +911,8 @@ public class ApiClient {
         }
     }
 
+    @Setter
+    @Getter
     public static class TaskStatus {
         private String taskId;
         private String status;     // IN_PROGRESS | COMPLETED | FAILED
@@ -838,44 +920,6 @@ public class ApiClient {
         private String message;
         private String downloadUrl;
 
-        public String getTaskId() {
-            return taskId;
-        }
 
-        public void setTaskId(String v) {
-            taskId = v;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String v) {
-            status = v;
-        }
-
-        public int getProgress() {
-            return progress;
-        }
-
-        public void setProgress(int v) {
-            progress = v;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String v) {
-            message = v;
-        }
-
-        public String getDownloadUrl() {
-            return downloadUrl;
-        }
-
-        public void setDownloadUrl(String v) {
-            downloadUrl = v;
-        }
     }
 }

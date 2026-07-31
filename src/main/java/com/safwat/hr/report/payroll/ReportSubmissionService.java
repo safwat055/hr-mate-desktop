@@ -1,8 +1,9 @@
 package com.safwat.hr.report.payroll;
 
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
+import com.safwat.hr.utils.dto.ReportSubmissionResult;
+import javafx.application.Platform;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -50,13 +51,33 @@ public class ReportSubmissionService {
     public void submit(PayrollRequest request,
                        Consumer<Long> onSuccess,
                        Consumer<Exception> onError) {
+
         executor.execute(() -> {
             try {
-                Long reportId = ReportApiService.sendPayrollReport(request);
-                onSuccess.accept(reportId);
-            } catch (IOException | InterruptedException e) {
-                Thread.currentThread().interrupt(); // استعادة حالة الإيقاف لو كانت InterruptedException
-                onError.accept(e);
+                ReportSubmissionResult result = ReportApiService.sendPayrollReport(request);
+
+                // ⬅️ Null Safety
+                if (result == null) {
+                    Platform.runLater(() -> onError.accept(
+                            new RuntimeException("فشل الاتصال بالخادم — لم يتم استلام رقم التقرير")
+                    ));
+                    return;
+                }
+
+                Long reportId = result.getReportId();
+                if (reportId == null) {
+                    Platform.runLater(() -> onError.accept(
+                            new RuntimeException("الخادم لم يرجع رقم التقرير")
+                    ));
+                    return;
+                }
+
+                // ✅ نجاح — الشاشة تقفل فوراً زي القديم
+                Platform.runLater(() -> onSuccess.accept(reportId));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Platform.runLater(() -> onError.accept(e));
             }
         });
     }
