@@ -63,6 +63,7 @@ public class HR_Client extends Application {
                 AuthService.login(request);
 
         if (!response.isSuccess()) {
+            
             throw new RuntimeException(response.getMessage());
         }
 

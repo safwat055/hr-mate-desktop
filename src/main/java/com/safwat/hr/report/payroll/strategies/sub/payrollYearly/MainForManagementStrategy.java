@@ -4,6 +4,8 @@ import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
+
+import com.safwat.hr.report.payroll.ui.SearchFieldConfig;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.report.payroll.ui.UiField;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -56,9 +58,7 @@ public class MainForManagementStrategy implements ReportStrategy {
                 .title("تقرير مجموعات التعيين الرئيسية لإدارة محددة")
                 .visibleFields(List.of(UiField.START_DATE, UiField.MANAGEMENT))
                 .requiredFields(List.of(UiField.START_DATE, UiField.MANAGEMENT))
-                .needsSearchDialog(true)
-                .searchDialogTitle("اختر إدارة")
-                .searchDataSource("management")
+                .searchField(SearchFieldConfig.of(UiField.MANAGEMENT, "اختر إدارة", "management"))
                 .build();
     }
 

@@ -6,8 +6,35 @@ import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
 
-import java.util.List;
-
+/**
+ * تقرير رئيسي حاوٍ — "تقرير الصرفيات الشهري".
+ *
+ * <p>لا يُرسِل بيانات بنفسه، بل يعمل كحاوٍ (Container)
+ * يُظهِر قائمة منسدلة فرعية بالتقارير التابعة له في الـ Controller.
+ *
+ * <p>التقارير الفرعية التابعة له (الفئة {@code yearly_payroll}):
+ * <ul>
+ *   <li>{@code payrollYearly_1} — كل مجموعات التعيين</li>
+ *   <li>{@code payrollYearly_2} — مجموعات التعيين الرئيسية</li>
+ *   <li>{@code payrollYearly_3} — مجموعات التعيين المنفصلة</li>
+ *   <li>{@code payrollYearly_6} — كل مجموعات التعيين لإدارة محددة</li>
+ *   <li>{@code payrollYearly_7} — مجموعات التعيين الرئيسية لإدارة محددة</li>
+ *   <li>{@code payrollYearly_8} — مجموعات التعيين المنفصلة لإدارة محددة</li>
+ *   <li>{@code payrollYearly_9} — مجموعة تعيين محددة</li>
+ * </ul>
+ *
+ * <p><b>لإضافة تقرير فرعي جديد لهذا الحاوي:</b>
+ * <ol>
+ *   <li>أنشئ class في {@code strategies/sub/} بالفئة {@code "yearly_payroll"}</li>
+ *   <li>سجِّله في {@link com.safwat.hr.report.payroll.strategies.ReportRegistryFactory}</li>
+ * </ol>
+ *
+ * <ul>
+ *   <li>الكود: {@code payReport_1}</li>
+ *   <li>الفئة: {@code main_container}</li>
+ *   <li>الفئة الفرعية: {@code yearly_payroll}</li>
+ * </ul>
+ */
 @PayrollReport(
         code = "payReport_1",
         displayName = "تقرير الصرفيات الشهري",
@@ -32,30 +59,44 @@ public class MonthlyExpensesContainerStrategy implements ReportStrategy {
     }
 
     /**
-     * عنده تقارير فرعية
+     * يُعيد فئة التقارير الفرعية التابعة لهذا الحاوي.
+     * يُستخدَم في {@link com.safwat.hr.report.payroll.strategies.ReportStrategyRegistry#getDisplayNamesByCategory(String)}
+     * لجلب قائمة الفرعيات.
+     */
+    @Override
+    public String getMainReport() {
+        return "yearly_payroll";
+    }
+
+    /**
+     * هذا تقرير حاوٍ — يُظهر ComboBox فرعي ولا يُرسِل مباشرةً
      */
     @Override
     public boolean hasSubReports() {
         return true;
     }
 
+    /**
+     * التقارير الحاوية لا تملك نموذجًا خاصًا بها —
+     * الـ Controller يُظهر ComboBox الفرعيات مباشرةً.
+     */
     @Override
     public UiConfiguration getUiConfig() {
-        // الحاوي نفسه مبيظهرش حقول — الفرعي هو اللي بيتحكم
         return UiConfiguration.builder()
                 .title("اختر التقرير الفرعي")
-                .visibleFields(List.of())
                 .build();
     }
 
+    /**
+     * التقارير الحاوية لا تُرسِل بيانات مباشرةً.
+     * الإرسال يتم من خلال الاستراتيجية الفرعية المختارة.
+     *
+     * @throws UnsupportedOperationException دائمًا
+     */
     @Override
-    public PayrollRequest buildRequest(ReportContext ctx) {
-        // الحاوي مبيبنيش Request — الفرعي هو اللي يبني
-        throw new UnsupportedOperationException("Container report — use sub-report instead");
-    }
-
-    @Override
-    public String getMainReport() {
-        return "yearly_payroll";
+    public PayrollRequest buildRequest(ReportContext context) {
+        throw new UnsupportedOperationException(
+                "'" + getDisplayName() + "' تقرير حاوٍ — استخدم التقرير الفرعي للإرسال"
+        );
     }
 }

@@ -39,6 +39,8 @@ public class ChatService {
     private Consumer<java.util.List<String>> onTypingChanged;
     private Consumer<ChatDTOs.ChatMessageDTO> onMessageStatusChanged;
     private Runnable onMessagesLoaded;
+    // ✅ جديد: يتنادى لما حالة اتصال طرف تاني (في محادثة خاصة) تتغير
+    private Consumer<ChatDTOs.ConversationSummaryDTO> onPresenceChanged;
 
     private ChatService() {
     }
@@ -63,6 +65,7 @@ public class ChatService {
         ChatStompClient.getInstance().connect(
                 username,
                 this::handleIncomingNotification,
+                this::handlePresenceEvent,
                 err -> {
                     System.err.println("[ChatService] WS Error: " + err);
                     if (onConnectionError != null)
@@ -173,7 +176,7 @@ public class ChatService {
     //  Send Message
     // ═════════════════════════════════════════════════════════════════
 
-    public void sendMessage(String content, Consumer<String> onError) {
+    public void sendMessage(String content, Long replyToId, Consumer<String> onError) {
         if (openConversationId == null) return;
         if (content == null || content.isBlank()) return;
 
@@ -183,7 +186,7 @@ public class ChatService {
             return;
         }
 
-        ChatApiService.sendTextMessage(openConversationId, trimmed)
+        ChatApiService.sendTextMessage(openConversationId, trimmed, replyToId)
                 .thenAccept(res -> {
                     if (!res.isSuccess()) {
                         Platform.runLater(() -> {
@@ -194,11 +197,11 @@ public class ChatService {
     }
 
     public void sendMessageWithFiles(String content, java.util.List<java.nio.file.Path> files,
-                                     Consumer<String> onError) {
+                                     Long replyToId, Consumer<String> onError) {
         if (openConversationId == null) return;
         if ((content == null || content.isBlank()) && (files == null || files.isEmpty())) return;
 
-        ChatApiService.sendMessageWithFiles(openConversationId, content, files)
+        ChatApiService.sendMessageWithFiles(openConversationId, content, files, replyToId)
                 .thenAccept(res -> {
                     Platform.runLater(() -> {
                         if (!res.isSuccess()) {
@@ -332,6 +335,7 @@ public class ChatService {
         switch (wsMsg.getType()) {
             case "NEW_MESSAGE" -> handleNewMessage(conversationId, wsMsg);
             case "MESSAGE_STATUS" -> handleMessageStatus(wsMsg);
+            case "MESSAGES_READ" -> handleMessagesRead(wsMsg);
             case "MESSAGE_EDITED" -> handleMessageEdited(wsMsg);
             case "MESSAGE_DELETED" -> handleMessageDeleted(wsMsg);
             case "CONVERSATION_DELETED" -> handleConversationDeleted(wsMsg);
@@ -350,10 +354,38 @@ public class ChatService {
             messages.add(msg);
             refreshConversations();
 
+            // ✅ جديد: المحادثة مفتوحة قدام المستخدم فعلياً، يبقى نعلّمها كمقروءة
+            // فوراً (بدل ما ننتظر لحد ما يفتح المحادثة تاني) — زي واتساب بالظبط
+            if (!msg.isMine()) {
+                ChatApiService.markAsRead(conversationId);
+            }
+
             if (onNewMessageInOpenConv != null) {
                 Platform.runLater(() -> onNewMessageInOpenConv.run());
             }
         }
+    }
+
+    /**
+     * ✅ جديد: دفعة تحديثات قراءة لعدة رسائل دفعة واحدة (✓✓ زرقاء لكل رسالة على حدة)
+     */
+    private void handleMessagesRead(ChatDTOs.WsMessageDTO wsMsg) {
+        if (wsMsg.getReadUpdates() == null || wsMsg.getReadUpdates().isEmpty()) return;
+
+        Platform.runLater(() -> {
+            for (ChatDTOs.MessageReadUpdateDTO update : wsMsg.getReadUpdates()) {
+                for (ChatDTOs.ChatMessageDTO msg : messages) {
+                    if (msg.getId() != null && msg.getId().equals(update.getMessageId())) {
+                        msg.setStatus(update.getStatus());
+                        msg.setReadBy(update.getReadBy());
+                        if (onMessageStatusChanged != null) {
+                            onMessageStatusChanged.accept(msg);
+                        }
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     private void handleMessageStatus(ChatDTOs.WsMessageDTO wsMsg) {
@@ -472,6 +504,23 @@ public class ChatService {
                 .build();
     }
 
+    /**
+     * ✅ جديد: تحديث حالة "متصل الآن / آخر ظهور" لحظياً لما توصل من السيرفر،
+     * من غير ما نحتاج نعمل refresh كامل لقائمة المحادثات.
+     */
+    private void handlePresenceEvent(ChatDTOs.PresenceEventDTO event) {
+        if (event.getUserId() == null) return;
+
+        for (ChatDTOs.ConversationSummaryDTO conv : conversations) {
+            if ("PRIVATE".equals(conv.getType()) && event.getUserId().equals(conv.getOtherUserId())) {
+                conv.setOnline(event.isOnline());
+                conv.setLastSeenText(event.getLastSeenText());
+                if (onPresenceChanged != null) onPresenceChanged.accept(conv);
+                break;
+            }
+        }
+    }
+
     // ═════════════════════════════════════════════════════════════════
     //  Getters
     // ═════════════════════════════════════════════════════════════════
@@ -510,6 +559,10 @@ public class ChatService {
 
     public void setOnMessagesLoaded(Runnable callback) {
         this.onMessagesLoaded = callback;
+    }
+
+    public void setOnPresenceChanged(Consumer<ChatDTOs.ConversationSummaryDTO> callback) {
+        this.onPresenceChanged = callback;
     }
 
     public void shutdown() {

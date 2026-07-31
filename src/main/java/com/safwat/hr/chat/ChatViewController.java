@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -26,6 +27,7 @@ public class ChatViewController implements Initializable {
     // ✅ جديد: حد أقصى لحجم الملف على الفرونت (بنفس قيمة الباك إند) — نمنع
     // محاولة الرفع من الأساس بدل ما ننتظر رد فشل من السيرفر
     private static final long MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB
+    private final List<File> pendingFiles = new java.util.ArrayList<>();
     @FXML
     private ListView<ChatDTOs.ConversationSummaryDTO> conversationList;
     @FXML
@@ -64,6 +66,20 @@ public class ChatViewController implements Initializable {
     private HBox typingIndicator;
     @FXML
     private Label typingLabel;
+    // ✅ جديد: شريط الرد على رسالة
+    @FXML
+    private HBox replyPreviewBar;
+    @FXML
+    private Label replyPreviewSender;
+    @FXML
+    private Label replyPreviewText;
+    @FXML
+    private Button btnCancelReply;
+    // ✅ جديد: شريط المرفقات المعلّقة قبل الإرسال
+    @FXML
+    private javafx.scene.control.ScrollPane pendingAttachmentsScroll;
+    @FXML
+    private HBox pendingAttachmentsBar;
     private ChatService chatService;
     private FilteredList<ChatDTOs.ConversationSummaryDTO> filteredConversations;
     private ChatDTOs.ConversationSummaryDTO currentConversation;
@@ -73,6 +89,8 @@ public class ChatViewController implements Initializable {
     private boolean userScrolledUp = false;
     private double lastVvalue = 1.0;
     private ChatDTOs.ChatMessageDTO editingMessage = null;
+    // ✅ جديد: حالة الرد + المرفقات المعلّقة
+    private ChatDTOs.ChatMessageDTO replyTarget = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -145,6 +163,9 @@ public class ChatViewController implements Initializable {
 
         // ✅ تم الإصلاح: استخدام updateMessageBubble بدل updateMessageStatus
         chatService.setOnMessageStatusChanged(this::updateMessageBubble);
+
+        // ✅ جديد: تحديث "متصل الآن / آخر ظهور" في الهيدر لحظياً
+        chatService.setOnPresenceChanged(this::onPresenceChanged);
 
         messageInput.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -273,10 +294,7 @@ public class ChatViewController implements Initializable {
         headerConvName.setText(name != null ? name : "");
 
         String type = conv.getType();
-        headerConvMeta.setText(
-                "PRIVATE".equals(type) ? "محادثة خاصة" :
-                        "GROUP".equals(type) ? "مجموعة" : "بث عام"
-        );
+        headerConvMeta.setText(buildHeaderMetaText(conv));
 
         boolean isGroup = !"PRIVATE".equals(type);
         btnConvInfo.setVisible(isGroup);
@@ -295,6 +313,35 @@ public class ChatViewController implements Initializable {
         chatContent.setPrefHeight(-1);
 
         messagesContainer.getChildren().clear();
+
+        // ✅ جديد: نصفّي حالة الرد والمرفقات المعلّقة لما نغيّر المحادثة
+        onCancelReply();
+        clearPendingAttachments();
+        if (editingMessage != null) cancelEditing();
+    }
+
+    /**
+     * ✅ جديد: للمحادثات الخاصة بيعرض "متصل الآن" أو "آخر ظهور ..."،
+     * وللمجموعات/البث بيعرض الوصف زي ما كان.
+     */
+    private String buildHeaderMetaText(ChatDTOs.ConversationSummaryDTO conv) {
+        String type = conv.getType();
+        if ("PRIVATE".equals(type)) {
+            if (conv.isOnline()) return "متصل الآن";
+            if (conv.getLastSeenText() != null) return conv.getLastSeenText();
+            return "محادثة خاصة";
+        }
+        return "GROUP".equals(type) ? "مجموعة" : "بث عام";
+    }
+
+    /**
+     * ✅ جديد: يحدّث نص الحالة في الهيدر لو المحادثة المفتوحة حالياً هي اللي اتغيرت حالتها
+     */
+    private void onPresenceChanged(ChatDTOs.ConversationSummaryDTO conv) {
+        if (currentConversation != null && conv.getId() != null
+                && conv.getId().equals(currentConversation.getId())) {
+            Platform.runLater(() -> headerConvMeta.setText(buildHeaderMetaText(conv)));
+        }
     }
 
     private void loadConversation(long convId) {
@@ -329,36 +376,73 @@ public class ChatViewController implements Initializable {
         MessageBubble bubble = new MessageBubble(msg);
 
         bubble.setOnContextMenuRequested(e -> {
-            if (!msg.isMine() || msg.isDeleted()) return;
+            if (msg.isDeleted()) return;
 
             ContextMenu menu = new ContextMenu();
 
-            MenuItem editItem = new MenuItem("✏️ تعديل");
-            editItem.setOnAction(ev -> startEditingMessage(msg));
+            // ✅ جديد: الرد متاح على أي رسالة (مني أو من حد تاني)
+            MenuItem replyItem = new MenuItem("↩️ رد");
+            replyItem.setOnAction(ev -> startReply(msg));
+            menu.getItems().add(replyItem);
 
-            MenuItem deleteItem = new MenuItem("🗑️ حذف");
-            deleteItem.setOnAction(ev -> {
-                chatService.deleteMessage(msg.getId(), err ->
-                        Platform.runLater(() ->
-                                NotificationService.getInstance().send(
-                                        HRNotification.builder()
-                                                .title("فشل الحذف")
-                                                .message(err)
-                                                .type(HRNotification.NotificationType.SYSTEM)
-                                                .build()
-                                )
-                        )
-                );
-            });
+            if (msg.isMine()) {
+                MenuItem editItem = new MenuItem("✏️ تعديل");
+                editItem.setOnAction(ev -> startEditingMessage(msg));
 
-            menu.getItems().addAll(editItem, deleteItem);
+                MenuItem deleteItem = new MenuItem("🗑️ حذف");
+                deleteItem.setOnAction(ev -> {
+                    chatService.deleteMessage(msg.getId(), err ->
+                            Platform.runLater(() ->
+                                    NotificationService.getInstance().send(
+                                            HRNotification.builder()
+                                                    .title("فشل الحذف")
+                                                    .message(err)
+                                                    .type(HRNotification.NotificationType.SYSTEM)
+                                                    .build()
+                                    )
+                            )
+                    );
+                });
+
+                menu.getItems().addAll(editItem, deleteItem);
+            }
+
             menu.show(bubble, e.getScreenX(), e.getScreenY());
         });
 
         messagesContainer.getChildren().add(bubble);
     }
 
+    /**
+     * ✅ جديد: يفعّل شريط الرد فوق خانة الكتابة بمعاينة الرسالة المختارة
+     */
+    private void startReply(ChatDTOs.ChatMessageDTO msg) {
+        replyTarget = msg;
+
+        String senderName = msg.isMine() ? "أنت" :
+                (msg.getSenderDisplayName() != null ? msg.getSenderDisplayName() : msg.getSenderUsername());
+        replyPreviewSender.setText(senderName);
+
+        String preview = (msg.getContent() != null && !msg.getContent().isBlank())
+                ? msg.getContent()
+                : (msg.getAttachments() != null && !msg.getAttachments().isEmpty() ? "📎 مرفق" : "");
+        replyPreviewText.setText(preview);
+
+        replyPreviewBar.setVisible(true);
+        replyPreviewBar.setManaged(true);
+
+        messageInput.requestFocus();
+    }
+
+    @FXML
+    private void onCancelReply() {
+        replyTarget = null;
+        replyPreviewBar.setVisible(false);
+        replyPreviewBar.setManaged(false);
+    }
+
     private void startEditingMessage(ChatDTOs.ChatMessageDTO msg) {
+        onCancelReply();
         editingMessage = msg;
         messageInput.setText(msg.getContent());
         messageInput.requestFocus();
@@ -431,29 +515,45 @@ public class ChatViewController implements Initializable {
 
     @FXML
     private void onSendMessage() {
-        String content = messageInput.getText();
-        if (content == null || content.isBlank()) return;
         if (chatService.getOpenConversationId() == null) return;
+
+        String content = messageInput.getText();
+        boolean hasText = content != null && !content.isBlank();
+        boolean hasFiles = !pendingFiles.isEmpty();
+        if (!hasText && !hasFiles) return;
+
+        Long replyToId = replyTarget != null ? replyTarget.getId() : null;
+        String textToSend = hasText ? content.trim() : null;
+        List<java.nio.file.Path> paths = hasFiles
+                ? pendingFiles.stream().map(File::toPath).toList()
+                : List.of();
 
         messageInput.clear();
         btnSend.setDisable(true);
+        onCancelReply();
+        clearPendingAttachments();
 
-        chatService.sendMessage(content, err -> {
-            Platform.runLater(() -> {
-                btnSend.setDisable(false);
-                if (err != null) {
-                    NotificationService.getInstance().send(
-                            HRNotification.builder()
-                                    .title("فشل الإرسال")
-                                    .message(err)
-                                    .type(HRNotification.NotificationType.SYSTEM)
-                                    .build()
-                    );
-                }
+        if (hasFiles) {
+            chatService.sendMessageWithFiles(textToSend, paths, replyToId, err -> {
+                Platform.runLater(() -> {
+                    btnSend.setDisable(false);
+                    if (err != null) showError("فشل الإرسال", err);
+                });
             });
-        });
+        } else {
+            chatService.sendMessage(textToSend, replyToId, err -> {
+                Platform.runLater(() -> {
+                    btnSend.setDisable(false);
+                    if (err != null) showError("فشل الإرسال", err);
+                });
+            });
+        }
     }
 
+    /**
+     * ✅ تم التحسين: بدل ما يبعت الملف فورًا، بيضيفه لقائمة "معلّقة" مع معاينة
+     * (زي واتساب بالظبط) — المستخدم يقدر يشيل أي ملف أو يضيف نص قبل الإرسال الفعلي.
+     */
     @FXML
     private void onAttachFile() {
         if (chatService.getOpenConversationId() == null) return;
@@ -466,7 +566,7 @@ public class ChatViewController implements Initializable {
                 new FileChooser.ExtensionFilter("مستندات", "*.pdf", "*.docx", "*.xlsx")
         );
 
-        // ✅ جديد: اختيار أكتر من ملف مرة واحدة زي واتساب
+        // اختيار أكتر من ملف مرة واحدة زي واتساب
         List<File> selected = chooser.showOpenMultipleDialog(btnAttach.getScene().getWindow());
         if (selected == null || selected.isEmpty()) return;
 
@@ -478,36 +578,62 @@ public class ChatViewController implements Initializable {
                     .map(File::getName)
                     .reduce((a, b) -> a + "، " + b)
                     .orElse("");
-            NotificationService.getInstance().send(
-                    HRNotification.builder()
-                            .title("الملف كبير جداً")
-                            .message("الحد الأقصى 50 ميجابايت لكل ملف: " + names)
-                            .type(HRNotification.NotificationType.SYSTEM)
-                            .build()
-            );
+            showError("الملف كبير جداً", "الحد الأقصى 50 ميجابايت لكل ملف: " + names);
             return;
         }
 
-        String caption = messageInput.getText().trim();
-        messageInput.clear();
-        btnAttach.setDisable(true);
+        pendingFiles.addAll(selected);
+        renderPendingAttachments();
+    }
 
-        List<java.nio.file.Path> paths = selected.stream().map(File::toPath).toList();
+    /**
+     * ✅ جديد: يعيد رسم شريط المرفقات المعلّقة (فقاعة لكل ملف مع زر حذف)
+     */
+    private void renderPendingAttachments() {
+        pendingAttachmentsBar.getChildren().clear();
 
-        chatService.sendMessageWithFiles(caption, paths, err -> {
-            Platform.runLater(() -> {
-                btnAttach.setDisable(false);
-                if (err != null) {
-                    NotificationService.getInstance().send(
-                            HRNotification.builder()
-                                    .title("فشل إرسال الملف")
-                                    .message(err)
-                                    .type(HRNotification.NotificationType.SYSTEM)
-                                    .build()
-                    );
-                }
-            });
+        for (File file : pendingFiles) {
+            pendingAttachmentsBar.getChildren().add(buildPendingFileChip(file));
+        }
+
+        boolean hasFiles = !pendingFiles.isEmpty();
+        pendingAttachmentsScroll.setVisible(hasFiles);
+        pendingAttachmentsScroll.setManaged(hasFiles);
+    }
+
+    private javafx.scene.Node buildPendingFileChip(File file) {
+        HBox chip = new HBox(6);
+        chip.setAlignment(Pos.CENTER_LEFT);
+        chip.getStyleClass().add("pending-attachment-chip");
+
+        String lowerName = file.getName().toLowerCase();
+        boolean isImage = lowerName.endsWith(".png") || lowerName.endsWith(".jpg")
+                || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif") || lowerName.endsWith(".webp");
+
+        Label icon = new Label(isImage ? "🖼️" : "📄");
+        icon.getStyleClass().add("pending-attachment-icon");
+
+        Label nameLabel = new Label(file.getName());
+        nameLabel.getStyleClass().add("pending-attachment-name");
+        nameLabel.setMaxWidth(130);
+
+        Button removeBtn = new Button("✕");
+        removeBtn.getStyleClass().add("pending-attachment-remove");
+        removeBtn.setOnAction(e -> {
+            pendingFiles.remove(file);
+            renderPendingAttachments();
         });
+
+        chip.getChildren().addAll(icon, nameLabel, removeBtn);
+        return chip;
+    }
+
+    /**
+     * ✅ جديد: يفضي قائمة المرفقات المعلّقة ويخفي الشريط
+     */
+    private void clearPendingAttachments() {
+        pendingFiles.clear();
+        renderPendingAttachments();
     }
 
     @FXML

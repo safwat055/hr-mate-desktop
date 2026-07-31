@@ -1,21 +1,99 @@
 package com.safwat.hr.report.payroll;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+/**
+ * نموذج بيانات طلب التقرير.
+ *
+ * <p>يجمع كل ما يُدخله المستخدم في نموذج التقارير في كائن واحد،
+ * يُمرَّر إلى:
+ * <ul>
+ *   <li>{@link com.safwat.hr.report.payroll.strategies.ReportStrategy#validate(ReportContext)}
+ *       — للتحقق من اكتمال البيانات.</li>
+ *   <li>{@link com.safwat.hr.report.payroll.strategies.ReportStrategy#buildRequest(ReportContext)}
+ *       — لبناء {@link com.safwat.hr.service.payroll.dto.PayrollRequest} الجاهز للإرسال.</li>
+ * </ul>
+ *
+ * <p>يُنشأ في الـ Controller ويُملأ من حقول الـ UI قبيل الإرسال.
+ *
+ * <p><b>ملاحظة على الحقول المحجوزة:</b>
+ * {@code customGroup}, {@code description}, {@code note}, {@code searchValue}
+ * لم تُستخدَم في الاستراتيجيات الحالية، لكنها محجوزة للتقارير القادمة.
+ * لا تحذفها.
+ */
+@Getter
+@Setter
 @Builder
 public class ReportContext {
-    private final String user;
-    private final String reportName;
-    private final String startDate;
-    private final String endDate;
-    private final String management;
-    private final String payGroup;
-    private final String nationalId;
-    private final String customGroup;
-    private final String description;
-    private final String note;
-    private final String format;
-    private final String searchValue;
+
+    /**
+     * تاريخ البداية بصيغة {@code yyyy-MM} أو {@code yyyy-MM-dd} حسب التقرير.
+     * يُحوَّل إلى أول يوم في الشهر عبر {@code DateUtils.getFirstDayOfMonth()}
+     * عند بناء الطلب.
+     */
+    private String startDate;
+
+    /**
+     * تاريخ النهاية — يُستخدَم في التقارير ذات النطاق الزمني.
+     */
+    private String endDate;
+
+    /**
+     * اسم الإدارة المختارة من نافذة البحث.
+     * مثال: {@code "إدارة الموارد البشرية"}
+     */
+    private String management;
+
+    /**
+     * كود مجموعة التعيين المختارة.
+     * مثال: {@code "PG001"}
+     */
+    private String payGroup;
+
+    /**
+     * الرقم القومي للموظف — للبحث عن موظف بعينه.
+     */
+    private String nationalId;
+
+    /**
+     * صيغة التقرير المطلوبة.
+     * القيم المتاحة: {@code "PDF"}, {@code "EXCEL"}.
+     */
+    private String format;
+
+    /**
+     * اسم التقرير كما يظهر في الـ UI — يُرسَل للـ Backend كـ metadata.
+     */
+    private String reportName;
+
+    /**
+     * اسم المستخدم الحالي — يُضاف تلقائيًا عبر {@code ApiClient.getUserName()}.
+     */
+    private String user;
+
+    // ────────────────────────────────────────────────────
+    //  حقول محجوزة للتوسع المستقبلي
+    // ────────────────────────────────────────────────────
+
+    /**
+     * مجموعة مخصصة أو عنصر — محجوز للتقارير القادمة
+     */
+    private String customGroup;
+
+    /**
+     * وصف إضافي — محجوز للتقارير القادمة
+     */
+    private String description;
+
+    /**
+     * ملاحظة — محجوزة للتقارير القادمة
+     */
+    private String note;
+
+    /**
+     * قيمة بحث حر — محجوزة للتقارير القادمة
+     */
+    private String searchValue;
 }

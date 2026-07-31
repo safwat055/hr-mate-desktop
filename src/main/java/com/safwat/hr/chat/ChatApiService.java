@@ -163,9 +163,9 @@ public class ChatApiService {
     }
 
     public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> sendTextMessage(
-            long conversationId, String content) {
+            long conversationId, String content, Long replyToId) {
 
-        ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(content);
+        ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(content, replyToId);
 
         Map<String, Object> formData = new HashMap<>();
         formData.put("data", req);
@@ -187,11 +187,12 @@ public class ChatApiService {
      * ✅ تم الإصلاح: multiple files بيتبعتوا صح
      */
     public static CompletableFuture<ApiResponse<ChatDTOs.ChatMessageDTO>> sendMessageWithFiles(
-            long conversationId, String content, List<Path> files) {
+            long conversationId, String content, List<Path> files, Long replyToId) {
 
         String defaultCaption = files.size() > 1 ? "📎 " + files.size() + " مرفقات" : "📎 ملف";
         ChatDTOs.SendMessageRequest req = new ChatDTOs.SendMessageRequest(
-                content == null || content.isBlank() ? defaultCaption : content
+                content == null || content.isBlank() ? defaultCaption : content,
+                replyToId
         );
 
         Map<String, Object> formData = new HashMap<>();

@@ -32,29 +32,131 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+/**
+ * الـ Controller الرئيسي لشاشة تقارير الرواتب.
+ *
+ * <p>يتولى:
+ * <ul>
+ *   <li>تهيئة القوائم المنسدلة عند فتح الشاشة.</li>
+ *   <li>الاستماع لاختيارات المستخدم وتفويض تحديث الواجهة إلى {@link PayrollUIManager}.</li>
+ *   <li>بناء {@link ReportContext} من حقول الـ UI وتمريره للاستراتيجية.</li>
+ *   <li>إطلاق عملية الإرسال عبر {@link ReportSubmissionService}.</li>
+ * </ul>
+ *
+ * <p><b>الـ Controller لا يعرف شيئًا عن منطق أي تقرير بعينه</b> —
+ * كل هذا المنطق في الاستراتيجيات. دوره فقط التنسيق بين المكونات.
+ *
+ * <hr>
+ *
+ * <h2>تدفق العمل</h2>
+ * <pre>
+ * فتح الشاشة
+ *   → initialize() : يملأ القوائم ويخفي الحقول
+ *
+ * اختيار تقرير رئيسي
+ *   → hasSubReports = true  : يُظهر ComboBox الفرعيات
+ *   → hasSubReports = false : يُطبِّق UiConfiguration مباشرةً
+ *
+ * اختيار تقرير فرعي
+ *   → يُطبِّق UiConfiguration عبر PayrollUIManager
+ *     (يُظهر الحقول + يُفعِّل أزرار البحث)
+ *
+ * الضغط على "استعلام"
+ *   → doReport() : يبني ReportContext ← يتحقق ← يبني الطلب ← يُرسِل
+ * </pre>
+ *
+ * <hr>
+ *
+ * <h2>تحديث configureSearchForCurrentStrategy</h2>
+ * <p>استُبدِل منطق if/else للبحث القديم بـ {@link PayrollUIManager#apply(UiConfiguration)}
+ * الذي يمشي على {@link UiConfiguration#getSearchFields()} تلقائيًا،
+ * مما يجعل Controller نظيفًا تمامًا من أي منطق خاص بحقل بعينه.
+ */
 @Getter
 public class PayrollReportController implements Initializable {
 
+    // ─────────────────────────────────────────────
+    //  Services & State
+    // ─────────────────────────────────────────────
+
+    /**
+     * سجل الاستراتيجيات المسجَّلة — يُنشأ مرة واحدة عبر الـ Factory
+     */
     private final ReportStrategyRegistry registry;
+
+    /**
+     * مدير الواجهة — مسؤول عن إظهار/إخفاء الحقول وتفعيل البحث
+     */
     private final PayrollUIManager uiManager;
+
+    /**
+     * خدمة الإرسال — تُنفِّذ الطلب على خيط خلفي
+     */
     private final ReportSubmissionService submissionService;
 
-    private ReportStrategy currentStrategy; // ممكن يكون رئيسي أو فرعي
+    /**
+     * الاستراتيجية الحالية المختارة من المستخدم.
+     * قد تكون تقريرًا فرعيًا (بعد اختيار من ComboBox الفرعي)
+     * أو رئيسيًا مباشرًا (ليس حاوٍ).
+     * تكون {@code null} إذا اختار المستخدم تقريرًا حاويًا ولم يختر فرعيًا بعد.
+     */
+    private ReportStrategy currentStrategy;
 
+    // ─────────────────────────────────────────────
+    //  FXML Components
+    // ─────────────────────────────────────────────
+
+    /**
+     * حقول HBox للعناصر المتفرقة (وصف، ملاحظة، بحث حر)
+     */
     @FXML
     private HBox H_1, H_2, H_3, H_4, H_5, H_6;
+
+    /**
+     * حقول HBox للمدخلات الرئيسية
+     */
     @FXML
-    private HBox H_element, H_employee, H_endDate, H_management, H_payGroup, H_report, H_startDate;
+    private HBox H_element, H_employee, H_endDate, H_management, H_payGroup, H_startDate;
+
+    /**
+     * حقل HBox لـ ComboBox التقارير الفرعية — يُدار بشكل مستقل عن hideAll()
+     */
+    @FXML
+    private HBox H_report;
+
+    /**
+     * قوائم الاختيار
+     */
     @FXML
     private ComboBox<String> combo_Format, combo_report, combo_reportName;
+
+    /**
+     * Labels
+     */
     @FXML
     private Label lbl_elementName, lbl_endDate, lbl_name, lbl_nationalId, lbl_payId, lbl_statDate;
+
+    /**
+     * حقول الإدخال
+     */
     @FXML
     private TextField txt_startDate, txt_endDate, txt_element, txt_search, txt_payGroup, txt_management;
+
+    /**
+     * الـ Container الرئيسي للنموذج
+     */
     @FXML
     private VBox mainCont;
+
+    /**
+     * الأزرار
+     */
     @FXML
     private Button btn_PayGroupSearch, btn_managementSearch, btn_searchMonth, btnDoReport;
+
+    // ─────────────────────────────────────────────
+    //  Constructor
+    // ─────────────────────────────────────────────
 
     public PayrollReportController() {
         this.registry = ReportRegistryFactory.create();
@@ -62,6 +164,15 @@ public class PayrollReportController implements Initializable {
         this.submissionService = new ReportSubmissionService();
     }
 
+    // ─────────────────────────────────────────────
+    //  Initialization
+    // ─────────────────────────────────────────────
+
+    /**
+     * يُغلِق الـ Stage الحاوي لأي مكوّن في الشاشة.
+     *
+     * @param targetComponent أي مكوّن داخل الـ Stage المطلوب إغلاقه
+     */
     public static void closeStage(Node targetComponent) {
         ((Stage) targetComponent.getScene().getWindow()).close();
     }
@@ -69,16 +180,18 @@ public class PayrollReportController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         fillFormatCombo();
-        fillMainCombo();        // ← ربطناها بالـ Registry
+        fillMainCombo();
         setupListeners();
         uiManager.hideAll();
     }
 
     /**
-     * التقارير الرئيسية من الـ Registry
+     * يملأ القائمة المنسدلة الرئيسية بالتقارير ذات الفئة {@code main_*}.
+     *
+     * <p>الاستراتيجيات تُصفَّى بالفئة ({@code category.startsWith("main_")})
+     * لضمان ظهور التقارير الرئيسية فقط وليس الفرعيات.
      */
     void fillMainCombo() {
-        // category = "main_container" أو "main_direct"
         List<String> mainReports = registry.getAll().stream()
                 .filter(s -> s.getCategory().startsWith("main_"))
                 .map(ReportStrategy::getDisplayName)
@@ -86,53 +199,71 @@ public class PayrollReportController implements Initializable {
         combo_reportName.getItems().addAll(mainReports);
     }
 
+    // ─────────────────────────────────────────────
+    //  Listeners
+    // ─────────────────────────────────────────────
+
+    /**
+     * يملأ قائمة الصيغ ويضبط PDF كاختيار افتراضي
+     */
     void fillFormatCombo() {
         combo_Format.getItems().addAll("PDF", "EXCEL");
         combo_Format.getSelectionModel().select(0);
     }
 
+    // ─────────────────────────────────────────────
+    //  Search Dialog
+    // ─────────────────────────────────────────────
+
+    /**
+     * يُعدِّل Listeners للقائمتين الرئيسية والفرعية.
+     *
+     * <p><b>القائمة الرئيسية ({@code combo_reportName}):</b>
+     * <ul>
+     *   <li>إذا كان التقرير حاوٍ ({@code hasSubReports = true}):
+     *       يخفي الحقول ويُظهر {@code H_report} بقائمة الفرعيات.</li>
+     *   <li>إذا كان مباشرًا: يُطبِّق {@link UiConfiguration} مباشرةً.</li>
+     * </ul>
+     *
+     * <p><b>القائمة الفرعية ({@code combo_report}):</b>
+     * يُطبِّق إعدادات الاستراتيجية الفرعية المختارة.
+     */
     void setupListeners() {
-        // ====== لما يختار التقرير الرئيسي ======
-        combo_reportName.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -> {
-            if (newVal == null) return;
+        combo_reportName.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, newVal) -> {
+                    if (newVal == null) return;
+                    ReportStrategy mainStrategy = registry.getByDisplayName(newVal);
 
-            ReportStrategy mainStrategy = registry.getByDisplayName(newVal);
+                    if (mainStrategy.hasSubReports()) {
+                        // تقرير حاوٍ: أخفِ كل شيء ثم اعرض ComboBox الفرعيات
+                        uiManager.hideAll();
+                        combo_report.getItems().clear();
+                        combo_report.getItems().addAll(
+                                registry.getDisplayNamesByCategory(mainStrategy.getMainReport())
+                        );
+                        H_report.setManaged(true);
+                        H_report.setVisible(true);
+                        currentStrategy = null; // ينتظر اختيار الفرعي
 
-            if (mainStrategy.hasSubReports()) {
-                // === حاوي: اخفي كل حاجة الأول، وبعدين اظهر الفرعي ===
-                uiManager.hideAll();           // ← اخفي كل حاجة الأول
-                combo_report.getItems().clear();
-                combo_report.getItems().addAll(registry.getDisplayNamesByCategory(mainStrategy.getMainReport()));
-                H_report.setManaged(true);     // ← اظهر الفرعي بعد الـ hideAll
-                H_report.setVisible(true);
-                currentStrategy = null;        // لسه ماختارش فرعي
+                    } else {
+                        // تقرير مباشر: أخفِ الفرعي وطبِّق الإعدادات
+                        H_report.setManaged(false);
+                        H_report.setVisible(false);
+                        combo_report.getItems().clear();
+                        combo_report.getSelectionModel().clearSelection();
+                        currentStrategy = mainStrategy;
+                        uiManager.apply(currentStrategy.getUiConfig());
+                    }
+                });
 
-            } else {
-                // === مباشر: اخفي الفرعي واظهر الحقول ===
-                H_report.setManaged(false);
-                H_report.setVisible(false);
-                combo_report.getItems().clear();
-                combo_report.getSelectionModel().clearSelection();
+        combo_report.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, newVal) -> {
+                    if (newVal == null) return;
+                    currentStrategy = registry.getByDisplayName(newVal);
+                    uiManager.apply(currentStrategy.getUiConfig());
+                });
 
-                currentStrategy = mainStrategy;
-                uiManager.apply(currentStrategy.getUiConfig());
-                configureSearchForCurrentStrategy();
-            }
-        });
-        // ====== لما يختار التقرير الفرعي (لو ظاهر) ======
-        combo_report.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -> {
-            if (newVal == null) return;
-            currentStrategy = registry.getByDisplayName(newVal);
-            uiManager.apply(currentStrategy.getUiConfig());
-            configureSearchForCurrentStrategy();
-        });
-    }
-
-    void configureSearchForCurrentStrategy() {
-        if (currentStrategy == null) return;
-        UiConfiguration config = currentStrategy.getUiConfig();
-
-        // زر اختيار الشهر
+        // زر اختيار الشهر — مشترك بين جميع التقارير
         btn_searchMonth.setOnAction(e -> {
             Optional<String> month = SearchDialog.forStrings()
                     .title("اختر شهر")
@@ -143,37 +274,33 @@ public class PayrollReportController implements Initializable {
                 lbl_statDate.setText(DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(m)));
             });
         });
-
-        // إدارة
-        if (config.isNeedsSearchDialog() && "management".equals(config.getSearchDataSource())) {
-            btn_managementSearch.setManaged(true);
-            btn_managementSearch.setVisible(true);
-            btn_managementSearch.setOnAction(e -> openSearchDialog(config.getSearchDialogTitle(), DataSourceResolver.get("management"), txt_management));
-            txt_management.setOnAction(e -> openSearchDialog(config.getSearchDialogTitle(), DataSourceResolver.get("management"), txt_management));
-        } else {
-            btn_managementSearch.setManaged(false);
-            btn_managementSearch.setVisible(false);
-            txt_management.setOnAction(null);
-        }
-
-        // مجموعة تعيين
-        if (config.isNeedsSearchDialog() && "payGroup".equals(config.getSearchDataSource())) {
-            btn_PayGroupSearch.setManaged(true);
-            btn_PayGroupSearch.setVisible(true);
-            btn_PayGroupSearch.setOnAction(e -> openSearchDialog(config.getSearchDialogTitle(), DataSourceResolver.get("payGroup"), txt_payGroup));
-            txt_payGroup.setOnAction(e -> openSearchDialog(config.getSearchDialogTitle(), DataSourceResolver.get("payGroup"), txt_payGroup));
-        } else {
-            btn_PayGroupSearch.setManaged(false);
-            btn_PayGroupSearch.setVisible(false);
-            txt_payGroup.setOnAction(null);
-        }
     }
 
-    void openSearchDialog(String title, List<String> data, TextField targetField) {
-        List<String> filtered = data.stream()
-                .filter(s -> s.contains(targetField.getText()))
-                .toList();
-        List<String> dialogData = filtered.isEmpty() ? data : filtered;
+    // ─────────────────────────────────────────────
+    //  Report Submission
+    // ─────────────────────────────────────────────
+
+    /**
+     * يفتح نافذة بحث ويضع النتيجة في الـ TextField المستهدف.
+     *
+     * <p>إذا كان الـ TextField يحتوي على نص، تُصفَّى القائمة لإظهار
+     * المطابقات فقط؛ وإلا تظهر القائمة كاملةً.
+     *
+     * <p>يُستدعى من {@link com.safwat.hr.report.payroll.ui.PayrollUIManager.SearchBinding}
+     * عبر {@code controller.openSearchDialog(...)}.
+     *
+     * @param title       عنوان نافذة البحث
+     * @param data        قائمة البيانات الكاملة
+     * @param targetField الـ TextField الذي يستقبل النتيجة
+     */
+    public void openSearchDialog(String title, List<String> data, TextField targetField) {
+        String currentText = targetField.getText();
+        List<String> dialogData = (currentText == null || currentText.isBlank())
+                ? data
+                : data.stream().filter(s -> s.contains(currentText)).toList();
+
+        // لو التصفية أفرغت القائمة نعرض الكل
+        if (dialogData.isEmpty()) dialogData = data;
 
         SearchDialog.forStrings()
                 .title(title)
@@ -182,6 +309,26 @@ public class PayrollReportController implements Initializable {
                 .ifPresent(targetField::setText);
     }
 
+    // ─────────────────────────────────────────────
+    //  Utility
+    // ─────────────────────────────────────────────
+
+    /**
+     * يُنفِّذ عملية إرسال التقرير.
+     *
+     * <p>التسلسل:
+     * <ol>
+     *   <li>التحقق من اختيار استراتيجية.</li>
+     *   <li>بناء {@link ReportContext} من حقول الـ UI.</li>
+     *   <li>التحقق من صحة المدخلات عبر {@code strategy.validate()}.</li>
+     *   <li>بناء الطلب عبر {@code strategy.buildRequest()}.</li>
+     *   <li>الإرسال عبر {@link ReportSubmissionService#submit} على خيط خلفي.</li>
+     * </ol>
+     *
+     * <p>عند النجاح: تُغلَق النافذة وتظهر رسالة نجاح.
+     * عند فشل التحقق: تظهر رسالة تحذير دون إغلاق.
+     * عند خطأ HTTP: تظهر رسالة خطأ.
+     */
     @FXML
     void doReport() {
         if (currentStrategy == null) {
@@ -208,9 +355,11 @@ public class PayrollReportController implements Initializable {
             submissionService.submit(request,
                     reportId -> Platform.runLater(() -> {
                         closeStage(btnDoReport);
-                        SAFNotification.success("تم تقديم الطلب بنجاح رقم الطلب: " + reportId);
+                        SAFNotification.success("تم تقديم الطلب بنجاح — رقم الطلب: " + reportId);
                     }),
-                    error -> Platform.runLater(() -> SAFNotification.error(error.getMessage()))
+                    error -> Platform.runLater(() ->
+                            SAFNotification.error(error.getMessage())
+                    )
             );
 
         } catch (ValidationException ve) {

@@ -36,6 +36,11 @@ public class ChatDTOs {
 
         private String timeAgo;
         private boolean muted;
+
+        // ✅ جديد: حالة الاتصال — للمحادثات الخاصة فقط
+        private Long otherUserId;
+        private boolean online;
+        private String lastSeenText;
     }
 
     @Data
@@ -94,6 +99,12 @@ public class ChatDTOs {
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime editedAt;
+
+        // ✅ جديد: الرد على رسالة (Reply/Quote)
+        private Long replyToId;
+        private String replyToSenderName;
+        private String replyToPreview;
+        private boolean replyToDeleted;
     }
 
     @Data
@@ -142,10 +153,17 @@ public class ChatDTOs {
     public static class SendMessageRequest {
         private String content;
         private String messageType;
+        private Long replyToId;
 
         public SendMessageRequest(String content) {
             this.content = content;
             this.messageType = "TEXT";
+        }
+
+        public SendMessageRequest(String content, Long replyToId) {
+            this.content = content;
+            this.messageType = "TEXT";
+            this.replyToId = replyToId;
         }
     }
 
@@ -193,12 +211,39 @@ public class ChatDTOs {
         private MessageStatus newStatus;
         private Set<Long> readBy;
 
+        // ✅ جديد: MESSAGES_READ — دفعة تحديثات قراءة لعدة رسائل
+        private List<MessageReadUpdateDTO> readUpdates;
+
         private String newContent;
-       
+
         private LocalDateTime editedAt;
 
         private boolean forEveryone;
         private String deletedBy;
+    }
+
+    /**
+     * ✅ جديد: تحديث حالة قراءة رسالة واحدة
+     */
+    @Data
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class MessageReadUpdateDTO {
+        private Long messageId;
+        private MessageStatus status;
+        private Set<Long> readBy;
+    }
+
+    /**
+     * ✅ جديد: حدث اتصال/آخر ظهور — عبر /topic/presence
+     */
+    @Data
+    @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PresenceEventDTO {
+        private Long userId;
+        private boolean online;
+        private String lastSeenText;
     }
 
     @Data

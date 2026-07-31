@@ -1,6 +1,7 @@
 package com.safwat.hr.chat;
 
 import com.safwat.hr.notification.util.FileOpener;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -14,9 +15,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -105,6 +105,9 @@ public class MessageBubble extends HBox {
             deleted.getStyleClass().add("msg-deleted");
             bubble.getChildren().add(deleted);
         } else {
+            if (msg.getReplyToId() != null) {
+                bubble.getChildren().add(buildReplyQuoteBox(msg));
+            }
             if (msg.getContent() != null && !msg.getContent().isBlank()) {
                 Label content = new Label(msg.getContent());
                 content.setWrapText(true);
@@ -177,6 +180,9 @@ public class MessageBubble extends HBox {
             deleted.getStyleClass().add("msg-deleted");
             bubble.getChildren().add(deleted);
         } else {
+            if (msg.getReplyToId() != null) {
+                bubble.getChildren().add(buildReplyQuoteBox(msg));
+            }
             if (msg.getContent() != null && !msg.getContent().isBlank()) {
                 Label content = new Label(msg.getContent());
                 content.setWrapText(true);
@@ -205,6 +211,35 @@ public class MessageBubble extends HBox {
     }
 
     // ═════════════════════════════════════════════════════════════════
+    //  الرد على رسالة (Reply/Quote)
+    // ═════════════════════════════════════════════════════════════════
+
+    /**
+     * ✅ جديد: صندوق صغير فوق الرسالة بيعرض معاينة الرسالة المردود عليها، زي واتساب.
+     */
+    private VBox buildReplyQuoteBox(ChatDTOs.ChatMessageDTO msg) {
+        VBox box = new VBox(2);
+        box.getStyleClass().add("reply-quote-box");
+        box.setPadding(new Insets(5, 8, 5, 8));
+
+        Label senderLabel = new Label(
+                msg.getReplyToSenderName() != null ? msg.getReplyToSenderName() : "رسالة"
+        );
+        senderLabel.getStyleClass().add("reply-quote-sender");
+
+        String preview = msg.isReplyToDeleted()
+                ? "[رسالة محذوفة]"
+                : (msg.getReplyToPreview() != null && !msg.getReplyToPreview().isBlank()
+                ? msg.getReplyToPreview() : "📎 مرفق");
+        Label previewLabel = new Label(preview);
+        previewLabel.getStyleClass().add("reply-quote-text");
+        previewLabel.setWrapText(true);
+
+        box.getChildren().addAll(senderLabel, previewLabel);
+        return box;
+    }
+
+    // ═════════════════════════════════════════════════════════════════
     //  المرفقات
     // ═════════════════════════════════════════════════════════════════
 
@@ -224,10 +259,11 @@ public class MessageBubble extends HBox {
      * ✅ تم الإصلاح: الصور كانت مش بتظهر أبداً لأن الكود كان بيحمّلها مباشرة
      * برابط نسبي (مش فيه http://host:port) ومن غير الـ Authorization header
      * بتاع الـ API، فأي طلب كان بيفشل فوراً (❌ فشل التحميل).
-     * الحل: نحمّل الصورة أولاً بشكل آمن عن طريق ChatApiService (اللي أصلاً
-     * بيبعت التوثيق صح — نفس الطريقة المستخدمة في زر التحميل)، ونحفظها في
-     * كاش محلي، وبعدين نعرضها من الملف المحلي. نفس الأسلوب بنستخدمه لما
-     * المستخدم يدوس على الصورة، بدل محاولة فتحها كرابط نسبي في المتصفح.
+     * الحل: نحمّل الصورة أولاً بشكل آمن عن طريق AttachmentCache (اللي بيستخدم
+     * ChatApiService.downloadAttachment اللي بالفعل بيبعت التوثيق صح)،
+     * ونعرضها من الملف المحلي.
+     * ✅ جديد: الضغط على الصورة بيفتح عارض صور داخلي (Lightbox) بدل محاولة
+     * فتحها كرابط نسبي في المتصفح الخارجي (اللي كان دايماً بيفشل).
      */
     private javafx.scene.Node buildImagePreview(ChatDTOs.ChatAttachmentDTO att) {
         VBox previewBox = new VBox(4);
@@ -241,9 +277,11 @@ public class MessageBubble extends HBox {
         loadingLabel.setStyle("-fx-text-fill: #9CA3AF;");
         imageContainer.getChildren().add(loadingLabel);
 
-        Path cacheFile = attachmentCachePath(att);
-
-        Runnable renderFromDisk = () -> javafx.application.Platform.runLater(() -> {
+        AttachmentCache.ensureDownloaded(att).thenAccept(cacheFile -> Platform.runLater(() -> {
+            if (cacheFile == null) {
+                loadingLabel.setText("❌ فشل التحميل");
+                return;
+            }
             try {
                 Image image = new Image(cacheFile.toUri().toString(),
                         MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT, true, true, false);
@@ -252,7 +290,7 @@ public class MessageBubble extends HBox {
                 imageView.setFitWidth(MAX_IMAGE_WIDTH);
                 imageView.setPreserveRatio(true);
                 imageView.setStyle("-fx-background-radius: 8; -fx-cursor: hand;");
-                imageView.setOnMouseClicked(e -> FileOpener.open(cacheFile.toString()));
+                imageView.setOnMouseClicked(e -> openLightbox(att));
 
                 imageContainer.getChildren().clear();
                 imageContainer.getChildren().add(imageView);
@@ -260,23 +298,7 @@ public class MessageBubble extends HBox {
             } catch (Exception e) {
                 loadingLabel.setText("❌ فشل عرض الصورة");
             }
-        });
-
-        if (Files.exists(cacheFile)) {
-            renderFromDisk.run();
-        } else if (att.getDownloadToken() != null) {
-            ChatApiService.downloadAttachment(att.getDownloadToken(), cacheFile)
-                    .thenAccept(success -> {
-                        if (success) {
-                            renderFromDisk.run();
-                        } else {
-                            javafx.application.Platform.runLater(() ->
-                                    loadingLabel.setText("❌ فشل التحميل"));
-                        }
-                    });
-        } else {
-            loadingLabel.setText("❌ الملف غير متاح");
-        }
+        }));
 
         Label nameLabel = new Label(att.getFileName());
         nameLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #6B7280;");
@@ -286,18 +308,28 @@ public class MessageBubble extends HBox {
     }
 
     /**
-     * كاش محلي مؤقت للصور المحمّلة، عشان ما نعيدش تحميل نفس الصورة كل مرة يتعاد فيها رسم الفقاعة.
+     * ✅ جديد: يفتح عارض الصور الداخلي على كل صور المحادثة الحالية (مش بس الصورة
+     * دي)، عشان المستخدم يقدر يتنقل بينها بالسهام زي أي معرض صور احترافي.
      */
-    private Path attachmentCachePath(ChatDTOs.ChatAttachmentDTO att) {
-        Path dir = Paths.get(System.getProperty("java.io.tmpdir"), "hr_chat_cache");
-        try {
-            Files.createDirectories(dir);
-        } catch (Exception ignored) {
+    private void openLightbox(ChatDTOs.ChatAttachmentDTO clicked) {
+        List<ChatDTOs.ChatAttachmentDTO> allImages = new ArrayList<>();
+        int startIndex = 0;
+
+        for (ChatDTOs.ChatMessageDTO m : ChatService.getInstance().getMessages()) {
+            if (m.getAttachments() == null) continue;
+            for (ChatDTOs.ChatAttachmentDTO a : m.getAttachments()) {
+                if (a.getMimeType() != null && a.getMimeType().startsWith("image/")) {
+                    if (a.getDownloadToken() != null && a.getDownloadToken().equals(clicked.getDownloadToken())) {
+                        startIndex = allImages.size();
+                    }
+                    allImages.add(a);
+                }
+            }
         }
-        String safeName = att.getFileName() != null
-                ? att.getFileName().replaceAll("[\\\\/:*?\"<>|]", "_")
-                : "file";
-        return dir.resolve(att.getDownloadToken() + "_" + safeName);
+
+        if (allImages.isEmpty()) allImages.add(clicked);
+
+        new ImageViewerDialog(getScene().getWindow(), allImages, startIndex).show();
     }
 
     private HBox buildAttachmentRow(ChatDTOs.ChatAttachmentDTO att) {

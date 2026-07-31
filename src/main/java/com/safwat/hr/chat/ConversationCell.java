@@ -24,6 +24,7 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
     private final HBox root = new HBox(10);
     private final StackPane avatarBox = new StackPane();
     private final Label avatarLabel = new Label();
+    private final javafx.scene.shape.Circle onlineDot = new javafx.scene.shape.Circle(6);
     private final VBox textBox = new VBox(3);
     private final HBox topRow = new HBox();
     private final Label nameLabel = new Label();
@@ -43,7 +44,14 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
         avatarBox.setMaxSize(44, 44);
         avatarBox.getStyleClass().add("conv-avatar");
         avatarLabel.getStyleClass().add("conv-avatar-initials");
-        avatarBox.getChildren().add(avatarLabel);
+        // ✅ جديد: نقطة خضراء صغيرة تظهر لما الطرف التاني (في محادثة خاصة) يكون متصل الآن
+        onlineDot.setFill(javafx.scene.paint.Color.web("#31D158"));
+        onlineDot.setStroke(javafx.scene.paint.Color.WHITE);
+        onlineDot.setStrokeWidth(2);
+        onlineDot.setVisible(false);
+        onlineDot.setManaged(false);
+        StackPane.setAlignment(onlineDot, Pos.BOTTOM_RIGHT);
+        avatarBox.getChildren().addAll(avatarLabel, onlineDot);
 
         // اسم + وقت
         nameLabel.getStyleClass().add("conv-name");
@@ -94,6 +102,11 @@ public class ConversationCell extends ListCell<ChatDTOs.ConversationSummaryDTO> 
         // ✅ استخدم CSS class بدل inline style
         avatarBox.getStyleClass().removeIf(s -> s.startsWith("avatar-color-"));
         avatarBox.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 22;");
+
+        // ✅ جديد: نقطة الاتصال — بس للمحادثات الخاصة
+        boolean showOnline = "PRIVATE".equals(conv.getType()) && conv.isOnline();
+        onlineDot.setVisible(showOnline);
+        onlineDot.setManaged(showOnline);
 
         // اسم + وقت
         nameLabel.setText(conv.getName() != null ? conv.getName() : "محادثة");

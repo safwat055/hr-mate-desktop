@@ -54,8 +54,10 @@ public class ChatStompClient {
     private ScheduledExecutorService reconnectScheduler;
 
     private Consumer<ChatDTOs.WsNotificationDTO> onNotification;
+    private Consumer<ChatDTOs.PresenceEventDTO> onPresence;
     private Consumer<String> onError;
     private String currentUsername;
+    private StompSession.Subscription presenceSub;
 
     private ChatStompClient() {
     }
@@ -75,6 +77,7 @@ public class ChatStompClient {
 
     public void connect(String username,
                         Consumer<ChatDTOs.WsNotificationDTO> onNotification,
+                        Consumer<ChatDTOs.PresenceEventDTO> onPresence,
                         Consumer<String> onError) {
 
         if (connected.get() || connecting.getAndSet(true)) {
@@ -84,6 +87,7 @@ public class ChatStompClient {
 
         this.currentUsername = username;
         this.onNotification = onNotification;
+        this.onPresence = onPresence;
         this.onError = onError;
         this.shouldReconnect.set(true);
         this.reconnectAttempts.set(0);
@@ -135,6 +139,7 @@ public class ChatStompClient {
                 System.out.println("[ChatStompClient] ✅ Connected");
 
                 subscribeToUserNotifications();
+                subscribeToPresence();
                 resubscribeConversations();
             }
 
@@ -214,6 +219,14 @@ public class ChatStompClient {
             notificationSub = null;
         }
 
+        if (presenceSub != null) {
+            try {
+                presenceSub.unsubscribe();
+            } catch (Exception ignored) {
+            }
+            presenceSub = null;
+        }
+
         if (session != null && session.isConnected()) {
             try {
                 session.disconnect();
@@ -265,6 +278,31 @@ public class ChatStompClient {
         });
 
         System.out.println("[ChatStompClient] 📡 Subscribed to: " + destination);
+    }
+
+    /**
+     * ✅ جديد: اشتراك عام (مش مرتبط بمحادثة معينة) في حالة اتصال المستخدمين
+     */
+    private void subscribeToPresence() {
+        if (!isReady()) return;
+
+        presenceSub = session.subscribe("/topic/presence", new StompFrameHandler() {
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return ChatDTOs.PresenceEventDTO.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                if (payload instanceof ChatDTOs.PresenceEventDTO dto) {
+                    Platform.runLater(() -> {
+                        if (onPresence != null) onPresence.accept(dto);
+                    });
+                }
+            }
+        });
+
+        System.out.println("[ChatStompClient] 📡 Subscribed to: /topic/presence");
     }
 
     public void subscribeToConversation(long conversationId,

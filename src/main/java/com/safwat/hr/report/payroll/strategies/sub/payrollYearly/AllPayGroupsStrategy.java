@@ -11,17 +11,27 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiEndpoints;
 
-import java.util.List;
-
-@PayrollReport(code = "payrollYearly_1",
+/**
+ * استراتيجية تقرير "كل مجموعات التعيين".
+ *
+ * <p>أبسط تقارير الصرفيات — يعرض صرفيات جميع مجموعات التعيين
+ * لشهر محدد دون أي تصفية إضافية.
+ *
+ * <p>الحقول المطلوبة: <b>الشهر فقط</b>.
+ *
+ * <ul>
+ *   <li>الكود: {@code payrollYearly_1}</li>
+ *   <li>الفئة: {@code yearly_payroll}</li>
+ *   <li>الـ Endpoint: {@link ApiEndpoints.PayrollYearly#YEARLY_EXPENSES}</li>
+ * </ul>
+ */
+@PayrollReport(
+        code = "payrollYearly_1",
         displayName = "كل مجموعات التعيين",
         category = "yearly_payroll",
-        mainReport = "yearly_payroll")
+        mainReport = "yearly_payroll"
+)
 public class AllPayGroupsStrategy implements ReportStrategy {
-    @Override
-    public String getMainReport() {
-        return "yearly_payroll";
-    }
 
     @Override
     public String getCode() {
@@ -39,19 +49,29 @@ public class AllPayGroupsStrategy implements ReportStrategy {
     }
 
     @Override
-    public void validate(ReportContext context) {
-        if (context.getStartDate() == null || context.getStartDate().isBlank()) {
-            throw new ValidationException("يجب اختيار فترة اولا!");
-        }
+    public String getMainReport() {
+        return "yearly_payroll";
     }
 
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير كل مجموعات التعيين")
-                .visibleFields(List.of(UiField.START_DATE))
-                .requiredFields(List.of(UiField.START_DATE))
+                .title("كل مجموعات التعيين")
+                .visibleField(UiField.START_DATE)
+                .requiredField(UiField.START_DATE)
                 .build();
+    }
+
+    /**
+     * يتحقق من اختيار الشهر.
+     *
+     * @throws ValidationException إذا كان الشهر فارغًا
+     */
+    @Override
+    public void validate(ReportContext context) {
+        if (context.getStartDate() == null || context.getStartDate().isBlank()) {
+            throw new ValidationException("يجب اختيار الشهر أولاً!");
+        }
     }
 
     @Override
