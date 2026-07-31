@@ -42,7 +42,7 @@ public class MonthlySummaryReportInRange implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير شهر محدد")
+                //  .title("تقرير شهر محدد")
                 .visibleFields(List.of(UiField.START_DATE, UiField.END_DATE))
                 .requiredFields(List.of(UiField.START_DATE, UiField.END_DATE))
                 .build();

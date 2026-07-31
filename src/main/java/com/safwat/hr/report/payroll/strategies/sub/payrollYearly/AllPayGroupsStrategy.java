@@ -56,7 +56,7 @@ public class AllPayGroupsStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("كل مجموعات التعيين")
+                //    .title("كل مجموعات التعيين")
                 .visibleField(UiField.START_DATE)
                 .requiredField(UiField.START_DATE)
                 .build();

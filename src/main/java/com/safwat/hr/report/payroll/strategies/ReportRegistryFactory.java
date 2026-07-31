@@ -1,10 +1,9 @@
 package com.safwat.hr.report.payroll.strategies;
 
+import com.safwat.hr.report.payroll.strategies.direct.EmployeePayments;
 import com.safwat.hr.report.payroll.strategies.mainContainer.MonthlyExpensesContainerStrategy;
 import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollCostSummaryStrategy;
-import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.MonthlyMainSummaryReport;
-import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.MonthlySummaryReport;
-import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.MonthlySummaryReportInRange;
+import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.strategies.sub.payrollYearly.*;
 
 /**
@@ -64,7 +63,7 @@ public class ReportRegistryFactory {
         // ══════════════════════════════════════════
         registry.register(new MonthlyExpensesContainerStrategy()); // تقرير الصرفيات الشهري   — حاوٍ
         registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
-
+        registry.register(new EmployeePayments());
         // ══════════════════════════════════════════
         //  فرعيات "تقرير الصرفيات الشهري" (yearly_payroll)
         // ══════════════════════════════════════════
@@ -82,6 +81,8 @@ public class ReportRegistryFactory {
         registry.register(new MonthlySummaryReport());
         registry.register(new MonthlySummaryReportInRange());
         registry.register(new MonthlyMainSummaryReport());
+        registry.register(new MonthlyMainSummaryReportInRange());
+        registry.register(new MonthlySubSummaryReport());
 
         return registry;
     }

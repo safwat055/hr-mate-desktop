@@ -58,7 +58,7 @@ public class MainPayGroupsStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("مجموعات التعيين الرئيسية")
+                //     .title("مجموعات التعيين الرئيسية")
                 .visibleField(UiField.START_DATE)
                 .requiredField(UiField.START_DATE)
                 .build();

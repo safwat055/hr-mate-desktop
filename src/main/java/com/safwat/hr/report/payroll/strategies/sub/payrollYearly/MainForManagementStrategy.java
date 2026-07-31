@@ -55,7 +55,7 @@ public class MainForManagementStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير مجموعات التعيين الرئيسية لإدارة محددة")
+                //     .title("تقرير مجموعات التعيين الرئيسية لإدارة محددة")
                 .visibleFields(List.of(UiField.START_DATE, UiField.MANAGEMENT))
                 .requiredFields(List.of(UiField.START_DATE, UiField.MANAGEMENT))
                 .searchField(SearchFieldConfig.of(UiField.MANAGEMENT, "اختر إدارة", "management"))

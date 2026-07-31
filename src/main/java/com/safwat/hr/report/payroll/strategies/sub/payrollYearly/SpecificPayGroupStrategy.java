@@ -57,7 +57,7 @@ public class SpecificPayGroupStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير مجموعة تعيين محددة")
+                //    .title("تقرير مجموعة تعيين محددة")
                 .visibleField(UiField.START_DATE)
                 .visibleField(UiField.PAY_GROUP)
                 .requiredField(UiField.START_DATE)

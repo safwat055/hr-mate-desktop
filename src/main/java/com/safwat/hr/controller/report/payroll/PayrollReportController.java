@@ -9,7 +9,9 @@ import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.strategies.ReportStrategyRegistry;
 import com.safwat.hr.report.payroll.ui.PayrollUIManager;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
+import com.safwat.hr.service.payroll.PayrollPaymentsService;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
+import com.safwat.hr.service.payroll.dto.SearchEmp;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.util.SearchDialog;
@@ -78,7 +80,7 @@ public class PayrollReportController implements Initializable {
     // ─────────────────────────────────────────────
     //  Services & State
     // ─────────────────────────────────────────────
-
+    private final PayrollPaymentsService paymentsService = PayrollPaymentsService.getInstance();
     /**
      * سجل الاستراتيجيات المسجَّلة — يُنشأ مرة واحدة عبر الـ Factory
      */
@@ -134,7 +136,7 @@ public class PayrollReportController implements Initializable {
      * Labels
      */
     @FXML
-    private Label lbl_elementName, lbl_endDate, lbl_name, lbl_nationalId, lbl_payId, lbl_statDate;
+    private Label lbl_elementName, lbl_endDate, lbl_name, lbl_nationalId, lbl_payId, lbl_startDate;
 
     /**
      * حقول الإدخال
@@ -152,7 +154,7 @@ public class PayrollReportController implements Initializable {
      * الأزرار
      */
     @FXML
-    private Button btn_PayGroupSearch, btn_managementSearch, btn_searchMonth, btnDoReport;
+    private Button btn_PayGroupSearch, btn_managementSearch, btn_searchMonth, btnDoReport, btn_searchMonthEnd, btn_SearchEmpolyee;
 
     // ─────────────────────────────────────────────
     //  Constructor
@@ -264,14 +266,42 @@ public class PayrollReportController implements Initializable {
                 });
 
         // زر اختيار الشهر — مشترك بين جميع التقارير
-        btn_searchMonth.setOnAction(e -> {
+        searchInMonths(btn_searchMonth, txt_startDate, lbl_startDate);
+
+        searchInMonths(btn_searchMonthEnd, txt_endDate, lbl_endDate);
+        btn_SearchEmpolyee.setOnAction(event -> {
+            PayrollRequest request = PayrollRequest.builder().build();
+            request.setSearchValue(txt_search.getText());
+            List<SearchEmp> data = paymentsService.searchInEmployees(request).getData();
+
+            Optional<SearchEmp> result = SearchDialog.builder(SearchEmp.class)
+                    .title("نتائج البحث")
+                    .column("رقم قومي", SearchEmp::getNational_id)
+                    .column("رقم موظف", SearchEmp::getPay_id)
+                    .column("اسم", SearchEmp::getEmp_name)
+                    .data(data)
+                    .searchPlaceholder("ابحث للتصفية")
+                    .show();
+
+            result.ifPresent(row -> {
+                lbl_nationalId.setText(row.getNational_id());
+                lbl_payId.setText(row.getPay_id());
+                lbl_name.setText(row.getEmp_name());
+            });
+        });
+
+
+    }
+
+    private void searchInMonths(Button btnSearchMonthEnd, TextField txtEndDate, Label lblEndDate) {
+        btnSearchMonthEnd.setOnAction(e -> {
             Optional<String> month = SearchDialog.forStrings()
                     .title("اختر شهر")
                     .data(DataSourceResolver.get("monthsYearly"))
                     .show();
             month.ifPresent(m -> {
-                txt_startDate.setText(m);
-                lbl_statDate.setText(DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(m)));
+                txtEndDate.setText(m);
+                lblEndDate.setText(DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(m)));
             });
         });
     }
@@ -344,7 +374,7 @@ public class PayrollReportController implements Initializable {
                     .endDate(txt_endDate.getText())
                     .management(txt_management.getText())
                     .payGroup(txt_payGroup.getText())
-                    .nationalId(txt_search.getText())
+                    .nationalId(lbl_nationalId.getText())
                     .format(combo_Format.getSelectionModel().getSelectedItem())
                     .build();
 

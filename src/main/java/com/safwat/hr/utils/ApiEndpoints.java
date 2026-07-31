@@ -37,6 +37,7 @@ public final class ApiEndpoints {
         //report
         public static final String YEARLY_EXPENSES = "/payrollYearly/get/yearlyExpenses";
         public static final String PAYROLL_SUMMARY = "/payrollYearly/get/monthSummary";
+        public static final String PAYROLL_PAYMENTS = "/payrollYearly/get/paymentsReport";
 
         public static final String PAY_GROUP_LIST = "/payrollYearly/allPayGroup";
         public static final String PAY_MANAGEMENT_LIST = "/payrollIndex/get-indexInfo";

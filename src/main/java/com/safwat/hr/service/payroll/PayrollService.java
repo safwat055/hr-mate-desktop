@@ -2,8 +2,11 @@ package com.safwat.hr.service.payroll;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
+import com.safwat.hr.service.payroll.dto.SearchEmp;
+import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiEndpoints;
+import com.safwat.hr.utils.ApiResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +20,21 @@ public class PayrollService {
             instance = new PayrollService();
         }
         return instance;
+    }
+
+    public ApiResponse<List<SearchEmp>> searchInEmployees(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollYearly.SEARCH,
+                    request,
+                    new TypeReference<List<SearchEmp>>() {
+                    }
+
+            );
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     public List<String> getPayGroup() {

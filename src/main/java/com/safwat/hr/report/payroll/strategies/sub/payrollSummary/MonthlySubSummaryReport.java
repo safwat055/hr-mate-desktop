@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.strategies.sub.payrollSummary;
 
-import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
@@ -11,22 +10,15 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.utils.ApiClient;
 import com.safwat.hr.utils.ApiEndpoints;
 
-import java.util.List;
-
-
-@PayrollReport(code = "summaryReport_1",
-        displayName = "اجمالى التكاليف لشهر محدد",
-        category = "payroll_summary",
-        mainReport = "payroll_summary")
-public class MonthlySummaryReport implements ReportStrategy {
+public class MonthlySubSummaryReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "summaryReport_1";
+        return "summaryReport_5";
     }
 
     @Override
     public String getDisplayName() {
-        return "اجمالى التكاليف لشهر محدد";
+        return "إجمالي تكاليف الصرفيات المنفصلة لشهر محدد";
     }
 
     @Override
@@ -42,9 +34,9 @@ public class MonthlySummaryReport implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                //           .title("تقرير شهر محدد")
-                .visibleFields(List.of(UiField.START_DATE))
-                .requiredFields(List.of(UiField.START_DATE))
+//.title("إجمالي تكاليف الصرفيات المنفصلة لشهر محدد")
+                .visibleField(UiField.START_DATE)
+                .requiredField(UiField.START_DATE)
                 .build();
     }
 
@@ -52,20 +44,23 @@ public class MonthlySummaryReport implements ReportStrategy {
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
                 .user(ApiClient.getUserName())
-                .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .report(getCode())
                 .reportName(context.getReportName())
-                .format(context.getFormat())
+                .report(getCode())
                 .endPoint(ApiEndpoints.PayrollYearly.PAYROLL_SUMMARY)
+                .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
+                .format(context.getFormat())
                 .build();
     }
 
+    /**
+     * يتحقق من اختيار الشهر.
+     *
+     * @throws ValidationException إذا كان الشهر فارغًا
+     */
     @Override
     public void validate(ReportContext context) {
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
-            throw new ValidationException("يجب اختيار فترة اولا!");
+            throw new ValidationException("يجب اختيار الشهر أولاً!");
         }
     }
-
-
 }

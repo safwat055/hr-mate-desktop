@@ -13,7 +13,7 @@ import com.safwat.hr.utils.ApiEndpoints;
 import java.util.List;
 
 @PayrollReport(code = "summaryReport_3",
-        displayName = "اجمالى تكاليف الصرفيات الرئيسية لشهر محدد",
+        displayName = "إجمالي تكاليف الصرفيات الرئيسية لشهر محدد",
         category = "payroll_summary",
         mainReport = "payroll_summary")
 public class MonthlyMainSummaryReport implements ReportStrategy {
@@ -24,7 +24,7 @@ public class MonthlyMainSummaryReport implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "اجمالى تكاليف الصرفيات الرئيسية لشهر محدد";
+        return "إجمالي تكاليف الصرفيات الرئيسية لشهر محدد";
     }
 
     @Override
@@ -40,7 +40,7 @@ public class MonthlyMainSummaryReport implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("اجمالى تكاليف الصرفيات الرئيسية لشهر محدد")
+                //.title("إجمالي تكاليف الصرفيات الرئيسية لشهر محدد")
                 .requiredFields(List.of(UiField.START_DATE))
                 .visibleFields(List.of(UiField.START_DATE))
                 .build();

@@ -17,6 +17,18 @@ import java.util.List;
 @Slf4j
 public class PayrollPaymentsService {
 
+    private static PayrollPaymentsService instance;
+
+    private PayrollPaymentsService() {
+
+    }
+
+    public static PayrollPaymentsService getInstance() {
+        if (instance == null) {
+            instance = new PayrollPaymentsService();
+        }
+        return instance;
+    }
 
     public ApiResponse<List<SearchEmp>> searchInEmployees(PayrollRequest request) {
         try {

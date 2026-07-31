@@ -60,7 +60,7 @@ public class SeparateForManagementStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير مجموعات التعيين المنفصلة لإدارة محددة")
+                //     .title("تقرير مجموعات التعيين المنفصلة لإدارة محددة")
                 .visibleField(UiField.START_DATE)
                 .visibleField(UiField.MANAGEMENT)
                 .requiredField(UiField.START_DATE)

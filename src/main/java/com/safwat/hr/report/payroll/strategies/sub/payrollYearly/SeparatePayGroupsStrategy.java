@@ -58,7 +58,7 @@ public class SeparatePayGroupsStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("مجموعات التعيين المنفصلة")
+                //     .title("مجموعات التعيين المنفصلة")
                 .visibleField(UiField.START_DATE)
                 .requiredField(UiField.START_DATE)
                 .build();

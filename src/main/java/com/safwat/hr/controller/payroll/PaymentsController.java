@@ -48,7 +48,7 @@ import static com.safwat.hr.shared.util.StringUtil.convertArabicToEnglishNumbers
 @Slf4j
 public class PaymentsController implements Initializable {
     private final ObservableList<PaymentsResult> resultList = FXCollections.observableArrayList();
-    private final PayrollPaymentsService paymentsService = new PayrollPaymentsService();
+    private final PayrollPaymentsService paymentsService = PayrollPaymentsService.getInstance();
     @FXML
     private Button btn_clear;
     @FXML

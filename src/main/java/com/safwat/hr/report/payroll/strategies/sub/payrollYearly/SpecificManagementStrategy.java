@@ -60,7 +60,7 @@ public class SpecificManagementStrategy implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .title("تقرير كل مجموعات التعيين لإدارة محددة")
+                //           .title("تقرير كل مجموعات التعيين لإدارة محددة")
                 .visibleField(UiField.START_DATE)
                 .visibleField(UiField.MANAGEMENT)
                 .requiredField(UiField.START_DATE)
