@@ -380,4 +380,21 @@ public class PayrollReportController implements Initializable {
             lbl_name.setText(row.getEmp_name());
         });
     }
+
+    public void setStartAndEndActions() {
+        setupMonthButton(btn_searchMonth, txt_startDate, lbl_startDate);
+        setupMonthButton(btn_searchMonthEnd, txt_endDate, lbl_endDate);
+        lbl_start.setText("بداية التقرير");
+        lbl_end.setText("نهاية التقرير");
+    }
+
+    public void setChoseMonth() {
+        setupMonthButton(btn_searchMonth, txt_startDate, lbl_startDate);
+        lbl_start.setText("اختر شهر");
+    }
+
+    public void setSearchEmployeeActions() {
+        btn_SearchEmpolyee.setOnAction(_ -> searchEmployee());
+        txt_searchEmp.setOnAction(_ -> searchEmployee());
+    }
 }

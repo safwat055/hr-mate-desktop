@@ -115,7 +115,7 @@ public class MainViewController implements Initializable {
         btn_payments.setOnAction(_ -> openPaymentsView());
         btn_changeCard.setOnAction(_ -> openChangeCard());
         btn_PayrollVocab.setOnAction(_ -> openPayVocab());
-
+        btn_report.setOnAction(_ -> openPayrollReport());
         // ✅ جديد — فتح التاب مع الـ Controller
         btn_mail.setOnAction(_ -> openMessagesTab());
     }

@@ -4,7 +4,12 @@ import com.safwat.hr.report.payroll.strategies.direct.EmployeePayments;
 import com.safwat.hr.report.payroll.strategies.direct.NetDifferenceBetweenTowMonths;
 import com.safwat.hr.report.payroll.strategies.direct.NetForTowMonths;
 import com.safwat.hr.report.payroll.strategies.mainContainer.MonthlyExpensesContainerStrategy;
+import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollChangeCard;
 import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollCostSummaryStrategy;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardAll;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardEmployee;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardManagement;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardPayGroup;
 import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.strategies.sub.payrollYearly.*;
 
@@ -65,6 +70,7 @@ public class ReportRegistryFactory {
         // ══════════════════════════════════════════
         registry.register(new MonthlyExpensesContainerStrategy()); // تقرير الصرفيات الشهري   — حاوٍ
         registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
+        registry.register(new PayrollChangeCard());        // إجمالي التكاليف الشهري  — حاوٍ
 
         // main_direct
         registry.register(new EmployeePayments());
@@ -90,6 +96,14 @@ public class ReportRegistryFactory {
         registry.register(new MonthlyMainSummaryReport());
         registry.register(new MonthlyMainSummaryReportInRange());
         registry.register(new MonthlySubSummaryReport());
+
+        // ==============================================
+        //  تقارير اجر الاشتراك الفرعية PAYROLL_CHANGE_CARD
+        //================================================
+        registry.register(new PayrollChangeCardAll());
+        registry.register(new PayrollChangeCardEmployee());
+        registry.register(new PayrollChangeCardManagement());
+        registry.register(new PayrollChangeCardPayGroup());
 
         return registry;
     }

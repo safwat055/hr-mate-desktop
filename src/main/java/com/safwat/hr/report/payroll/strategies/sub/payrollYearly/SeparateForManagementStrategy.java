@@ -74,9 +74,7 @@ public class SeparateForManagementStrategy implements ReportStrategy {
     @Override
     public void onApply(PayrollReportController c) {
 
-        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
-
-        c.getLbl_start().setText("اختر شهر");
+        c.setChoseMonth();
 
         c.getBtn_managementSearch().setOnAction(_ -> {
             c.openSearchDialog(
