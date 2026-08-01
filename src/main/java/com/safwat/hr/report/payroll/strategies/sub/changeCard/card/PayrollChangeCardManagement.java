@@ -1,9 +1,10 @@
-package com.safwat.hr.report.payroll.strategies.sub.changeCard;
+package com.safwat.hr.report.payroll.strategies.sub.changeCard.card;
 
 import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
+import com.safwat.hr.report.payroll.ui.SearchFieldConfig;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.report.payroll.ui.UiField;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -12,15 +13,15 @@ import com.safwat.hr.utils.ApiClient;
 
 import java.util.List;
 
-public class PayrollChangeCardEmployee implements ReportStrategy {
+public class PayrollChangeCardManagement implements ReportStrategy {
     @Override
     public String getCode() {
-        return "CHANGE_CARD_EMPLOYEE";
+        return "CHANGE_CARD_MANAGEMENT";
     }
 
     @Override
     public String getDisplayName() {
-        return "موظف محدد";
+        return "إدارة محددة";
     }
 
     @Override
@@ -36,15 +37,18 @@ public class PayrollChangeCardEmployee implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_EMPLOYEE))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_EMPLOYEE))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_MANAGEMENT))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_MANAGEMENT))
+                .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر إدارة", "management"))
                 .build();
     }
 
     @Override
     public void onApply(PayrollReportController c) {
+
         c.setStartAndEndActions();
-        c.setSearchEmployeeActions();
+
+
     }
 
 
@@ -56,8 +60,7 @@ public class PayrollChangeCardEmployee implements ReportStrategy {
                 .endDate(DateUtils.getFirstDayOfMonth(ctx.getEndDate()))
                 .report(getCode())
                 .reportName(ctx.getReportName())
-                .nationalId(ctx.getNationalId())
-
+                .management(ctx.getManagement())
                 .format(ctx.getFormat())
                 .build();
     }
@@ -67,8 +70,9 @@ public class PayrollChangeCardEmployee implements ReportStrategy {
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
             throw new ValidationException("يجب اختيار بداية التقرير أولاً!");
         }
-        if (context.getNationalId() == null || context.getNationalId().isBlank()) {
-            throw new ValidationException("يجب تحديد موظف أولا");
+
+        if (context.getManagement() == null || context.getManagement().isBlank()) {
+            throw new ValidationException("يجب اختيار الإدارة أولاً!");
         }
     }
 }

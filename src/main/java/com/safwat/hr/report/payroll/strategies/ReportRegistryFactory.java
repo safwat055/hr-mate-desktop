@@ -3,13 +3,19 @@ package com.safwat.hr.report.payroll.strategies;
 import com.safwat.hr.report.payroll.strategies.direct.EmployeePayments;
 import com.safwat.hr.report.payroll.strategies.direct.NetDifferenceBetweenTowMonths;
 import com.safwat.hr.report.payroll.strategies.direct.NetForTowMonths;
-import com.safwat.hr.report.payroll.strategies.mainContainer.MonthlyExpensesContainerStrategy;
-import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollChangeCard;
-import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollCostSummaryStrategy;
-import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardAll;
-import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardEmployee;
-import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardManagement;
-import com.safwat.hr.report.payroll.strategies.sub.changeCard.PayrollChangeCardPayGroup;
+import com.safwat.hr.report.payroll.strategies.direct.PayrollIndex;
+import com.safwat.hr.report.payroll.strategies.mainContainer.*;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementEmployee;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementEmployees;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementManagement;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementPayGroup;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardAll;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardEmployee;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardManagement;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardPayGroup;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.month.PayrollChangeMonthAll;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.month.PayrollChangeMonthManagement;
+import com.safwat.hr.report.payroll.strategies.sub.changeCard.month.PayrollChangeMonthPayGroup;
 import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.strategies.sub.payrollYearly.*;
 
@@ -71,11 +77,15 @@ public class ReportRegistryFactory {
         registry.register(new MonthlyExpensesContainerStrategy()); // تقرير الصرفيات الشهري   — حاوٍ
         registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
         registry.register(new PayrollChangeCard());        // إجمالي التكاليف الشهري  — حاوٍ
+        registry.register(new PayrollElement()); // تقرير عنصر معين  - حاو
+        registry.register(new PayrollChangeMonth());
 
         // main_direct
         registry.register(new EmployeePayments());
         registry.register(new NetForTowMonths());  // payrollYearly_5
         registry.register(new NetDifferenceBetweenTowMonths()); // payrollYearly_4
+
+        registry.register(new PayrollIndex());
         // ══════════════════════════════════════════
         //  فرعيات "تقرير الصرفيات الشهري" (yearly_payroll)
         // ══════════════════════════════════════════
@@ -104,6 +114,22 @@ public class ReportRegistryFactory {
         registry.register(new PayrollChangeCardEmployee());
         registry.register(new PayrollChangeCardManagement());
         registry.register(new PayrollChangeCardPayGroup());
+
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية ELEMENT
+        //================================================
+        registry.register(new ElementEmployee());
+        registry.register(new ElementEmployees());
+        registry.register(new ElementManagement());
+        registry.register(new ElementPayGroup());
+
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية CHANGE_MONTH
+        //================================================
+        registry.register(new PayrollChangeMonthAll());
+        registry.register(new PayrollChangeMonthManagement());
+        registry.register(new PayrollChangeMonthPayGroup());
+
 
         return registry;
     }

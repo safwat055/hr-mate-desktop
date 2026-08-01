@@ -51,4 +51,9 @@ public final class ApiEndpoints {
         public static final String SEARCH = "/payrollHistory/get/searchEmployee";
         public static final String downloadReview = "/payrollHistory/downloade-review";
     }
+
+    public static class PayrollElement {
+        public static final String BASE = "/element";
+        public static final String GET_NAMES = "/element/getElement";
+    }
 }

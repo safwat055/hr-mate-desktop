@@ -90,7 +90,12 @@ public class PayrollUIManager {
                 UiField.H_PAY_GROUP, new SearchBinding(
                         controller::getBtn_PayGroupSearch,
                         controller::getTxt_payGroup
+                ),
+                UiField.H_SEARCH, new SearchBinding(
+                        controller::getBtn_Search,
+                        controller::getTxt_search
                 )
+
                 // لإضافة حقل بحث جديد: أضف سطرًا هنا فقط
         );
         this.fieldToTextField = Map.of();
@@ -151,7 +156,9 @@ public class PayrollUIManager {
      */
     public void apply(UiConfiguration config, ReportStrategy strategy) {
         hideAll();
-
+        if (config == null) {
+            return;
+        }
         if (config.getVisibleFields() != null) {
             config.getVisibleFields().forEach(this::showField);
         }

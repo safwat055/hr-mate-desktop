@@ -83,4 +83,18 @@ public class PayrollService {
             return new ArrayList<>();
         }
     }
+
+    public List<String> getAllElementNames() {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollElement.GET_NAMES,
+                    null,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            return new ArrayList<>();
+           
+        }
+    }
 }

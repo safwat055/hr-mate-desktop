@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.strategies.sub.changeCard;
+package com.safwat.hr.report.payroll.strategies.sub.changeCard.month;
 
 import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
@@ -10,61 +10,55 @@ import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.utils.ApiClient;
 
-import java.util.List;
-
-public class PayrollChangeCardAll implements ReportStrategy {
+public class PayrollChangeMonthAll implements ReportStrategy {
     @Override
     public String getCode() {
-        return "CHANGE_CARD_ALL";
+        return "CHANGE_MONTH_ALL";
     }
 
     @Override
     public String getDisplayName() {
-        return "كل الموظفين";
+        return "اجر اشتراك للكل";
     }
 
     @Override
     public String getCategory() {
-        return "PAYROLL_CHANGE_CARD";
+        return "CHANGE_MONTH";
     }
 
     @Override
     public String getMainReport() {
-        return "PAYROLL_CHANGE_CARD";
+        return "CHANGE_MONTH";
     }
 
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
+                .requiredField(UiField.H_START_DATE)
+                .visibleField(UiField.H_START_DATE)
                 .build();
     }
 
     @Override
-    public void onApply(PayrollReportController c) {
-
-        c.setStartAndEndActions();
-
+    public void onApply(PayrollReportController controller) {
+        controller.setChoseMonth();
     }
 
-
     @Override
-    public PayrollRequest buildRequest(ReportContext ctx) {
+    public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
                 .user(ApiClient.getUserName())
-                .startDate(DateUtils.getFirstDayOfMonth(ctx.getStartDate()))
-                .endDate(DateUtils.getFirstDayOfMonth(ctx.getEndDate()))
+                .reportName(context.getReportName())
                 .report(getCode())
-                .reportName(ctx.getReportName())
-                .format(ctx.getFormat())
+                .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .build();
     }
 
     @Override
     public void validate(ReportContext context) {
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
-            throw new ValidationException("يجب اختيار بداية التقرير أولاً!");
+            throw new ValidationException("حقل الشهر مطلوب");
+
         }
     }
 }

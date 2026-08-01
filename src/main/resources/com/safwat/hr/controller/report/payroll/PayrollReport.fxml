@@ -65,9 +65,10 @@
                                 <Label fx:id="lbl_end" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الي :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;">
                             <children>
                                 <Label fx:id="lbl_searchValue" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="527.0" />
+                        <Button fx:id="btn_Search" mnemonicParsing="false" text=":" />
                                 <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0" />
                                 <Label fx:id="lbl_search" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم العنصر" />
                             </children>

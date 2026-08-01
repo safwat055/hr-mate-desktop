@@ -1,10 +1,9 @@
-package com.safwat.hr.report.payroll.strategies.sub.changeCard;
+package com.safwat.hr.report.payroll.strategies.sub.changeCard.card;
 
 import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
-import com.safwat.hr.report.payroll.ui.SearchFieldConfig;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.report.payroll.ui.UiField;
 import com.safwat.hr.service.payroll.dto.PayrollRequest;
@@ -13,15 +12,15 @@ import com.safwat.hr.utils.ApiClient;
 
 import java.util.List;
 
-public class PayrollChangeCardPayGroup implements ReportStrategy {
+public class PayrollChangeCardAll implements ReportStrategy {
     @Override
     public String getCode() {
-        return "CHANGE_CARD_PAYGROUP";
+        return "CHANGE_CARD_ALL";
     }
 
     @Override
     public String getDisplayName() {
-        return "مجموعة تعيين محددة";
+        return "كل الموظفين";
     }
 
     @Override
@@ -37,9 +36,8 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_PAY_GROUP))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_PAY_GROUP))
-                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "management"))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
                 .build();
     }
 
@@ -47,8 +45,6 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
     public void onApply(PayrollReportController c) {
 
         c.setStartAndEndActions();
-
-
 
     }
 
@@ -61,7 +57,6 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
                 .endDate(DateUtils.getFirstDayOfMonth(ctx.getEndDate()))
                 .report(getCode())
                 .reportName(ctx.getReportName())
-                .payGroup(ctx.getPayGroup())
                 .format(ctx.getFormat())
                 .build();
     }
@@ -70,10 +65,6 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
     public void validate(ReportContext context) {
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
             throw new ValidationException("يجب اختيار بداية التقرير أولاً!");
-        }
-
-        if (context.getManagement() == null || context.getManagement().isBlank()) {
-            throw new ValidationException("يجب اختيار مجموعة تعيين أولاً!");
         }
     }
 }

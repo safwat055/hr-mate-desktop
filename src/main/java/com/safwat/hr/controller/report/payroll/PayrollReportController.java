@@ -116,7 +116,7 @@ public class PayrollReportController implements Initializable {
     @FXML
     private Button btn_PayGroupSearch, btn_managementSearch,
             btn_searchMonth, btn_searchMonthEnd,
-            btn_SearchEmpolyee, btnDoReport;
+            btn_SearchEmpolyee, btn_Search, btnDoReport;
 
     // ─────────────────────────────────────────────
     //  Constructor
@@ -150,6 +150,7 @@ public class PayrollReportController implements Initializable {
                     .getData().stream()
                     .map(AvailableReportInfo::getArabicName)
                     .distinct()
+                    .sorted()
                     .toList();
             combo_reportName.getItems().addAll(mainReports);
         } catch (IOException | InterruptedException e) {
@@ -332,6 +333,7 @@ public class PayrollReportController implements Initializable {
                     .management(txt_management.getText())
                     .payGroup(txt_payGroup.getText())
                     .nationalId(lbl_nationalId.getText())
+                    .searchValue(txt_search.getText())
                     .format(combo_Format.getSelectionModel().getSelectedItem())
                     .build();
 

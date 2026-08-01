@@ -41,6 +41,7 @@ public class DataSourceResolver {
             case "payGroup" -> payrollService.getPayGroup();
             case "management" -> payrollService.getManagement();
             case "monthsYearly" -> payrollService.getAllMonthsYearly();
+            case "elements" -> payrollService.getAllElementNames();
             //case "employee" -> payrollService.searchInEmployees();
             default -> List.of();
         };

@@ -55,14 +55,9 @@ public class EmployeePayments implements ReportStrategy {
 
     @Override
     public void onApply(PayrollReportController c) {
-        c.getBtn_SearchEmpolyee().setOnAction(_ -> c.searchEmployee());
-        c.getTxt_searchEmp().setOnAction(_ -> c.searchEmployee());
+        c.setSearchEmployeeActions();
 
-        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
-        c.setupMonthButton(c.getBtn_searchMonthEnd(), c.getTxt_endDate(), c.getLbl_endDate());
-
-        c.getLbl_start().setText("بداية التقرير");
-        c.getLbl_end().setText("نهاية التقرير");
+        c.setStartAndEndActions();
     }
 
     /**
