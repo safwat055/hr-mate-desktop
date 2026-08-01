@@ -1,6 +1,8 @@
 package com.safwat.hr.report.payroll.strategies;
 
 import com.safwat.hr.report.payroll.strategies.direct.EmployeePayments;
+import com.safwat.hr.report.payroll.strategies.direct.NetDifferenceBetweenTowMonths;
+import com.safwat.hr.report.payroll.strategies.direct.NetForTowMonths;
 import com.safwat.hr.report.payroll.strategies.mainContainer.MonthlyExpensesContainerStrategy;
 import com.safwat.hr.report.payroll.strategies.mainContainer.PayrollCostSummaryStrategy;
 import com.safwat.hr.report.payroll.strategies.sub.payrollSummary.*;
@@ -63,13 +65,18 @@ public class ReportRegistryFactory {
         // ══════════════════════════════════════════
         registry.register(new MonthlyExpensesContainerStrategy()); // تقرير الصرفيات الشهري   — حاوٍ
         registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
+
+        // main_direct
         registry.register(new EmployeePayments());
+        registry.register(new NetForTowMonths());  // payrollYearly_5
+        registry.register(new NetDifferenceBetweenTowMonths()); // payrollYearly_4
         // ══════════════════════════════════════════
         //  فرعيات "تقرير الصرفيات الشهري" (yearly_payroll)
         // ══════════════════════════════════════════
         registry.register(new AllPayGroupsStrategy());              // payrollYearly_1
         registry.register(new MainPayGroupsStrategy());             // payrollYearly_2
         registry.register(new SeparatePayGroupsStrategy());         // payrollYearly_3
+
         registry.register(new SpecificManagementStrategy());        // payrollYearly_6
         registry.register(new MainForManagementStrategy());         // payrollYearly_7
         registry.register(new SeparateForManagementStrategy());     // payrollYearly_8

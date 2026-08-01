@@ -25,7 +25,7 @@ public class EmployeePayments implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير صرفيات موظف";
+        return "تقرير صرفيات الموظف";
     }
 
     @Override

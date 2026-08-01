@@ -16,6 +16,7 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.util.SearchDialog;
 import com.safwat.hr.utils.ApiClient;
+import com.safwat.hr.utils.dto.AvailableReportInfo;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,6 +30,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -194,10 +196,17 @@ public class PayrollReportController implements Initializable {
      * لضمان ظهور التقارير الرئيسية فقط وليس الفرعيات.
      */
     void fillMainCombo() {
-        List<String> mainReports = registry.getAll().stream()
+       /* List<String> mainReports = registry.getAll().stream()
                 .filter(s -> s.getCategory().startsWith("main_"))
                 .map(ReportStrategy::getDisplayName)
-                .toList();
+                .toList();*/
+        List<String> mainReports = null;
+        try {
+            mainReports = ApiClient.getAvailableReports().getData().stream().map(AvailableReportInfo::getArabicName).distinct().toList();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
         combo_reportName.getItems().addAll(mainReports);
     }
 
@@ -316,7 +325,7 @@ public class PayrollReportController implements Initializable {
      * <p>إذا كان الـ TextField يحتوي على نص، تُصفَّى القائمة لإظهار
      * المطابقات فقط؛ وإلا تظهر القائمة كاملةً.
      *
-     * <p>يُستدعى من {@link com.safwat.hr.report.payroll.ui.PayrollUIManager.SearchBinding}
+     * <p>يُستدعى من {@link com.safwat.hr.report.payroll.ui.PayrollUIManager}
      * عبر {@code controller.openSearchDialog(...)}.
      *
      * @param title       عنوان نافذة البحث
