@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies.sub.payrollYearly;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
@@ -57,9 +58,18 @@ public class AllPayGroupsStrategy implements ReportStrategy {
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
                 //    .title("كل مجموعات التعيين")
-                .visibleField(UiField.START_DATE)
-                .requiredField(UiField.START_DATE)
+                .visibleField(UiField.H_START_DATE)
+                .requiredField(UiField.H_START_DATE)
                 .build();
+    }
+
+    @Override
+    public void onApply(PayrollReportController c) {
+
+        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
+
+        c.getLbl_start().setText("اختر شهر");
+
     }
 
     /**

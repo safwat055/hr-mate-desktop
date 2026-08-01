@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
@@ -13,15 +14,17 @@ import com.safwat.hr.service.payroll.dto.PayrollRequest;
  * <ul>
  *   <li>هوية التقرير (code, displayName, category)</li>
  *   <li>إعدادات الواجهة ({@link #getUiConfig()})</li>
+ *   <li>تخصيص الواجهة ({@link #onApply(PayrollReportController)})</li>
  *   <li>بناء الطلب ({@link #buildRequest(ReportContext)})</li>
  *   <li>التحقق من المدخلات ({@link #validate(ReportContext)})</li>
  * </ul>
  *
  * <p><b>تسلسل التنفيذ في الـ Controller:</b>
  * <pre>
- *   1. getUiConfig()   ← لإعداد الواجهة عند اختيار التقرير
- *   2. validate()      ← للتحقق قبل الإرسال
- *   3. buildRequest()  ← لبناء الطلب بعد نجاح التحقق
+ *   1. getUiConfig()                    ← يحدد الحقول الظاهرة وأزرار البحث
+ *   2. onApply(controller)              ← تخصيص كامل للمكونات (نصوص، مستمعين، ...)
+ *   3. validate(context)                ← للتحقق قبل الإرسال
+ *   4. buildRequest(context)            ← لبناء الطلب بعد نجاح التحقق
  * </pre>
  *
  * <p><b>لإضافة تقرير جديد:</b>
@@ -72,13 +75,70 @@ public interface ReportStrategy {
     String getMainReport();
 
     /**
-     * إعدادات الواجهة الخاصة بهذا التقرير.
+     * إعدادات الواجهة الأساسية لهذا التقرير.
      *
-     * <p>يُستدعى عند اختيار التقرير لإعداد الحقول الظاهرة وإعدادات البحث.
+     * <p>يُحدِّد:
+     * <ul>
+     *   <li>الحقول الظاهرة ({@code visibleFields})</li>
+     *   <li>الحقول الإلزامية ({@code requiredFields})</li>
+     *   <li>حقول البحث ({@code searchFields})</li>
+     * </ul>
+     *
+     * <p>يُستدعى أولاً قبل {@link #onApply} — يُعِد الهيكل،
+     * ثم {@link #onApply} يُخصِّص التفاصيل.
      *
      * @return كائن {@link UiConfiguration} يصف شكل النموذج
      */
     UiConfiguration getUiConfig();
+
+    /**
+     * تخصيص كامل لمكونات الواجهة بعد تطبيق {@link #getUiConfig()}.
+     *
+     * <p>يُستدعى من {@link com.safwat.hr.report.payroll.ui.PayrollUIManager#apply}
+     * بعد إظهار الحقول وتفعيل أزرار البحث الأساسية.
+     *
+     * <p><b>ما يمكن تخصيصه هنا:</b>
+     * <ul>
+     *   <li>تغيير نصوص الـ Labels</li>
+     *   <li>تغيير الـ placeholder للحقول</li>
+     *   <li>ربط مستمعين خاصين على الأزرار أو الحقول</li>
+     *   <li>تغيير مصادر بيانات أزرار البحث</li>
+     *   <li>إخفاء/إظهار أزرار داخل الـ HBoxes الظاهرة</li>
+     *   <li>أي منطق UI خاص بهذا التقرير</li>
+     * </ul>
+     *
+     * <p><b>ملاحظة مهمة:</b> لا تحتاج لتنظيف ما تضيفه هنا يدوياً —
+     * {@link com.safwat.hr.report.payroll.ui.PayrollUIManager#hideAll()}
+     * يمسح جميع الـ handlers والتخصيصات قبل كل تطبيق جديد.
+     *
+     * <p><b>الافتراضي:</b> لا يفعل شيئًا — التقارير التي لا تحتاج تخصيصًا
+     * لا تحتاج لـ override هذه الطريقة.
+     *
+     * <p><b>مثال:</b>
+     * <pre>{@code
+     * @Override
+     * public void onApply(PayrollReportController controller) {
+     *     // تغيير نص Label
+     *     controller.getLbl_startDate().setText("من شهر");
+     *
+     *     // زر بحث بمصدر بيانات مختلف
+     *     controller.getBtn_managementSearch().setOnAction(e ->
+     *         controller.openSearchDialog("اختر قسم",
+     *             DataSourceResolver.get("departments"),
+     *             controller.getTxt_management())
+     *     );
+     *
+     *     // مستمع على حقل إدخال
+     *     controller.getTxt_payGroup().textProperty()
+     *         .addListener((obs, old, val) -> doSomething(val));
+     * }
+     * }</pre>
+     *
+     * @param controller الـ Controller المالك لجميع مكونات الواجهة
+     */
+    default void onApply(PayrollReportController controller) {
+        // افتراضي: لا تخصيص — التقارير البسيطة لا تحتاج override
+    }
 
     /**
      * يبني كائن الطلب المُرسَل إلى الـ Backend.

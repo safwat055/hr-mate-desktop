@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies.sub.payrollSummary;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
@@ -41,9 +42,18 @@ public class MonthlyMainSummaryReport implements ReportStrategy {
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
                 //.title("إجمالي تكاليف الصرفيات الرئيسية لشهر محدد")
-                .requiredFields(List.of(UiField.START_DATE))
-                .visibleFields(List.of(UiField.START_DATE))
+                .requiredFields(List.of(UiField.H_START_DATE))
+                .visibleFields(List.of(UiField.H_START_DATE))
                 .build();
+
+    }
+
+    @Override
+    public void onApply(PayrollReportController c) {
+
+        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
+
+        c.getLbl_start().setText("اختر شهر");
 
     }
 

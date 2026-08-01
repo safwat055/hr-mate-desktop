@@ -54,7 +54,7 @@
                                 <Label fx:id="lbl_startDate" alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="150.0" />
                                 <Button fx:id="btn_searchMonth" mnemonicParsing="false" text=":" />
                                 <TextField fx:id="txt_startDate" prefHeight="26.0" prefWidth="138.0" />
-                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="من :-" />
+                                <Label fx:id="lbl_start" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="من :-" />
                             </children>
                         </HBox>
                         <HBox fx:id="H_endDate" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="120.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
@@ -62,14 +62,14 @@
                                 <Label fx:id="lbl_endDate" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="150.0" />
                                 <Button fx:id="btn_searchMonthEnd" mnemonicParsing="false" text=":" />
                                 <TextField fx:id="txt_endDate" prefHeight="26.0" prefWidth="138.0" />
-                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الي :-" />
+                                <Label fx:id="lbl_end" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الي :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_element" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_elementName" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="160.0" />
-                                <TextField fx:id="txt_element" prefHeight="26.0" prefWidth="138.0" />
-                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم العنصر" />
+                                <Label fx:id="lbl_searchValue" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="527.0" />
+                                <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0" />
+                                <Label fx:id="lbl_search" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم العنصر" />
                             </children>
                         </HBox>
                         <HBox fx:id="H_employee" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="190.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
@@ -78,7 +78,7 @@
                                 <Label fx:id="lbl_payId" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
                                 <Label fx:id="lbl_nationalId" alignment="CENTER" contentDisplay="CENTER" layoutX="648.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
                         <Button fx:id="btn_SearchEmpolyee" mnemonicParsing="false" text=":" />
-                                <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0" />
+                                <TextField fx:id="txt_searchEmp" prefHeight="26.0" prefWidth="138.0" />
                                 <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم الموظف:-" />
                             </children>
                         </HBox>

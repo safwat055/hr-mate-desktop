@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies.sub.payrollSummary;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
@@ -38,9 +39,19 @@ public class MonthlyMainSummaryReportInRange implements ReportStrategy {
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
                 // .title("إجمالي تكاليف الصرفيات الرئيسية لمدة محدد")
-                .visibleFields(List.of(UiField.START_DATE, UiField.END_DATE))
-                .requiredFields(List.of(UiField.START_DATE, UiField.END_DATE))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
                 .build();
+    }
+
+    @Override
+    public void onApply(PayrollReportController c) {
+
+        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
+        c.setupMonthButton(c.getBtn_searchMonthEnd(), c.getTxt_endDate(), c.getLbl_endDate());
+
+        c.getLbl_start().setText("بداية التقرير");
+        c.getLbl_end().setText("نهاية التقرير");
     }
 
     @Override

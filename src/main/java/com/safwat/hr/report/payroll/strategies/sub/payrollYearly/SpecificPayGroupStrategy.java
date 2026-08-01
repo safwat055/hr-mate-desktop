@@ -1,5 +1,7 @@
 package com.safwat.hr.report.payroll.strategies.sub.payrollYearly;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
+import com.safwat.hr.report.payroll.DataSourceResolver;
 import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
@@ -58,12 +60,29 @@ public class SpecificPayGroupStrategy implements ReportStrategy {
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
                 //    .title("تقرير مجموعة تعيين محددة")
-                .visibleField(UiField.START_DATE)
-                .visibleField(UiField.PAY_GROUP)
-                .requiredField(UiField.START_DATE)
-                .requiredField(UiField.PAY_GROUP)
-                .searchField(SearchFieldConfig.of(UiField.PAY_GROUP, "اختر مجموعة تعيين", "payGroup"))
+                .visibleField(UiField.H_START_DATE)
+                .visibleField(UiField.H_PAY_GROUP)
+                .requiredField(UiField.H_START_DATE)
+                .requiredField(UiField.H_PAY_GROUP)
+                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر مجموعة تعيين", "payGroup"))
                 .build();
+    }
+
+    @Override
+    public void onApply(PayrollReportController c) {
+
+        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
+
+        c.getLbl_start().setText("اختر شهر");
+
+        c.getBtn_managementSearch().setOnAction(_ -> {
+            c.openSearchDialog(
+                    "اختر مجموعة تعيين",
+                    DataSourceResolver.get("payGroup"),
+                    c.getTxt_management()
+            );
+        });
+
     }
 
     /**

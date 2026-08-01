@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies.direct;
 
+import com.safwat.hr.controller.report.payroll.PayrollReportController;
 import com.safwat.hr.report.payroll.PayrollReport;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
@@ -43,13 +44,25 @@ public class EmployeePayments implements ReportStrategy {
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
                 //    .title("تقرير صرفيات موظف")
-                .visibleField(UiField.START_DATE)
-                .visibleField(UiField.END_DATE)
-                .visibleField(UiField.NATIONAL_ID)
-                .requiredField(UiField.START_DATE)
-                .requiredField(UiField.END_DATE)
-                .requiredField(UiField.NATIONAL_ID)
+                .visibleField(UiField.H_START_DATE)
+                .visibleField(UiField.H_END_DATE)
+                .visibleField(UiField.H_EMPLOYEE)
+                .requiredField(UiField.H_START_DATE)
+                .requiredField(UiField.H_END_DATE)
+                .requiredField(UiField.H_EMPLOYEE)
                 .build();
+    }
+
+    @Override
+    public void onApply(PayrollReportController c) {
+        c.getBtn_SearchEmpolyee().setOnAction(_ -> c.searchEmployee());
+        c.getTxt_searchEmp().setOnAction(_ -> c.searchEmployee());
+
+        c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
+        c.setupMonthButton(c.getBtn_searchMonthEnd(), c.getTxt_endDate(), c.getLbl_endDate());
+
+        c.getLbl_start().setText("بداية التقرير");
+        c.getLbl_end().setText("نهاية التقرير");
     }
 
     /**
