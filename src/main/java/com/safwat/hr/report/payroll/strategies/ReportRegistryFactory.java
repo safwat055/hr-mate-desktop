@@ -5,10 +5,14 @@ import com.safwat.hr.report.payroll.strategies.direct.NetDifferenceBetweenTowMon
 import com.safwat.hr.report.payroll.strategies.direct.NetForTowMonths;
 import com.safwat.hr.report.payroll.strategies.direct.PayrollIndex;
 import com.safwat.hr.report.payroll.strategies.mainContainer.*;
-import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementEmployee;
-import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementEmployees;
-import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementManagement;
-import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.ElementPayGroup;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.element.ElementEmployee;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.element.ElementEmployees;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.element.ElementManagement;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.element.ElementPayGroup;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportAll;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportEmployee;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportManagement;
+import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportPayGroup;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardAll;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardEmployee;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardManagement;
@@ -78,7 +82,8 @@ public class ReportRegistryFactory {
         registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
         registry.register(new PayrollChangeCard());        // إجمالي التكاليف الشهري  — حاوٍ
         registry.register(new PayrollElement()); // تقرير عنصر معين  - حاو
-        registry.register(new PayrollChangeMonth());
+        registry.register(new PayrollChangeMonth()); //  تقرير اجر الاشتراك تقرير  حاو
+        registry.register(new ReviewReport()); // تقرير المراجعة للصرفيات الرئيسية تقرير   حاو
 
         // main_direct
         registry.register(new EmployeePayments());
@@ -124,12 +129,18 @@ public class ReportRegistryFactory {
         registry.register(new ElementPayGroup());
 
         // ==============================================
-        //  تقارير اجر عنصر معين الفرعية CHANGE_MONTH
+        //  تقارير اجر اشتراك شهر معين الفرعية CHANGE_MONTH
         //================================================
         registry.register(new PayrollChangeMonthAll());
         registry.register(new PayrollChangeMonthManagement());
         registry.register(new PayrollChangeMonthPayGroup());
-
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية REVIEW_REPORT
+        //================================================
+        registry.register(new ReviewReportAll());
+        registry.register(new ReviewReportEmployee());
+        registry.register(new ReviewReportManagement());
+        registry.register(new ReviewReportPayGroup());
 
         return registry;
     }
