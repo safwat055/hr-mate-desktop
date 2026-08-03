@@ -78,7 +78,8 @@ public class PayrollUIManager {
                 UiField.H_MANAGEMENT, controller::getH_management,
                 UiField.H_PAY_GROUP, controller::getH_payGroup,
                 UiField.H_EMPLOYEE, controller::getH_employee,
-                UiField.H_SEARCH, controller::getH_Search
+                UiField.H_SEARCH, controller::getH_Search,
+                UiField.H_FILES, controller::getH_files
 
         );
 
@@ -212,7 +213,7 @@ public class PayrollUIManager {
         // مسح handlers الأزرار الإضافية (غير أزرار البحث المُدارة في SearchBinding)
         controller.getBtn_searchMonth().setOnAction(null);
         controller.getBtn_searchMonthEnd().setOnAction(null);
-        controller.getBtn_SearchEmpolyee().setOnAction(null);
+        controller.getBtn_SearchEmployee().setOnAction(null);
     }
 
     // ─────────────────────────────────────────────

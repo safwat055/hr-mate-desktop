@@ -4,6 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.nio.file.Path;
+import java.util.List;
+
 /**
  * نموذج بيانات طلب التقرير.
  *
@@ -96,4 +99,7 @@ public class ReportContext {
      * قيمة بحث حر — محجوزة للتقارير القادمة
      */
     private String searchValue;
+
+    @Builder.Default
+    private List<Path> files = java.util.Collections.emptyList();
 }

@@ -177,4 +177,8 @@ public interface ReportStrategy {
     default boolean hasSubReports() {
         return false;
     }
+
+    default boolean requiresFiles() {
+        return false;
+    }
 }

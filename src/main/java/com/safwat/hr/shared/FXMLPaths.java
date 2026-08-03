@@ -7,7 +7,7 @@ public class FXMLPaths {
     private final String paymentsView = "/com/safwat/hr/controller/payroll/Payments.fxml";
     private final String changeCardView = "/com/safwat/hr/controller/payroll/ChangeCard.fxml";
     private final String payrollVocab = "/com/safwat/hr/controller/payroll/PayrollVocab.fxml";
-
+    private final String reportManager = "/com/safwat/hr/controller/report/user/user_reports.fxml";
     private final String payrollReport = "/com/safwat/hr/controller/report/payroll/PayrollReport.fxml";
     private final String chat = "/com/safwat/hr/chat/ChatView.fxml";
     private final String MessageInboxView = "/com/safwat/hr/notification/ui/MessageInboxView.fxml";

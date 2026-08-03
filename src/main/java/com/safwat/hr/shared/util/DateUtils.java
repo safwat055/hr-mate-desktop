@@ -448,4 +448,29 @@ public class DateUtils {
         int year = date.getYear();
         return ARABIC_MONTH_NAMES.get(month - 1) + " " + year;
     }
+
+    public static String toMonthYearNumber(LocalDate date) {
+        return date.getMonthValue() + " " + date.getYear();
+    }
+
+    public static LocalDate parseDate(String date) {
+
+        if (date == null || date.isBlank()) {
+            return null;
+        }
+
+        date = date.trim();
+
+        DateTimeFormatter formatter;
+
+        if (date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        } else if (date.matches("\\d{2}-\\d{2}-\\d{4}")) {
+            formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        } else {
+            throw new IllegalArgumentException("صيغة التاريخ غير صحيحة: " + date);
+        }
+
+        return LocalDate.parse(date, formatter);
+    }
 }

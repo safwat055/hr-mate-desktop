@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.utils.dto.AvailableReportInfo;
+import com.safwat.hr.utils.dto.ReportPayloadResponse;
 import com.safwat.hr.utils.dto.ReportStatusResponse;
 import com.safwat.hr.utils.dto.ReportSubmissionResult;
 import lombok.Getter;
@@ -727,6 +729,23 @@ public class ApiClient {
     public static String getBaseUrl() {
         return BASE_URL;
     }
+
+    /**
+     * جلب تقارير المستخدم الحالي.
+     */
+    public static ApiResponse<List<ReportStatusResponse>> getMyReports()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/my", new TypeReference<List<ReportStatusResponse>>() {
+        });
+    }
+
+    /**
+     * تحميل ملف التقرير من السيرفر.
+     */
+    public static boolean downloadReportFile(Long reportId, java.nio.file.Path targetPath)
+            throws IOException, InterruptedException {
+        return downloadFile("/download/" + reportId + "/file", null, targetPath);
+    }
     // ═════════════════════════════════════════════════════════════════
     //  New Report Manager (Unified Endpoint)
     // ═════════════════════════════════════════════════════════════════
@@ -742,6 +761,58 @@ public class ApiClient {
     public static ApiResponse<ReportSubmissionResult> submitReport(Object requestBody)
             throws IOException, InterruptedException {
         return post("/reports", requestBody, ReportSubmissionResult.class);
+    }
+
+    /**
+     * إرسال تقرير مع ملفات (multipart/form-data).
+     * الـ Backend يتوقع: part اسمها "data" (JSON) و parts اسمها "files".
+     */
+    public static ApiResponse<ReportSubmissionResult> submitReport(
+            PayrollRequest request,
+            List<java.nio.file.Path> files) throws IOException, InterruptedException {
+
+        String boundary = "---Boundary" + System.currentTimeMillis();
+        var parts = new ArrayList<byte[]>();
+
+        // ── Part 1: data (JSON) ──
+        String json = mapper.writeValueAsString(request);
+        parts.add(("--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"data\"\r\n" +
+                "Content-Type: application/json\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        parts.add(json.getBytes(StandardCharsets.UTF_8));
+        parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+
+        // ── Parts 2..n: files ──
+        if (files != null) {
+            for (java.nio.file.Path file : files) {
+                String mime = Files.probeContentType(file);
+                if (mime == null) mime = "application/octet-stream";
+                String fileName = file.getFileName().toString();
+
+                parts.add(("--" + boundary + "\r\n" +
+                        "Content-Disposition: form-data; name=\"files\"; filename=\"" + fileName + "\"\r\n" +
+                        "Content-Type: " + mime + "\r\n\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+                parts.add(Files.readAllBytes(file));
+                parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+            }
+        }
+
+        parts.add(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+        HttpRequest httpRequest = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + "/reports"))
+                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                        .header("Accept", "application/json")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofByteArrays(parts)))
+                .build();
+
+        return parseResponse(
+                httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString()),
+                ReportSubmissionResult.class);
     }
 
     /**
@@ -769,10 +840,18 @@ public class ApiClient {
         });
     }
 
-    public static ApiResponse<Map<String, Object>> getReportPayload(Long reportId)
+    public static ApiResponse<ReportPayloadResponse> getReportPayload(Long reportId)
             throws IOException, InterruptedException {
-        return getWithTypeRef("/reports/" + reportId + "/payload", new TypeReference<Map<String, Object>>() {
-        });
+        return getWithTypeRef("/reports/" + reportId + "/payload",
+                new TypeReference<ReportPayloadResponse>() {
+                });
+    }
+
+    public static ApiResponse<ReportPayloadResponse> getReportPayload()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/lastReport",
+                new TypeReference<ReportPayloadResponse>() {
+                });
     }
 
     /**

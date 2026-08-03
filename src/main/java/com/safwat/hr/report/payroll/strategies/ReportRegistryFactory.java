@@ -13,6 +13,7 @@ import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.R
 import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportEmployee;
 import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportManagement;
 import com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport.ReviewReportPayGroup;
+import com.safwat.hr.report.payroll.strategies.sub.UploadReviewReport;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardAll;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardEmployee;
 import com.safwat.hr.report.payroll.strategies.sub.changeCard.card.PayrollChangeCardManagement;
@@ -84,7 +85,7 @@ public class ReportRegistryFactory {
         registry.register(new PayrollElement()); // تقرير عنصر معين  - حاو
         registry.register(new PayrollChangeMonth()); //  تقرير اجر الاشتراك تقرير  حاو
         registry.register(new ReviewReport()); // تقرير المراجعة للصرفيات الرئيسية تقرير   حاو
-
+        registry.register(new UploadPayrollReport()); // تحميل التقارير المنظومة  - حاو
         // main_direct
         registry.register(new EmployeePayments());
         registry.register(new NetForTowMonths());  // payrollYearly_5
@@ -141,7 +142,10 @@ public class ReportRegistryFactory {
         registry.register(new ReviewReportEmployee());
         registry.register(new ReviewReportManagement());
         registry.register(new ReviewReportPayGroup());
-
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية UPLOAD_PAYROLL
+        //================================================
+        registry.register(new UploadReviewReport());
         return registry;
     }
 }

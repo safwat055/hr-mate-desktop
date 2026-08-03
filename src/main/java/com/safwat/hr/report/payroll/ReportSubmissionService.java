@@ -4,6 +4,8 @@ import com.safwat.hr.service.payroll.dto.PayrollRequest;
 import com.safwat.hr.utils.dto.ReportSubmissionResult;
 import javafx.application.Platform;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -49,21 +51,20 @@ public class ReportSubmissionService {
      * @param onError   يُستدعى بالاستثناء عند الفشل (على الخيط الخلفي)
      */
     public void submit(PayrollRequest request,
+                       List<Path> files,  // ⬅️ جديد
                        Consumer<Long> onSuccess,
                        Consumer<Exception> onError) {
 
         executor.execute(() -> {
             try {
-                ReportSubmissionResult result = ReportApiService.sendPayrollReport(request);
+                ReportSubmissionResult result = ReportApiService.sendPayrollReport(request, files);
 
-                // ⬅️ Null Safety
                 if (result == null) {
                     Platform.runLater(() -> onError.accept(
-                            new RuntimeException("فشل الاتصال بالخادم — لم يتم استلام رقم التقرير")
+                            new RuntimeException("فشل الاتصال بالخادم")
                     ));
                     return;
                 }
-
                 Long reportId = result.getReportId();
                 if (reportId == null) {
                     Platform.runLater(() -> onError.accept(
@@ -71,10 +72,7 @@ public class ReportSubmissionService {
                     ));
                     return;
                 }
-
-                // ✅ نجاح — الشاشة تقفل فوراً زي القديم
                 Platform.runLater(() -> onSuccess.accept(reportId));
-
             } catch (Exception e) {
                 e.printStackTrace();
                 Platform.runLater(() -> onError.accept(e));

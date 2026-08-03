@@ -167,6 +167,7 @@ public class MainViewController implements Initializable {
 
     @FXML
     private void openPayrollReport() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
         ViewManager.openIndependentView(new FXMLPaths().getPayrollReport(), null);
     }
 

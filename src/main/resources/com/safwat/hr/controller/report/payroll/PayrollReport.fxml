@@ -15,8 +15,10 @@
             <children>
                 <ComboBox fx:id="combo_Format" prefHeight="26.0" prefWidth="113.0" visibleRowCount="3" />
                 <Label alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="69.0" text="صيغة التقرير" />
-                <ComboBox fx:id="combo_reportName" prefHeight="26.0" prefWidth="495.0" />
-                <Label alignment="CENTER_RIGHT" layoutX="726.0" layoutY="13.0" prefHeight="25.0" prefWidth="69.0" text="اختر تقرير" />
+                <HBox fx:id="H_reportName" alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="573.0" spacing="5">
+                    <TextField fx:id="txt_reportSearch" alignment="CENTER_RIGHT" editable="false" promptText="اضغط لاختيار التقرير..." HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btn_reportSearch" styleClass="search-button" text="🔍" />
+                </HBox>
             </children>
             <padding>
                 <Insets left="10.0" right="10.0" />
@@ -65,10 +67,10 @@
                                 <Label fx:id="lbl_end" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الي :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;">
+                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
                                 <Label fx:id="lbl_searchValue" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="527.0" />
-                        <Button fx:id="btn_Search" mnemonicParsing="false" text=":" />
+                                <Button fx:id="btn_Search" mnemonicParsing="false" text=":" />
                                 <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0" />
                                 <Label fx:id="lbl_search" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم العنصر" />
                             </children>
@@ -78,12 +80,18 @@
                                 <Label fx:id="lbl_name" alignment="CENTER" contentDisplay="CENTER" layoutX="243.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="240.0" />
                                 <Label fx:id="lbl_payId" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
                                 <Label fx:id="lbl_nationalId" alignment="CENTER" contentDisplay="CENTER" layoutX="648.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
-                        <Button fx:id="btn_SearchEmpolyee" mnemonicParsing="false" text=":" />
+                                <Button fx:id="btn_SearchEmployee" mnemonicParsing="false" text=":" />
                                 <TextField fx:id="txt_searchEmp" prefHeight="26.0" prefWidth="138.0" />
                                 <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم الموظف:-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_1" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="225.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
+                        <HBox fx:id="H_files" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="225.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: true;">
+                            <children>
+                                <Label fx:id="lbl_filesCount" alignment="CENTER" prefHeight="33.0" prefWidth="556.0" />
+                                <Button fx:id="btn_previewFiles" mnemonicParsing="false" onAction="#previewFiles" text="معاينة" />
+                                <Button fx:id="btn_attachFiles" mnemonicParsing="false" onAction="#chooseFiles" prefHeight="26.0" prefWidth="101.0" text="اضافة مرفقات" />
+                            </children>
+                        </HBox>
                         <HBox fx:id="H_2" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="260.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
                         <HBox fx:id="H_3" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="295.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
                         <HBox fx:id="H_4" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="330.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
@@ -98,7 +106,7 @@
         </AnchorPane>
         <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="785.0" spacing="10.0" style="-fx-border-color: gray;">
             <children>
-                <Button layoutX="735.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="70.0" text="نسخ" />
+                <Button fx:id="btn_copyLast" layoutX="735.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="79.0" text="نسخ الاخير" />
                 <Button fx:id="btnDoReport" layoutX="665.0" layoutY="17.0" mnemonicParsing="false" onAction="#doReport" prefHeight="30.0" prefWidth="70.0" text="تقديم" />
             </children>
             <padding>
