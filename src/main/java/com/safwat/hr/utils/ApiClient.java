@@ -22,7 +22,6 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,28 +32,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 
 /**
- * عميل متكامل للتواصل مع backend (Spring Boot) من تطبيقات JavaFX.
- * يدعم:
- * - طرق HTTP (GET, POST, PUT, DELETE) مع أو بدون متغيرات.
- * - إرسال JSON (RequestBody).
- * - إرسال بيانات نموذج (application/x-www-form-urlencoded).
- * - رفع ملفات (multipart/form-data) مع بيانات إضافية.
- * - WebSocket.
- * - إدارة التوكن (للصلاحيات).
+ * عميل HTTP موحد للتواصل مع Backend (Spring Boot) من تطبيقات JavaFX.
+ * <p>
+ * يدعم: GET, POST, PUT, DELETE, Form POST, Multipart Upload, File Download.
+ * <p>
+ * <b>ملاحظة:</b> الـ WebSocket تم فصله في {@link WebSocketClient}.
+ *
+ * @see WebSocketClient
  */
 public class ApiClient {
+
     private static final DateTimeFormatter SERVER_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    // ── Jackson ObjectMapper (مكان Gson) ─────────────────────────────
+
     public static final ObjectMapper mapper = new ObjectMapper()
             .registerModule(new JavaTimeModule()
                     .addDeserializer(java.time.LocalDateTime.class,
-                            new LocalDateTimeDeserializer(SERVER_DATE_FORMAT))
-            )
+                            new LocalDateTimeDeserializer(SERVER_DATE_FORMAT)))
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -64,16 +60,19 @@ public class ApiClient {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(TIMEOUT)
             .build();
+
     public static String url = AppConfig.getString("connection", "url", "http://");
     public static String url2 = AppConfig.getString("connection", "url2", "ws://");
     public static String masterPC = AppConfig.getString("connection", "masterPC", "localhost");
     public static String port = AppConfig.getString("connection", "port", "8080");
+
     public static final String BASE_URL = url + masterPC + ":" + port + "/api";
     public static final String BASE_URL2 = url2 + masterPC + ":" + port + "/ws";
-    // ── إدارة التوكن ─────────────────────────────────────────────────
+
     @Getter
     @Setter
     private static String authToken = null;
+
     @Getter
     @Setter
     private static String userName = null;
@@ -82,72 +81,13 @@ public class ApiClient {
         authToken = null;
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  HTTP Methods
+    // ═════════════════════════════════════════════════════════════════
+
     public static <T> ApiResponse<T> get(String path, Class<T> responseType)
             throws IOException, InterruptedException {
         return sendRequest(path, "GET", null, null, responseType);
-    }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  GET
-    // ═════════════════════════════════════════════════════════════════
-    public static <T> ApiResponse<T> getWithTypeRef(String path, TypeReference<T> responseType)
-            throws IOException, InterruptedException {
-        return sendRequestWithTypeRef(path, "GET", null, null, responseType);
-    }
-
-    private static <T> ApiResponse<T> sendRequestWithTypeRef(String path,
-                                                             String method,
-                                                             Object body,
-                                                             Map<String, String> headers,
-                                                             TypeReference<T> responseType)
-            throws IOException, InterruptedException {
-        HttpRequest.Builder builder = baseBuilder(path, headers);
-        applyMethod(builder, method, body);
-        HttpResponse<String> response = httpClient.send(
-                addAuthHeader(builder).build(),
-                HttpResponse.BodyHandlers.ofString());
-        return parseResponseWithTypeRef(response, responseType);
-    }
-
-    private static <T> ApiResponse<T> parseResponseWithTypeRef(HttpResponse<String> response,
-                                                               TypeReference<T> responseType) {
-        String body = response.body();
-        int statusCode = response.statusCode();
-
-        try {
-            JavaType innerType = mapper.getTypeFactory().constructType(responseType);
-            JavaType apiType = mapper.getTypeFactory()
-                    .constructParametricType(ApiResponse.class, innerType);
-            ApiResponse<T> parsed = mapper.readValue(body, apiType);
-            if (parsed != null) return parsed;
-        } catch (Exception ignored) {
-        }
-
-        // fallback
-        ApiResponse<T> apiResponse = new ApiResponse<>();
-        boolean success = statusCode >= 200 && statusCode < 300;
-        apiResponse.setSuccess(success);
-        apiResponse.setTimestamp(java.time.LocalDateTime.now().toString());
-
-        if (success) {
-            try {
-                apiResponse.setData(mapper.readValue(body, responseType));
-                apiResponse.setMessage("Success");
-            } catch (Exception e) {
-                apiResponse.setSuccess(false);
-                apiResponse.setMessage("Failed to parse response: " + e.getMessage());
-            }
-        } else {
-            apiResponse.setMessage(body);
-        }
-        return apiResponse;
-    }
-
-    public static <T> ApiResponse<T> getWithTypeRef(String path,
-                                                    Map<String, String> queryParams,
-                                                    TypeReference<T> responseType)
-            throws IOException, InterruptedException {
-        return sendRequestWithTypeRef(appendQueryParams(path, queryParams), "GET", null, null, responseType);
     }
 
     public static <T> ApiResponse<T> get(String path,
@@ -157,14 +97,22 @@ public class ApiClient {
         return sendRequest(appendQueryParams(path, queryParams), "GET", null, null, responseType);
     }
 
+    public static <T> ApiResponse<T> getWithTypeRef(String path, TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(path, "GET", null, null, responseType);
+    }
+
+    public static <T> ApiResponse<T> getWithTypeRef(String path,
+                                                    Map<String, String> queryParams,
+                                                    TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(appendQueryParams(path, queryParams), "GET", null, null, responseType);
+    }
+
     public static <T> ApiResponse<T> post(String path, Object body, Class<T> responseType)
             throws IOException, InterruptedException {
         return sendRequest(path, "POST", body, null, responseType);
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  POST
-    // ═════════════════════════════════════════════════════════════════
 
     public static <T> ApiResponse<T> post(String path,
                                           Object body,
@@ -174,13 +122,6 @@ public class ApiClient {
         return sendRequest(appendQueryParams(path, queryParams), "POST", body, null, responseType);
     }
 
-    /**
-     * POST مع TypeReference لدعم الأنواع المعقدة مثل List&lt;Employee&gt;.
-     * <pre>
-     *   ApiResponse&lt;List&lt;Employee&gt;&gt; res =
-     *       ApiClient.post("/employees", body, new TypeReference&lt;&gt;() {});
-     * </pre>
-     */
     public static <T> ApiResponse<T> post(String path,
                                           Object body,
                                           TypeReference<T> responseType)
@@ -193,18 +134,10 @@ public class ApiClient {
         return sendRequest(path, "PUT", body, null, responseType);
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  PUT
-    // ═════════════════════════════════════════════════════════════════
-
     public static <T> ApiResponse<T> delete(String path, Class<T> responseType)
             throws IOException, InterruptedException {
         return sendRequest(path, "DELETE", null, null, responseType);
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  DELETE
-    // ═════════════════════════════════════════════════════════════════
 
     public static <T> ApiResponse<T> delete(String path,
                                             Map<String, String> queryParams,
@@ -231,7 +164,7 @@ public class ApiClient {
     }
 
     // ═════════════════════════════════════════════════════════════════
-    //  Form & File Upload
+    //  File Upload
     // ═════════════════════════════════════════════════════════════════
 
     public static <T> ApiResponse<T> uploadFile(String path,
@@ -276,7 +209,6 @@ public class ApiClient {
                     content = s;
                     contentType = "text/plain";
                 } else {
-                    // Jackson بدل Gson
                     content = mapper.writeValueAsString(value);
                     contentType = "application/json";
                 }
@@ -304,6 +236,10 @@ public class ApiClient {
                 responseType);
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  File Download
+    // ═════════════════════════════════════════════════════════════════
+
     public static boolean downloadFile(String path,
                                        Map<String, String> queryParams,
                                        Path targetPath)
@@ -317,10 +253,6 @@ public class ApiClient {
         HttpResponse<Path> response = httpClient.send(request, HttpResponse.BodyHandlers.ofFile(targetPath));
         return response.statusCode() >= 200 && response.statusCode() < 300;
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  File Download
-    // ═════════════════════════════════════════════════════════════════
 
     public static boolean downloadFileViaPost(String path, Object body, Path targetPath)
             throws IOException, InterruptedException {
@@ -336,6 +268,42 @@ public class ApiClient {
         return response.statusCode() >= 200 && response.statusCode() < 300;
     }
 
+    public static boolean downloadFileViaPostWithBody(String path,
+                                                      Object body,
+                                                      Path targetPath)
+            throws IOException, InterruptedException {
+        String jsonBody = mapper.writeValueAsString(body);
+
+        HttpRequest request = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + path))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/octet-stream, application/pdf, application/*")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8)))
+                .build();
+
+        HttpResponse<byte[]> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofByteArray());
+
+        int statusCode = response.statusCode();
+        if (statusCode >= 200 && statusCode < 300) {
+            byte[] fileBytes = response.body();
+            if (fileBytes != null && fileBytes.length > 0) {
+                Files.write(targetPath, fileBytes);
+                return true;
+            }
+            return false;
+        }
+
+        throw new IOException("Download failed with status: " + statusCode +
+                ", body: " + new String(response.body(), StandardCharsets.UTF_8));
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Async Variants
+    // ═════════════════════════════════════════════════════════════════
+
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path, Class<T> responseType) {
         return CompletableFuture.supplyAsync(() -> {
             try {
@@ -345,10 +313,6 @@ public class ApiClient {
             }
         });
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  Async variants
-    // ═════════════════════════════════════════════════════════════════
 
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
                                                                  Map<String, String> queryParams,
@@ -412,13 +376,186 @@ public class ApiClient {
         });
     }
 
+    public static CompletableFuture<Boolean> downloadFileViaPostWithBodyAsync(
+            String path, Object body, Path targetPath) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return downloadFileViaPostWithBody(path, body, targetPath);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Report Manager Methods
+    // ═════════════════════════════════════════════════════════════════
+
+    public static ApiResponse<List<ReportStatusResponse>> getMyReports()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/my", new TypeReference<List<ReportStatusResponse>>() {
+        });
+    }
+
+    public static boolean downloadReportFile(Long reportId, Path targetPath)
+            throws IOException, InterruptedException {
+        return downloadFile("/download/" + reportId + "/file", null, targetPath);
+    }
+
+    public static ApiResponse<ReportSubmissionResult> submitReport(Object requestBody)
+            throws IOException, InterruptedException {
+        return post("/reports", requestBody, ReportSubmissionResult.class);
+    }
+
+    public static ApiResponse<ReportSubmissionResult> submitReport(PayrollRequest request,
+                                                                   List<Path> files)
+            throws IOException, InterruptedException {
+        String boundary = "---Boundary" + System.currentTimeMillis();
+        var parts = new ArrayList<byte[]>();
+
+        String json = mapper.writeValueAsString(request);
+        parts.add(("--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"data\"\r\n" +
+                "Content-Type: application/json\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        parts.add(json.getBytes(StandardCharsets.UTF_8));
+        parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+
+        if (files != null) {
+            for (Path file : files) {
+                String mime = Files.probeContentType(file);
+                if (mime == null) mime = "application/octet-stream";
+                String fileName = file.getFileName().toString();
+
+                parts.add(("--" + boundary + "\r\n" +
+                        "Content-Disposition: form-data; name=\"files\"; filename=\"" + fileName + "\"\r\n" +
+                        "Content-Type: " + mime + "\r\n\r\n")
+                        .getBytes(StandardCharsets.UTF_8));
+                parts.add(Files.readAllBytes(file));
+                parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        parts.add(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+        HttpRequest httpRequest = addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(URI.create(BASE_URL + "/reports"))
+                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                        .header("Accept", "application/json")
+                        .timeout(TIMEOUT)
+                        .POST(HttpRequest.BodyPublishers.ofByteArrays(parts)))
+                .build();
+
+        return parseResponse(
+                httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString()),
+                ReportSubmissionResult.class);
+    }
+
+    public static ApiResponse<ReportStatusResponse> getReportStatus(Long reportId)
+            throws IOException, InterruptedException {
+        return get("/reports/" + reportId, ReportStatusResponse.class);
+    }
+
+    public static ApiResponse<Void> cancelReport(Long reportId)
+            throws IOException, InterruptedException {
+        return post("/reports/" + reportId + "/cancel", null, Void.class);
+    }
+
+    public static ApiResponse<List<AvailableReportInfo>> getAvailableReports()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/available", new TypeReference<List<AvailableReportInfo>>() {
+        });
+    }
+
+    public static ApiResponse<ReportPayloadResponse> getReportPayload(Long reportId)
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/" + reportId + "/payload", new TypeReference<ReportPayloadResponse>() {
+        });
+    }
+
+    public static ApiResponse<ReportPayloadResponse> getReportPayload()
+            throws IOException, InterruptedException {
+        return getWithTypeRef("/reports/lastReport", new TypeReference<ReportPayloadResponse>() {
+        });
+    }
+
+    public static ReportStatusResponse pollReportUntilDone(Long reportId,
+                                                           int pollIntervalSeconds,
+                                                           int maxAttempts)
+            throws IOException, InterruptedException {
+        for (int i = 0; i < maxAttempts; i++) {
+            ApiResponse<ReportStatusResponse> response = getReportStatus(reportId);
+            if (!response.isSuccess() || response.getData() == null) {
+                throw new IOException("Failed to get report status: " + response.getMessage());
+            }
+            ReportStatusResponse status = response.getData();
+            String currentStatus = status.getStatus();
+            if ("COMPLETED".equals(currentStatus) || "FAILED".equals(currentStatus) || "CANCELLED".equals(currentStatus)) {
+                return status;
+            }
+            Thread.sleep(pollIntervalSeconds * 1000L);
+        }
+        throw new IOException("Report polling timed out after " + maxAttempts + " attempts");
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Async Download with Polling (Legacy)
+    // ═════════════════════════════════════════════════════════════════
+
+    public static TaskStatus startAsyncDownload(String path, Object body)
+            throws IOException, InterruptedException {
+        ApiResponse<TaskStatus> response = post(path, body, TaskStatus.class);
+        if (response.isSuccess() && response.getData() != null) return response.getData();
+        throw new IOException("Failed to start async download: " + response.getMessage());
+    }
+
+    public static TaskStatus getDownloadStatus(String taskId)
+            throws IOException, InterruptedException {
+        ApiResponse<TaskStatus> response = get("/tasks/" + taskId + "/status", TaskStatus.class);
+        if (response.isSuccess() && response.getData() != null) return response.getData();
+        throw new IOException("Failed to get task status: " + response.getMessage());
+    }
+
+    public static boolean downloadCompletedFile(String taskId, Path targetPath)
+            throws IOException, InterruptedException {
+        return downloadFile("/tasks/" + taskId + "/download", null, targetPath);
+    }
+
+    public static CompletableFuture<Path> pollAsyncDownload(String path,
+                                                            Object body,
+                                                            Path targetDir,
+                                                            int pollIntervalSeconds) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TaskStatus startStatus = startAsyncDownload(path, body);
+                String taskId = startStatus.getTaskId();
+                while (true) {
+                    Thread.sleep(pollIntervalSeconds * 1000L);
+                    TaskStatus status = getDownloadStatus(taskId);
+                    if ("COMPLETED".equals(status.getStatus())) {
+                        Path filePath = targetDir.resolve("report_" + taskId + ".xlsx");
+                        if (downloadCompletedFile(taskId, filePath)) return filePath;
+                        throw new IOException("Download failed after task completion");
+                    } else if ("FAILED".equals(status.getStatus())) {
+                        throw new IOException("Task failed: " + status.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Core Helpers
+    // ═════════════════════════════════════════════════════════════════
+
     private static <T> ApiResponse<T> sendRequest(String path,
                                                   String method,
                                                   Object body,
                                                   Map<String, String> headers,
                                                   Class<T> responseType)
             throws IOException, InterruptedException {
-
         HttpRequest.Builder builder = baseBuilder(path, headers);
         applyMethod(builder, method, body);
         HttpResponse<String> response = httpClient.send(
@@ -426,10 +563,6 @@ public class ApiClient {
                 HttpResponse.BodyHandlers.ofString());
         return parseResponse(response, responseType);
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  Core sendRequest — Class<T>
-    // ═════════════════════════════════════════════════════════════════
 
     private static <T> ApiResponse<T> sendRequest(String path,
                                                   String method,
@@ -437,7 +570,6 @@ public class ApiClient {
                                                   Map<String, String> headers,
                                                   TypeReference<T> responseType)
             throws IOException, InterruptedException {
-
         HttpRequest.Builder builder = baseBuilder(path, headers);
         applyMethod(builder, method, body);
         HttpResponse<String> response = httpClient.send(
@@ -446,26 +578,19 @@ public class ApiClient {
         return parseResponse(response, responseType);
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  Core sendRequest — TypeReference<T>  (مكان Type من Gson)
-    // ═════════════════════════════════════════════════════════════════
-
     private static <T> ApiResponse<T> parseResponse(HttpResponse<String> response,
                                                     Class<T> responseType) {
         String body = response.body();
         int statusCode = response.statusCode();
 
         try {
-            // نحاول تحليل الاستجابة كـ ApiResponse<T> مباشرة
             JavaType apiType = mapper.getTypeFactory()
                     .constructParametricType(ApiResponse.class, responseType);
             ApiResponse<T> parsed = mapper.readValue(body, apiType);
             if (parsed != null) return parsed;
-
         } catch (Exception ignored) {
         }
 
-        // fallback يدوي
         ApiResponse<T> apiResponse = new ApiResponse<>();
         boolean success = statusCode >= 200 && statusCode < 300;
         apiResponse.setSuccess(success);
@@ -485,28 +610,20 @@ public class ApiClient {
         return apiResponse;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  parseResponse — Class<T>
-    // ═════════════════════════════════════════════════════════════════
-
     private static <T> ApiResponse<T> parseResponse(HttpResponse<String> response,
                                                     TypeReference<T> responseType) {
         String body = response.body();
         int statusCode = response.statusCode();
 
         try {
-            // نحاول تحليل الاستجابة كـ ApiResponse<T>
-            // نستخرج JavaType من TypeReference
             JavaType innerType = mapper.getTypeFactory().constructType(responseType);
             JavaType apiType = mapper.getTypeFactory()
                     .constructParametricType(ApiResponse.class, innerType);
             ApiResponse<T> parsed = mapper.readValue(body, apiType);
             if (parsed != null) return parsed;
-
         } catch (Exception ignored) {
         }
 
-        // fallback يدوي
         ApiResponse<T> apiResponse = new ApiResponse<>();
         boolean success = statusCode >= 200 && statusCode < 300;
         apiResponse.setSuccess(success);
@@ -526,10 +643,6 @@ public class ApiClient {
         return apiResponse;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  parseResponse — TypeReference<T>
-    // ═════════════════════════════════════════════════════════════════
-
     private static HttpRequest.Builder baseBuilder(String path, Map<String, String> headers) {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + path))
@@ -540,14 +653,9 @@ public class ApiClient {
         return builder;
     }
 
-    // ═════════════════════════════════════════════════════════════════
-    //  Helpers
-    // ═════════════════════════════════════════════════════════════════
-
     private static void applyMethod(HttpRequest.Builder builder,
                                     String method,
                                     Object body) throws IOException {
-        // Jackson بدل Gson لتحويل الكائن إلى JSON
         String json = body != null ? mapper.writeValueAsString(body) : "";
         switch (method) {
             case "GET" -> builder.GET();
@@ -589,9 +697,6 @@ public class ApiClient {
         return builder;
     }
 
-    /**
-     * مستخدمة فقط في uploadFile (يستقبل HttpRequest بدل Builder)
-     */
     private static HttpRequest addAuthHeader(HttpRequest request) {
         if (authToken != null && !authToken.isEmpty())
             return HttpRequest.newBuilder(request, (n, v) -> true)
@@ -608,397 +713,11 @@ public class ApiClient {
         return error;
     }
 
-    public static TaskStatus startAsyncDownload(String path, Object body)
-            throws IOException, InterruptedException {
-        ApiResponse<TaskStatus> response = post(path, body, TaskStatus.class);
-        if (response.isSuccess() && response.getData() != null) return response.getData();
-        throw new IOException("Failed to start async download: " + response.getMessage());
-    }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  WebSocket
-    // ═════════════════════════════════════════════════════════════════
-
-    public static TaskStatus getDownloadStatus(String taskId)
-            throws IOException, InterruptedException {
-        ApiResponse<TaskStatus> response = get("/tasks/" + taskId + "/status", TaskStatus.class);
-        if (response.isSuccess() && response.getData() != null) return response.getData();
-        throw new IOException("Failed to get task status: " + response.getMessage());
-    }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  Async Download with Polling
-    // ═════════════════════════════════════════════════════════════════
-
-    public static boolean downloadCompletedFile(String taskId, Path targetPath)
-            throws IOException, InterruptedException {
-        return downloadFile("/tasks/" + taskId + "/download", null, targetPath);
-    }
-
-    public static CompletableFuture<Path> pollAsyncDownload(String path,
-                                                            Object body,
-                                                            Path targetDir,
-                                                            int pollIntervalSeconds) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                TaskStatus startStatus = startAsyncDownload(path, body);
-                String taskId = startStatus.getTaskId();
-                while (true) {
-                    Thread.sleep(pollIntervalSeconds * 1000L);
-                    TaskStatus status = getDownloadStatus(taskId);
-                    if ("COMPLETED".equals(status.getStatus())) {
-                        Path filePath = targetDir.resolve("report_" + taskId + ".xlsx");
-                        if (downloadCompletedFile(taskId, filePath)) return filePath;
-                        throw new IOException("Download failed after task completion");
-                    } else if ("FAILED".equals(status.getStatus())) {
-                        throw new IOException("Task failed: " + status.getMessage());
-                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    /**
-     * تحميل ملف باستخدام POST مع RequestBody
-     * مفيد للـ endpoints اللي بتستخدم @PostMapping وترجع Resource
-     *
-     * @param path       المسار النسبي (مثل: "/payroll/download-changeMonth")
-     * @param body       كائن الطلب (مثل: PayrollReportRequest)
-     * @param targetPath المسار اللي هنحفظ فيه الملف
-     * @return true لو نجح التحميل
-     */
-    public static boolean downloadFileViaPostWithBody(String path,
-                                                      Object body,
-                                                      Path targetPath)
-            throws IOException, InterruptedException {
-
-        // تحويل body لـ JSON
-        String jsonBody = mapper.writeValueAsString(body);
-
-        HttpRequest request = addAuthHeader(
-                HttpRequest.newBuilder()
-                        .uri(URI.create(BASE_URL + path))
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/octet-stream, application/pdf, application/*")
-                        .timeout(TIMEOUT)
-                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8)))
-                .build();
-
-        // التحميل كـ byte array عشان نقدر نتعامل مع الـ Resource
-        HttpResponse<byte[]> response = httpClient.send(request,
-                HttpResponse.BodyHandlers.ofByteArray());
-
-        // التحقق من نجاح التحميل
-        int statusCode = response.statusCode();
-        if (statusCode >= 200 && statusCode < 300) {
-            byte[] fileBytes = response.body();
-            if (fileBytes != null && fileBytes.length > 0) {
-                // حفظ الملف
-                Files.write(targetPath, fileBytes);
-                return true;
-            }
-            return false;
-        }
-
-        throw new IOException("Download failed with status: " + statusCode +
-                ", body: " + new String(response.body(), StandardCharsets.UTF_8));
-    }
-
-    /**
-     * نفس الميثود بس Async
-     */
-    public static CompletableFuture<Boolean> downloadFileViaPostWithBodyAsync(
-            String path,
-            Object body,
-            Path targetPath) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return downloadFileViaPostWithBody(path, body, targetPath);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
     public static String BASE_URL2() {
         return BASE_URL2;
     }
 
     public static String getBaseUrl() {
         return BASE_URL;
-    }
-
-    /**
-     * جلب تقارير المستخدم الحالي.
-     */
-    public static ApiResponse<List<ReportStatusResponse>> getMyReports()
-            throws IOException, InterruptedException {
-        return getWithTypeRef("/reports/my", new TypeReference<List<ReportStatusResponse>>() {
-        });
-    }
-
-    /**
-     * تحميل ملف التقرير من السيرفر.
-     */
-    public static boolean downloadReportFile(Long reportId, java.nio.file.Path targetPath)
-            throws IOException, InterruptedException {
-        return downloadFile("/download/" + reportId + "/file", null, targetPath);
-    }
-    // ═════════════════════════════════════════════════════════════════
-    //  New Report Manager (Unified Endpoint)
-    // ═════════════════════════════════════════════════════════════════
-
-    /**
-     * إرسال تقرير للنظام الجديد (POST /api/reports)
-     * يقبل أي Object (مثل PayrollRequest) ويحوله لـ JSON.
-     */
-    /**
-     * إرسال تقرير للنظام الجديد (POST /api/reports)
-     * الـ Backend بيرجع ReportSubmissionResult مباشرة (مش ApiResponse)
-     */
-    public static ApiResponse<ReportSubmissionResult> submitReport(Object requestBody)
-            throws IOException, InterruptedException {
-        return post("/reports", requestBody, ReportSubmissionResult.class);
-    }
-
-    /**
-     * إرسال تقرير مع ملفات (multipart/form-data).
-     * الـ Backend يتوقع: part اسمها "data" (JSON) و parts اسمها "files".
-     */
-    public static ApiResponse<ReportSubmissionResult> submitReport(
-            PayrollRequest request,
-            List<java.nio.file.Path> files) throws IOException, InterruptedException {
-
-        String boundary = "---Boundary" + System.currentTimeMillis();
-        var parts = new ArrayList<byte[]>();
-
-        // ── Part 1: data (JSON) ──
-        String json = mapper.writeValueAsString(request);
-        parts.add(("--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"data\"\r\n" +
-                "Content-Type: application/json\r\n\r\n")
-                .getBytes(StandardCharsets.UTF_8));
-        parts.add(json.getBytes(StandardCharsets.UTF_8));
-        parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
-
-        // ── Parts 2..n: files ──
-        if (files != null) {
-            for (java.nio.file.Path file : files) {
-                String mime = Files.probeContentType(file);
-                if (mime == null) mime = "application/octet-stream";
-                String fileName = file.getFileName().toString();
-
-                parts.add(("--" + boundary + "\r\n" +
-                        "Content-Disposition: form-data; name=\"files\"; filename=\"" + fileName + "\"\r\n" +
-                        "Content-Type: " + mime + "\r\n\r\n")
-                        .getBytes(StandardCharsets.UTF_8));
-                parts.add(Files.readAllBytes(file));
-                parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
-            }
-        }
-
-        parts.add(("--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
-
-        HttpRequest httpRequest = addAuthHeader(
-                HttpRequest.newBuilder()
-                        .uri(URI.create(BASE_URL + "/reports"))
-                        .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                        .header("Accept", "application/json")
-                        .timeout(TIMEOUT)
-                        .POST(HttpRequest.BodyPublishers.ofByteArrays(parts)))
-                .build();
-
-        return parseResponse(
-                httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString()),
-                ReportSubmissionResult.class);
-    }
-
-    /**
-     * جلب حالة تقرير (GET /api/reports/{reportId})
-     */
-    public static ApiResponse<ReportStatusResponse> getReportStatus(Long reportId)
-            throws IOException, InterruptedException {
-        return get("/reports/" + reportId, ReportStatusResponse.class);
-    }
-
-    /**
-     * إلغاء تقرير (POST /api/reports/{reportId}/cancel)
-     */
-    public static ApiResponse<Void> cancelReport(Long reportId)
-            throws IOException, InterruptedException {
-        return post("/reports/" + reportId + "/cancel", null, Void.class);
-    }
-
-    /**
-     * قائمة التقارير المتاحة للمستخدم (GET /api/reports/available)
-     */
-    public static ApiResponse<List<AvailableReportInfo>> getAvailableReports()
-            throws IOException, InterruptedException {
-        return getWithTypeRef("/reports/available", new TypeReference<List<AvailableReportInfo>>() {
-        });
-    }
-
-    public static ApiResponse<ReportPayloadResponse> getReportPayload(Long reportId)
-            throws IOException, InterruptedException {
-        return getWithTypeRef("/reports/" + reportId + "/payload",
-                new TypeReference<ReportPayloadResponse>() {
-                });
-    }
-
-    public static ApiResponse<ReportPayloadResponse> getReportPayload()
-            throws IOException, InterruptedException {
-        return getWithTypeRef("/reports/lastReport",
-                new TypeReference<ReportPayloadResponse>() {
-                });
-    }
-
-    /**
-     * متابعة التقرير حتى الاكتمال (Polling)
-     *
-     * @param reportId            معرف التقرير
-     * @param pollIntervalSeconds فترة الانتظار بين كل استعلام
-     * @param maxAttempts         عدد المحاولات القصوى
-     * @return الحالة النهائية
-     */
-    public static ReportStatusResponse pollReportUntilDone(Long reportId,
-                                                           int pollIntervalSeconds,
-                                                           int maxAttempts)
-            throws IOException, InterruptedException {
-        for (int i = 0; i < maxAttempts; i++) {
-            ApiResponse<ReportStatusResponse> response = getReportStatus(reportId);
-            if (!response.isSuccess() || response.getData() == null) {
-                throw new IOException("Failed to get report status: " + response.getMessage());
-            }
-
-            ReportStatusResponse status = response.getData();
-            String currentStatus = status.getStatus();
-
-            if ("COMPLETED".equals(currentStatus) || "FAILED".equals(currentStatus) || "CANCELLED".equals(currentStatus)) {
-                return status;
-            }
-
-            Thread.sleep(pollIntervalSeconds * 1000L);
-        }
-        throw new IOException("Report polling timed out after " + maxAttempts + " attempts");
-    }
-
-    public static class WebSocketClient {
-        private final URI serverUri;
-        private final Consumer<String> onMessage;
-        private final Consumer<Throwable> onError;
-        private final Runnable onClose;
-        private final String authToken;
-        private WebSocket webSocket;
-
-        public WebSocketClient(String path,
-                               Consumer<String> onMessage,
-                               Consumer<Throwable> onError,
-                               Runnable onClose) {
-            this(path, onMessage, onError, onClose, null);
-        }
-
-        public WebSocketClient(String path,
-                               Consumer<String> onMessage,
-                               Consumer<Throwable> onError,
-                               Runnable onClose,
-                               String token) {
-            this.authToken = token != null ? token : ApiClient.getAuthToken();
-
-            // ✅ استخدم BASE_URL2 بدلاً من BASE_URL
-            this.serverUri = URI.create(BASE_URL2);
-
-            this.onMessage = onMessage;
-            this.onError = onError;
-            this.onClose = onClose;
-
-            System.out.println("[WebSocketClient] Connecting to: " + serverUri);
-            System.out.println("[WebSocketClient] Token present: " + (authToken != null && !authToken.isEmpty()));
-        }
-
-        public CompletableFuture<Void> connect() {
-            // إنشاء Builder وإضافة Headers
-            WebSocket.Builder builder = httpClient.newWebSocketBuilder();
-
-            // إضافة Authorization Header
-            if (authToken != null && !authToken.isEmpty()) {
-                builder.header("Authorization", "Bearer " + authToken);
-                System.out.println("[WebSocketClient] ✅ Authorization header added");
-            } else {
-                System.out.println("[WebSocketClient] ⚠️ No token available");
-            }
-
-            // إضافة Headers إضافية
-            builder.header("Origin", "http://localhost:8080");
-            builder.header("User-Agent", "JavaFX-Client");
-
-            return builder
-                    .buildAsync(serverUri, new WebSocket.Listener() {
-                        @Override
-                        public void onOpen(WebSocket ws) {
-                            webSocket = ws;
-                            System.out.println("[WebSocketClient] ✅ Connection opened");
-                            ws.request(1);
-                        }
-
-                        @Override
-                        public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
-                            if (onMessage != null) {
-                                System.out.println("[WebSocketClient] 📩 Received: " + data);
-                                onMessage.accept(data.toString());
-                            }
-                            ws.request(1);
-                            return null;
-                        }
-
-                        @Override
-                        public void onError(WebSocket ws, Throwable error) {
-                            System.err.println("[WebSocketClient] ❌ Error: " + error.getMessage());
-                            if (onError != null) onError.accept(error);
-                        }
-
-                        @Override
-                        public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-                            System.out.println("[WebSocketClient] 🔌 Closed: " + reason + " (code: " + statusCode + ")");
-                            if (onClose != null) onClose.run();
-                            return null;
-                        }
-                    })
-                    .thenAccept(ws -> webSocket = ws)
-                    .exceptionally(e -> {
-                        System.err.println("[WebSocketClient] ❌ Connection failed: " + e.getMessage());
-                        if (onError != null) onError.accept(e);
-                        return null;
-                    });
-        }
-
-        public void sendMessage(String message) {
-            if (webSocket != null) {
-                webSocket.sendText(message, true);
-                System.out.println("[WebSocketClient] 📤 Sent: " + message);
-            } else {
-                System.err.println("[WebSocketClient] ⚠️ Cannot send, WebSocket is null");
-            }
-        }
-
-        public void close() {
-            if (webSocket != null) {
-                webSocket.sendClose(1000, "Closing");
-                System.out.println("[WebSocketClient] 🔌 Closing connection");
-            }
-        }
-    }
-
-    @Setter
-    @Getter
-    public static class TaskStatus {
-        private String taskId;
-        private String status;     // IN_PROGRESS | COMPLETED | FAILED
-        private int progress;   // 0-100
-        private String message;
-        private String downloadUrl;
-
-
     }
 }
