@@ -21,7 +21,7 @@ public class PayrollChangeCardManagement implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "إدارة محددة";
+        return "بطاقة اجر الاشتراك لادارة";
     }
 
     @Override

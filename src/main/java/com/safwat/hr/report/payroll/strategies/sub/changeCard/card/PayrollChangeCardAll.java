@@ -20,7 +20,7 @@ public class PayrollChangeCardAll implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "كل الموظفين";
+        return "بطاقات اجر الاشتراك لكل الموظفين";
     }
 
     @Override

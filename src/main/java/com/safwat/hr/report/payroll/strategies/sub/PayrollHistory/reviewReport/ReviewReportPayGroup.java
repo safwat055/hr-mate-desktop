@@ -21,7 +21,7 @@ public class ReviewReportPayGroup implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "لمجموعة تعيين محددة";
+        return "تفرير مراجعة لمجموعة تعيين";
     }
 
     @Override

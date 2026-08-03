@@ -20,7 +20,7 @@ public class ReviewReportEmployee implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "لموظف محدد";
+        return "تفرير مراجعة لموظف";
     }
 
     @Override

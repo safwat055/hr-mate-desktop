@@ -21,7 +21,7 @@ public class ElementEmployee implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير موظف";
+        return "عنصر لموظف";
     }
 
     @Override

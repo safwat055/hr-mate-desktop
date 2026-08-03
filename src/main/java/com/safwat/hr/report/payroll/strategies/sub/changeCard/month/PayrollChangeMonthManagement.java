@@ -21,7 +21,7 @@ public class PayrollChangeMonthManagement implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "اجر الاشتراك لإدارة محددة";
+        return "اجر اشتراك شهر لادارة";
     }
 
     @Override

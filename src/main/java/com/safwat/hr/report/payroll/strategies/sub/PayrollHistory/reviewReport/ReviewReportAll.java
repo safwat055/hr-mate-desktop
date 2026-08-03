@@ -18,7 +18,7 @@ public class ReviewReportAll implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "لكل الموظفين";
+        return "تفرير مراجعة لكل الموظفين";
     }
 
     @Override

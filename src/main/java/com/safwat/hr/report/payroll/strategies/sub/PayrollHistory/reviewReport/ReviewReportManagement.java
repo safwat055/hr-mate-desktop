@@ -21,7 +21,7 @@ public class ReviewReportManagement implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "لإدارة محددة";
+        return "تفرير مراجعة لادارة";
     }
 
     @Override

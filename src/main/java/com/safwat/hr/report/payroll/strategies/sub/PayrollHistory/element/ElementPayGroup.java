@@ -21,7 +21,7 @@ public class ElementPayGroup implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير مجموعة تعيين محددة";
+        return "عنصر لمجموعة تعيين";
     }
 
     @Override

@@ -18,7 +18,7 @@ public class PayrollChangeMonthAll implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "اجر اشتراك للكل";
+        return "اجر اشتراك شهر للكل";
     }
 
     @Override

@@ -21,7 +21,7 @@ public class ElementManagement implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير إدارة محددة";
+        return "عنصر لادارة";
     }
 
     @Override

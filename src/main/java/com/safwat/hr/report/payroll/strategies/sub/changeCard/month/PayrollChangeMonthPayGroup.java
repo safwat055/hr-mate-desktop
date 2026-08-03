@@ -21,7 +21,7 @@ public class PayrollChangeMonthPayGroup implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "اجر الاشتراك لمجموعة تعيين محددة";
+        return "اجر اشتراك شهر لمجموعة تعيين";
     }
 
     @Override

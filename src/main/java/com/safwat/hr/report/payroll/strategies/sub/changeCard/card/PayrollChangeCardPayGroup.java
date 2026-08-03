@@ -21,7 +21,7 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "مجموعة تعيين محددة";
+        return "بطاقات اجر الاشتراك لمجموعة تعيين";
     }
 
     @Override

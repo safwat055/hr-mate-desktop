@@ -28,12 +28,7 @@ import com.safwat.hr.utils.ApiEndpoints;
  *   <li>الـ Endpoint: {@link ApiEndpoints.PayrollYearly#YEARLY_EXPENSES}</li>
  * </ul>
  */
-@PayrollReport(
-        code = "payrollYearly_9",
-        displayName = "تقرير مجموعة تعيين محددة",
-        category = "yearly_payroll",
-        mainReport = "yearly_payroll"
-)
+
 public class SpecificPayGroupStrategy implements ReportStrategy {
 
     @Override
@@ -43,7 +38,7 @@ public class SpecificPayGroupStrategy implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير مجموعة تعيين محددة";
+        return "مجموعة محددة";
     }
 
     @Override

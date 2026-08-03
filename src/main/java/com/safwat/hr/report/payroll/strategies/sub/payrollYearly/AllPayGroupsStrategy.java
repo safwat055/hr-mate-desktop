@@ -41,7 +41,7 @@ public class AllPayGroupsStrategy implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "كل مجموعات التعيين";
+        return "تقرير كل المجموعات";
     }
 
     @Override
