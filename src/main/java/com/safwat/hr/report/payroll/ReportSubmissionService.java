@@ -1,7 +1,7 @@
 package com.safwat.hr.report.payroll;
 
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
-import com.safwat.hr.utils.dto.ReportSubmissionResult;
+import com.safwat.hr.network.dto.ReportSubmissionResult;
+import com.safwat.hr.shared.PayrollRequest;
 import javafx.application.Platform;
 
 import java.nio.file.Path;

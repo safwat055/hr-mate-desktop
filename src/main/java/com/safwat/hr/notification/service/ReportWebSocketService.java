@@ -1,10 +1,10 @@
 package com.safwat.hr.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.notification.event.HREventBus;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.ui.HRToast;
-import com.safwat.hr.utils.ApiClient;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 

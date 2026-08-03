@@ -1,10 +1,10 @@
 package com.safwat.hr.report.payroll.strategies.direct;
 
+import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
-import com.safwat.hr.utils.ApiClient;
+import com.safwat.hr.shared.PayrollRequest;
 
 public class PayrollIndex implements ReportStrategy {
     @Override

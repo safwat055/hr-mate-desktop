@@ -1,12 +1,13 @@
 package com.safwat.hr.report.payroll.strategies.sub;
 
-import com.safwat.hr.controller.report.payroll.PayrollReportController;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
+import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.report.payroll.ui.UiField;
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
-import com.safwat.hr.utils.ApiClient;
+import com.safwat.hr.shared.PayrollRequest;
 
 public class UploadReviewReport implements ReportStrategy {
     @Override
@@ -54,13 +55,13 @@ public class UploadReviewReport implements ReportStrategy {
     @Override
     public void validate(ReportContext context) {
         if (context.getFiles() == null || context.getFiles().isEmpty()) {
-            throw new com.safwat.hr.report.payroll.ValidationException("يجب اختيار ملف واحد على الأقل!");
+            throw new ValidationException("يجب اختيار ملف واحد على الأقل!");
         }
 
         // التحقق من أن الملفات موجودة فعلاً على الديسك
         for (java.nio.file.Path file : context.getFiles()) {
             if (!java.nio.file.Files.exists(file)) {
-                throw new com.safwat.hr.report.payroll.ValidationException(
+                throw new ValidationException(
                         "الملف غير موجود: " + file.getFileName());
             }
         }

@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll;
 
+import com.safwat.hr.shared.PayrollRequest;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,7 +17,7 @@ import java.util.List;
  *   <li>{@link com.safwat.hr.report.payroll.strategies.ReportStrategy#validate(ReportContext)}
  *       — للتحقق من اكتمال البيانات.</li>
  *   <li>{@link com.safwat.hr.report.payroll.strategies.ReportStrategy#buildRequest(ReportContext)}
- *       — لبناء {@link com.safwat.hr.service.payroll.dto.PayrollRequest} الجاهز للإرسال.</li>
+ *       — لبناء {@link PayrollRequest} الجاهز للإرسال.</li>
  * </ul>
  *
  * <p>يُنشأ في الـ Controller ويُملأ من حقول الـ UI قبيل الإرسال.

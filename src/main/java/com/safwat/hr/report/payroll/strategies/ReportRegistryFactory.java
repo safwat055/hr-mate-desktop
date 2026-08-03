@@ -1,5 +1,6 @@
 package com.safwat.hr.report.payroll.strategies;
 
+import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.payroll.strategies.direct.EmployeePayments;
 import com.safwat.hr.report.payroll.strategies.direct.NetDifferenceBetweenTowMonths;
 import com.safwat.hr.report.payroll.strategies.direct.NetForTowMonths;
@@ -69,7 +70,7 @@ public class ReportRegistryFactory {
     /**
      * يُنشئ ويُعيد سجلاً جاهزًا بجميع الاستراتيجيات المسجَّلة.
      *
-     * <p>يُستدعى مرة واحدة في بناء {@link com.safwat.hr.controller.report.payroll.PayrollReportController}.
+     * <p>يُستدعى مرة واحدة في بناء {@link PayrollReportController}.
      *
      * @return {@link ReportStrategyRegistry} مكتمل وجاهز للاستخدام
      */

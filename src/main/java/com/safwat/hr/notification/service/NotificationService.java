@@ -1,6 +1,6 @@
 package com.safwat.hr.notification.service;
 
-import com.safwat.hr.model.message.service.MessageClientService;
+import com.safwat.hr.message.service.MessageClientService;
 import com.safwat.hr.notification.event.HREventBus;
 import com.safwat.hr.notification.model.HRNotification;
 import javafx.beans.property.IntegerProperty;

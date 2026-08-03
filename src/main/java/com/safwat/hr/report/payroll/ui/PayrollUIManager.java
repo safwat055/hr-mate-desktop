@@ -1,6 +1,6 @@
 package com.safwat.hr.report.payroll.ui;
 
-import com.safwat.hr.controller.report.payroll.PayrollReportController;
+import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.payroll.DataSourceResolver;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import javafx.event.ActionEvent;

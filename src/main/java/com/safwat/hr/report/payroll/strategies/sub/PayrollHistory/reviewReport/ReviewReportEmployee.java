@@ -1,14 +1,14 @@
 package com.safwat.hr.report.payroll.strategies.sub.PayrollHistory.reviewReport;
 
-import com.safwat.hr.controller.report.payroll.PayrollReportController;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.ValidationException;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
 import com.safwat.hr.report.payroll.ui.UiField;
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
+import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.utils.ApiClient;
 
 import java.util.List;
 

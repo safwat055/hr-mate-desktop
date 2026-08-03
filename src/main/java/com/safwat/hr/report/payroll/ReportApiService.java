@@ -1,9 +1,9 @@
 package com.safwat.hr.report.payroll;
 
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
-import com.safwat.hr.utils.ApiClient;
-import com.safwat.hr.utils.ApiResponse;
-import com.safwat.hr.utils.dto.ReportSubmissionResult;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.dto.ReportSubmissionResult;
+import com.safwat.hr.shared.PayrollRequest;
 
 import java.nio.file.Path;
 import java.util.List;

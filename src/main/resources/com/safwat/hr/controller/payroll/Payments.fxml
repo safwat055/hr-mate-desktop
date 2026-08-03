@@ -2,57 +2,75 @@
 
 <?import io.github.palexdev.mfxcore.controls.Label?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.web.WebView?>
-
-<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="660.0" prefWidth="1138.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.payroll.PaymentsController">
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT"
+            prefHeight="660.0"
+            prefWidth="1138.0" xmlns="http://javafx.com/javafx/26"
+            fx:controller="com.safwat.hr.payroll.payments.PaymentsController">
     <content>
-        <AnchorPane minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="646.0" prefWidth="1098.0">
+        <AnchorPane minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="646.0"
+                    prefWidth="1098.0">
             <children>
-                <HBox alignment="CENTER_RIGHT" layoutX="14.0" layoutY="-14.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="909.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
+                <HBox alignment="CENTER_RIGHT" layoutX="14.0" layoutY="-14.0" maxHeight="-Infinity"
+                      nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="909.0" spacing="10.0"
+                      AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
                     <padding>
-                        <Insets left="5.0" right="5.0" />
+                        <Insets left="5.0" right="5.0"/>
                     </padding>
                     <children>
-                        <Label fx:id="pathLabel" prefHeight="18.0" prefWidth="138.0" />
-                  <CheckBox fx:id="chk_showAction" contentDisplay="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="25.0" prefWidth="124.0" style="-fx-border-color: lightgray;" text="عرض الاجراءات">
-                     <padding>
-                        <Insets left="5.0" right="5.0" />
-                     </padding>
-                  </CheckBox>
-                        <TextField fx:id="txt_searchValue" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="354.0" promptText="ادخل فيمة للبحث او اكتب الرقم القومي كامل في حقل الادخال " />
-                        <Button fx:id="btn_search" layoutX="961.0" layoutY="17.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="82.0" text="بحث" />
-                        <Button fx:id="btn_clear" layoutX="1031.0" layoutY="17.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="56.0" text="مسح" />
+                        <Label fx:id="pathLabel" prefHeight="18.0" prefWidth="138.0"/>
+                        <CheckBox fx:id="chk_showAction" contentDisplay="CENTER" mnemonicParsing="false"
+                                  nodeOrientation="RIGHT_TO_LEFT" prefHeight="25.0" prefWidth="124.0"
+                                  style="-fx-border-color: lightgray;" text="عرض الاجراءات">
+                            <padding>
+                                <Insets left="5.0" right="5.0"/>
+                            </padding>
+                        </CheckBox>
+                        <TextField fx:id="txt_searchValue" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="354.0"
+                                   promptText="ادخل فيمة للبحث او اكتب الرقم القومي كامل في حقل الادخال "/>
+                        <Button fx:id="btn_search" layoutX="961.0" layoutY="17.0" mnemonicParsing="false"
+                                prefHeight="26.0" prefWidth="82.0" text="بحث"/>
+                        <Button fx:id="btn_clear" layoutX="1031.0" layoutY="17.0" mnemonicParsing="false"
+                                prefHeight="26.0" prefWidth="56.0" text="مسح"/>
                     </children>
                 </HBox>
-                <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="44.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="51.0" prefWidth="1116.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
+                <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="44.0" maxHeight="-Infinity"
+                      nodeOrientation="LEFT_TO_RIGHT" prefHeight="51.0" prefWidth="1116.0" spacing="10.0"
+                      AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
                     <children>
-                        <TextField fx:id="txt_endMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
-                  <Label alignment="CENTER" fontSmoothingType="GRAY" layoutX="560.0" layoutY="21.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="الي" />
+                        <TextField fx:id="txt_endMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0"
+                                   promptText="شهر سنة 2025 2"/>
+                        <Label alignment="CENTER" fontSmoothingType="GRAY" layoutX="560.0" layoutY="21.0"
+                               maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                               prefHeight="30.0" prefWidth="30.0" text="الي"/>
 
-                        <TextField fx:id="txt_startMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
-                        <Label alignment="CENTER" fontSmoothingType="GRAY" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="من" />
-                        <TextField fx:id="txt_empName" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="198.0" promptText="اسم الموظف" />
-                        <TextField fx:id="txt_empCode" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="112.0" promptText="رقم موظف" />
-                        <TextField fx:id="txt_nationalID" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="134.0" promptText="رقم قومى" />
-                        <Button fx:id="btn_pdf" mnemonicParsing="false" prefHeight="26.0" prefWidth="36.0" />
-                        <Button fx:id="btn_view" mnemonicParsing="false" prefHeight="26.0" prefWidth="56.0" text="عرض" />
+                        <TextField fx:id="txt_startMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0"
+                                   promptText="شهر سنة 2025 2"/>
+                        <Label alignment="CENTER" fontSmoothingType="GRAY" maxHeight="-Infinity" maxWidth="-Infinity"
+                               minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="من"/>
+                        <TextField fx:id="txt_empName" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0"
+                                   prefWidth="198.0" promptText="اسم الموظف"/>
+                        <TextField fx:id="txt_empCode" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0"
+                                   prefWidth="112.0" promptText="رقم موظف"/>
+                        <TextField fx:id="txt_nationalID" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="134.0"
+                                   promptText="رقم قومى"/>
+                        <Button fx:id="btn_pdf" mnemonicParsing="false" prefHeight="26.0" prefWidth="36.0"/>
+                        <Button fx:id="btn_view" mnemonicParsing="false" prefHeight="26.0" prefWidth="56.0" text="عرض"/>
                     </children>
                     <padding>
-                        <Insets left="5.0" right="5.0" />
+                        <Insets left="5.0" right="5.0"/>
                     </padding>
                 </HBox>
-                <VBox alignment="TOP_RIGHT" layoutX="11.0" layoutY="95.0" maxHeight="1.7976931348623157E308" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="95.0">
+                <VBox alignment="TOP_RIGHT" layoutX="11.0" layoutY="95.0" maxHeight="1.7976931348623157E308"
+                      AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="10.0"
+                      AnchorPane.topAnchor="95.0">
                     <children>
-                        <TableView fx:id="table_payments" editable="true" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1500.0" prefWidth="1300.0" style="-fx-managed: false;" />
-                        <WebView fx:id="webView" prefHeight="1500.0" prefWidth="200.0" style="-fx-managed: false;" />
+                        <TableView fx:id="table_payments" editable="true" maxHeight="1.7976931348623157E308"
+                                   maxWidth="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT"
+                                   prefHeight="1500.0" prefWidth="1300.0" style="-fx-managed: false;"/>
+                        <WebView fx:id="webView" prefHeight="1500.0" prefWidth="200.0" style="-fx-managed: false;"/>
                     </children>
                 </VBox>
             </children>

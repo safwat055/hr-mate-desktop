@@ -1,6 +1,6 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.controller.main.CentralController;
+import com.safwat.hr.main.CentralController;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.web.WebView;

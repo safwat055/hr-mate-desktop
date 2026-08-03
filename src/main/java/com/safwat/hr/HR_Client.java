@@ -1,16 +1,16 @@
 package com.safwat.hr;
 
-import com.safwat.hr.model.message.service.MessageClientService;
+import com.safwat.hr.auth.dto.LoginRequest;
+import com.safwat.hr.auth.dto.LoginResponse;
+import com.safwat.hr.auth.service.AuthService;
+import com.safwat.hr.message.service.MessageClientService;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.service.ReportWebSocketService;
 import com.safwat.hr.notification.ui.HRToast;
-import com.safwat.hr.service.auth.dto.LoginRequest;
-import com.safwat.hr.service.auth.dto.LoginResponse;
-import com.safwat.hr.service.auth.service.AuthService;
 import com.safwat.hr.ui.util.AppTheme;
-import com.safwat.hr.utils.ApiClient;
-import com.safwat.hr.utils.ApiResponse;
 import javafx.application.Application;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXMLLoader;

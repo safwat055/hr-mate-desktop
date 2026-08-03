@@ -4,7 +4,7 @@ package com.safwat.hr.report.payroll.strategies.mainContainer;
 import com.safwat.hr.report.payroll.ReportContext;
 import com.safwat.hr.report.payroll.strategies.ReportStrategy;
 import com.safwat.hr.report.payroll.ui.UiConfiguration;
-import com.safwat.hr.service.payroll.dto.PayrollRequest;
+import com.safwat.hr.shared.PayrollRequest;
 
 
 public class PayrollChangeCard implements ReportStrategy {
