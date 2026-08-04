@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.network.ApiResponse;
-import com.safwat.hr.payroll.dto.searchVocab;
+import com.safwat.hr.payroll.dto.SearchVocab;
+
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;
 
@@ -13,12 +14,12 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class PayrollVocabService {
-    public ApiResponse<List<searchVocab>> searchVocab(PayrollRequest request) {
+    public ApiResponse<List<SearchVocab>> searchVocab(PayrollRequest request) {
         try {
             return ApiClient.post(
                     ApiEndpoints.PayrollHistory.SEARCH,
                     request,
-                    new TypeReference<List<searchVocab>>() {
+                    new TypeReference<List<SearchVocab>>() {
                     }
             );
         } catch (IOException | InterruptedException e) {

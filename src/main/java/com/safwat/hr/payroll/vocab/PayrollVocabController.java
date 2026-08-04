@@ -2,7 +2,8 @@ package com.safwat.hr.payroll.vocab;
 
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
-import com.safwat.hr.payroll.dto.searchVocab;
+
+import com.safwat.hr.payroll.dto.SearchVocab;
 import com.safwat.hr.payroll.vocab.service.PayrollVocabService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
@@ -94,7 +95,7 @@ public class PayrollVocabController implements Initializable {
                 startDate(DateUtils.getFirstDayOfMonth(txt_month.getText())).build();
 
 
-        List<searchVocab> data = vocabService.searchVocab(request).getData();
+        List<SearchVocab> data = vocabService.searchVocab(request).getData();
         System.out.println(data.size());
         if (data.size() == 1) {
             txt_nationalID.setText(data.getFirst().nationalID());

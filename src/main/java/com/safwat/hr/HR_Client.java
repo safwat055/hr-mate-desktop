@@ -45,6 +45,7 @@ public class HR_Client extends Application {
         ApiClient.setAuthToken(response.getData().getToken());
         ApiClient.setUserName(response.getData().getUsername());
 
+        
         // ── الاتصال بـ WebSocket الرسائل (مش محتاج Stage) ──
         MessageClientService.getInstance().connect();
     }
