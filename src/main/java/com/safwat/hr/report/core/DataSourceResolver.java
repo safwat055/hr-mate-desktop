@@ -1,6 +1,6 @@
 package com.safwat.hr.report.core;
 
-import com.safwat.hr.payroll.dto.PayrollService;
+import com.safwat.hr.payroll.PayrollService;
 
 import java.util.List;
 

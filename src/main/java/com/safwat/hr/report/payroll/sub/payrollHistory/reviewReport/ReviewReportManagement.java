@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.PayrollHistory.reviewReport;
+package com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,15 +13,15 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class ReviewReportPayGroup implements ReportStrategy {
+public class ReviewReportManagement implements ReportStrategy {
     @Override
     public String getCode() {
-        return "REVIEW_REPORT_PAY_GROUP";
+        return "REVIEW_REPORT_MANAGEMENT";
     }
 
     @Override
     public String getDisplayName() {
-        return "تفرير مراجعة لمجموعة تعيين";
+        return "تفرير مراجعة لادارة";
     }
 
     @Override
@@ -37,9 +37,9 @@ public class ReviewReportPayGroup implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "payGroup"))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_MANAGEMENT))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_MANAGEMENT))
+                .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر إدارة", "management"))
                 .build();
     }
 
@@ -56,7 +56,7 @@ public class ReviewReportPayGroup implements ReportStrategy {
                 .user(ApiClient.getUserName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .payGroup(context.getPayGroup())
+                .management(context.getManagement())
                 .build();
     }
 
@@ -66,8 +66,8 @@ public class ReviewReportPayGroup implements ReportStrategy {
             throw new ValidationException("الشهر مطلوب");
 
         }
-        if (context.getPayGroup() == null || context.getPayGroup().isBlank()) {
-            throw new ValidationException("مجموعة التعيين مطلوبة");
+        if (context.getManagement() == null || context.getManagement().isBlank()) {
+            throw new ValidationException("الإدارة مطلوبة");
         }
     }
 }

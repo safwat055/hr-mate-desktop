@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.PayrollHistory.element;
+package com.safwat.hr.report.payroll.sub.payrollHistory.element;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,15 +13,15 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class ElementEmployees implements ReportStrategy {
+public class ElementEmployee implements ReportStrategy {
     @Override
     public String getCode() {
-        return "ELEMENT_EMPLOYEES";
+        return "ELEMENT_EMPLOYEE";
     }
 
     @Override
     public String getDisplayName() {
-        return "عنصر لكل الموظفين";
+        return "عنصر لموظف";
     }
 
     @Override
@@ -37,8 +37,8 @@ public class ElementEmployees implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_EMPLOYEE, UiField.H_SEARCH))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_EMPLOYEE, UiField.H_SEARCH))
                 .searchField(SearchFieldConfig.of(UiField.H_SEARCH, "اختر عنصر", "elements"))
                 .build();
     }
@@ -59,6 +59,7 @@ public class ElementEmployees implements ReportStrategy {
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))
+                .nationalId(context.getNationalId())
                 .searchValue(context.getSearchValue())
                 .format(context.getFormat())
                 .build();
@@ -66,7 +67,9 @@ public class ElementEmployees implements ReportStrategy {
 
     @Override
     public void validate(ReportContext context) {
-
+        if (context.getNationalId() == null || context.getNationalId().isBlank()) {
+            throw new ValidationException("يجب اختيار موظف");
+        }
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
             throw new ValidationException("يجب اختيار بداية التقرير");
         }

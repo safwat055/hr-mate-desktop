@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.PayrollHistory.reviewReport;
+package com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;

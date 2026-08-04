@@ -7,7 +7,7 @@ package com.safwat.hr.payroll.dto;
  * @param name
  * @param management
  */
-public record searchVocab(
+public record SearchVocab(
         String nationalID,
         String payID,
         String name,
