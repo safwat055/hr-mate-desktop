@@ -24,6 +24,14 @@ import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReport
 import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReportPayGroup;
 import com.safwat.hr.report.payroll.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.sub.payrollYearly.*;
+import com.safwat.hr.report.payroll.sub.records.full.FullRecordAll;
+import com.safwat.hr.report.payroll.sub.records.full.FullRecordEmployee;
+import com.safwat.hr.report.payroll.sub.records.full.FullRecordManagement;
+import com.safwat.hr.report.payroll.sub.records.full.FullRecordPayGroup;
+import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordAll;
+import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordEmployee;
+import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
+import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
 
 /**
  * مصنع إنشاء السجل الرئيسي لاستراتيجيات التقارير.
@@ -87,6 +95,11 @@ public class ReportRegistryFactory {
         registry.register(new PayrollChangeMonth()); //  تقرير اجر الاشتراك تقرير  حاو
         registry.register(new ReviewReport()); // تقرير المراجعة للصرفيات الرئيسية تقرير   حاو
         registry.register(new UploadPayrollReport()); // تحميل التقارير المنظومة  - حاو
+
+        registry.register(new FullRecords());
+        registry.register(new ShortRecords());
+
+
         // main_direct
         registry.register(new EmployeePayments());
         registry.register(new NetForTowMonths());  // payrollYearly_5
@@ -147,6 +160,26 @@ public class ReportRegistryFactory {
         //  تقارير اجر عنصر معين الفرعية UPLOAD_PAYROLL
         //================================================
         registry.register(new UploadReviewReport());
+
+
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية FULL_RECORD
+        //================================================
+
+        registry.register(new FullRecordAll());
+        registry.register(new FullRecordEmployee());
+        registry.register(new FullRecordManagement());
+        registry.register(new FullRecordPayGroup());
+        // ==============================================
+        //  تقارير اجر عنصر معين الفرعية SHORT_RECORD
+        //================================================
+
+        registry.register(new ShortRecordAll());
+        registry.register(new ShortRecordEmployee());
+        registry.register(new ShortRecordManagement());
+        registry.register(new ShortRecordPayGroup());
+
+
         return registry;
     }
 }
