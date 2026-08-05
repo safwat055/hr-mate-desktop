@@ -28,7 +28,7 @@ import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordAll;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordEmployee;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
-import com.safwat.hr.report.payroll.sub.upload.UploadReviewReport;
+import com.safwat.hr.report.payroll.sub.upload.*;
 
 /**
  * مصنع إنشاء السجل الرئيسي لاستراتيجيات التقارير.
@@ -159,6 +159,10 @@ public class ReportRegistryFactory {
         //  تقارير اجر عنصر معين الفرعية UPLOAD_PAYROLL
         //================================================
         registry.register(new UploadReviewReport());
+        registry.register(new UploadChangeCardReport());
+        registry.register(new UploadYearlyReport());
+        registry.register(new UploadIndexReport());
+        registry.register(new UploadIndex_30_06_Report());
 
 
         // ==============================================

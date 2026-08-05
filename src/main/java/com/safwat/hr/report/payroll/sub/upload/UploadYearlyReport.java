@@ -8,9 +8,7 @@ import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
-import org.springframework.stereotype.Component;
 
-@Component
 public class UploadYearlyReport implements ReportStrategy {
     @Override
     public String getCode() {
@@ -19,7 +17,7 @@ public class UploadYearlyReport implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير المراجعة";
+        return "تقرير الصرفيات السنوى";
     }
 
     @Override
