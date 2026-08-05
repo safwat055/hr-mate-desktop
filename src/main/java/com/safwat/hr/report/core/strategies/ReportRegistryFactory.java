@@ -1,12 +1,8 @@
 package com.safwat.hr.report.core.strategies;
 
 import com.safwat.hr.report.controller.PayrollReportController;
-import com.safwat.hr.report.payroll.direct.EmployeePayments;
-import com.safwat.hr.report.payroll.direct.NetDifferenceBetweenTowMonths;
-import com.safwat.hr.report.payroll.direct.NetForTowMonths;
-import com.safwat.hr.report.payroll.direct.PayrollIndex;
+import com.safwat.hr.report.payroll.direct.*;
 import com.safwat.hr.report.payroll.mainContainer.*;
-import com.safwat.hr.report.payroll.sub.UploadReviewReport;
 import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardAll;
 import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardEmployee;
 import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardManagement;
@@ -32,6 +28,7 @@ import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordAll;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordEmployee;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
+import com.safwat.hr.report.payroll.sub.upload.UploadReviewReport;
 
 /**
  * مصنع إنشاء السجل الرئيسي لاستراتيجيات التقارير.
@@ -104,6 +101,8 @@ public class ReportRegistryFactory {
         registry.register(new EmployeePayments());
         registry.register(new NetForTowMonths());  // payrollYearly_5
         registry.register(new NetDifferenceBetweenTowMonths()); // payrollYearly_4
+
+        registry.register(new PayrollElementReport());
 
         registry.register(new PayrollIndex());
         // ══════════════════════════════════════════

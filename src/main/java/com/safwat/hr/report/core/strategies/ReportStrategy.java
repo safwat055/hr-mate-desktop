@@ -1,11 +1,12 @@
 package com.safwat.hr.report.core.strategies;
 
 import com.safwat.hr.report.controller.PayrollReportController;
-import com.safwat.hr.report.core.ui.PayrollUIManager;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
+import com.safwat.hr.report.core.ui.PayrollUIManager;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
+import org.springframework.stereotype.Component;
 
 /**
  * واجهة أساسية لجميع استراتيجيات التقارير.
@@ -38,6 +39,7 @@ import com.safwat.hr.shared.PayrollRequest;
  * @see ReportStrategyRegistry
  * @see ReportRegistryFactory
  */
+@Component
 public interface ReportStrategy {
 
     /**

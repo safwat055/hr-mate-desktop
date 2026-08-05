@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub;
+package com.safwat.hr.report.payroll.sub.upload;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -8,11 +8,13 @@ import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
+import org.springframework.stereotype.Component;
 
-public class UploadReviewReport implements ReportStrategy {
+@Component
+public class UploadIndex_30_06_Report implements ReportStrategy {
     @Override
     public String getCode() {
-        return "UPLOAD_REVIEW_REPORT";
+        return "UPLOAD_INDEX_30_06_REPORT";
     }
 
     @Override
