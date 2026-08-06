@@ -1,188 +1,152 @@
 package com.safwat.hr.report.core.strategies;
 
-import com.safwat.hr.report.controller.PayrollReportController;
-import com.safwat.hr.report.payroll.direct.*;
-import com.safwat.hr.report.payroll.mainContainer.*;
-import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardAll;
-import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardEmployee;
-import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardManagement;
-import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardPayGroup;
-import com.safwat.hr.report.payroll.sub.changeCard.month.PayrollChangeMonthAll;
-import com.safwat.hr.report.payroll.sub.changeCard.month.PayrollChangeMonthManagement;
-import com.safwat.hr.report.payroll.sub.changeCard.month.PayrollChangeMonthPayGroup;
-import com.safwat.hr.report.payroll.sub.payrollHistory.element.ElementEmployee;
-import com.safwat.hr.report.payroll.sub.payrollHistory.element.ElementEmployees;
-import com.safwat.hr.report.payroll.sub.payrollHistory.element.ElementManagement;
-import com.safwat.hr.report.payroll.sub.payrollHistory.element.ElementPayGroup;
-import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReportAll;
-import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReportEmployee;
-import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReportManagement;
-import com.safwat.hr.report.payroll.sub.payrollHistory.reviewReport.ReviewReportPayGroup;
-import com.safwat.hr.report.payroll.sub.payrollSummary.*;
-import com.safwat.hr.report.payroll.sub.payrollYearly.*;
-import com.safwat.hr.report.payroll.sub.records.full.FullRecordAll;
-import com.safwat.hr.report.payroll.sub.records.full.FullRecordEmployee;
-import com.safwat.hr.report.payroll.sub.records.full.FullRecordManagement;
-import com.safwat.hr.report.payroll.sub.records.full.FullRecordPayGroup;
-import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordAll;
-import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordEmployee;
-import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
-import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
-import com.safwat.hr.report.payroll.sub.upload.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * مصنع إنشاء السجل الرئيسي لاستراتيجيات التقارير.
  *
- * <p>هذا الملف هو <b>النقطة الوحيدة</b> التي يُسجَّل فيها أي تقرير جديد.
- * لا حاجة لتعديل أي ملف آخر لإضافة تقرير.
- *
- * <hr>
- *
- * <h2>ترتيب التسجيل مهم</h2>
- * <p>ترتيب التسجيل هو ترتيب الظهور في القوائم المنسدلة للمستخدم.
- * سجِّل التقارير الرئيسية أولاً، ثم الفرعية.
- *
- * <hr>
- *
- * <h2>لإضافة تقرير جديد</h2>
- * <ol>
- *   <li>أنشئ class جديدًا في المجلد المناسب ({@code sub/} أو {@code mainContainer/})</li>
- *   <li>أضف سطر {@code registry.register(new MyNewStrategy());} هنا</li>
- *   <li>انتهى ✓</li>
- * </ol>
- *
- * <hr>
- *
- * <h2>هيكل الفئات المعتمدة</h2>
- * <pre>
- * main_container               ← تقارير رئيسية (تظهر في ComboBox الأول)
- * │
- * ├── yearly_payroll           ← فرعي لـ "تقرير الصرفيات الشهري"
- * │   ├── payrollYearly_1  كل مجموعات التعيين
- * │   ├── payrollYearly_2  مجموعات التعيين الرئيسية
- * │   ├── payrollYearly_3  مجموعات التعيين المنفصلة
- * │   ├── payrollYearly_6  إدارة محددة
- * │   ├── payrollYearly_7  مجموعات التعيين الرئيسية لإدارة محددة
- * │   ├── payrollYearly_8  مجموعات التعيين المنفصلة لإدارة محددة
- * │   └── payrollYearly_9  مجموعة تعيين محددة
- * │
- * └── payroll_summary          ← فرعي لـ "تقرير إجمالي التكاليف الشهري"
- *     └── (قيد الإضافة)
- * </pre>
+ * <p><b>Singleton — التسجيل يتم مرة واحدة فقط طول دورة البرنامج.</b>
+ * حتى لو استُدعي {@link #create()} مليون مرة، يُرجع نفس الـ instance.
  */
+
+@Slf4j
 public class ReportRegistryFactory {
 
+    // private static final Logger LOG = Logger.getLogger(ReportRegistryFactory.class.getName());
+    private static final List<String> SCAN_PACKAGES = List.of(
+            "com.safwat.hr.report.payroll.mainContainer",
+            "com.safwat.hr.report.payroll.direct",
+            "com.safwat.hr.report.payroll.sub.changeCard",
+            "com.safwat.hr.report.payroll.sub.payrollHistory",
+            "com.safwat.hr.report.payroll.sub.payrollSummary",
+            "com.safwat.hr.report.payroll.sub.payrollYearly",
+            "com.safwat.hr.report.payroll.sub.records",
+            "com.safwat.hr.report.payroll.sub.upload"
+    );
     /**
-     * يُنشئ ويُعيد سجلاً جاهزًا بجميع الاستراتيجيات المسجَّلة.
-     *
-     * <p>يُستدعى مرة واحدة في بناء {@link PayrollReportController}.
-     *
-     * @return {@link ReportStrategyRegistry} مكتمل وجاهز للاستخدام
+     * الـ instance الوحيد — يُبنى مرة واحدة عند أول استدعاء للـ class
+     */
+    private static final ReportStrategyRegistry INSTANCE = buildRegistry();
+
+    /**
+     * لا يُنشأ من الخارج
+     */
+    private ReportRegistryFactory() {
+    }
+
+    /**
+     * يُرجع السجل المُسجَّل — نفس الـ instance دائمًا.
      */
     public static ReportStrategyRegistry create() {
+        return INSTANCE;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  بناء السجل (مرة واحدة فقط)
+    // ═══════════════════════════════════════════════════════════════
+
+    private static ReportStrategyRegistry buildRegistry() {
         ReportStrategyRegistry registry = new ReportStrategyRegistry();
+        List<ReportStrategy> strategies = new ArrayList<>();
 
-        // ══════════════════════════════════════════
-        //  التقارير الرئيسية (main_container)
-        // ══════════════════════════════════════════
-        registry.register(new MonthlyExpensesContainerStrategy()); // تقرير الصرفيات الشهري   — حاوٍ
-        registry.register(new PayrollCostSummaryStrategy());        // إجمالي التكاليف الشهري  — حاوٍ
-        registry.register(new PayrollChangeCard());        // إجمالي التكاليف الشهري  — حاوٍ
-        registry.register(new PayrollElement()); // تقرير عنصر معين  - حاو
-        registry.register(new PayrollChangeMonth()); //  تقرير اجر الاشتراك تقرير  حاو
-        registry.register(new ReviewReport()); // تقرير المراجعة للصرفيات الرئيسية تقرير   حاو
-        registry.register(new UploadPayrollReport()); // تحميل التقارير المنظومة  - حاو
+        for (String pkg : SCAN_PACKAGES) {
+            for (Class<?> clazz : findClassesInPackage(pkg)) {
+                if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
+                    continue;
+                }
+                if (!ReportStrategy.class.isAssignableFrom(clazz)) {
+                    continue;
+                }
+                try {
+                    ReportStrategy strategy = (ReportStrategy) clazz
+                            .getDeclaredConstructor()
+                            .newInstance();
+                    strategies.add(strategy);
+                } catch (Exception e) {
+                    throw new RuntimeException(
+                            "فشل إنشاء instance للتقرير: " + clazz.getName(), e);
+                }
+            }
+        }
 
-        registry.register(new FullRecords());
-        registry.register(new ShortRecords());
+        strategies.sort(Comparator
+                .comparingInt((ReportStrategy s) -> isMain(s) ? 0 : 1)
+                .thenComparing(ReportStrategy::getMainReport)
+                .thenComparing(ReportStrategy::getDisplayName)
+        );
 
+        log.info("═══ تم تسجيل {} تقرير تلقائيًا ═══", strategies.size());
+        for (ReportStrategy s : strategies) {
+            String type = isMain(s) ? "رئيسي" : "فرعي";
+            log.info(String.format("  [%s] %-45s | cat=%-20s | main=%s | class=%s",
+                    type, s.getDisplayName(), s.getCategory(), s.getMainReport(), s.getClass().getSimpleName()));
+        }
 
-        // main_direct
-        registry.register(new EmployeePayments());
-        registry.register(new NetForTowMonths());  // payrollYearly_5
-        registry.register(new NetDifferenceBetweenTowMonths()); // payrollYearly_4
-
-        registry.register(new PayrollElementReport());
-
-        registry.register(new PayrollIndex());
-        // ══════════════════════════════════════════
-        //  فرعيات "تقرير الصرفيات الشهري" (yearly_payroll)
-        // ══════════════════════════════════════════
-        registry.register(new AllPayGroupsStrategy());              // payrollYearly_1
-        registry.register(new MainPayGroupsStrategy());             // payrollYearly_2
-        registry.register(new SeparatePayGroupsStrategy());         // payrollYearly_3
-
-        registry.register(new SpecificManagementStrategy());        // payrollYearly_6
-        registry.register(new MainForManagementStrategy());         // payrollYearly_7
-        registry.register(new SeparateForManagementStrategy());     // payrollYearly_8
-        registry.register(new SpecificPayGroupStrategy());          // payrollYearly_9
-
-        // ══════════════════════════════════════════
-        //  فرعيات "إجمالي التكاليف" (payroll_summary)
-        // ══════════════════════════════════════════
-        registry.register(new MonthlySummaryReport());
-        registry.register(new MonthlySummaryReportInRange());
-        registry.register(new MonthlyMainSummaryReport());
-        registry.register(new MonthlyMainSummaryReportInRange());
-        registry.register(new MonthlySubSummaryReport());
-
-        // ==============================================
-        //  تقارير اجر الاشتراك الفرعية PAYROLL_CHANGE_CARD
-        //================================================
-        registry.register(new PayrollChangeCardAll());
-        registry.register(new PayrollChangeCardEmployee());
-        registry.register(new PayrollChangeCardManagement());
-        registry.register(new PayrollChangeCardPayGroup());
-
-        // ==============================================
-        //  تقارير اجر عنصر معين الفرعية ELEMENT
-        //================================================
-        registry.register(new ElementEmployee());
-        registry.register(new ElementEmployees());
-        registry.register(new ElementManagement());
-        registry.register(new ElementPayGroup());
-
-        // ==============================================
-        //  تقارير اجر اشتراك شهر معين الفرعية CHANGE_MONTH
-        //================================================
-        registry.register(new PayrollChangeMonthAll());
-        registry.register(new PayrollChangeMonthManagement());
-        registry.register(new PayrollChangeMonthPayGroup());
-        // ==============================================
-        //  تقارير اجر عنصر معين الفرعية REVIEW_REPORT
-        //================================================
-        registry.register(new ReviewReportAll());
-        registry.register(new ReviewReportEmployee());
-        registry.register(new ReviewReportManagement());
-        registry.register(new ReviewReportPayGroup());
-        // ==============================================
-        //  تقارير اجر عنصر معين الفرعية UPLOAD_PAYROLL
-        //================================================
-        registry.register(new UploadReviewReport());
-        registry.register(new UploadChangeCardReport());
-        registry.register(new UploadYearlyReport());
-        registry.register(new UploadIndexReport());
-        registry.register(new UploadIndex_30_06_Report());
-
-
-        // ==============================================
-        //  تقارير اجر عنصر معين الفرعية FULL_RECORD
-        //================================================
-
-        registry.register(new FullRecordAll());
-        registry.register(new FullRecordEmployee());
-        registry.register(new FullRecordManagement());
-        registry.register(new FullRecordPayGroup());
-        // ==============================================
-        //  تقارير اجر عنصر معين الفرعية SHORT_RECORD
-        //================================================
-
-        registry.register(new ShortRecordAll());
-        registry.register(new ShortRecordEmployee());
-        registry.register(new ShortRecordManagement());
-        registry.register(new ShortRecordPayGroup());
-
-
+        strategies.forEach(registry::register);
         return registry;
+    }
+
+    /**
+     * الرئيسي = حاوي (hasSubReports) أو مباشر (category يبدأ بـ main_)
+     */
+    private static boolean isMain(ReportStrategy strategy) {
+        return strategy.hasSubReports()
+                || (strategy.getCategory() != null && strategy.getCategory().startsWith("main_"));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  فحص يدوي للباكيج
+    // ═══════════════════════════════════════════════════════════════
+
+    private static List<Class<?>> findClassesInPackage(String packageName) {
+        List<Class<?>> classes = new ArrayList<>();
+        String path = packageName.replace('.', '/');
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+        try {
+            Enumeration<URL> resources = classLoader.getResources(path);
+            while (resources.hasMoreElements()) {
+                URL resource = resources.nextElement();
+                String decodedPath = URLDecoder.decode(resource.getFile(), StandardCharsets.UTF_8);
+                File directory = new File(decodedPath);
+
+                if (directory.exists() && directory.isDirectory()) {
+                    scanDirectory(directory, packageName, classes);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("فشل فحص الباكيج: " + packageName, e);
+        }
+        return classes;
+    }
+
+    private static void scanDirectory(File directory, String packageName, List<Class<?>> classes) {
+        File[] files = directory.listFiles();
+        if (files == null) return;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                scanDirectory(file, packageName + "." + file.getName(), classes);
+            } else if (file.getName().endsWith(".class")) {
+                String className = packageName + "." +
+                        file.getName().substring(0, file.getName().length() - 6);
+                try {
+                    classes.add(Class.forName(className));
+                } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                    // تجاوز
+                }
+            }
+        }
     }
 }
