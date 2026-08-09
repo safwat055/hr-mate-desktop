@@ -56,6 +56,8 @@ import java.util.function.Consumer;
  * <p><b>قاعدة ذهبية:</b> الـ Controller لا يعرف شيئًا عن منطق أي تقرير بعينه.
  * كل التخصيص موجود في الاستراتيجية عبر {@link ReportStrategy#onApply}.
  *
+ *
+ *
  * <hr>
  *
  * <h2>تدفق العمل</h2>
@@ -143,6 +145,7 @@ public class PayrollReportController implements Initializable {
 
     // --- القوائم المنسدلة ---
     @FXML
+    
     private ComboBox<String> combo_Format, combo_report;
 
     // --- Labels ---

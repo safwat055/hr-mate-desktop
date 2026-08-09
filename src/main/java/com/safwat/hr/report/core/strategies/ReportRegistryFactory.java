@@ -28,11 +28,13 @@ public class ReportRegistryFactory {
             "com.safwat.hr.report.payroll.mainContainer",
             "com.safwat.hr.report.payroll.direct",
             "com.safwat.hr.report.payroll.sub.changeCard",
-            "com.safwat.hr.report.payroll.sub.payrollHistory",
+            "com.safwat.hr.report.payroll.sub.payrollReview",
             "com.safwat.hr.report.payroll.sub.payrollSummary",
             "com.safwat.hr.report.payroll.sub.payrollYearly",
             "com.safwat.hr.report.payroll.sub.records",
-            "com.safwat.hr.report.payroll.sub.upload"
+            "com.safwat.hr.report.payroll.sub.upload",
+            "com.safwat.hr.report.payroll.sub.update",
+            "com.safwat.hr.report.public_"
     );
     /**
      * الـ instance الوحيد — يُبنى مرة واحدة عند أول استدعاء للـ class

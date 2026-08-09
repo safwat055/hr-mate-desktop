@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.payrollHistory.element;
+package com.safwat.hr.report.payroll.sub.payrollReview.element;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,15 +13,15 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class ElementEmployees implements ReportStrategy {
+public class ElementManagement implements ReportStrategy {
     @Override
     public String getCode() {
-        return "ELEMENT_EMPLOYEES";
+        return "ELEMENT_MANAGEMENT";
     }
 
     @Override
     public String getDisplayName() {
-        return "عنصر لكل الموظفين";
+        return "عنصر لادارة";
     }
 
     @Override
@@ -37,9 +37,10 @@ public class ElementEmployees implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_MANAGEMENT))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_MANAGEMENT))
                 .searchField(SearchFieldConfig.of(UiField.H_SEARCH, "اختر عنصر", "elements"))
+                .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر إدارة", "management"))
                 .build();
     }
 
@@ -60,6 +61,7 @@ public class ElementEmployees implements ReportStrategy {
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))
                 .searchValue(context.getSearchValue())
+                .management(context.getManagement())
                 .format(context.getFormat())
                 .build();
     }
@@ -73,8 +75,12 @@ public class ElementEmployees implements ReportStrategy {
         if (context.getEndDate() == null || context.getEndDate().isBlank()) {
             throw new ValidationException("يجب اختيار نهاية التقرير");
         }
+        if (context.getManagement() == null || context.getManagement().isBlank()) {
+            throw new ValidationException("يجب اختيار إدارة أولا");
+        }
         if (context.getSearchValue() == null || context.getSearchValue().isBlank()) {
             throw new ValidationException("يجب اختيار عنصر أولا");
         }
+
     }
 }
