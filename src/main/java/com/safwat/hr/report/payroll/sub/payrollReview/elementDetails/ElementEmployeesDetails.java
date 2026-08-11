@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.payrollReview.element;
+package com.safwat.hr.report.payroll.sub.payrollReview.elementDetails;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,34 +13,33 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class ElementManagement implements ReportStrategy {
+public class ElementEmployeesDetails implements ReportStrategy {
     @Override
     public String getCode() {
-        return "ELEMENT_MANAGEMENT";
+        return "DETAILS_ELEMENT_EMPLOYEES";
     }
 
     @Override
     public String getDisplayName() {
-        return "عنصر لادارة";
+        return "عنصر تفصيلي لكل الموظفين";
     }
 
     @Override
     public String getCategory() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT";
     }
 
     @Override
     public String getMainReport() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT";
     }
 
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_MANAGEMENT))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_MANAGEMENT))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
                 .searchField(SearchFieldConfig.of(UiField.H_SEARCH, "اختر عنصر", "elements"))
-                .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر إدارة", "management"))
                 .build();
     }
 
@@ -61,7 +60,6 @@ public class ElementManagement implements ReportStrategy {
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))
                 .searchValue(context.getSearchValue())
-                .management(context.getManagement())
                 .format(context.getFormat())
                 .build();
     }
@@ -75,12 +73,8 @@ public class ElementManagement implements ReportStrategy {
         if (context.getEndDate() == null || context.getEndDate().isBlank()) {
             throw new ValidationException("يجب اختيار نهاية التقرير");
         }
-        if (context.getManagement() == null || context.getManagement().isBlank()) {
-            throw new ValidationException("يجب اختيار إدارة أولا");
-        }
         if (context.getSearchValue() == null || context.getSearchValue().isBlank()) {
             throw new ValidationException("يجب اختيار عنصر أولا");
         }
-
     }
 }

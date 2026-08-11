@@ -7,16 +7,16 @@ import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
 
 
-public class PayrollElement implements ReportStrategy {
+public class PayrollElementCodeDetails implements ReportStrategy {
 
     @Override
     public String getCode() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT_CODE";
     }
 
     @Override
     public String getDisplayName() {
-        return "تقرير عنصر معين";
+        return "تقرير عنصر معين بالكود الاقتصادي تفصيلا";
     }
 
     @Override
@@ -27,7 +27,7 @@ public class PayrollElement implements ReportStrategy {
 
     @Override
     public String getMainReport() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT_CODE";
     }
 
 

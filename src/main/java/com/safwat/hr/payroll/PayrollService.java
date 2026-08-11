@@ -97,4 +97,18 @@ public class PayrollService {
 
         }
     }
+
+    public List<String> getAllElementCodes() {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollElement.GET_CODES,
+                    null,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            return new ArrayList<>();
+
+        }
+    }
 }

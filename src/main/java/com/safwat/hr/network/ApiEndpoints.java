@@ -55,5 +55,6 @@ public final class ApiEndpoints {
     public static class PayrollElement {
         public static final String BASE = "/element";
         public static final String GET_NAMES = "/element/getElement";
+        public static final String GET_CODES = "/element/getAllCodes";
     }
 }

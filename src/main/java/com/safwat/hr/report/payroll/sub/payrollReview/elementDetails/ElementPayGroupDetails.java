@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.payrollReview.element;
+package com.safwat.hr.report.payroll.sub.payrollReview.elementDetails;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,33 +13,34 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class ElementEmployees implements ReportStrategy {
+public class ElementPayGroupDetails implements ReportStrategy {
     @Override
     public String getCode() {
-        return "ELEMENT_EMPLOYEES";
+        return "DETAILS_ELEMENT_PAY_GROUP";
     }
 
     @Override
     public String getDisplayName() {
-        return "عنصر لكل الموظفين";
+        return "عنصر تفصيلي لمجموعة تعيين محددة";
     }
 
     @Override
     public String getCategory() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT";
     }
 
     @Override
     public String getMainReport() {
-        return "ELEMENT";
+        return "DETAILS_ELEMENT";
     }
 
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH))
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_PAY_GROUP))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_SEARCH, UiField.H_PAY_GROUP))
                 .searchField(SearchFieldConfig.of(UiField.H_SEARCH, "اختر عنصر", "elements"))
+                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "payGroup"))
                 .build();
     }
 
@@ -60,6 +61,7 @@ public class ElementEmployees implements ReportStrategy {
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))
                 .searchValue(context.getSearchValue())
+                .payGroup(context.getPayGroup())
                 .format(context.getFormat())
                 .build();
     }
@@ -73,8 +75,12 @@ public class ElementEmployees implements ReportStrategy {
         if (context.getEndDate() == null || context.getEndDate().isBlank()) {
             throw new ValidationException("يجب اختيار نهاية التقرير");
         }
+        if (context.getPayGroup() == null || context.getPayGroup().isBlank()) {
+            throw new ValidationException("يجب اختيار مجموعة تعيين أولا");
+        }
         if (context.getSearchValue() == null || context.getSearchValue().isBlank()) {
             throw new ValidationException("يجب اختيار عنصر أولا");
         }
+
     }
 }
