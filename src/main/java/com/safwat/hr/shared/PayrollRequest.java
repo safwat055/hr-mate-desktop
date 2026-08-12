@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +17,7 @@ public class PayrollRequest {
     private LocalDate endDate;
     private String nationalId;
     private String payGroup;
+    private List<String> payGroups;
     private String management;
     private String customGroup;
     private String description;

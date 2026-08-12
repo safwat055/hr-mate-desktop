@@ -53,6 +53,12 @@ public class MultiSelectSearchDialog<T> {
         return new MultiSelectSearchDialog<>();
     }
 
+    public static MultiSelectSearchDialog<String> forStrings() {
+        MultiSelectSearchDialog<String> d = new MultiSelectSearchDialog<>();
+        d.column("القيمة", s -> s == null ? "" : s);
+        return d;
+    }
+
     public MultiSelectSearchDialog<T> title(String v) {
         this.title = v;
         return this;
@@ -326,6 +332,7 @@ class MultiSelectDialogController<T> {
                     -fx-font-family: "DejaVu Sans";
                     -fx-font-size: 13px;
                 """);
+
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPlaceholder(buildEmptyState());
         VBox.setVgrow(table, Priority.ALWAYS);

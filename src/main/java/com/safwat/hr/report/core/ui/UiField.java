@@ -84,5 +84,6 @@ public enum UiField {
      * للبحث المتعدد
      */
 
-    TXT_SEARCH
+    TXT_SEARCH,
+    TXT_START_DATE
 }

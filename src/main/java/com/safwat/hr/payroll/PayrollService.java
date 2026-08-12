@@ -11,6 +11,7 @@ import com.safwat.hr.ui.controls.SAFNotification;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PayrollService {
     private static PayrollService instance;
@@ -109,6 +110,29 @@ public class PayrollService {
         } catch (IOException | InterruptedException e) {
             return new ArrayList<>();
 
+        }
+    }
+
+    public List<String> getElementNamesByMonth(String param) {
+        return null;
+    }
+
+    public List<String> getPayGroupsByMonth(String param) {
+        try {
+            // ═══════════════════════════════════════════════════════
+            //  غيّرنا — بنبعت JSON Object { "payMonth": "2026-01-01" }
+            // ═══════════════════════════════════════════════════════
+            Map<String, String> body = Map.of("payMonth", param);
+
+            return ApiClient.post(
+                    ApiEndpoints.PayrollYearly.PAY_GROUP_LIST_MONTH,
+                    body,  // ← Map بيتعمله serialize لـ JSON
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
     }
 }

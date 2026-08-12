@@ -40,6 +40,7 @@ public final class ApiEndpoints {
         public static final String PAYROLL_PAYMENTS = "/payrollYearly/get/paymentsReport";
 
         public static final String PAY_GROUP_LIST = "/payrollYearly/allPayGroup";
+        public static final String PAY_GROUP_LIST_MONTH = "/payrollYearly/get/ExchangeNamesWithMonth";
         public static final String PAY_MANAGEMENT_LIST = "/payrollIndex/get-indexInfo";
         public static final String PAY_MONTHS_List = "/payrollYearly/allMonths";
 

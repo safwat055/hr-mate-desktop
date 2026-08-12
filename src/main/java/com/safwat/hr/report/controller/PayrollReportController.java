@@ -121,6 +121,8 @@ public class PayrollReportController implements Initializable {
      * يحتاج {@code remove(index)}. لا تستخدم {@code List.of()} أو {@code .toList()}.
      */
     private final List<Path> selectedFiles = new ArrayList<>();
+    private final List<String> selectedGroups = new ArrayList<>();
+
 
     /**
      * الاستراتيجية الحالية. {@code null} إذا اختار تقريرًا حاويًا ولم يختر فرعيًا بعد.
@@ -145,7 +147,7 @@ public class PayrollReportController implements Initializable {
 
     // --- القوائم المنسدلة ---
     @FXML
-    
+
     private ComboBox<String> combo_Format, combo_report;
 
     // --- Labels ---
@@ -448,6 +450,7 @@ public class PayrollReportController implements Initializable {
      */
     private void clearSelectedFiles() {
         selectedFiles.clear();
+        selectedGroups.clear();
         updateFilesLabel();
     }
 

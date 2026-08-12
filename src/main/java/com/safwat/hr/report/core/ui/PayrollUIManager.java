@@ -3,72 +3,31 @@ package com.safwat.hr.report.core.ui;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.DataSourceResolver;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
+import com.safwat.hr.ui.util.MultiSelectSearchDialog;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-/**
- * مدير واجهة نموذج التقارير.
- *
- * <p>يفصل منطق إظهار/إخفاء الحقول وتفعيل أزرار البحث
- * عن {@link PayrollReportController}، ويُطبِّق إعدادات
- * {@link UiConfiguration} على مكونات الواجهة الفعلية.
- *
- * <p>يعمل كـ <b>Mediator</b> بين الاستراتيجية (التي تُحدِّد ماذا تُظهر وكيف تتصرف)
- * والـ Controller (الذي يملك المكونات الفعلية في الـ FXML).
- *
- * <hr>
- *
- * <h2>تسلسل apply()</h2>
- * <ol>
- *   <li>{@link #hideAll()} — يخفي كل الحقول ويمسح جميع الـ handlers</li>
- *   <li>إظهار الحقول المحددة في {@code visibleFields}</li>
- *   <li>تفعيل حقول البحث من {@code searchFields}</li>
- *   <li>تحديث العنوان</li>
- *   <li>{@link ReportStrategy#onApply(PayrollReportController)} — تخصيص كامل للاستراتيجية</li>
- * </ol>
- *
- * <hr>
- *
- * <h2>إضافة حقل بحث جديد</h2>
- * <ol>
- *   <li>أضف القيمة في {@link UiField}</li>
- *   <li>أضف HBox وزر في الـ FXML وأضف getters في الـ Controller</li>
- *   <li>أضف سطرًا في {@code fieldToComponent} و{@code fieldToSearchBinding} هنا</li>
- *   <li>في الاستراتيجية: {@code .searchField(SearchFieldConfig.of(UiField.X, "عنوان", "source"))}</li>
- * </ol>
- */
 public class PayrollUIManager {
 
     private final PayrollReportController controller;
 
-    /**
-     * خريطة تربط كل {@link UiField} بالـ HBox Container المقابل له.
-     * تُمكِّن إظهار/إخفاء أي حقل بكود موحَّد دون if/else.
-     */
     private final Map<UiField, Supplier<HBox>> fieldToComponent;
-
-    /**
-     * خريطة تربط كل {@link UiField} القابل للبحث بـ {@link SearchBinding} الخاص به.
-     * تُمكِّن تفعيل/تعطيل البحث لأي حقل بكود موحَّد.
-     */
     private final Map<UiField, SearchBinding> fieldToSearchBinding;
 
-    /**
-     * قائمة بجميع الـ TextFields التي قد يُضاف عليها handlers من الاستراتيجيات.
-     * تُستخدَم في {@link #clearAllHandlers()} لضمان تنظيف كامل عند التبديل.
-     */
+    // ═══════════════════════════════════════════════════════
+    //  جديد — خريطة TextFields عشان نقرأ قيم الحقول
+    // ═══════════════════════════════════════════════════════
     private final Map<UiField, Supplier<TextField>> fieldToTextField;
 
-    /**
-     * @param controller الـ Controller المالك للمكونات الفعلية
-     */
     public PayrollUIManager(PayrollReportController controller) {
         this.controller = controller;
 
@@ -84,47 +43,27 @@ public class PayrollUIManager {
         );
 
         this.fieldToSearchBinding = Map.of(
-                UiField.H_MANAGEMENT, new SearchBinding(
-                        controller::getBtn_managementSearch,
-                        controller::getTxt_management
-                ),
-                UiField.H_PAY_GROUP, new SearchBinding(
-                        controller::getBtn_PayGroupSearch,
-                        controller::getTxt_payGroup
-                ),
-                UiField.H_SEARCH, new SearchBinding(
-                        controller::getBtn_Search,
-                        controller::getTxt_search
-                )
-
-                // لإضافة حقل بحث جديد: أضف سطرًا هنا فقط
+                UiField.H_MANAGEMENT, new SearchBinding(controller::getBtn_managementSearch, controller::getTxt_management),
+                UiField.H_PAY_GROUP, new SearchBinding(controller::getBtn_PayGroupSearch, controller::getTxt_payGroup),
+                UiField.H_SEARCH, new SearchBinding(controller::getBtn_Search, controller::getTxt_search)
         );
-        this.fieldToTextField = Map.of();
-        // جميع الـ TextFields التي قد تحمل handlers من الاستراتيجيات
-        /*this.fieldToTextField = Map.of(
-                UiField.START_DATE, controller::getTxt_startDate,
-                UiField.END_DATE, controller::getTxt_endDate,
-                UiField.MANAGEMENT, controller::getTxt_management,
-                UiField.PAY_GROUP, controller::getTxt_payGroup,
-                UiField.SEARCH_VALUE, controller::getTxt_search
-        );*/
+
+        // ═══════════════════════════════════════════════════════
+        //  جديد — ربط الحقول بـ TextFields عشان نقرأ قيمهم
+        // ═══════════════════════════════════════════════════════
+        this.fieldToTextField = Map.of(
+                UiField.H_START_DATE, controller::getTxt_startDate,
+                UiField.H_END_DATE, controller::getTxt_endDate,
+                UiField.H_MANAGEMENT, controller::getTxt_management,
+                UiField.H_PAY_GROUP, controller::getTxt_payGroup,
+                UiField.H_SEARCH, controller::getTxt_search,
+                UiField.TXT_START_DATE, controller::getTxt_startDate
+        );
     }
 
-    // ─────────────────────────────────────────────
-    //  Public API
-    // ─────────────────────────────────────────────
+    // ─── Public API ───
 
-    /**
-     * يخفي جميع حقول النموذج ويمسح جميع الـ handlers.
-     *
-     * <p>يُستدعى قبل تطبيق أي إعداد جديد لضمان بدء نظيف تماماً —
-     * لا handlers قديمة، لا نصوص Labels متبقية من تقرير سابق.
-     *
-     * <p>يتجاهل {@code H_report} لأنه container الـ ComboBox الفرعي
-     * ويُدار بشكل مستقل في الـ Controller.
-     */
     public void hideAll() {
-        // إخفاء جميع الـ HBoxes
         for (Node node : controller.getMainCont().getChildren()) {
             if (node instanceof HBox hBox) {
                 if (hBox == controller.getH_report()) continue;
@@ -132,53 +71,39 @@ public class PayrollUIManager {
                 hBox.setVisible(false);
             }
         }
-        // مسح handlers أزرار البحث
         fieldToSearchBinding.values().forEach(SearchBinding::hide);
-
-        // مسح جميع الـ handlers على الـ TextFields
-        // عشان لو استراتيجية سابقة أضافت مستمع، يتمسح قبل الاستراتيجية الجديدة
         clearAllHandlers();
     }
 
-    /**
-     * يُطبِّق إعدادات الاستراتيجية على الواجهة.
-     *
-     * <p><b>التسلسل:</b>
-     * <ol>
-     *   <li>يخفي كل الحقول والأزرار ويمسح الـ handlers</li>
-     *   <li>يُظهر الحقول المحددة في {@code visibleFields}</li>
-     *   <li>يُفعِّل البحث لكل عنصر في {@code searchFields}</li>
-     *   <li>يُحدِّث عنوان النموذج</li>
-     *   <li>يستدعي {@link ReportStrategy#onApply} للتخصيص الكامل</li>
-     * </ol>
-     *
-     * @param config   إعدادات الواجهة القادمة من الاستراتيجية
-     * @param strategy الاستراتيجية الحالية — تحصل على فرصة التخصيص الكامل في النهاية
-     */
     public void apply(UiConfiguration config, ReportStrategy strategy) {
         hideAll();
-        if (config == null) {
-            return;
-        }
+        if (config == null) return;
+
         if (config.getVisibleFields() != null) {
             config.getVisibleFields().forEach(this::showField);
         }
 
         if (config.getSearchFields() != null) {
-            config.getSearchFields().forEach(this::activateSearch);
+            // ═══════════════════════════════════════════════════════
+            //  جديد — فرقنا بين Single Select و Multi Select
+            // ═══════════════════════════════════════════════════════
+            config.getSearchFields().forEach(cfg -> {
+                if (cfg.isMultiSelect()) {
+                    activateMultiSelectSearch(cfg);
+                } else {
+                    activateSingleSelectSearch(cfg);
+                }
+            });
         }
 
         if (config.getTitle() != null && !config.getTitle().isBlank()) {
             controller.getLbl_name().setText(config.getTitle());
         }
 
-        // التخصيص الكامل — الاستراتيجية تتحكم في أي شيء تريده
         strategy.onApply(controller);
     }
 
-    // ─────────────────────────────────────────────
-    //  Private Helpers
-    // ─────────────────────────────────────────────
+    // ─── Private Helpers ───
 
     private void showField(UiField field) {
         Supplier<HBox> supplier = fieldToComponent.get(field);
@@ -188,46 +113,100 @@ public class PayrollUIManager {
         box.setVisible(true);
     }
 
-    private void activateSearch(SearchFieldConfig cfg) {
+    /**
+     * الطريقة القديمة — Single Select
+     */
+    private void activateSingleSelectSearch(SearchFieldConfig cfg) {
         SearchBinding binding = fieldToSearchBinding.get(cfg.getField());
         if (binding == null) return;
         binding.activate(cfg, controller);
     }
 
     /**
-     * يمسح جميع الـ handlers على الـ TextFields وأزرار البحث.
-     *
-     * <p>يضمن عدم تراكم مستمعين من استراتيجيات سابقة عند التبديل بين التقارير.
-     * يُستدعى في بداية كل {@link #hideAll()}.
+     * جديد — تفعيل البحث المتعدد (MultiSelect) مع دعم الـ Dependent Field
      */
+    private void activateMultiSelectSearch(SearchFieldConfig cfg) {
+        SearchBinding binding = fieldToSearchBinding.get(cfg.getField());
+        if (binding == null) return;
+
+        Button btn = binding.buttonSupplier.get();
+        TextField textField = binding.fieldSupplier.get();
+
+        btn.setManaged(true);
+        btn.setVisible(true);
+
+        EventHandler<ActionEvent> handler = e -> {
+            // 1️⃣ قراءة قيمة الحقل المعتمد
+            String dependentValue = null;
+            if (cfg.getDependentField() != null) {
+                dependentValue = getFieldValue(cfg.getDependentField());
+
+                // ═══════════════════════════════════════════════════════
+                //  جديد — تطبيق المحول لو موجود
+                // ═══════════════════════════════════════════════════════
+                if (dependentValue != null && cfg.getDependentValueConverter() != null) {
+                    dependentValue = cfg.getDependentValueConverter().apply(dependentValue);
+                }
+            }
+
+            // 2️⃣ إعداد الـ params
+            String[] params = (dependentValue != null && !dependentValue.isBlank())
+                    ? new String[]{dependentValue}
+                    : new String[0];
+
+            // 3️⃣ جلب الداتا
+            List<String> data = DataSourceResolver.get(cfg.getDataSource(), params);
+
+            // 4️⃣ فتح MultiSelectSearchDialog
+            List<String> selected = MultiSelectSearchDialog.forStrings()
+                    .title(cfg.getDialogTitle())
+                    .data(data)
+                    .searchPlaceholder("ابحث...")
+                    .owner(getStage())
+                    .showAndWait();
+            controller.getSelectedGroups().addAll(selected);
+            // 5️⃣ كتابة النتيجة
+            if (selected != null && !selected.isEmpty()) {
+                textField.setText(String.join(":", selected));
+            }
+        };
+
+        btn.setOnAction(handler);
+    }
+
+    /**
+     * قراءة قيمة أي حقل في الواجهة
+     */
+    private String getFieldValue(UiField field) {
+        Supplier<TextField> supplier = fieldToTextField.get(field);
+        if (supplier == null) return null;
+        TextField tf = supplier.get();
+        return tf != null ? tf.getText() : null;
+    }
+
+    /**
+     * جلب الـ Stage الحالي
+     */
+    private Stage getStage() {
+        return (Stage) controller.getLbl_name().getScene().getWindow();
+    }
+
     private void clearAllHandlers() {
-        // مسح handlers الـ TextFields
         fieldToTextField.values().forEach(supplier -> {
             TextField tf = supplier.get();
-            tf.setOnAction(null);
-            // مسح listeners الـ textProperty المضافة من الاستراتيجيات
-            // بالاستبدال بـ listener فارغ ثم إزالته — الطريقة الأضمن في JavaFX
-            tf.getProperties().remove("strategyListener");
+            if (tf != null) {
+                tf.setOnAction(null);
+                tf.getProperties().remove("strategyListener");
+            }
         });
-
-        // مسح handlers الأزرار الإضافية (غير أزرار البحث المُدارة في SearchBinding)
         controller.getBtn_searchMonth().setOnAction(null);
         controller.getBtn_searchMonthEnd().setOnAction(null);
         controller.getBtn_SearchEmployee().setOnAction(null);
     }
 
-    // ─────────────────────────────────────────────
-    //  Inner Class — SearchBinding
-    // ─────────────────────────────────────────────
+    // ─── Inner Class: SearchBinding ───
 
-    /**
-     * يُمثِّل الرابط بين {@link UiField} وعناصر الواجهة المقابلة له (الزر + TextField).
-     *
-     * <p>كلاس داخلي مساعد يُغلِّف منطق إظهار/إخفاء وربط الـ handlers
-     * لكل حقل بحث، بحيث يبقى {@link PayrollUIManager} نظيفًا وبدون تكرار.
-     */
     static class SearchBinding {
-
         private final Supplier<Button> buttonSupplier;
         private final Supplier<TextField> fieldSupplier;
 
@@ -236,9 +215,6 @@ public class PayrollUIManager {
             this.fieldSupplier = fieldSupplier;
         }
 
-        /**
-         * يُخفي الزر ويمسح الـ handlers تمهيدًا لإعداد جديد
-         */
         void hide() {
             Button btn = buttonSupplier.get();
             btn.setManaged(false);
@@ -248,16 +224,7 @@ public class PayrollUIManager {
         }
 
         /**
-         * يُظهر الزر ويربط الـ handlers بمصدر البيانات المحدد.
-         *
-         * <p>فتح نافذة البحث يحدث عند:
-         * <ul>
-         *   <li>الضغط على الزر</li>
-         *   <li>الضغط على Enter داخل الـ TextField</li>
-         * </ul>
-         *
-         * @param cfg        إعداد البحث (العنوان + مفتاح المصدر)
-         * @param controller الـ Controller لفتح نافذة البحث
+         * تفعيل البحث العادي (Single Select)
          */
         void activate(SearchFieldConfig cfg, PayrollReportController controller) {
             Button btn = buttonSupplier.get();

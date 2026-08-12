@@ -1,73 +1,74 @@
 package com.safwat.hr.report.core.ui;
 
+import java.util.function.Function;
+
 /**
  * إعدادات نافذة البحث المرتبطة بحقل إدخال معين.
  *
- * <p>يربط هذا الكائن بين {@link UiField} (الحقل في النموذج)
- * وإعدادات نافذة البحث الخاصة به (العنوان + مصدر البيانات).
- *
- * <p>يُستخدَم في قائمة {@link UiConfiguration#getSearchFields()}
- * بدلاً من الثلاثة fields المنفصلة السابقة التي كانت تدعم بحثًا واحدًا فقط.
- *
- * <p><b>مثال — تقرير بحقلَي بحث:</b>
- * <pre>{@code
- * List.of(
- *     SearchFieldConfig.of(UiField.MANAGEMENT, "اختر إدارة",        "management"),
- *     SearchFieldConfig.of(UiField.PAY_GROUP,  "اختر مجموعة تعيين", "payGroup")
- * )
- * }</pre>
- *
- * <p><b>مثال — تقرير بدون بحث:</b>
- * <pre>{@code
- * List.of()   // أو null — PayrollUIManager يتعامل مع الحالتين
- * }</pre>
- *
- * @see UiConfiguration
- * @see UiField
- * @see DataSourceResolver
+ * <p><b>جديد:</b> دعم تحويل قيمة الحقل المعتمد (Value Converter) قبل الإرسال للـ DataSource.
  */
 public class SearchFieldConfig {
 
-    /**
-     * الحقل الذي يرتبط به هذا الإعداد.
-     * يحدد أي TextField وأي زر بحث سيُفعَّلان في الواجهة.
-     */
     private final UiField field;
-
-    /**
-     * عنوان نافذة البحث — يظهر في الـ title bar عند فتح النافذة.
-     * مثال: {@code "اختر إدارة"}
-     */
     private final String dialogTitle;
-
-    /**
-     * مفتاح مصدر البيانات في {@link DataSourceResolver}.
-     * القيم المتاحة: {@code "management"}, {@code "payGroup"}, {@code "monthsYearly"}.
-     */
     private final String dataSource;
+    private final boolean multiSelect;
+    private final UiField dependentField;
+    private final String dependentParamKey;
 
-    private SearchFieldConfig(UiField field, String dialogTitle, String dataSource) {
+    // ═══════════════════════════════════════════════════════
+    //  جديد — محول قيمة الحقل المعتمد (اختياري)
+    // ═══════════════════════════════════════════════════════
+    /**
+     * دالة تحويل قيمة الحقل المعتمد قبل الإرسال للـ DataSource.
+     * مثال: تحويل "01/2026" → "2026-01-01"
+     */
+    private final Function<String, String> dependentValueConverter;
+
+    private SearchFieldConfig(UiField field, String dialogTitle, String dataSource,
+                              boolean multiSelect, UiField dependentField,
+                              String dependentParamKey, Function<String, String> dependentValueConverter) {
         this.field = field;
         this.dialogTitle = dialogTitle;
         this.dataSource = dataSource;
+        this.multiSelect = multiSelect;
+        this.dependentField = dependentField;
+        this.dependentParamKey = dependentParamKey;
+        this.dependentValueConverter = dependentValueConverter;
     }
 
-    /**
-     * Factory method لإنشاء {@code SearchFieldConfig} بصيغة مختصرة.
-     *
-     * <p><b>الاستخدام:</b>
-     * <pre>{@code
-     * SearchFieldConfig.of(UiField.MANAGEMENT, "اختر إدارة", "management")
-     * }</pre>
-     *
-     * @param field       الحقل المرتبط بهذا البحث
-     * @param dialogTitle عنوان نافذة البحث
-     * @param dataSource  مفتاح المصدر في {@link DataSourceResolver}
-     * @return كائن {@code SearchFieldConfig} جاهز
-     */
+    // ─── Factory Methods (القديمة — بدون تغيير) ───
+
     public static SearchFieldConfig of(UiField field, String dialogTitle, String dataSource) {
-        return new SearchFieldConfig(field, dialogTitle, dataSource);
+        return new SearchFieldConfig(field, dialogTitle, dataSource, false, null, null, null);
     }
+
+    public static SearchFieldConfig multiSelectOf(UiField field, String dialogTitle, String dataSource) {
+        return new SearchFieldConfig(field, dialogTitle, dataSource, true, null, null, null);
+    }
+
+    public static SearchFieldConfig multiSelectOf(UiField field, String dialogTitle, String dataSource,
+                                                  UiField dependentField, String dependentParamKey) {
+        return new SearchFieldConfig(field, dialogTitle, dataSource, true, dependentField, dependentParamKey, null);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  جديد — مع محول قيمة
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * بحث متعدد معتمد على حلف تاني + محول قيمة
+     *
+     * @param dependentValueConverter دالة تحويل القيمة (مثلاً: v -> "2026-" + v.substring(0,2) + "-01")
+     */
+    public static SearchFieldConfig multiSelectOf(UiField field, String dialogTitle, String dataSource,
+                                                  UiField dependentField, String dependentParamKey,
+                                                  Function<String, String> dependentValueConverter) {
+        return new SearchFieldConfig(field, dialogTitle, dataSource, true,
+                dependentField, dependentParamKey, dependentValueConverter);
+    }
+
+    // ─── Getters ───
 
     public UiField getField() {
         return field;
@@ -79,5 +80,21 @@ public class SearchFieldConfig {
 
     public String getDataSource() {
         return dataSource;
+    }
+
+    public boolean isMultiSelect() {
+        return multiSelect;
+    }
+
+    public UiField getDependentField() {
+        return dependentField;
+    }
+
+    public String getDependentParamKey() {
+        return dependentParamKey;
+    }
+
+    public Function<String, String> getDependentValueConverter() {
+        return dependentValueConverter;
     }
 }

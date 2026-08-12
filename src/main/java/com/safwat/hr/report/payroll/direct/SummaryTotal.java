@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.changeCard.month;
+package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -13,25 +13,25 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-public class PayrollChangeMonthPayGroup implements ReportStrategy {
+public class SummaryTotal implements ReportStrategy {
     @Override
     public String getCode() {
-        return "CHANGE_MONTH_PAY_GROUP";
+        return "TOTAL_SUMMARY_REPORT";
     }
 
     @Override
     public String getDisplayName() {
-        return "اجر اشتراك شهر لمجموعة تعيين";
+        return "تقرير إجمالي تفصيلي لمجموعات تعيين محددة";
     }
 
     @Override
     public String getCategory() {
-        return "CHANGE_MONTH";
+        return "main_direct";
     }
 
     @Override
     public String getMainReport() {
-        return "CHANGE_MONTH";
+        return "main_direct";
     }
 
     @Override
@@ -39,15 +39,15 @@ public class PayrollChangeMonthPayGroup implements ReportStrategy {
         return UiConfiguration.builder()
                 .requiredFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
                 .visibleFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "payGroup"))
-                /*   .searchField(SearchFieldConfig.multiSelectOf(
-                           UiField.H_PAY_GROUP,           // الحقل اللي هيفتح البحث
-                           "اختر البنود",              // عنوان النافذة
-                           "payGroupsByMonth",          // مفتاح الـ DataSource
-                           UiField.TXT_START_DATE,       // الحقل المعتمد عليه (الشهر)
-                           "payMonth",                     // اسم الـ param
-                           value -> DateUtils.getFirstDayOfMonth((value)).toString()
-                   ))*/
+                //.searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "payGroup"))
+                .searchField(SearchFieldConfig.multiSelectOf(
+                        UiField.H_PAY_GROUP,           // الحقل اللي هيفتح البحث
+                        "اختر البنود",              // عنوان النافذة
+                        "payGroupsByMonth",          // مفتاح الـ DataSource
+                        UiField.TXT_START_DATE,       // الحقل المعتمد عليه (الشهر)
+                        "payMonth",                     // اسم الـ param
+                        value -> DateUtils.getFirstDayOfMonth((value)).toString()
+                ))
                 .build();
     }
 
@@ -58,12 +58,15 @@ public class PayrollChangeMonthPayGroup implements ReportStrategy {
 
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
+
+        // مجموعات التعيين المختارة (مفصولة بفواصل)
+
         return PayrollRequest.builder()
                 .user(ApiClient.getUserName())
                 .reportName(context.getReportName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .payGroup(context.getPayGroup())
+                .payGroup(context.getPayGroup())  // String مفصول :
                 .build();
     }
 
@@ -78,4 +81,6 @@ public class PayrollChangeMonthPayGroup implements ReportStrategy {
 
         }
     }
+
+
 }

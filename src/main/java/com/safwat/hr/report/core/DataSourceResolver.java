@@ -7,43 +7,49 @@ import java.util.List;
 /**
  * مُحلِّل مصادر بيانات القوائم المنسدلة في نماذج التقارير.
  *
- * <p>يُوفِّر نقطة وصول مركزية لجلب بيانات الإدارات ومجموعات التعيين والشهور،
- * بدلاً من تشتيتها في كل استراتيجية على حدة.
- *
- * <p><b>إصلاح:</b> كانت البيانات تُحمَّل مرة واحدة عند تهيئة الـ class
- * ({@code static final Map}). هذا يعني أن أي إدارة أو مجموعة تعيين تُضاف
- * لاحقًا لن تظهر دون إعادة تشغيل التطبيق.
- * الآن تُجلَب البيانات عند كل استدعاء (Lazy / Live).
- *
- * <p><b>مفاتيح المصادر المتاحة:</b>
- * <ul>
- *   <li>{@code "payGroup"}     — قائمة مجموعات التعيين</li>
- *   <li>{@code "management"}   — قائمة الإدارات</li>
- *   <li>{@code "monthsYearly"} — قائمة الشهور السنوية</li>
- * </ul>
- *
- * <p><b>إضافة مصدر جديد:</b> أضف {@code case} جديدًا في {@link #get(String)}.
+ * <p><b>جديد:</b> دعم Dynamic Data Sources بتاخد parameters من الواجهة.
  */
 public class DataSourceResolver {
 
     private static final PayrollService payrollService = PayrollService.getInstance();
 
     /**
-     * يجلب قائمة البيانات المرتبطة بالمفتاح المحدد.
-     *
-     * <p>البيانات تُجلَب في اللحظة ذاتها من الـ Service لضمان حداثتها.
-     *
-     * @param key مفتاح المصدر المطلوب
-     * @return قائمة القيم، أو قائمة فارغة إذا كان المفتاح غير معروف
+     * الطريقة القديمة — بدون parameters
      */
     public static List<String> get(String key) {
+        return get(key, new String[0]);
+    }
+
+    /**
+     * جديد — بياخد parameters اختيارية (مثلاً الشهر)
+     *
+     * @param key    مفتاح المصدر
+     * @param params parameters اختيارية (مثلاً قيمة الشهر)
+     */
+    public static List<String> get(String key, String... params) {
         return switch (key) {
             case "payGroup" -> payrollService.getPayGroup();
             case "management" -> payrollService.getManagement();
             case "monthsYearly" -> payrollService.getAllMonthsYearly();
             case "elements" -> payrollService.getAllElementNames();
             case "elementsCodes" -> payrollService.getAllElementCodes();
-            //case "employee" -> payrollService.searchInEmployees();
+
+            // ═══════════════════════════════════════════════════════
+            //  جديد — Dynamic Sources بتعتمد على parameters
+            // ═══════════════════════════════════════════════════════
+            case "elementsByMonth" -> {
+                if (params.length > 0 && params[0] != null && !params[0].isBlank()) {
+                    yield payrollService.getElementNamesByMonth(params[0]);
+                }
+                yield List.of();
+            }
+            case "payGroupsByMonth" -> {
+                if (params.length > 0 && params[0] != null && !params[0].isBlank()) {
+                    yield payrollService.getPayGroupsByMonth(params[0]);
+                }
+                yield List.of();
+            }
+
             default -> List.of();
         };
     }
