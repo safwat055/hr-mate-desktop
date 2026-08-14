@@ -19,6 +19,7 @@ public class ElementCompareEmployee implements ReportStrategy {
     }
 
     @Override
+
     public String getDisplayName() {
         return "تقرير تعديلات عناصر الصرفية الرئيسية لموظف";
     }
@@ -56,7 +57,7 @@ public class ElementCompareEmployee implements ReportStrategy {
                 .user(ApiClient.getUserName())
                 .reportName(context.getReportName())
                 .report(getCode())
-                
+
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .nationalId(context.getNationalId())
                 .format(context.getFormat())

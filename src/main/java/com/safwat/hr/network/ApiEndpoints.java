@@ -47,10 +47,10 @@ public final class ApiEndpoints {
     }
 
 
-    public static class PayrollHistory {
-        public static final String BASE = "/payrollHistory";
-        public static final String SEARCH = "/payrollHistory/get/searchEmployee";
-        public static final String downloadReview = "/payrollHistory/downloade-review";
+    public static class PayrollReview {
+        public static final String BASE = "/payroll-review";
+        public static final String SEARCH = "/payroll-review/search-employee";
+        public static final String downloadReview = "/payroll-review/download-main-report";
     }
 
     public static class PayrollElement {

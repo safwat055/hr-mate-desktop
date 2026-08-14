@@ -17,7 +17,7 @@ public class PayrollVocabService {
     public ApiResponse<List<SearchVocab>> searchVocab(PayrollRequest request) {
         try {
             return ApiClient.post(
-                    ApiEndpoints.PayrollHistory.SEARCH,
+                    ApiEndpoints.PayrollReview.SEARCH,
                     request,
                     new TypeReference<List<SearchVocab>>() {
                     }
@@ -31,7 +31,7 @@ public class PayrollVocabService {
     public boolean downloadVocab(PayrollRequest request, Path filePath) {
         try {
             return ApiClient.downloadFileViaPostWithBody(
-                    ApiEndpoints.PayrollHistory.downloadReview,
+                    ApiEndpoints.PayrollReview.downloadReview,
                     request,
                     filePath
 

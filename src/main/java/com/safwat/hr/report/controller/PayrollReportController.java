@@ -259,6 +259,8 @@ public class PayrollReportController implements Initializable {
                     if (newVal == null) return;
 
                     clearSelectedFiles();
+
+
                     applyStrategy(registry.getByDisplayName(newVal));
                 });
 
@@ -312,8 +314,8 @@ public class PayrollReportController implements Initializable {
             updateFileAttachmentVisibility();
 
         } else {
-            H_report.setManaged(false);
-            H_report.setVisible(false);
+            H_report.setManaged(true);
+            H_report.setVisible(true);
             combo_report.getItems().clear();
             combo_report.getSelectionModel().clearSelection();
             applyStrategy(mainStrategy);
@@ -609,6 +611,7 @@ public class PayrollReportController implements Initializable {
                     .payGroup(txt_payGroup.getText())
                     .nationalId(lbl_nationalId.getText())
                     .searchValue(txt_search.getText())
+                    .subReport(combo_report.getSelectionModel().getSelectedItem())
                     .format(combo_Format.getSelectionModel().getSelectedItem())
                     .files(new ArrayList<>(selectedFiles)) // نسخة defensive
                     .build();

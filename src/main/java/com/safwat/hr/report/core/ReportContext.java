@@ -102,6 +102,8 @@ public class ReportContext {
      */
     private String searchValue;
 
+
+    private String subReport;
     @Builder.Default
     private List<Path> files = java.util.Collections.emptyList();
 }

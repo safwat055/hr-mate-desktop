@@ -32,6 +32,8 @@ public class PayrollUIManager {
         this.controller = controller;
 
         this.fieldToComponent = Map.of(
+
+                UiField.H_REPORT, controller::getH_report,
                 UiField.H_START_DATE, controller::getH_startDate,
                 UiField.H_END_DATE, controller::getH_endDate,
                 UiField.H_MANAGEMENT, controller::getH_management,

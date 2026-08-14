@@ -1,39 +1,39 @@
-package com.safwat.hr.report.payroll.sub.changeCard.month;
+package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.ReportContext;
-import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 
-public class PayrollChangeMonthAll implements ReportStrategy {
+public class PayrollReviewSheet implements ReportStrategy {
     @Override
     public String getCode() {
-        return "CHANGE_MONTH_ALL";
+        return "PAYROLL_REVIEW_SHEET";
     }
 
     @Override
     public String getDisplayName() {
-        return "اجر اشتراك شهر للكل";
+        return "شيت الرواتب الشهري";
     }
 
     @Override
     public String getCategory() {
-        return "CHANGE_MONTH";
+        return "main_direct";
     }
 
     @Override
     public String getMainReport() {
-        return "CHANGE_MONTH";
+        return "main_direct";
     }
 
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
+                
                 .requiredField(UiField.H_START_DATE)
                 .visibleField(UiField.H_START_DATE)
                 .build();
@@ -47,19 +47,10 @@ public class PayrollChangeMonthAll implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
                 .reportName(context.getReportName())
                 .report(getCode())
+                .user(ApiClient.getUserName())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .format(context.getFormat())
                 .build();
-    }
-
-    @Override
-    public void validate(ReportContext context) {
-        if (context.getStartDate() == null || context.getStartDate().isBlank()) {
-            throw new ValidationException("حقل الشهر مطلوب");
-
-        }
     }
 }

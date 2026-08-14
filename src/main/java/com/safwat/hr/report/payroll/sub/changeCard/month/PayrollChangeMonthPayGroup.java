@@ -64,6 +64,7 @@ public class PayrollChangeMonthPayGroup implements ReportStrategy {
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .payGroup(context.getPayGroup())
+                .format(context.getFormat())
                 .build();
     }
 
