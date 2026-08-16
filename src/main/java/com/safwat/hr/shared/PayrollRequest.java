@@ -11,6 +11,7 @@ import java.util.List;
 public class PayrollRequest {
     private String user;
     private String report;
+    private String reportType;
     private String reportName;
     private String searchValue;
     private LocalDate startDate;

@@ -37,8 +37,8 @@ public class ElementComparisonAddedDeletedReport implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_REPORT, UiField.H_MANAGEMENT, UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .visibleFields(List.of(UiField.H_REPORT, UiField.H_MANAGEMENT, UiField.H_START_DATE, UiField.H_PAY_GROUP))
+                .requiredFields(List.of(UiField.H_REPORT_TYPE, UiField.H_MANAGEMENT, UiField.H_START_DATE, UiField.H_PAY_GROUP))
+                .visibleFields(List.of(UiField.H_REPORT_TYPE, UiField.H_MANAGEMENT, UiField.H_START_DATE, UiField.H_PAY_GROUP))
                 .searchFields(List.of(
                         SearchFieldConfig.of(UiField.H_MANAGEMENT, "", "management"),
                         SearchFieldConfig.of(UiField.H_PAY_GROUP, "", "payGroup")
@@ -52,8 +52,8 @@ public class ElementComparisonAddedDeletedReport implements ReportStrategy {
     public void onApply(PayrollReportController controller) {
         controller.setChoseMonth();
 
-        controller.getCombo_report().getItems().clear();
-        controller.getCombo_report().getItems().addAll("العناصر المضافة", "الاستحقاقات المضافة", "الاستقطاعات المضافة", "العناصر المحذوفة", "الاستحقاقات المحذوفة", "الاستقطاعات المحذوفة");
+        controller.getCombo_reportType().getItems().clear();
+        controller.getCombo_reportType().getItems().addAll("العناصر المضافة", "الاستحقاقات المضافة", "الاستقطاعات المضافة", "العناصر المحذوفة", "الاستحقاقات المحذوفة", "الاستقطاعات المحذوفة");
         //controller.setSearchEmployeeActions();
     }
 
@@ -67,12 +67,15 @@ public class ElementComparisonAddedDeletedReport implements ReportStrategy {
                 .payGroup(context.getPayGroup() == null ? null : context.getPayGroup())
                 .management(context.getManagement() == null ? null : context.getManagement())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .searchValue(context.getSubReport())
+                .reportType(context.getReportType())
                 .build();
     }
 
     @Override
     public void validate(ReportContext context) {
+        if (context.getReportType() == null || context.getReportType().isBlank()) {
+            throw new ValidationException("يجب تحديد نوع التقرير ");
+        }
         if (context.getStartDate() == null || context.getStartDate().isBlank()) {
             throw new ValidationException("يجب تحديد فترة ");
         }

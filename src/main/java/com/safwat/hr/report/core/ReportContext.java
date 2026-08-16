@@ -72,6 +72,7 @@ public class ReportContext {
      * اسم التقرير كما يظهر في الـ UI — يُرسَل للـ Backend كـ metadata.
      */
     private String reportName;
+    private String reportType;
 
     /**
      * اسم المستخدم الحالي — يُضاف تلقائيًا عبر {@code ApiClient.getUserName()}.
@@ -103,7 +104,6 @@ public class ReportContext {
     private String searchValue;
 
 
-    private String subReport;
     @Builder.Default
     private List<Path> files = java.util.Collections.emptyList();
 }

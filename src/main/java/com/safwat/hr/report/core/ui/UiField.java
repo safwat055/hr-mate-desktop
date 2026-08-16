@@ -15,12 +15,13 @@ package com.safwat.hr.report.core.ui;
  * <p><b>إضافة حقل جديد:</b> أضف قيمة هنا ثم اربطها في {@link PayrollUIManager}.
  */
 public enum UiField {
+    H_REPORT_TYPE,
 
     // ══════════════════════════════════════════════
     //  HBox Containers — الحاويات
     //  تُستخدَم في visibleFields لإظهار/إخفاء الصفوف
     // ══════════════════════════════════════════════
-    H_REPORT,
+
     /**
      * حاوي حقل تاريخ البداية (الشهر)
      */

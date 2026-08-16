@@ -1,190 +1,126 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" alignment="TOP_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity"
-      nodeOrientation="LEFT_TO_RIGHT" prefHeight="425.0" prefWidth="841.0" spacing="10.0"
-      xmlns="http://javafx.com/javafx/26" fx:controller="com.safwat.hr.report.controller.PayrollReportController">
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="TOP_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="425.0" prefWidth="841.0" spacing="10.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.report.controller.PayrollReportController">
     <children>
-        <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-              minWidth="-Infinity" prefHeight="50.0" prefWidth="821.0" spacing="10.0" style="-fx-border-color: gray;">
+        <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="821.0" spacing="10.0" style="-fx-border-color: gray;">
             <children>
-                <ComboBox fx:id="combo_Format" prefHeight="26.0" prefWidth="113.0" visibleRowCount="3"/>
-                <Label alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="69.0" text="صيغة التقرير"/>
+                <ComboBox fx:id="combo_Format" prefHeight="26.0" prefWidth="113.0" visibleRowCount="3" />
+                <Label alignment="CENTER_RIGHT" prefHeight="25.0" prefWidth="69.0" text="صيغة التقرير" />
                 <HBox fx:id="H_reportName" alignment="CENTER_LEFT" prefHeight="48.0" prefWidth="573.0" spacing="5">
-                    <TextField fx:id="txt_reportSearch" alignment="CENTER_RIGHT" editable="false"
-                               promptText="اضغط لاختيار التقرير..." HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btn_reportSearch" styleClass="search-button" text="🔍"/>
+                    <TextField fx:id="txt_reportSearch" alignment="CENTER_RIGHT" editable="false" promptText="اضغط لاختيار التقرير..." HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btn_reportSearch" styleClass="search-button" text="🔍" />
                 </HBox>
             </children>
             <padding>
-                <Insets left="10.0" right="10.0"/>
+                <Insets left="10.0" right="10.0" />
             </padding>
         </HBox>
-        <AnchorPane maxHeight="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="333.0"
-                    prefWidth="821.0" style="-fx-border-color: gray;">
+        <AnchorPane maxHeight="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="333.0" prefWidth="821.0" style="-fx-border-color: gray;">
             <children>
-                <VBox fx:id="mainCont" layoutX="140.0" layoutY="26.0" spacing="5.0" AnchorPane.bottomAnchor="0.0"
-                      AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <VBox fx:id="mainCont" layoutX="140.0" layoutY="26.0" spacing="5.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
-                        <HBox fx:id="H_report" alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity"
-                              minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT"
-                              prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_ReportType" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="260.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: true;">
+                     <children>
+                        <ComboBox fx:id="combo_reportType" prefHeight="26.0" prefWidth="210.0" />
+                     </children>
+                     <padding>
+                        <Insets left="5.0" right="5.0" />
+                     </padding></HBox>
+                        <HBox fx:id="H_report" alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <ComboBox fx:id="combo_report" prefHeight="26.0" prefWidth="303.0"/>
-                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT"
-                                       prefHeight="25.0" prefWidth="93.0" text="توع التقرير :"/>
+                                <ComboBox fx:id="combo_report" prefHeight="26.0" prefWidth="303.0" />
+                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="93.0" text="توع التقرير :" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_payGroup" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="15.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_payGroup" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="15.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Button fx:id="btn_PayGroupSearch" maxHeight="-Infinity" maxWidth="-Infinity"
-                                        minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false"
-                                        prefHeight="26.0" prefWidth="18.0" text=":"/>
-                                <TextField fx:id="txt_payGroup" nodeOrientation="RIGHT_TO_LEFT" prefHeight="26.0"
-                                           prefWidth="328.0"/>
-                                <Label alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0"
-                                       text="مجموعة التعيين"/>
+                                <Button fx:id="btn_PayGroupSearch" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="26.0" prefWidth="18.0" text=":" />
+                                <TextField fx:id="txt_payGroup" nodeOrientation="RIGHT_TO_LEFT" prefHeight="26.0" prefWidth="328.0" />
+                                <Label alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="مجموعة التعيين" />
                             </children>
                             <opaqueInsets>
-                                <Insets/>
+                                <Insets />
                             </opaqueInsets>
                         </HBox>
-                        <HBox fx:id="H_management" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="50.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_management" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="50.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Button fx:id="btn_managementSearch" maxHeight="-Infinity" maxWidth="-Infinity"
-                                        minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false"
-                                        prefHeight="26.0" prefWidth="18.0" text=":"/>
-                                <TextField fx:id="txt_management" alignment="CENTER_RIGHT" prefHeight="26.0"
-                                           prefWidth="366.0"/>
-                                <Label alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0"
-                                       text="الادارة :-"/>
+                                <Button fx:id="btn_managementSearch" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="26.0" prefWidth="18.0" text=":" />
+                                <TextField fx:id="txt_management" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="366.0" />
+                                <Label alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الادارة :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_startDate" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="85.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_startDate" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="85.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_startDate" alignment="CENTER" contentDisplay="CENTER" layoutX="716.0"
-                                       layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0"
-                                       prefWidth="150.0"/>
-                                <Button fx:id="btn_searchMonth" mnemonicParsing="false" text=":"/>
-                                <TextField fx:id="txt_startDate" prefHeight="26.0" prefWidth="138.0"/>
-                                <Label fx:id="lbl_start" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="من :-"/>
+                                <Label fx:id="lbl_startDate" alignment="CENTER" contentDisplay="CENTER" layoutX="716.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="150.0" />
+                                <Button fx:id="btn_searchMonth" mnemonicParsing="false" text=":" />
+                                <TextField fx:id="txt_startDate" prefHeight="26.0" prefWidth="138.0" />
+                                <Label fx:id="lbl_start" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="من :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_endDate" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="120.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_endDate" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="120.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_endDate" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="150.0"/>
-                                <Button fx:id="btn_searchMonthEnd" mnemonicParsing="false" text=":"/>
-                                <TextField fx:id="txt_endDate" prefHeight="26.0" prefWidth="138.0"/>
-                                <Label fx:id="lbl_end" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0"
-                                       text="الي :-"/>
+                                <Label fx:id="lbl_endDate" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="150.0" />
+                                <Button fx:id="btn_searchMonthEnd" mnemonicParsing="false" text=":" />
+                                <TextField fx:id="txt_endDate" prefHeight="26.0" prefWidth="138.0" />
+                                <Label fx:id="lbl_end" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="الي :-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_Search" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="155.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_searchValue" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="527.0"/>
-                                <Button fx:id="btn_Search" mnemonicParsing="false" text=":"/>
-                                <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0"/>
-                                <Label fx:id="lbl_search" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0"
-                                       text="اسم العنصر"/>
+                                <Label fx:id="lbl_searchValue" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="527.0" />
+                                <Button fx:id="btn_Search" mnemonicParsing="false" text=":" />
+                                <TextField fx:id="txt_search" prefHeight="26.0" prefWidth="138.0" />
+                                <Label fx:id="lbl_search" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم العنصر" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_employee" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="190.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
+                        <HBox fx:id="H_employee" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="190.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_name" alignment="CENTER" contentDisplay="CENTER" layoutX="243.0"
-                                       layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0"
-                                       prefWidth="240.0"/>
-                                <Label fx:id="lbl_payId" alignment="CENTER" contentDisplay="CENTER"
-                                       nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0"/>
-                                <Label fx:id="lbl_nationalId" alignment="CENTER" contentDisplay="CENTER" layoutX="648.0"
-                                       layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0"
-                                       prefWidth="147.0"/>
-                                <Button fx:id="btn_SearchEmployee" mnemonicParsing="false" text=":"/>
-                                <TextField fx:id="txt_searchEmp" prefHeight="26.0" prefWidth="138.0"/>
-                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT"
-                                       prefHeight="25.0" prefWidth="92.0" text="اسم الموظف:-"/>
+                                <Label fx:id="lbl_name" alignment="CENTER" contentDisplay="CENTER" layoutX="243.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="240.0" />
+                                <Label fx:id="lbl_payId" alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
+                                <Label fx:id="lbl_nationalId" alignment="CENTER" contentDisplay="CENTER" layoutX="648.0" layoutY="15.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="147.0" />
+                                <Button fx:id="btn_SearchEmployee" mnemonicParsing="false" text=":" />
+                                <TextField fx:id="txt_searchEmp" prefHeight="26.0" prefWidth="138.0" />
+                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="اسم الموظف:-" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_files" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="225.0"
-                              maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: true;">
+                        <HBox fx:id="H_files" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="225.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false">
                             <children>
-                                <Label fx:id="lbl_filesCount" alignment="CENTER" prefHeight="33.0" prefWidth="556.0"/>
-                                <Button fx:id="btn_previewFiles" mnemonicParsing="false" onAction="#previewFiles"
-                                        text="معاينة"/>
-                                <Button fx:id="btn_attachFiles" mnemonicParsing="false" onAction="#chooseFiles"
-                                        prefHeight="26.0" prefWidth="101.0" text="اضافة مرفقات"/>
+                                <Label fx:id="lbl_filesCount" alignment="CENTER" prefHeight="33.0" prefWidth="556.0" />
+                                <Button fx:id="btn_previewFiles" mnemonicParsing="false" onAction="#previewFiles" text="معاينة" />
+                                <Button fx:id="btn_attachFiles" mnemonicParsing="false" onAction="#chooseFiles" prefHeight="26.0" prefWidth="101.0" text="اضافة مرفقات" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_2" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="260.0" maxHeight="-Infinity"
-                              maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false"/>
-                        <HBox fx:id="H_3" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="295.0" maxHeight="-Infinity"
-                              maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false"/>
-                        <HBox fx:id="H_4" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="330.0" maxHeight="-Infinity"
-                              maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false"/>
-                        <HBox fx:id="H_5" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="365.0" maxHeight="-Infinity"
-                              maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false"/>
-                        <HBox fx:id="H_6" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="400.0" maxHeight="-Infinity"
-                              maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                              nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0"
-                              style="-fx-border-color: lightgray; -fx-managed: false;" visible="false"/>
+                        <HBox fx:id="H_3" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="295.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
+                        <HBox fx:id="H_4" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="330.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
+                        <HBox fx:id="H_5" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="365.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
+                        <HBox fx:id="H_6" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="400.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-border-color: lightgray; -fx-managed: false;" visible="false" />
                     </children>
                     <padding>
-                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0"/>
+                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
                     </padding>
                 </VBox>
             </children>
         </AnchorPane>
-        <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="785.0"
-              spacing="10.0" style="-fx-border-color: gray;">
+        <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" minHeight="-Infinity" prefHeight="50.0" prefWidth="785.0" spacing="10.0" style="-fx-border-color: gray;">
             <children>
-                <Button fx:id="btn_copyLast" layoutX="735.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0"
-                        prefWidth="79.0" text="نسخ الاخير"/>
-                <Button fx:id="btnDoReport" layoutX="665.0" layoutY="17.0" mnemonicParsing="false" onAction="#doReport"
-                        prefHeight="30.0" prefWidth="70.0" text="تقديم"/>
+                <Button fx:id="btn_copyLast" layoutX="735.0" layoutY="17.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="79.0" text="نسخ الاخير" />
+                <Button fx:id="btnDoReport" layoutX="665.0" layoutY="17.0" mnemonicParsing="false" onAction="#doReport" prefHeight="30.0" prefWidth="70.0" text="تقديم" />
             </children>
             <padding>
-                <Insets right="10.0"/>
+                <Insets right="10.0" />
             </padding>
         </HBox>
     </children>
     <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
     </padding>
 </VBox>

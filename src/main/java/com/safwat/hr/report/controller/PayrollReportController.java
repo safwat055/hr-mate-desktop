@@ -135,7 +135,7 @@ public class PayrollReportController implements Initializable {
 
     // --- حقول HBox متفرقة ---
     @FXML
-    private HBox H_2, H_3, H_4, H_5, H_6;
+    private HBox H_ReportType, H_3, H_4, H_5, H_6;
     @FXML
     private HBox H_Search, H_employee, H_endDate, H_management, H_payGroup, H_startDate, H_files;
 
@@ -148,7 +148,7 @@ public class PayrollReportController implements Initializable {
     // --- القوائم المنسدلة ---
     @FXML
 
-    private ComboBox<String> combo_Format, combo_report;
+    private ComboBox<String> combo_Format, combo_report, combo_reportType;
 
     // --- Labels ---
     @FXML
@@ -260,7 +260,6 @@ public class PayrollReportController implements Initializable {
 
                     clearSelectedFiles();
 
-
                     applyStrategy(registry.getByDisplayName(newVal));
                 });
 
@@ -314,8 +313,8 @@ public class PayrollReportController implements Initializable {
             updateFileAttachmentVisibility();
 
         } else {
-            H_report.setManaged(true);
-            H_report.setVisible(true);
+            H_report.setManaged(false);
+            H_report.setVisible(false);
             combo_report.getItems().clear();
             combo_report.getSelectionModel().clearSelection();
             applyStrategy(mainStrategy);
@@ -605,13 +604,14 @@ public class PayrollReportController implements Initializable {
             ReportContext context = ReportContext.builder()
                     .user(ApiClient.getUserName())
                     .reportName(txt_reportSearch.getText())
+                    .reportType(combo_reportType.getSelectionModel().getSelectedItem())
                     .startDate(txt_startDate.getText())
                     .endDate(txt_endDate.getText())
                     .management(txt_management.getText())
                     .payGroup(txt_payGroup.getText())
                     .nationalId(lbl_nationalId.getText())
                     .searchValue(txt_search.getText())
-                    .subReport(combo_report.getSelectionModel().getSelectedItem())
+
                     .format(combo_Format.getSelectionModel().getSelectedItem())
                     .files(new ArrayList<>(selectedFiles)) // نسخة defensive
                     .build();
@@ -741,11 +741,13 @@ public class PayrollReportController implements Initializable {
         setIfNotNull(payload.get("payGroup"), txt_payGroup::setText);
         setIfNotNull(payload.get("nationalId"), v -> lbl_nationalId.setText(v));
         setIfNotNull(payload.get("searchValue"), txt_search::setText);
+        setIfNotNull(payload.get("reportType"), combo_reportType::setValue);
 
         Object format = payload.get("format");
         if (format != null) {
             combo_Format.getSelectionModel().select(format.toString());
         }
+
     }
 
     /**
