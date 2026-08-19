@@ -44,6 +44,7 @@ import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordEmployee;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
 import com.safwat.hr.report.payroll.sub.upload.*;
+import com.safwat.hr.report.public_.StartTransferData;
 
 /**
  * مصنع إنشاء السجل الرئيسي لاستراتيجيات التقارير.
@@ -92,6 +93,7 @@ public class ReportRegistryFactory {
         registry.register(new PayrollReviewSheet());
         registry.register(new ScaleReport());
         registry.register(new SummaryTotal());
+        registry.register(new StartTransferData());
 
         // ══════════════════════════════════════════
         //  فرعيات payrollYearly
@@ -179,6 +181,7 @@ public class ReportRegistryFactory {
         // ══════════════════════════════════════════
         registry.register(new UpdateReviewKeysAll());
 
+        
         // ══════════════════════════════════════════
         //  فرعيات records — full
         // ══════════════════════════════════════════
