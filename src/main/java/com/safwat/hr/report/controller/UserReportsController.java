@@ -87,6 +87,7 @@ public class UserReportsController implements Initializable {
 
         colReportId.setCellValueFactory(new PropertyValueFactory<>("reportId"));
         colReportName.setCellValueFactory(new PropertyValueFactory<>("reportName"));
+        colReportName.setMinWidth(280.00);
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         // ⬅️ تاريخ التقديم — بدون T
         colSubmittedTime.setCellFactory(col -> new TableCell<>() {
@@ -108,7 +109,7 @@ public class UserReportsController implements Initializable {
         });
         colFinishedTime.setCellValueFactory(new PropertyValueFactory<>("finishedTime"));
         colMessage.setCellValueFactory(new PropertyValueFactory<>("message"));
-
+        colMessage.setMaxWidth(90.00);
         // ── عمود الإجراءات (عرض + نسخ) ──
         colActions.setCellFactory(param -> new TableCell<>() {
             private final Button btnView = new Button("عرض");
