@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="870.0" prefWidth="1327.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.scale.ScaleController">
+   <content>
+      <AnchorPane nodeOrientation="LEFT_TO_RIGHT" prefHeight="400.0" prefWidth="600.0">
+         <children>
+            <HBox alignment="CENTER_RIGHT" layoutX="37.0" layoutY="40.0" prefHeight="40.0" prefWidth="1292.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.leftAnchor="5.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="5.0">
+               <children>
+                  <TextField fx:id="txt_Management" alignment="CENTER" layoutX="455.0" layoutY="15.0" prefHeight="30.0" prefWidth="303.0" />
+                  <Label alignment="CENTER" layoutX="761.0" layoutY="15.0" prefHeight="30.0" prefWidth="60.0" text="الادارة" />
+                  <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="30.0" prefWidth="286.0" />
+                  <Label alignment="CENTER" prefHeight="30.0" prefWidth="60.0" text="الاسم" />
+                  <TextField fx:id="txt_empCode" alignment="CENTER" layoutX="1022.0" layoutY="15.0" prefHeight="30.0" prefWidth="127.0" />
+                  <Label alignment="CENTER" layoutX="1181.0" layoutY="15.0" prefHeight="30.0" prefWidth="60.0" text="رقم موظف" />
+                  <TextField fx:id="txt_nationalId" alignment="CENTER" layoutX="1078.0" layoutY="15.0" prefHeight="30.0" prefWidth="147.0" />
+                  <Label alignment="CENTER" layoutX="1237.0" layoutY="15.0" prefHeight="30.0" prefWidth="60.0" text="رقم قومى" />
+                  <Button fx:id="btn_search" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" prefHeight="30.0" prefWidth="51.0" text="بحث" />
+               </children>
+               <padding>
+                  <Insets left="5.0" right="5.0" />
+               </padding>
+            </HBox>
+            <TableView fx:id="table_result" layoutX="1078.0" layoutY="482.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="466.0" prefWidth="905.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="477.0">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </TableView>
+            <VBox alignment="TOP_CENTER" layoutX="1077.0" layoutY="120.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="358.0" prefWidth="220.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="105.0">
+               <children>
+                  <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_startDate" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="تاريخ التعيين" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="16.0" layoutY="16.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_backStart" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="تاريخ الاقدمية" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="16.0" layoutY="156.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_debloma" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="دبلومة" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="16.0" layoutY="191.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_magester" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="ماجستير" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="16.0" layoutY="226.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_doctoraa" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="دكتوراة" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="15.0" layoutY="156.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_ectra" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="تمييز علمى" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="18.0" layoutY="191.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_regrade3" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="تسوية مؤهل عال" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="18.0" layoutY="226.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_regrade4" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="ت مؤهل متوسط" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="18.0" layoutY="261.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_regrade5" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="ت اعدادية" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" layoutX="18.0" layoutY="296.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="205.0" spacing="5.0" style="-fx-border-color: lightgray;">
+                     <children>
+                        <TextField fx:id="txt_backRegrade" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" />
+                        <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="اقدمية التسوية" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <VBox alignment="TOP_CENTER" layoutX="741.0" layoutY="70.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="347.0" prefWidth="322.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="235.0" AnchorPane.topAnchor="105.0">
+               <children>
+                  <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="309.0" style="-fx-border-color: lightgray;" text="ترقيات" />
+                  <TableView fx:id="table_upgrade" nodeOrientation="RIGHT_TO_LEFT" prefHeight="296.0" prefWidth="310.0">
+                     <columns>
+                        <TableColumn prefWidth="107.0" text="تاريخ" />
+                        <TableColumn prefWidth="107.0" text="الدرجة" />
+                        <TableColumn prefWidth="107.0" text="رقم القرار" />
+                     </columns>
+                  </TableView>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <VBox alignment="TOP_CENTER" layoutX="384.0" layoutY="115.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="347.0" prefWidth="246.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="570.0" AnchorPane.topAnchor="105.0">
+               <children>
+                  <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="214.0" style="-fx-border-color: lightgray;" text="تشجيعيات" />
+                  <TableView fx:id="table_encourge" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="297.0" prefWidth="214.0">
+                     <columns>
+                        <TableColumn prefWidth="107.0" text="تاريخ" />
+                        <TableColumn prefWidth="107.0" text="رقم القرار" />
+                     </columns>
+                  </TableView>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <HBox alignment="CENTER_RIGHT" layoutX="20.0" layoutY="20.0" prefHeight="40.0" prefWidth="1292.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="55.0">
+               <padding>
+                  <Insets left="5.0" right="5.0" />
+               </padding>
+               <children>
+                  <TextField fx:id="txt_group" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="252.0" />
+                  <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="100.0" style="-fx-border-color: lightgray;" text="المجموعة النوعية" />
+                  <TextField fx:id="txt_law" alignment="CENTER" layoutX="889.0" layoutY="15.0" prefHeight="30.0" prefWidth="55.0" />
+                  <Label alignment="CENTER" layoutX="942.0" layoutY="15.0" prefHeight="30.0" prefWidth="46.0" text="قانون" />
+                  <TextField fx:id="txt_code" alignment="CENTER" prefHeight="30.0" prefWidth="48.0" />
+                  <Label alignment="CENTER" prefHeight="30.0" prefWidth="75.0" text="كود الوظيفة" />
+                  <TextField fx:id="txt_startDegree" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="61.0" />
+                  <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="83.0" style="-fx-border-color: lightgray;" text="درجة التعيين" />
+                  <ToolBar maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="103.0" style="-fx-border-color: lightgray;">
+                     <items>
+                        <Button layoutX="120.0" layoutY="10.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="71.0" text="احتساب" />
+                        <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="51.0" text="pdf" />
+                        <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="51.0" text="save" />
+                        <Button mnemonicParsing="false" prefHeight="30.0" prefWidth="51.0" text="مسح" />
+                     </items>
+                  </ToolBar>
+               </children>
+            </HBox>
+            <VBox alignment="TOP_CENTER" layoutX="233.0" layoutY="110.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="347.0" prefWidth="246.0" spacing="5.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="828.0" AnchorPane.topAnchor="105.0">
+               <children>
+                  <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="214.0" style="-fx-border-color: lightgray;" text="حافز ترقية" />
+                  <TableView fx:id="table_promotion" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="297.0" prefWidth="214.0">
+                     <columns>
+                        <TableColumn prefWidth="107.0" text="تاريخ" />
+                        <TableColumn prefWidth="107.0" text="رقم القرار" />
+                     </columns>
+                  </TableView>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <VBox alignment="TOP_RIGHT" layoutX="14.0" layoutY="115.0" maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="210.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="1090.0" AnchorPane.topAnchor="110.0">
+               <children>
+                  <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="yearUp" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="سنوات تدرج" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="yearNoUp" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="سنوات لا تدرج" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="38.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="gpUp" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="خبرة تدرج" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="66.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="gpNoUp" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="خبرة لا تدرج" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0">
+                     <children>
+                        <TextField fx:id="yearsBack" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="اقدمية للتسكين" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="16.0" layoutY="214.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="date_kader" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="اساسي 30 - 6" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="16.0" layoutY="245.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0" VBox.vgrow="NEVER">
+                     <children>
+                        <TextField fx:id="end_day" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="انهاء/تقاعد" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="14.0" layoutY="172.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0">
+                     <children>
+                        <TextField fx:id="txt_startCut" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="بداية انقطاع" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_RIGHT" layoutX="14.0" layoutY="198.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="200.0" spacing="2.0">
+                     <children>
+                        <TextField fx:id="txt_endCut" alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ" HBox.hgrow="NEVER">
+                           <font>
+                              <Font size="13.0" />
+                           </font>
+                        </TextField>
+                        <TextField editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="105.0" text="نهاية انقطاع" HBox.hgrow="NEVER" />
+                     </children>
+                  </HBox>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+            <AnchorPane layoutX="77.0" layoutY="468.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="311.0" style="-fx-border-color: lightgray;" AnchorPane.rightAnchor="923.0">
+               <children>
+                  <VBox fillWidth="false" layoutX="4.0" layoutY="3.2" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="192.0" prefWidth="152.0" AnchorPane.topAnchor="2.0">
+                     <children>
+                        <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="142.0" text="اضافة للمجرد" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font name="Arial" size="14.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate1" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue1" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate2" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue2" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate3" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue3" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate4" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue4" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate5" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue5" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0" VBox.vgrow="NEVER">
+                           <children>
+                              <TextField fx:id="mogardAddDate6" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardAddVlaue6" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </VBox>
+                  <VBox fillWidth="false" layoutY="3.2" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="192.0" prefWidth="152.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="2.0">
+                     <children>
+                        <HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="142.0" text="خصم للمجرد" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font name="Arial" size="14.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox layoutX="10.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate1" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue1" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate2" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue2" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate3" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue3" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate4" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue4" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="26.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate5" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue5" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="28.0" prefWidth="144.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="mogardRivalDate6" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="mogardRivalValue6" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </VBox>
+               </children>
+               <opaqueInsets>
+                  <Insets left="5.0" right="5.0" />
+               </opaqueInsets>
+            </AnchorPane>
+            <AnchorPane layoutX="71.0" layoutY="668.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="311.0" style="-fx-border-color: lightgray;">
+               <children>
+                  <VBox layoutX="4.8" layoutY="3.2" prefHeight="192.0" prefWidth="152.0" AnchorPane.leftAnchor="2.0" AnchorPane.topAnchor="2.0">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="142.0" text="اضافة للعلاوات" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font name="Arial" size="14.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox layoutX="10.0" layoutY="10.0" prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate1" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue1" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate2" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue2" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate3" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue3" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate4" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue4" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate5" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue5" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="27.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsAddDate6" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsAddValue6" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </VBox>
+                  <VBox layoutY="4.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="192.0" prefWidth="152.0" AnchorPane.rightAnchor="3.0" AnchorPane.topAnchor="3.0">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="142.0" text="خصم للعلاوات" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font name="Arial" size="14.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox layoutX="10.0" layoutY="10.0" prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate1" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue1" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate2" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue2" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate3" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue3" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate4" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue4" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate5" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue5" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="26.0" prefWidth="123.0" spacing="2.0">
+                           <children>
+                              <TextField fx:id="bounsRivalDate6" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="90.0" promptText="تاريخ الاضافة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                              <TextField fx:id="bounsRivalValue6" alignment="CENTER" layoutX="102.0" layoutY="10.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="24.0" prefWidth="49.0" promptText="قيمة" HBox.hgrow="NEVER">
+                                 <font>
+                                    <Font size="13.0" />
+                                 </font>
+                              </TextField>
+                           </children>
+                        </HBox>
+                     </children>
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </VBox>
+               </children>
+               <opaqueInsets>
+                  <Insets left="5.0" right="5.0" />
+               </opaqueInsets>
+            </AnchorPane>
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </AnchorPane>
+   </content>
+</ScrollPane>

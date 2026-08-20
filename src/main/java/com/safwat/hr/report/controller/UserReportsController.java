@@ -315,7 +315,7 @@ public class UserReportsController implements Initializable {
     private void openPayrollReportWithPayload(ReportPayloadResponse response) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/report/payroll/PayrollReport.fxml"));
+                    "/com/safwat/hr/view/report/payroll/PayrollReport.fxml"));
             Parent root = loader.load();
 
             PayrollReportController controller = loader.getController();

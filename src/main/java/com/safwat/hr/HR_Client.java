@@ -45,7 +45,6 @@ public class HR_Client extends Application {
         ApiClient.setAuthToken(response.getData().getToken());
         ApiClient.setUserName(response.getData().getUsername());
 
-        
         // ── الاتصال بـ WebSocket الرسائل (مش محتاج Stage) ──
         MessageClientService.getInstance().connect();
     }
@@ -55,7 +54,7 @@ public class HR_Client extends Application {
         this.primaryStage = stage; // ✅ نخزن الـ Stage هنا
 
         FXMLLoader fxmlLoader = new FXMLLoader(
-                HR_Client.class.getResource("/com/safwat/hr/controller/MainView.fxml"));
+                HR_Client.class.getResource("/com/safwat/hr/view/MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         AppTheme.apply(scene);
 
