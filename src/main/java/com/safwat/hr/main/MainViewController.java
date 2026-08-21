@@ -28,7 +28,9 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport, btn_mail, btn_chat, btn_report;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_mail, btn_chat, btn_report, btn_payManager;
+    @FXML
+    private Button btn_scaleView;
     @FXML
     private TabPane tab;
     @FXML
@@ -66,12 +68,7 @@ public class MainViewController implements Initializable {
 
             // ✅ جديد — ربط الـ Bell بالـ Inbox
             bell.setOnMouseClicked(e -> {
-                // لما يدوس على الجرس → يفتح الـ Panel
-                // الـ Panel هيتبنى جوه الـ HRNotificationBell
-                // بس احنا محتاجين نربط الـ Panel بـ onOpenMessage
-                // الحل: ن override الـ togglePanel في الـ Bell أو نبني Panel منفصل
 
-                // أسهل حاجة: نبني Panel منفصل هنا ونربطه
                 com.safwat.hr.notification.ui.HRNotificationPanel panel =
                         new com.safwat.hr.notification.ui.HRNotificationPanel(stage);
 
@@ -109,7 +106,8 @@ public class MainViewController implements Initializable {
     }
 
     void setMainViewIcon() {
-        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payReport);
+        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payManager,
+                btn_scaleView);
     }
 
     void setButtonsAction() {
@@ -117,8 +115,11 @@ public class MainViewController implements Initializable {
         btn_changeCard.setOnAction(_ -> openChangeCard());
         btn_PayrollVocab.setOnAction(_ -> openPayVocab());
         btn_report.setOnAction(_ -> openPayrollReport());
+        btn_payManager.setOnAction(_ -> openPayManager());
         // ✅ جديد — فتح التاب مع الـ Controller
         btn_mail.setOnAction(_ -> openMessagesTab());
+
+        btn_scaleView.setOnAction(_ -> openScaleView());
     }
 
     /**
@@ -176,5 +177,16 @@ public class MainViewController implements Initializable {
     void openChatView() {
 
         TabManager.loadFXMLInTab(tab, "/com/safwat/hr/chat/ChatView.fxml", "محادثات", true);
+    }
+
+    @FXML
+    void openPayManager() {
+
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollManager(), "مدير استحقاقات", true);
+    }
+
+    @FXML
+    void openScaleView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getSalaryScale(), "مدير استحقاقات", true);
     }
 }

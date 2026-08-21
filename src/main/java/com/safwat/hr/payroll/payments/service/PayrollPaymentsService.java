@@ -35,7 +35,7 @@ public class PayrollPaymentsService {
             return ApiClient.post(
                     ApiEndpoints.PayrollYearly.SEARCH,
                     request,
-                    new TypeReference<List<SearchEmp>>() {
+                    new TypeReference<>() {
                     }
 
             );
@@ -67,7 +67,7 @@ public class PayrollPaymentsService {
             );
         } catch (IOException | InterruptedException e) {
             SAFNotification.error(e.getMessage());
-            e.printStackTrace();
+            log.error(e.getMessage());
             return false;
         }
     }
@@ -97,6 +97,34 @@ public class PayrollPaymentsService {
             SAFNotification.error(e.getMessage());
             log.error(e.getMessage());
             return 0;
+        }
+    }
+
+    public boolean downloadCustomReviewPDF(PayrollRequest request, Path targetPath) {
+        try {
+            return ApiClient.downloadFileViaPostWithBody(
+                    ApiEndpoints.PayrollReview.downloadCustomReview,
+                    request,
+                    targetPath
+            );
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean downloadComparePDF(PayrollRequest request, Path targetPath) {
+        try {
+            return ApiClient.downloadFileViaPostWithBody(
+                    ApiEndpoints.PayrollReview.downloadCompare,
+                    request,
+                    targetPath
+            );
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            log.error(e.getMessage());
+            return false;
         }
     }
 

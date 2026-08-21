@@ -235,10 +235,6 @@ public class ChangeCardController implements Initializable {
 
         request.setStartDate(DateUtils.fromArabicMonthYearFlexible(row.getMonth()));
         request.setNote(row.getNotes());
-        System.out.println(request.getNationalId());
-
-        System.out.println(request.getStartDate());
-        System.out.println(request.getNote());
         return changeService.updateNote(request);
     }
 
@@ -400,6 +396,7 @@ public class ChangeCardController implements Initializable {
                         .build()
         );
 
+        SAFNotification.withAction(targetPath.toString(), targetPath.toFile());
 
     }
 

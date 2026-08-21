@@ -28,10 +28,9 @@ import com.safwat.hr.report.payroll.sub.payrollReview.elementTotal.ElementEmploy
 import com.safwat.hr.report.payroll.sub.payrollReview.elementTotal.ElementEmployees;
 import com.safwat.hr.report.payroll.sub.payrollReview.elementTotal.ElementManagement;
 import com.safwat.hr.report.payroll.sub.payrollReview.elementTotal.ElementPayGroup;
-import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.ReviewReportAll;
-import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.ReviewReportEmployee;
-import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.ReviewReportManagement;
-import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.ReviewReportPayGroup;
+import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.FullReviewReport;
+
+import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.MainReviewReport;
 import com.safwat.hr.report.payroll.sub.payrollReview.update.UpdateReviewKeysAll;
 import com.safwat.hr.report.payroll.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.sub.payrollYearly.*;
@@ -171,17 +170,15 @@ public class ReportRegistryFactory {
         // ══════════════════════════════════════════
         //  فرعيات payrollReview — reviewReport
         // ══════════════════════════════════════════
-        registry.register(new ReviewReportAll());
-        registry.register(new ReviewReportEmployee());
-        registry.register(new ReviewReportManagement());
-        registry.register(new ReviewReportPayGroup());
+        registry.register(new FullReviewReport());
+        registry.register(new MainReviewReport());
+
 
         // ══════════════════════════════════════════
         //  فرعيات payrollReview — update
         // ══════════════════════════════════════════
         registry.register(new UpdateReviewKeysAll());
 
-        
         // ══════════════════════════════════════════
         //  فرعيات records — full
         // ══════════════════════════════════════════

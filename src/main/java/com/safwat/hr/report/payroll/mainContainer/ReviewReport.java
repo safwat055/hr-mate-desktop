@@ -13,7 +13,7 @@ public class ReviewReport implements ReportStrategy {
 
     @Override
     public String getDisplayName() {
-        return "تقرير المراجعة للصرفيات الرئيسية";
+        return "استخراج تقرير المراجعة";
     }
 
     @Override

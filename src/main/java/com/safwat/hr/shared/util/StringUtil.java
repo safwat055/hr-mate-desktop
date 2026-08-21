@@ -18,4 +18,20 @@ public class StringUtil {
                 .replaceAll("٨", "8")
                 .replaceAll("٩", "9");
     }
+
+    public static String convertEnglishToArabicNumbers(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input.replaceAll("0", "٠")
+                .replaceAll("1", "١")
+                .replaceAll("2", "٢")
+                .replaceAll("3", "٣")
+                .replaceAll("4", "٤")
+                .replaceAll("5", "٥")
+                .replaceAll("6", "٦")
+                .replaceAll("7", "٧")
+                .replaceAll("8", "٨")
+                .replaceAll("9", "٩");
+    }
 }

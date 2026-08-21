@@ -11,17 +11,15 @@ import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 
-import java.util.List;
-
-public class ReviewReportPayGroup implements ReportStrategy {
+public class FullReviewReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "REVIEW_REPORT_PAY_GROUP";
+        return "FULL_REVIEW_REPORT";
     }
 
     @Override
     public String getDisplayName() {
-        return "تفرير مراجعة لمجموعة تعيين";
+        return "تقرير مراجعة لكل الصرفيات";
     }
 
     @Override
@@ -37,37 +35,61 @@ public class ReviewReportPayGroup implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_PAY_GROUP))
-                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "payGroup"))
+                .requiredField(UiField.H_START_DATE)
+                .requiredField(UiField.H_EMPLOYEE)
+                .requiredField(UiField.H_MANAGEMENT)
+                .requiredField(UiField.H_PAY_GROUP)
+
+                .visibleField(UiField.H_START_DATE)
+                .visibleField(UiField.H_EMPLOYEE)
+                .visibleField(UiField.H_MANAGEMENT)
+                .visibleField(UiField.H_PAY_GROUP)
+
+                .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر إدارة", "management"))
+                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر مجموعة", "payGroup"))
+
                 .build();
     }
 
     @Override
     public void onApply(PayrollReportController controller) {
+
         controller.setChoseMonth();
+
+        controller.setSearchEmployeeActions();
 
     }
 
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
+        String reportType;
+        if (context.getManagement() != null && !context.getManagement().isBlank()) {
+            reportType = "MANAGEMENT";
+        } else if (context.getPayGroup() != null && !context.getPayGroup().isBlank()) {
+            reportType = "PAY_GROUP";
+        } else if (context.getNationalId() != null && !context.getNationalId().isBlank()) {
+            reportType = "EMPLOYEE";
+        } else {
+            reportType = "ALL";
+        }
+
         return PayrollRequest.builder()
-                .reportName(context.getReportName())
                 .user(ApiClient.getUserName())
+                .reportName(context.getReportName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
+                .reportType(reportType)
+                .management(context.getManagement())
                 .payGroup(context.getPayGroup())
+                .nationalId(context.getNationalId())
                 .build();
     }
 
     @Override
     public void validate(ReportContext context) {
-        if (context.getStartDate() == null || context.getStartDate().isEmpty()) {
+        if (context.getStartDate() == null || context.getStartDate().isBlank()) {
             throw new ValidationException("الشهر مطلوب");
 
-        }
-        if (context.getPayGroup() == null || context.getPayGroup().isBlank()) {
-            throw new ValidationException("مجموعة التعيين مطلوبة");
         }
     }
 }

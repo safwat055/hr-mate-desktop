@@ -1,18 +1,13 @@
 package com.safwat.hr.payroll.payments;
 
-import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.payroll.dto.PaymentsView;
 import com.safwat.hr.payroll.dto.SearchEmp;
 import com.safwat.hr.payroll.payments.service.PayrollPaymentsService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.controls.SAFDialog;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.icons.Icons;
-import com.safwat.hr.ui.util.PDFView;
 import com.safwat.hr.ui.util.SearchDialog;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,7 +23,6 @@ import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
-import javafx.scene.web.WebView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
@@ -73,39 +67,27 @@ public class PaymentsController implements Initializable {
     @FXML
     private TextField txt_startMonth;
 
-    @FXML
-    private WebView webView;
-    @FXML
-    private Label pathLabel;
+
     @FXML
     private CheckBox chk_showAction;
     private TableColumn<PaymentsResult, Void> colActions;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setView();
+
         setButtonsAction();
         setTextFieldsAction();
         setupTable();
-        pathLabel.setVisible(false);
-    }
-
-    /**
-     * use to setting ui component
-     */
-    void setView() {
-        webView.setManaged(false);
-        table_payments.setManaged(false);
-        SAFTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
-        SAFButton.flat(true, btn_clear, btn_search, btn_view);
-        Icons.getInstance().getPDFImage(btn_pdf);
 
     }
+
 
     /**
      * Use To Set Buttons Actions
      */
     void setButtonsAction() {
+
+        Icons.getInstance().getPDFImage(btn_pdf);
         btn_search.setOnAction(_ -> searchEmployee());
         btn_view.setOnAction(_ -> getEmployeeData());
         btn_pdf.setOnAction(_ -> exportToPDF());
@@ -118,13 +100,8 @@ public class PaymentsController implements Initializable {
 
     void setTextFieldsAction() {
         txt_searchValue.setOnAction(_ -> searchEmployee());
-        txt_nationalID.setOnAction(_ -> exportToPDF());
+        // txt_nationalID.setOnAction(_ -> exportToPDF());
 
-        txt_nationalID.textProperty().addListener(
-                (_, _, _) -> pathLabel.setText("")
-        );
-        txt_startMonth.textProperty().addListener((_, _, _) -> pathLabel.setText(""));
-        txt_endMonth.textProperty().addListener((_, _, _) -> pathLabel.setText(""));
     }
 
     /**
@@ -139,9 +116,8 @@ public class PaymentsController implements Initializable {
         txt_nationalID.clear();
         txt_startMonth.clear();
         txt_endMonth.clear();
-        pathLabel.setText("");
-        webView.setManaged(false);
-        table_payments.setManaged(false);
+
+
     }
 
     private void exportToPDF() {
@@ -151,14 +127,7 @@ public class PaymentsController implements Initializable {
                 SAFNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
                 return;
             }
-            if (!pathLabel.getText().isEmpty()) {
-                Path targetPath = Path.of(pathLabel.getText());
 
-                openPDF(targetPath);
-
-                return;
-            }
-            showWebView();
             PayrollRequest request = PayrollRequest.builder().build();
 
             request.setNationalId(txt_nationalID.getText());
@@ -175,7 +144,7 @@ public class PaymentsController implements Initializable {
             }
 
             Path targetPath = tempDownloadsDir.resolve(fileName);
-            pathLabel.setText(targetPath.toString());
+
             SAFNotification.success("جاري تحميل الملف...");
 
             boolean success = paymentsService.downloadPaymentsPDF(request, targetPath);
@@ -195,35 +164,88 @@ public class PaymentsController implements Initializable {
         }
     }
 
+    private void customExportToPDF(String month, String payGroup) {
+
+        try {
+
+            PayrollRequest request = PayrollRequest.builder().build();
+
+            request.setNationalId(txt_nationalID.getText());
+            request.setStartDate(DateUtils.getFirstDayOfMonth(convertArabicToEnglishNumbers(month)));
+            request.setPayGroup(convertArabicToEnglishNumbers(payGroup));
+
+            request.setFormat("PDF");
+            String fileName = "REVIEW_REPORT" + System.currentTimeMillis() + ".pdf";
+
+            String workingDir = System.getProperty("user.dir");
+
+            Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
+            if (!Files.exists(tempDownloadsDir)) {
+                Files.createDirectories(tempDownloadsDir);
+            }
+
+            Path targetPath = tempDownloadsDir.resolve(fileName);
+
+            SAFNotification.success("جاري تحميل الملف...");
+
+            boolean success = paymentsService.downloadCustomReviewPDF(request, targetPath);
+
+            if (success) {
+                SAFNotification.withAction("هل تريد فتح التقرير الان ؟", targetPath.toFile());
+
+            } else {
+
+                SAFNotification.error("فشل تحميل الملف");
+            }
+
+        } catch (Exception e) {
+            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
+
+        }
+    }
+
+    private void compareExportToPDF(String month) {
+
+        try {
+
+            PayrollRequest request = PayrollRequest.builder().build();
+
+            request.setNationalId(txt_nationalID.getText());
+            request.setStartDate(DateUtils.getFirstDayOfMonth(convertArabicToEnglishNumbers(month)));
+
+            request.setFormat("PDF");
+            String fileName = "COMPARE_REPORT" + System.currentTimeMillis() + ".pdf";
+
+            String workingDir = System.getProperty("user.dir");
+
+            Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
+            if (!Files.exists(tempDownloadsDir)) {
+                Files.createDirectories(tempDownloadsDir);
+            }
+
+            Path targetPath = tempDownloadsDir.resolve(fileName);
+
+            SAFNotification.success("جاري تحميل الملف...");
+
+            boolean success = paymentsService.downloadComparePDF(request, targetPath);
+
+            if (success) {
+                SAFNotification.withAction("هل تريد فتح التقرير الان ؟", targetPath.toFile());
+
+            } else {
+
+                SAFNotification.error("فشل تحميل الملف");
+            }
+
+        } catch (Exception e) {
+            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
+
+        }
+    }
+
     private void openPDF(Path targetPath) {
 
-        showWebView();
-        PDFView.showIN(targetPath.toString(), webView);
-        NotificationService.getInstance().send(
-                HRNotification.builder()
-                        .type(HRNotification.NotificationType.SYSTEM)
-                        .priority(HRNotification.Priority.NORMAL)
-                        .title("تقرير صرفيات")
-                        .message(txt_empName.getText())
-                        .file(targetPath.toString())
-                        .sender("system")
-                        .build()
-        );
-    }
-
-    private void showWebView() {
-        table_payments.getItems().clear();
-        table_payments.setManaged(false);
-        table_payments.setVisible(false);
-        webView.setManaged(true);
-        webView.setVisible(true);
-    }
-
-    private void showPaymentsTable() {
-        webView.setManaged(false);
-        webView.setVisible(false);
-        table_payments.setManaged(true);
-        table_payments.setVisible(true);
+        SAFNotification.withAction(targetPath.toString(), targetPath.toFile());
     }
 
 
@@ -289,12 +311,14 @@ public class PaymentsController implements Initializable {
         });
 
         colActions = new TableColumn<>("الإجراءات");
-        colActions.setPrefWidth(180);
+        //  colActions.setPrefWidth(180);
 
         colActions.setCellFactory(_ -> new TableCell<>() {
 
             private final Button btnEdit = new Button("تعديل");
             private final Button btnDelete = new Button("حذف");
+            private final Button btnPDF = new Button("PDF");
+            private final Button btnComparePDF = new Button("ملاحظات");
 
             {
                 btnEdit.setStyle("""
@@ -303,9 +327,21 @@ public class PaymentsController implements Initializable {
                         -fx-background-radius: 5;
                         -fx-cursor: hand;
                         """);
+                btnComparePDF.setStyle("""
+                        -fx-background-color: #1976D2;
+                        -fx-text-fill: white;
+                        -fx-background-radius: 5;
+                        -fx-cursor: hand;
+                        """);
 
                 btnDelete.setStyle("""
                         -fx-background-color: #D32F2F;
+                        -fx-text-fill: white;
+                        -fx-background-radius: 5;
+                        -fx-cursor: hand;
+                        """);
+                btnPDF.setStyle("""
+                        -fx-background-color: #1976D2;
                         -fx-text-fill: white;
                         -fx-background-radius: 5;
                         -fx-cursor: hand;
@@ -322,6 +358,23 @@ public class PaymentsController implements Initializable {
                     } else {
                         SAFNotification.error("يجب تحديد الصف أولا ...");
                     }
+
+                });
+
+                btnPDF.setOnAction(_ -> {
+                    PaymentsResult row = getTableView().getItems().get(getIndex());
+                    customExportToPDF(row.month.get(), row.payGroup.get());
+
+                });
+
+                btnComparePDF.setOnAction(_ -> {
+
+                    PaymentsResult row = getTableView().getItems().get(getIndex());
+                    if (!row.getPayGroup().contains("رئيسية")) {
+                        SAFNotification.error("الملاحظات للصرفية الرئيسية فقط");
+                        return;
+                    }
+                    compareExportToPDF(row.month.get());
 
                 });
 
@@ -347,7 +400,7 @@ public class PaymentsController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    HBox box = new HBox(8, btnEdit, btnDelete);
+                    HBox box = new HBox(8, btnPDF, btnEdit, btnComparePDF, btnDelete);
                     box.setAlignment(Pos.CENTER);
                     setGraphic(box);
                 }
@@ -409,13 +462,12 @@ public class PaymentsController implements Initializable {
     private void getEmployeeData() {
         if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
             SAFNotification.warning("يجب ادخال الرقم القومى او البحث عن قيمة اولا");
+
             return;
         }
 
         try {
             //   table_payments.getColumns().clear();
-
-            showPaymentsTable();
 
             PayrollRequest request = PayrollRequest.builder().build();
             request.setNationalId(txt_nationalID.getText());
@@ -462,10 +514,7 @@ public class PaymentsController implements Initializable {
         request.setPayGroup(convertArabicToEnglishNumbers(row.getPayGroup()));
         request.setStartDate(DateUtils.fromArabicMonthYear(row.getMonth()));
         request.setNote(row.getNote());
-        System.out.println(request.getNationalId());
-        System.out.println(request.getPayGroup());
-        System.out.println(request.getStartDate());
-        System.out.println(request.getNote());
+
         return paymentsService.updateEmployeeNote(request);
     }
 
