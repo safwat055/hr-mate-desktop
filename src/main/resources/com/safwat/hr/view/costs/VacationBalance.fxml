@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0"
+            prefWidth="1280.0" style="-fx-background-color: #F5F6FA;"
+            xmlns="http://javafx.com/javafx/26"
+            fx:controller="safwat.controllers.humanResources.costes.VacationBalanceController">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+            <padding>
+                <Insets bottom="16" left="16" right="16" top="16"/>
+            </padding>
+
+            <!-- CARD: بيانات البحث -->
+            <VBox spacing="0"
+                  style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <Label alignment="CENTER" maxWidth="Infinity"
+                       style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                       text="بيانات البحث"/>
+
+                <VBox spacing="10">
+                    <padding>
+                        <Insets bottom="12" left="12" right="12" top="12"/>
+                    </padding>
+
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                        <TextField fx:id="txt_vac_id" alignment="CENTER" editable="false"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="160"
+                                   promptText="رقم قومى"/>
+                        <TextField fx:id="txt_vac_name" alignment="CENTER" editable="false"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="180" promptText="الاسم"/>
+                        <TextField fx:id="txt_vac_cost_num" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
+                                   prefHeight="32" prefWidth="160" promptText="رقم الدعوى"/>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <Label prefHeight="28" prefWidth="50" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="النوع"/>
+                        <ComboBox fx:id="combo_vac_type" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                                  prefWidth="180"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="من"/>
+                        <TextField fx:id="txt_vac_start" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                   prefHeight="32" prefWidth="120" promptText="تاريخ البداية"/>
+
+                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="الي"/>
+                        <TextField fx:id="txt_vac_end" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                   prefHeight="32" prefWidth="120" promptText="تاريخ النهاية"/>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <Button fx:id="btn_get" prefHeight="32" prefWidth="90"
+                                style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;"
+                                text="تجهيز"/>
+                        <Button fx:id="btn_calc" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="احتساب"/>
+                        <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="PDF"/>
+                        <Button fx:id="btn_clear" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="مسح"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- TABLES -->
+            <HBox spacing="10" VBox.vgrow="ALWAYS">
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      HBox.hgrow="ALWAYS">
+                    <Label alignment="CENTER" maxWidth="Infinity"
+                           style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           text="تفاصيل الاجازات"/>
+                    <TableView fx:id="table_vac_details" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
+                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="400" VBox.vgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="8" left="8" right="8" top="8"/>
+                        </padding>
+                    </TableView>
+                </VBox>
+
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      prefWidth="300">
+                    <Label alignment="CENTER" maxWidth="Infinity"
+                           style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           text="اجمالى الاجازات"/>
+                    <TableView fx:id="table_vac_total" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
+                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="400" VBox.vgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="8" left="8" right="8" top="8"/>
+                        </padding>
+                    </TableView>
+                </VBox>
+            </HBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

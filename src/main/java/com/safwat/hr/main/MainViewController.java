@@ -187,6 +187,6 @@ public class MainViewController implements Initializable {
 
     @FXML
     void openScaleView() {
-        TabManager.loadFXMLInTab(tab, new FXMLPaths().getSalaryScale(), "مدير استحقاقات", true);
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getSalaryScale(), "تدرج راتب", true);
     }
 }

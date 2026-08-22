@@ -23,10 +23,10 @@
     5. RTL على المستوى الصح (ScrollPane فقط)
 -->
 
-<ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1128.0" prefWidth="1239.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.scale.ScaleController">
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1128.0" prefWidth="1239.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.scale.ScaleController">
 
     <content>
-        <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1126.0" prefWidth="1247.0" spacing="8" style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="1126.0" prefWidth="1247.0" spacing="8" style="-fx-background-color: #F5F6FA;">
             <padding>
                 <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
@@ -220,7 +220,7 @@
                    </VBox>
 
                                 <!-- ترقيات -->
-                    <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                  -fx-border-radius: 6; -fx-background-radius: 6;                                  -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="364.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                  -fx-border-radius: 6; -fx-background-radius: 6;                                  -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                         <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                       -fx-font-weight: bold; -fx-font-size: 13;                                       -fx-background-radius: 6 6 0 0; -fx-padding: 6;" text="الترقيات" />
                         <TableView fx:id="table_upgrade" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="302.0" prefWidth="368.0">
                             <columns>
@@ -250,7 +250,7 @@
                                  <!-- حافز ترقية -->
                      <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                      -fx-border-radius: 6; -fx-background-radius: 6;                                      -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                          <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                           -fx-font-weight: bold; -fx-font-size: 13;                                           -fx-background-radius: 6 6 0 0; -fx-padding: 6;" text="حافز الترقية" />
-                         <TableView fx:id="table_promotion" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="294.0" prefWidth="268.0">
+                         <TableView fx:id="table_promotion" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="294.0" prefWidth="268.0">
                              <columns>
                                  <TableColumn prefWidth="130" text="التاريخ" />
                                  <TableColumn prefWidth="130" text="رقم القرار" />
@@ -356,7 +356,7 @@
             <!-- ══════════════════════════════════════════════════════
                  5. نتائج البحث
             ══════════════════════════════════════════════════════ -->
-            <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="349.0" prefWidth="1394.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                 <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #374151; -fx-text-fill: white;                               -fx-font-weight: bold; -fx-font-size: 13;                               -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="نتائج البحث" />
                 <TableView fx:id="table_result" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="300">
                     <padding><Insets bottom="6" left="6" right="6" top="4" /></padding>

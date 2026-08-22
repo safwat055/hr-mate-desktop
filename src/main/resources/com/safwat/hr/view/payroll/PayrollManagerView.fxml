@@ -18,138 +18,144 @@
 
 <!-- ============================================================
      مدير تقارير البيرول — Payroll Report Manager
-     Single Screen — 3 Report Cards — Clean & Functional
+     Single Screen — 3 Report Cards — Styled per Salary Scale v1.0
      ============================================================ -->
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
 
     <content>
-        <VBox spacing="20.0">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" style="-fx-background-color: #F5F6FA;">
             <padding>
-                <Insets bottom="28.0" left="32.0" right="32.0" top="28.0" />
+                <Insets bottom="16" left="16" right="16" top="16" />
             </padding>
 
             <!-- ════════════════════════════════════════════════════════
                  HEADER
                  ════════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_RIGHT" spacing="12.0">
-                <Label styleClass="page-title" text="مدير تقارير البيرول" />
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="12" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <padding><Insets bottom="10" left="16" right="16" top="10" /></padding>
+                <Label style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="مدير تقارير البيرول" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblStatus" styleClass="status-label" text="جاهز" />
+                <Label fx:id="lblStatus" style="-fx-font-size: 13; -fx-text-fill: #6B7280;" text="جاهز" />
             </HBox>
 
             <!-- ════════════════════════════════════════════════════════
                  CARD 1: التقرير السنوي
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="14.0">
+            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                 <!-- Card Header -->
-                <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                    <Label styleClass="card-title annual-title" text="التقرير السنوي" />
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
+                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="التقرير السنوي" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshAnnual" styleClass="btn-icon" text="↻" />
+                    <Button fx:id="btnRefreshAnnual" prefHeight="32.0" prefWidth="57.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
                 </HBox>
 
-                <!-- ── قسم الحذف ── -->
-                <VBox spacing="10.0">
-                    <Label styleClass="section-title" text="عمليات الحذف" />
+                <VBox spacing="12">
+                    <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
 
-                    <GridPane hgap="14.0" styleClass="actions-grid" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="220.0" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                            <ColumnConstraints hgrow="NEVER" minWidth="120.0" />
-                        </columnConstraints>
+                    <!-- ── قسم الحذف ── -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
 
-                        <!-- حذف الكل -->
-                        <Label styleClass="action-label" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                        <Button fx:id="btnDeleteAllAnnual" styleClass="btn-danger" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="200" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
 
-                        <!-- حذف شهر -->
-                        <Label styleClass="action-label" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                  <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                     <children>
-                        <TextField fx:id="txtAllMonthsYearly" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="26.0" prefWidth="107.0" promptText=" سنة شهر 2025 2" />
-                        <Label fx:id="lblAllMonthsYearly" alignment="CENTER" prefHeight="25.0" prefWidth="135.0" />
-                     </children>
-                  </HBox>
-                        <Button fx:id="btnDeleteMonthAnnual" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <!-- حذف الكل -->
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-                        <!-- حذف مجموعة في شهر -->
-                        <Label styleClass="action-label" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                     <TextField fx:id="txtMonthGroupY" nodeOrientation="LEFT_TO_RIGHT" prefHeight="26.0" prefWidth="108.0" promptText="ادخل الشهر" />
-                     <Label fx:id="lblMonthGroupY" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="27.0" prefWidth="101.0" />
-                            <TextField fx:id="txtGroupAnnual" alignment="CENTER_RIGHT" nodeOrientation="LEFT_TO_RIGHT" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeleteGroupAnnual" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <!-- حذف شهر -->
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <TextField fx:id="txtAllMonthsYearly" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="104.0" promptText="ادخل شهر" />
+                                <Label fx:id="lblAllMonthsYearly" alignment="CENTER" prefHeight="28" prefWidth="140" style="-fx-text-fill: #6B7280;" />
+                            </HBox>
+                            <Button fx:id="btnDeleteMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
-                        <!-- حذف صرفيات موظف في شهر -->
-                        <Label styleClass="action-label" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                            <ComboBox fx:id="cmbMonthForEmpAnnual" prefWidth="140.0" promptText="الشهر" />
-                            <TextField fx:id="txtEmpIdAnnual" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeleteEmpMonthAnnual" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                            <!-- حذف مجموعة في شهر -->
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                <TextField fx:id="txtMonthGroupY" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="100" promptText="ادخل الشهر" />
+                                <Label fx:id="lblMonthGroupY" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="28" prefWidth="100" style="-fx-text-fill: #6B7280;" />
+                                <TextField fx:id="txtGroupAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeleteGroupAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
-                        <!-- حذف صرفية معينة لموظف -->
-                        <Label styleClass="action-label" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                            <ComboBox fx:id="cmbMonthForPaymentAnnual" prefWidth="120.0" promptText="الشهر" />
-                            <TextField fx:id="txtEmpIdPaymentAnnual" prefWidth="140.0" promptText="الرقم القومي" />
-                            <TextField fx:id="txtPaymentNameAnnual" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeletePaymentAnnual" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                  <rowConstraints>
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                  </rowConstraints>
-                    </GridPane>
-                </VBox>
+                            <!-- حذف صرفيات موظف في شهر -->
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                <ComboBox fx:id="cmbMonthForEmpAnnual" prefHeight="32" prefWidth="140" promptText="الشهر" />
+                                <TextField fx:id="txtEmpIdAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeleteEmpMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-                <!-- ── قسم التعديل ── -->
-                <VBox spacing="10.0">
-                    <Label styleClass="section-title" text="عمليات التعديل" />
+                            <!-- حذف صرفية معينة لموظف -->
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                <ComboBox fx:id="cmbMonthForPaymentAnnual" prefHeight="32" prefWidth="120" promptText="الشهر" />
+                                <TextField fx:id="txtEmpIdPaymentAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" promptText="الرقم القومي" />
+                                <TextField fx:id="txtPaymentNameAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeletePaymentAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
 
-                    <!-- تعديل اسم الصرفية -->
-                    <GridPane hgap="14.0" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="220.0" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                            <ColumnConstraints hgrow="NEVER" minWidth="120.0" />
-                        </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+                        </GridPane>
+                    </VBox>
 
-                        <Label styleClass="action-label" text="تعديل اسم الصرفية في كل السجلات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <TextField fx:id="txtOldPaymentName" promptText="الاسم القديم" HBox.hgrow="ALWAYS" />
-                            <TextField fx:id="txtNewPaymentName" promptText="الاسم الجديد" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnUpdatePaymentName" styleClass="btn-primary" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                  <rowConstraints>
-                     <RowConstraints />
-                  </rowConstraints>
-                    </GridPane>
+                    <!-- ── قسم التعديل ── -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات التعديل" />
 
-                    <!-- إضافة وصف للمجموعات -->
-                    <VBox spacing="8.0">
-                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                            <Label styleClass="action-label" text="إضافة وصف حسب الشهر والمجموعة" />
-                            <Region HBox.hgrow="ALWAYS" />
-                            <ComboBox fx:id="cmbDescMonthAnnual" promptText="اختر الشهر" />
-                            <Button fx:id="btnLoadGroupsForDesc" styleClass="btn-secondary" text="عرض المجموعات" />
-                        </HBox>
-                        <TableView fx:id="tableGroupDescriptions" prefHeight="180.0">
-                            <columns>
-                                <TableColumn fx:id="colGroupName" prefWidth="250.0" text="اسم المجموعة" />
-                                <TableColumn fx:id="colGroupDesc" prefWidth="400.0" text="الوصف" />
-                            </columns>
-                        </TableView>
-                        <HBox alignment="CENTER_LEFT">
-                            <Button fx:id="btnSaveDescriptions" styleClass="btn-primary" text="حفظ الأوصاف" />
-                        </HBox>
+                        <!-- تعديل اسم الصرفية -->
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="200" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
+
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تعديل اسم الصرفية في كل السجلات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <TextField fx:id="txtOldPaymentName" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الاسم القديم" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtNewPaymentName" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الاسم الجديد" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnUpdatePaymentName" prefHeight="32" prefWidth="90" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                            <rowConstraints>
+                                <RowConstraints />
+                            </rowConstraints>
+                        </GridPane>
+
+                        <!-- إضافة وصف للمجموعات -->
+                        <VBox spacing="8">
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
+                                <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="إضافة وصف حسب الشهر والمجموعة" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="cmbDescMonthAnnual" prefHeight="32" promptText="اختر الشهر" />
+                                <Button fx:id="btnLoadGroupsForDesc" prefHeight="32" prefWidth="110" style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="عرض المجموعات" />
+                            </HBox>
+                            <TableView fx:id="tableGroupDescriptions" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="180">
+                                <columns>
+                                    <TableColumn fx:id="colGroupName" prefWidth="250" text="اسم المجموعة" />
+                                    <TableColumn fx:id="colGroupDesc" prefWidth="400" text="الوصف" />
+                                </columns>
+                                <padding><Insets bottom="4" left="4" right="4" top="2" /></padding>
+                            </TableView>
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT">
+                                <Button fx:id="btnSaveDescriptions" prefHeight="32" prefWidth="110" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حفظ الأوصاف" />
+                            </HBox>
+                        </VBox>
                     </VBox>
                 </VBox>
             </VBox>
@@ -157,126 +163,137 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD 2: تقرير المراجعة
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="14.0">
-                <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                    <Label styleClass="card-title review-title" text="تقرير المراجعة" />
+            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
+                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="تقرير المراجعة" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshReview" styleClass="btn-icon" text="↻" />
+                    <Button fx:id="btnRefreshReview" prefHeight="32.0" prefWidth="68.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
                 </HBox>
 
-                <!-- قسم الحذف -->
-                <VBox spacing="10.0">
-                    <Label styleClass="section-title" text="عمليات الحذف" />
-                    <GridPane hgap="14.0" styleClass="actions-grid" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="220.0" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                            <ColumnConstraints hgrow="NEVER" minWidth="120.0" />
-                        </columnConstraints>
+                <VBox spacing="12">
+                    <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
 
-                        <Label styleClass="action-label" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                        <Button fx:id="btnDeleteAllReview" styleClass="btn-danger" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                    <!-- قسم الحذف -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="200" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
 
-                        <Label styleClass="action-label" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                        <ComboBox fx:id="cmbMonthReview" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Button fx:id="btnDeleteMonthReview" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-                        <Label styleClass="action-label" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                            <ComboBox fx:id="cmbMonthForGroupReview" promptText="الشهر" HBox.hgrow="ALWAYS" />
-                            <TextField fx:id="txtGroupReview" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeleteGroupReview" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="cmbMonthReview" prefHeight="32" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <Button fx:id="btnDeleteMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
-                        <Label styleClass="action-label" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                            <ComboBox fx:id="cmbMonthForEmpReview" prefWidth="140.0" promptText="الشهر" />
-                            <TextField fx:id="txtEmpIdReview" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeleteEmpMonthReview" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                <ComboBox fx:id="cmbMonthForGroupReview" prefHeight="32" promptText="الشهر" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtGroupReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeleteGroupReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
-                        <Label styleClass="action-label" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                            <ComboBox fx:id="cmbMonthForPaymentReview" prefWidth="120.0" promptText="الشهر" />
-                            <TextField fx:id="txtEmpIdPaymentReview" prefWidth="140.0" promptText="الرقم القومي" />
-                            <TextField fx:id="txtPaymentNameReview" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeletePaymentReview" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                  <rowConstraints>
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                  </rowConstraints>
-                    </GridPane>
-                </VBox>
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                                <ComboBox fx:id="cmbMonthForEmpReview" prefHeight="32" prefWidth="140" promptText="الشهر" />
+                                <TextField fx:id="txtEmpIdReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeleteEmpMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-                <!-- قسم تحديث المفاتيح -->
-                <VBox spacing="10.0">
-                    <Label styleClass="section-title" text="تحديث مفاتيح Nested Map" />
-                    <GridPane hgap="14.0" styleClass="actions-grid" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="220.0" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                            <ColumnConstraints hgrow="NEVER" minWidth="120.0" />
-                        </columnConstraints>
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                                <ComboBox fx:id="cmbMonthForPaymentReview" prefHeight="32" prefWidth="120" promptText="الشهر" />
+                                <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" promptText="الرقم القومي" />
+                                <TextField fx:id="txtPaymentNameReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeletePaymentReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
 
-                        <Label styleClass="action-label" text="تحديث مفتاح" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <ComboBox fx:id="cmbKeyMonthReview" prefWidth="140.0" promptText="الشهر (اختياري)" />
-                            <CheckBox fx:id="chkAllMonthsReview" text="كل الأشهر" />
-                            <TextField fx:id="txtOldKeyReview" promptText="المفتاح القديم" HBox.hgrow="ALWAYS" />
-                            <TextField fx:id="txtNewKeyReview" promptText="المفتاح الجديد" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnUpdateKeysReview" styleClass="btn-primary" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                  <rowConstraints>
-                     <RowConstraints />
-                  </rowConstraints>
-                    </GridPane>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- قسم تحديث المفاتيح -->
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="تحديث مفاتيح Nested Map" />
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="200" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
+
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تحديث مفتاح" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <ComboBox fx:id="cmbKeyMonthReview" prefHeight="32" prefWidth="140" promptText="الشهر (اختياري)" />
+                                <CheckBox fx:id="chkAllMonthsReview" nodeOrientation="RIGHT_TO_LEFT" text="كل الأشهر" />
+                                <TextField fx:id="txtOldKeyReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="المفتاح القديم" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtNewKeyReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="المفتاح الجديد" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnUpdateKeysReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                            <rowConstraints>
+                                <RowConstraints />
+                            </rowConstraints>
+                        </GridPane>
+                    </VBox>
                 </VBox>
             </VBox>
 
             <!-- ════════════════════════════════════════════════════════
                  CARD 3: إجر الاشتراك
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="14.0">
-                <HBox alignment="CENTER_RIGHT" spacing="10.0">
-                    <Label styleClass="card-title sub-title" text="تقرير إجر الاشتراك" />
+            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
+                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="تقرير إجر الاشتراك" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshSub" styleClass="btn-icon" text="↻" />
+                    <Button fx:id="btnRefreshSub" prefHeight="32.0" prefWidth="56.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
                 </HBox>
 
-                <VBox spacing="10.0" styleClass="sub-card">
-                    <Label styleClass="section-title" text="عمليات الحذف" />
-                    <GridPane hgap="14.0" styleClass="actions-grid" vgap="10.0">
-                        <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" minWidth="220.0" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                            <ColumnConstraints hgrow="NEVER" minWidth="120.0" />
-                        </columnConstraints>
+                <VBox spacing="12">
+                    <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
 
-                        <Label styleClass="action-label" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                        <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                        <Button fx:id="btnDeleteAllSub" styleClass="btn-danger" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                    <VBox spacing="8">
+                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="200" />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                            </columnConstraints>
 
-                        <Label styleClass="action-label" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                        <ComboBox fx:id="cmbMonthSub" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Button fx:id="btnDeleteMonthSub" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-                        <Label styleClass="action-label" text="حذف بيانات موظف" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                        <HBox spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                            <ComboBox fx:id="cmbMonthForEmpSub" prefWidth="140.0" promptText="الشهر" />
-                            <TextField fx:id="txtEmpIdSub" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Button fx:id="btnDeleteEmpSub" styleClass="btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                  <rowConstraints>
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                  </rowConstraints>
-                    </GridPane>
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <ComboBox fx:id="cmbMonthSub" prefHeight="32" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <Button fx:id="btnDeleteMonthSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف بيانات موظف" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                <ComboBox fx:id="cmbMonthForEmpSub" prefHeight="32" prefWidth="140" promptText="الشهر" />
+                                <TextField fx:id="txtEmpIdSub" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                            </HBox>
+                            <Button fx:id="btnDeleteEmpSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+                        </GridPane>
+                    </VBox>
                 </VBox>
             </VBox>
 

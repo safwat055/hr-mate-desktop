@@ -1,54 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.github.palexdev.mfxcore.controls.Label?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="665.0" prefWidth="1308.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payments.PaymentsController">
+<!-- ============================================================
+     شاشة الصرفيات — Payments
+     Styled per Salary Scale v1.0 Design System
+     ============================================================ -->
+
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payments.PaymentsController">
+
     <content>
-        <AnchorPane minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="646.0" prefWidth="1098.0">
-            <children>
-                <HBox alignment="CENTER_RIGHT" layoutX="14.0" layoutY="-14.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="909.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0">
-                    <padding>
-                        <Insets left="5.0" right="5.0" />
-                    </padding>
-                    <children>
-                        <Label fx:id="pathLabel" prefHeight="18.0" prefWidth="138.0" />
-                        <CheckBox fx:id="chk_showAction" contentDisplay="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="25.0" prefWidth="124.0" style="-fx-border-color: lightgray;" text="عرض الاجراءات">
-                            <padding>
-                                <Insets left="5.0" right="5.0" />
-                            </padding>
-                        </CheckBox>
-                        <TextField fx:id="txt_searchValue" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="354.0" promptText="ادخل فيمة للبحث او اكتب الرقم القومي كامل في حقل الادخال " />
-                        <Button fx:id="btn_search" layoutX="961.0" layoutY="17.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="82.0" text="بحث" />
-                        <Button fx:id="btn_clear" layoutX="1031.0" layoutY="17.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="56.0" text="مسح" />
-                    </children>
-                </HBox>
-                <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="44.0" maxHeight="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="51.0" prefWidth="1116.0" spacing="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
-                    <children>
-                        <TextField fx:id="txt_endMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
-                        <Label alignment="CENTER" fontSmoothingType="GRAY" layoutX="560.0" layoutY="21.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="الي" />
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+            <padding>
+                <Insets bottom="16" left="16" right="16" top="16" />
+            </padding>
 
-                        <TextField fx:id="txt_startMonth" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="115.0" promptText="شهر سنة 2025 2" />
-                        <Label alignment="CENTER" fontSmoothingType="GRAY" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="30.0" text="من" />
-                        <TextField fx:id="txt_empName" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="198.0" promptText="اسم الموظف" />
-                        <TextField fx:id="txt_empCode" alignment="CENTER_RIGHT" editable="false" prefHeight="26.0" prefWidth="112.0" promptText="رقم موظف" />
-                        <TextField fx:id="txt_nationalID" alignment="CENTER_RIGHT" prefHeight="26.0" prefWidth="134.0" promptText="رقم قومى" />
-                        <Button fx:id="btn_pdf" mnemonicParsing="false" prefHeight="26.0" prefWidth="36.0" />
-                        <Button fx:id="btn_view" mnemonicParsing="false" prefHeight="26.0" prefWidth="56.0" text="عرض" />
-                    </children>
-                    <padding>
-                        <Insets left="5.0" right="5.0" />
-                    </padding>
-                </HBox>
-                  <TableView fx:id="table_payments" editable="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="563.0" prefWidth="1286.0" style="-fx-managed: true;" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="100.0" />
-            </children>
-        </AnchorPane>
+            <!-- ════════════════════════════════════════════════════════
+                 HEADER — شريط البحث الأول
+                 ════════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <padding><Insets bottom="8" left="12" right="12" top="8" /></padding>
+
+                <Button fx:id="btn_search" prefHeight="32" prefWidth="80" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="🔍 بحث" />
+                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="مسح" />
+
+                <TextField fx:id="txt_searchValue" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="360" promptText="ادخل قيمة للبحث او اكتب الرقم القومي كامل" />
+
+                <CheckBox fx:id="chk_showAction" nodeOrientation="RIGHT_TO_LEFT" prefHeight="28" style="-fx-border-color: #DDE1E7; -fx-border-radius: 4; -fx-padding: 4 8 4 8;" text="عرض الاجراءات" />
+
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="pathLabel" prefHeight="22" prefWidth="140" style="-fx-text-fill: #6B7280;" />
+            </HBox>
+
+            <!-- ════════════════════════════════════════════════════════
+                 TOOLBAR — شريط الأدوات (عرض + بيانات الموظف + الشهور)
+                 ════════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <padding><Insets bottom="8" left="12" right="12" top="8" /></padding>
+
+                <Button fx:id="btn_view" prefHeight="32" prefWidth="80" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="عرض" />
+                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="PDF" />
+
+                <Separator orientation="VERTICAL" />
+
+                <TextField fx:id="txt_nationalID" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" promptText="رقم قومى" />
+                <TextField fx:id="txt_empCode" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="120" promptText="رقم موظف" />
+                <TextField fx:id="txt_empName" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="200" promptText="اسم الموظف" />
+
+                <Separator orientation="VERTICAL" />
+
+                <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="من" />
+                <TextField fx:id="txt_startMonth" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="120" promptText="شهر سنة 2025 2" />
+
+                <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الي" />
+                <TextField fx:id="txt_endMonth" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="120" promptText="شهر سنة 2025 2" />
+            </HBox>
+
+            <!-- ════════════════════════════════════════════════════════
+                 RESULTS — جدول الصرفيات
+                 ════════════════════════════════════════════════════════ -->
+            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
+                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="نتائج البحث" />
+
+                <TableView fx:id="table_payments" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="500" VBox.vgrow="ALWAYS">
+                    <padding><Insets bottom="8" left="8" right="8" top="8" /></padding>
+                </TableView>
+            </VBox>
+
+        </VBox>
     </content>
 </ScrollPane>

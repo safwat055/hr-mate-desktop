@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT"
+            prefHeight="1200.0"
+            prefWidth="1280.0" style="-fx-background-color: #F5F6FA;"
+            xmlns="http://javafx.com/javafx/26"
+            fx:controller="safwat.controllers.humanResources.costes.CaderChange_212_Controller">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+            <padding>
+                <Insets bottom="16" left="16" right="16" top="16"/>
+            </padding>
+
+            <!-- CARD: بيانات البحث -->
+            <VBox spacing="0"
+                  style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <Label alignment="CENTER" maxWidth="Infinity"
+                       style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                       text="بيانات البحث"/>
+
+                <VBox spacing="10">
+                    <padding>
+                        <Insets bottom="12" left="12" right="12" top="12"/>
+                    </padding>
+
+                    <!-- Row 1: الموظف + الاساسي -->
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                        <TextField fx:id="txt_cader_id" alignment="CENTER" editable="false"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="160"
+                                   promptText="رقم قومى"/>
+                        <TextField fx:id="txt_cader_name" alignment="CENTER" editable="false"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="180" promptText="الاسم"/>
+                        <TextField fx:id="txt_cost_num" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
+                                   prefHeight="32" prefWidth="140" promptText="رقم الدعوى"/>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="اساسي قديم"/>
+                        <TextField fx:id="txt_cader_1" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
+                                   prefHeight="32" prefWidth="70"/>
+                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="اساسي جديد"/>
+                        <TextField fx:id="txt_cader_2" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
+                                   prefHeight="32" prefWidth="70"/>
+                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="فرق الاساسي"/>
+                        <Label fx:id="lbl_Basic" alignment="CENTER" prefHeight="32" prefWidth="70"
+                               style="-fx-border-color: #DDE1E7; -fx-background-color: #F5F6FA; -fx-border-radius: 4;"/>
+                    </HBox>
+
+                    <!-- Row 2: التواريخ + الأزرار -->
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="من"/>
+                        <TextField fx:id="txt_startDate_costes" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                   prefHeight="32" prefWidth="100" promptText="تاريخ البداية"/>
+                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                               text="الى"/>
+                        <TextField fx:id="txt_endDate_costes" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                   prefHeight="32" prefWidth="100" promptText="تاريخ النهاية"/>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <Button fx:id="btn_getData" prefHeight="32" prefWidth="90"
+                                style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;"
+                                text="تجهيز"/>
+                        <Button fx:id="btn_calc" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="احتساب"/>
+                        <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="PDF"/>
+                        <Button fx:id="btn_clear" prefHeight="32" prefWidth="70"
+                                style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                text="مسح"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </HBox>
+
+                    <!-- Row 3: Checkboxes -->
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
+                        <VBox spacing="4" prefWidth="130">
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="نوع الجداول"/>
+                            <CheckBox fx:id="check_1" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
+                                      text="عرض الاجمالي"/>
+                            <CheckBox fx:id="check_2" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
+                                      text="عرض تفصيلى"/>
+                            <CheckBox fx:id="check_3" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
+                                      text="عرض الخاضع"/>
+                        </VBox>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <VBox spacing="4" prefWidth="120">
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="البدلات"/>
+                            <CheckBox fx:id="chek_Credit_Allowance" mnemonicParsing="false"
+                                      nodeOrientation="RIGHT_TO_LEFT" selected="true" text="بدل اعتماد"/>
+                            <CheckBox fx:id="chek_Reward_Allowence" mnemonicParsing="false"
+                                      nodeOrientation="RIGHT_TO_LEFT" selected="true" text="حافز الاثابة"/>
+                            <CheckBox fx:id="chek_TeacherAllowance" mnemonicParsing="false"
+                                      nodeOrientation="RIGHT_TO_LEFT" selected="true" text="بدل معلم"/>
+                            <CheckBox fx:id="chek_Performance_Allowence" mnemonicParsing="false"
+                                      nodeOrientation="RIGHT_TO_LEFT" selected="true" text="حافز اداء"/>
+                            <CheckBox fx:id="chek_reward" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
+                                      selected="true" text="مكافاة"/>
+                        </VBox>
+
+                        <Separator orientation="VERTICAL"/>
+
+                        <VBox spacing="4" prefWidth="200">
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="تريية خاصة"/>
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                                <CheckBox fx:id="chek_incentive_25" mnemonicParsing="false"
+                                          nodeOrientation="RIGHT_TO_LEFT" text="تريية خاصة 25%"/>
+                                <TextField fx:id="txt_incentive_25" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                           prefHeight="32" prefWidth="100" promptText="تاريخ اختيارى"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                                <CheckBox fx:id="chek_incentive_50" mnemonicParsing="false"
+                                          nodeOrientation="RIGHT_TO_LEFT" text="تريية خاصة 50%"/>
+                                <TextField fx:id="txt_incentive_50" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                           prefHeight="32" prefWidth="100" promptText="تاريخ اختيارى"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                                <CheckBox fx:id="chek_incentive_75" mnemonicParsing="false"
+                                          nodeOrientation="RIGHT_TO_LEFT" text="تريية خاصة 75%"/>
+                                <TextField fx:id="txt_incentive_75" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                           prefHeight="32" prefWidth="100" promptText="تاريخ اختيارى"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                                <CheckBox fx:id="chek_incentive_100" mnemonicParsing="false"
+                                          nodeOrientation="RIGHT_TO_LEFT" text="تريية خاصة 100%"/>
+                                <TextField fx:id="txt_incentive_100" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
+                                           prefHeight="32" prefWidth="100" promptText="تاريخ اختيارى"/>
+                            </HBox>
+                        </VBox>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- TABLES -->
+            <HBox spacing="10" VBox.vgrow="ALWAYS">
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      HBox.hgrow="ALWAYS">
+                    <Label alignment="CENTER" maxWidth="Infinity"
+                           style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           text="تفاصيل التكاليف"/>
+                    <TableView fx:id="table_details" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
+                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="300" VBox.vgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="8" left="8" right="8" top="8"/>
+                        </padding>
+                    </TableView>
+                </VBox>
+
+                <VBox spacing="0"
+                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      prefWidth="380">
+                    <Label alignment="CENTER" maxWidth="Infinity"
+                           style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           text="اجمالى التكاليف"/>
+                    <TableView fx:id="table_total" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
+                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="300" VBox.vgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="8" left="8" right="8" top="8"/>
+                        </padding>
+                    </TableView>
+                </VBox>
+            </HBox>
+
+            <!-- Summary -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10"
+                  style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+                <Label prefHeight="28" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
+                       text="اجمالي الخاصع لاجر الاشتراك:"/>
+                <Label fx:id="lbl_sum1" alignment="CENTER" prefHeight="28" prefWidth="160"
+                       style="-fx-border-color: #DDE1E7; -fx-background-color: #F5F6FA; -fx-border-radius: 4;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+        </VBox>
+    </content>
+</ScrollPane>
