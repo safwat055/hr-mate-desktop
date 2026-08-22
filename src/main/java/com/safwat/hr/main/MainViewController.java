@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_mail, btn_chat, btn_report, btn_payManager;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_mail, btn_chat, btn_report, btn_payManager, btn_records, btn_tableView;
     @FXML
     private Button btn_scaleView;
     @FXML
@@ -107,7 +107,7 @@ public class MainViewController implements Initializable {
 
     void setMainViewIcon() {
         SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payManager,
-                btn_scaleView);
+                btn_scaleView, btn_records, btn_tableView);
     }
 
     void setButtonsAction() {
@@ -120,6 +120,8 @@ public class MainViewController implements Initializable {
         btn_mail.setOnAction(_ -> openMessagesTab());
 
         btn_scaleView.setOnAction(_ -> openScaleView());
+        btn_records.setOnAction(_ -> openRecordsView());
+        btn_tableView.setOnAction(_ -> openTableView());
     }
 
     /**
@@ -188,5 +190,15 @@ public class MainViewController implements Initializable {
     @FXML
     void openScaleView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getSalaryScale(), "تدرج راتب", true);
+    }
+
+    @FXML
+    void openRecordsView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollRecords(), "سجلات", true);
+    }
+
+    @FXML
+    void openTableView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollTableView(), "واجهة الإدخال", true);
     }
 }

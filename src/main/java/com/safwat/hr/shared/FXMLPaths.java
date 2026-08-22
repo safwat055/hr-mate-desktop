@@ -8,6 +8,9 @@ public class FXMLPaths {
     private final String changeCardView = "/com/safwat/hr/view/payroll/ChangeCard.fxml";
     private final String payrollVocab = "/com/safwat/hr/view/payroll/PayrollVocab.fxml";
     private final String payrollManager = "/com/safwat/hr/view/payroll/PayrollManagerView.fxml";
+    private final String payrollRecords = "/com/safwat/hr/view/payroll/PayrollRecords.fxml";
+    private final String payrollTableView = "/com/safwat/hr/view/payroll/ExcelTableView.fxml";
+
     private final String reportManager = "/com/safwat/hr/view/report/user/user_reports.fxml";
     private final String payrollReport = "/com/safwat/hr/view/report/payroll/PayrollReport.fxml";
 

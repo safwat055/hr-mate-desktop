@@ -174,6 +174,7 @@ public class PayrollManagerService {
         List<Map<String, String>> payload = descriptions.stream()
                 .map(d -> {
                     Map<String, String> map = new HashMap<>();
+                    
                     map.put("payGroup", d.getPayGroup());
                     map.put("description", d.getDescription());
                     return map;
