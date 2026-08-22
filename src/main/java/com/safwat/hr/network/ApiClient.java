@@ -143,6 +143,13 @@ public class ApiClient {
         return sendRequest(appendQueryParams(path, queryParams), "DELETE", null, null, responseType);
     }
 
+    public static <T> ApiResponse<T> delete(String path,
+                                            Object body,
+                                            Class<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRequest(path, "DELETE", body, null, responseType);
+    }
+
     public static <T> ApiResponse<T> postForm(String path,
                                               Map<String, String> formData,
                                               Class<T> responseType)

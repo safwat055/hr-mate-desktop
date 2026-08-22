@@ -72,7 +72,7 @@
                             <!-- حذف شهر -->
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                                <TextField fx:id="txtAllMonthsYearly" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="104.0" promptText="ادخل شهر" />
+                                <TextField fx:id="txtAllMonthsYearly" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <Label fx:id="lblAllMonthsYearly" alignment="CENTER" prefHeight="28" prefWidth="140" style="-fx-text-fill: #6B7280;" />
                             </HBox>
                             <Button fx:id="btnDeleteMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
@@ -80,26 +80,29 @@
                             <!-- حذف مجموعة في شهر -->
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                <TextField fx:id="txtMonthGroupY" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="100" promptText="ادخل الشهر" />
-                                <Label fx:id="lblMonthGroupY" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="28" prefWidth="100" style="-fx-text-fill: #6B7280;" />
-                                <TextField fx:id="txtGroupAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtMonthGroupY" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="30.0" prefWidth="120.0" promptText="ادخل الشهر" />
+                                <TextField fx:id="txtGroupAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
                             </HBox>
                             <Button fx:id="btnDeleteGroupAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
                             <!-- حذف صرفيات موظف في شهر -->
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                                <ComboBox fx:id="cmbMonthForEmpAnnual" prefHeight="32" prefWidth="140" promptText="الشهر" />
-                                <TextField fx:id="txtEmpIdAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtEmpIdAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtMonthForEmpAnnual" alignment="CENTER" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
+                        <TextField fx:id="txtEmpNameAnnual" editable="false" prefHeight="30.0" prefWidth="381.0" />
+                        <TextField fx:id="txtEmpCodeAnnual" editable="false" layoutX="315.0" layoutY="11.0" prefHeight="30.0" prefWidth="212.0" />
                             </HBox>
                             <Button fx:id="btnDeleteEmpMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
                             <!-- حذف صرفية معينة لموظف -->
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                                <ComboBox fx:id="cmbMonthForPaymentAnnual" prefHeight="32" prefWidth="120" promptText="الشهر" />
-                                <TextField fx:id="txtEmpIdPaymentAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" promptText="الرقم القومي" />
-                                <TextField fx:id="txtPaymentNameAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtEmpIdPaymentAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" />
+                        <TextField fx:id="txtMonthForPaymentAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
+                                <TextField fx:id="txtPaymentNameAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="286.0" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtEmpNameAnnual2" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="202.0" />
+                        <TextField fx:id="txtEmpCodeAnnual2" alignment="CENTER" editable="false" prefHeight="30.0" />
                             </HBox>
                             <Button fx:id="btnDeletePaymentAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
 
@@ -138,23 +141,21 @@
                         </GridPane>
 
                         <!-- إضافة وصف للمجموعات -->
-                        <VBox spacing="8">
+                        <VBox prefHeight="332.0" prefWidth="1206.0" spacing="8">
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
                                 <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="إضافة وصف حسب الشهر والمجموعة" />
                                 <Region HBox.hgrow="ALWAYS" />
-                                <ComboBox fx:id="cmbDescMonthAnnual" prefHeight="32" promptText="اختر الشهر" />
+                        <TextField fx:id="txtDescMonthAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <Button fx:id="btnLoadGroupsForDesc" prefHeight="32" prefWidth="110" style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="عرض المجموعات" />
+                                <Button fx:id="btnSaveDescriptions" prefHeight="32" prefWidth="110" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حفظ الأوصاف" />
                             </HBox>
-                            <TableView fx:id="tableGroupDescriptions" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="180">
+                            <TableView fx:id="tableGroupDescriptions" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="293.0" prefWidth="1206.0">
                                 <columns>
-                                    <TableColumn fx:id="colGroupName" prefWidth="250" text="اسم المجموعة" />
-                                    <TableColumn fx:id="colGroupDesc" prefWidth="400" text="الوصف" />
+                                    <TableColumn fx:id="colGroupName" prefWidth="449.0" text="اسم المجموعة" />
+                                    <TableColumn fx:id="colGroupDesc" prefWidth="535.0" text="الوصف" />
                                 </columns>
                                 <padding><Insets bottom="4" left="4" right="4" top="2" /></padding>
                             </TableView>
-                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT">
-                                <Button fx:id="btnSaveDescriptions" prefHeight="32" prefWidth="110" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حفظ الأوصاف" />
-                            </HBox>
                         </VBox>
                     </VBox>
                 </VBox>

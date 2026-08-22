@@ -1,57 +1,64 @@
 package com.safwat.hr.payroll.payrollManager;
 
+import com.safwat.hr.payroll.dto.SearchEmp;
+import com.safwat.hr.shared.SmartSearchHelper;
+import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.util.SearchDialog;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.converter.DefaultStringConverter;
 import lombok.Getter;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @Getter
 public class PayrollManagerController implements Initializable {
+
+    private final ObservableList<GroupDescription> groupDescriptionList = FXCollections.observableArrayList();
     private PayrollManagerService managerService;
+
+    // ── Header ──
     @FXML
-// ── Header ──
     private Label lblStatus;
 
     // ── Annual Report ──
     @FXML
     private Button btnRefreshAnnual;
+
     // Deletion
     @FXML
     private Button btnDeleteAllAnnual;
     @FXML
     private TextField txtAllMonthsYearly, txtMonthGroupY;
     @FXML
-    private Label lblAllMonthsYearly, lblMonthGroupY;
-    @FXML
     private Button btnDeleteMonthAnnual;
-
     @FXML
     private TextField txtGroupAnnual;
     @FXML
     private Button btnDeleteGroupAnnual;
     @FXML
-    private ComboBox<String> cmbMonthForEmpAnnual;
-    @FXML
     private TextField txtEmpIdAnnual;
+    @FXML
+    private TextField txtEmpNameAnnual, txtEmpCodeAnnual;
     @FXML
     private Button btnDeleteEmpMonthAnnual;
     @FXML
-    private ComboBox<String> cmbMonthForPaymentAnnual;
+    private TextField txtEmpIdPaymentAnnual, txtMonthForPaymentAnnual, txtPaymentNameAnnual, txtMonthForEmpAnnual;
     @FXML
-    private TextField txtEmpIdPaymentAnnual;
-    @FXML
-    private TextField txtPaymentNameAnnual;
+    private TextField txtEmpNameAnnual2, txtEmpCodeAnnual2;
     @FXML
     private Button btnDeletePaymentAnnual;
+
     // Edit
     @FXML
     private TextField txtOldPaymentName;
@@ -60,7 +67,7 @@ public class PayrollManagerController implements Initializable {
     @FXML
     private Button btnUpdatePaymentName;
     @FXML
-    private ComboBox<String> cmbDescMonthAnnual;
+    private TextField txtDescMonthAnnual;
     @FXML
     private Button btnLoadGroupsForDesc;
     @FXML
@@ -75,7 +82,6 @@ public class PayrollManagerController implements Initializable {
     // ── Review Report ──
     @FXML
     private Button btnRefreshReview;
-    // Deletion (same pattern as annual)
     @FXML
     private Button btnDeleteAllReview;
     @FXML
@@ -102,6 +108,7 @@ public class PayrollManagerController implements Initializable {
     private TextField txtPaymentNameReview;
     @FXML
     private Button btnDeletePaymentReview;
+
     // Key Update
     @FXML
     private ComboBox<String> cmbKeyMonthReview;
@@ -130,23 +137,36 @@ public class PayrollManagerController implements Initializable {
     @FXML
     private Button btnDeleteEmpSub;
 
-    /**
-     * Called to initialize a controller after its root element has been
-     * completely processed.
-     *
-     * @param location  The location used to resolve relative paths for the root object, or
-     *                  {@code null} if the location is not known.
-     * @param resources The resources used to localize the root object, or {@code null} if
-     *                  the root object was not localized.
-     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         managerService = new PayrollManagerService(this);
 
+        setupTableColumns();
         fillMainLists();
-
         setTxtMonthSearch();
         setButtonsActions();
+    }
+
+    /**
+     * ── ربط أعمدة الجدول + تفعيل التعديل على عمود الوصف ──
+     */
+    private void setupTableColumns() {
+        // عمود اسم المجموعة — للعرض فقط
+        colGroupName.setCellValueFactory(cell ->
+                cell.getValue().payGroupProperty());
+        colGroupName.setEditable(false);
+
+        // عمود الوصف — قابل للتعديل
+        colGroupDesc.setCellValueFactory(cell ->
+                cell.getValue().descriptionProperty());
+        colGroupDesc.setCellFactory(TextFieldTableCell.forTableColumn(new DefaultStringConverter()));
+        colGroupDesc.setOnEditCommit(event -> {
+            GroupDescription row = event.getRowValue();
+            row.setDescription(event.getNewValue());
+        });
+
+        tableGroupDescriptions.setEditable(true);
+        tableGroupDescriptions.setItems(groupDescriptionList);
     }
 
     void fillMainLists() {
@@ -156,102 +176,166 @@ public class PayrollManagerController implements Initializable {
     void setButtonsActions() {
         btnDeleteMonthAnnual.setOnAction(_ -> managerService.deleteOneMonthYearly());
         btnDeleteGroupAnnual.setOnAction(_ -> managerService.deleteTargetPayGroup());
-    }
+        btnDeleteEmpMonthAnnual.setOnAction(_ -> managerService.deleteEmployeeMonth());
+        btnDeletePaymentAnnual.setOnAction(_ -> managerService.deletePayGroupInTargetMonthAndEmployee(
+                txtEmpIdPaymentAnnual.getText(), txtMonthForPaymentAnnual.getText(), txtPaymentNameAnnual.getText()
+        ));
+        btnUpdatePaymentName.setOnAction(_ -> managerService.updatePayGroupName(
+                txtOldPaymentName.getText(), txtNewPaymentName.getText()));
+        btnLoadGroupsForDesc.setOnAction(_ -> updateDescriptionList());
 
-    void setTxtMonthSearch() {
-        setupSmartSearch(txtAllMonthsYearly, () ->
-                        managerService.allMonthsYearly
-                ,
-                val -> lblAllMonthsYearly.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
-
-        setupSmartSearch(txtMonthGroupY, () -> managerService.allMonthsYearly,
-                val -> lblMonthGroupY.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
-        setupSmartSearch(txtGroupAnnual, () -> managerService.getAvailablePayGroupForMonth(),
-                val -> txtGroupAnnual.setText(val)
-        );
+        // ── حفظ الأوصاف المعدلة ──
+        btnSaveDescriptions.setOnAction(_ -> saveDescriptions());
     }
 
     /**
-     * يربط حقل نصي بـ SearchDialog ذكي مع دعم قوائم ديناميكية.
-     * القائمة تُجلب في لحظة الاستخدام (lazy) عبر Supplier.
+     * ── تحميل الأوصاف من الـ Backend وملء الجدول ──
      */
-    private void setupSmartSearch(
-            TextField textField,
-            Supplier<List<String>> dataSupplier,
-            Consumer<String> onSelect) {
-
-        Runnable openSearch = () -> {
-            List<String> dataList = dataSupplier.get();
-            if (dataList == null || dataList.isEmpty()) {
-                SAFNotification.warning("لا توجد بيانات متاحة للشهر المختار");
-                return;
-            }
-            SearchDialog.forStrings()
-                    .title("اختر")
-                    .data(dataList)
-                    .show()
-                    .ifPresent(val -> {
-                        textField.setText(val);
-                        if (onSelect != null) onSelect.accept(val);
-                    });
-        };
-
-        // ── Enter ──
-        textField.setOnAction(_ -> {
-            if (textField.getText() == null || textField.getText().isBlank()) {
-                openSearch.run();
-                return;
-            }
-            handleInput(textField, dataSupplier, onSelect, openSearch);
-        });
-
-        // ── Focus Lost ──
-        textField.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {  // double click
-                String raw = textField.getText();
-                if (raw == null || raw.isBlank()) {
-                    openSearch.run();          // فاضي + دبل كليك → بحث
-                    return;
-                }
-                handleInput(textField, dataSupplier, onSelect, openSearch);
-            }
-        });
+    void updateDescriptionList() {
+        groupDescriptionList.clear();
+        List<GroupDescription> fetched = managerService.getDescriptions(txtDescMonthAnnual.getText());
+        groupDescriptionList.addAll(fetched);
     }
 
-    private void handleInput(
-            TextField textField,
-            Supplier<List<String>> dataSupplier,
-            Consumer<String> onSelect,
-            Runnable openSearch) {
-
-        List<String> dataList = dataSupplier.get();  // ← تجلب هنا في اللحظة
-        if (dataList == null || dataList.isEmpty()) {
-            openSearch.run();
+    /**
+     * ── حفظ الأوصاف المعدلة ──
+     */
+    private void saveDescriptions() {
+        String month = txtDescMonthAnnual.getText();
+        if (month == null || month.isBlank()) {
+            // SAFNotification.warning("اختر الشهر أولاً");
             return;
         }
 
-        String input = DateUtils.normalizeArabicText(textField.getText());
-        List<String> matches = dataList.stream()
-                .filter(s -> DateUtils.normalizeArabicText(s).contains(input))
-                .toList();
+        List<GroupDescription> modified = new ArrayList<>(groupDescriptionList);
+        boolean success = managerService.saveDescriptions(month, modified);
 
-        if (matches.size() == 1) {
-            String val = matches.get(0);
-            textField.setText(val);
-            if (onSelect != null) onSelect.accept(val);
+        if (success) {
+            //SAFNotification.success("تم حفظ الأوصاف بنجاح");
         } else {
-            openSearch.run();
+            SAFNotification.error("فشل حفظ الأوصاف");
         }
     }
 
-    private class GroupDescription {
-        private String groupName;
-        private String groupDisc;
+    void setTxtMonthSearch() {
+        // ── String simple binds ──
+        SmartSearchHelper.bind(txtAllMonthsYearly, () -> managerService.allMonthsYearly,
+                val -> txtAllMonthsYearly.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                ));
+
+        SmartSearchHelper.bind(txtMonthGroupY, () -> managerService.allMonthsYearly,
+                val -> txtMonthGroupY.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                ));
+
+        SmartSearchHelper.bind(txtGroupAnnual, () -> managerService.getAvailablePayGroupForMonth(),
+                val -> txtGroupAnnual.setText(val)
+        );
+
+        // ── Multi-field: Employee (Annual deletion) ──
+        SmartSearchHelper.bind(
+                txtEmpIdAnnual,
+                () -> managerService.getEmployeeInYearly(),
+                SearchDialog.builder(SearchEmp.class)
+                        .title("بحث عن موظف")
+                        .column("رقم قومى", SearchEmp::getNational_id)
+                        .column("رقم موظف", SearchEmp::getPay_id)
+                        .column("الاسم", SearchEmp::getEmp_name),
+                emp -> {
+                },
+                SmartSearchHelper.FieldBind.of(txtEmpIdAnnual, SearchEmp::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual, SearchEmp::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual, SearchEmp::getPay_id)
+        );
+
+        // ── Multi-field: Employee (Payment deletion) ──
+        SmartSearchHelper.bind(
+                txtEmpIdPaymentAnnual,
+                () -> managerService.getEmployeeInYearly(),
+                SearchDialog.builder(SearchEmp.class)
+                        .title("بحث عن موظف")
+                        .column("رقم قومى", SearchEmp::getNational_id)
+                        .column("رقم موظف", SearchEmp::getPay_id)
+                        .column("الاسم", SearchEmp::getEmp_name),
+                emp -> {
+                },
+                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentAnnual, SearchEmp::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual2, SearchEmp::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual2, SearchEmp::getPay_id)
+        );
+
+        // ── Month binds ──
+        SmartSearchHelper.bind(txtMonthForEmpAnnual,
+                () -> managerService.getEmployeeMonths(txtEmpIdAnnual.getText()),
+                val -> txtMonthForEmpAnnual.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+
+        SmartSearchHelper.bind(txtMonthForPaymentAnnual,
+                () -> managerService.getEmployeeMonths(txtEmpIdPaymentAnnual.getText()),
+                val -> txtMonthForPaymentAnnual.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+
+        SmartSearchHelper.bind(txtPaymentNameAnnual,
+                () -> managerService.getPayGroupForEmployeeInMonth(
+                        txtEmpIdPaymentAnnual.getText(), txtMonthForPaymentAnnual.getText()),
+                val -> txtPaymentNameAnnual.setText(val)
+        );
+
+        SmartSearchHelper.bind(txtOldPaymentName,
+                () -> managerService.getPayGroup(),
+                val -> txtOldPaymentName.setText(val)
+        );
+
+        SmartSearchHelper.bind(txtDescMonthAnnual,
+                () -> managerService.allMonthsYearly,
+                val -> txtDescMonthAnnual.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  DTO — Class مع Property (عشان التعديل في الجدول)
+    // ═══════════════════════════════════════════════════════════
+    public static class GroupDescription {
+        private final StringProperty payGroup = new SimpleStringProperty();
+        private final StringProperty description = new SimpleStringProperty();
+
+        public GroupDescription() {
+        }
+
+        public GroupDescription(String payGroup, String description) {
+            this.payGroup.set(payGroup);
+            this.description.set(description);
+        }
+
+        public String getPayGroup() {
+            return payGroup.get();
+        }
+
+        public void setPayGroup(String value) {
+            payGroup.set(value);
+        }
+
+        public StringProperty payGroupProperty() {
+            return payGroup;
+        }
+
+        public String getDescription() {
+            return description.get();
+        }
+
+        public void setDescription(String value) {
+            description.set(value);
+        }
+
+        public StringProperty descriptionProperty() {
+            return description;
+        }
     }
 }

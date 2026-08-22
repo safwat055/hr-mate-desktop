@@ -1,4 +1,4 @@
-package com.safwat.hr.ui.util;
+package com.safwat.hr.shared.ui;
 
 import io.github.palexdev.materialfx.controls.MFXButton;
 import javafx.beans.property.SimpleStringProperty;

@@ -2,17 +2,16 @@ package com.safwat.hr.payroll.vocab;
 
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
-
 import com.safwat.hr.payroll.dto.SearchVocab;
 import com.safwat.hr.payroll.vocab.service.PayrollVocabService;
 import com.safwat.hr.shared.PayrollRequest;
+import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.PDFView;
-import com.safwat.hr.ui.util.SearchDialog;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -89,11 +88,9 @@ public class PayrollVocabController implements Initializable {
             return;
         }
 
-
         PayrollRequest request = PayrollRequest.builder().
                 searchValue(txt_search.getText()).
                 startDate(DateUtils.getFirstDayOfMonth(txt_month.getText())).build();
-
 
         List<SearchVocab> data = vocabService.searchVocab(request).getData();
         System.out.println(data.size());

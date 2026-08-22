@@ -1,10 +1,10 @@
 package com.safwat.hr.shared;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Builder
@@ -18,7 +18,7 @@ public class PayrollRequest {
     private LocalDate endDate;
     private String nationalId;
     private String payGroup;
-    private List<String> payGroups;
+
     private String management;
     private String customGroup;
     private String description;
@@ -28,4 +28,6 @@ public class PayrollRequest {
     private String endPoint;
     @Builder.Default
     private String format = "PDF";
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Object payload;   // ← يقبل List, Map, Object, أي حاجة
 }

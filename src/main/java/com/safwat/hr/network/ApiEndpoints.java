@@ -30,6 +30,7 @@ public final class ApiEndpoints {
         public static final String BASE = "/payrollYearly";
 
         public static final String SEARCH = "/payrollYearly/get/searchEmployee";
+        public static final String SEARCH_IN_MONTH = "/payrollYearly/searchEmployeeMonth";
         public static final String EMPLOYEE_RECORD = "/payrollYearly/get/employeeYearly";
         public static final String DOWNLOAD_PAYMENTS = "/payrollYearly/get/download-payments";
 
@@ -37,6 +38,8 @@ public final class ApiEndpoints {
         public static final String DELETE_ONE_EMPLOYEE_RECORD = "/payrollYearly/delete-employee-record";
         public static final String DELETE_ONE_MONTH = "/payrollYearly/delete/targetMonth";
         public static final String DELETE_TARGET_PAY_GROUP = "/payrollYearly/delete/targetGroup";
+        public static final String DELETE_TARGET_EMPLOYEE_MONTH = "/payrollYearly/delete/employeWithMonth";
+        public static final String DELETE_TARGET_GROUP_MONTH_EMPLOYEE = "/payrollYearly/employeeWithMonthAndPayGroup";
         //report
         public static final String YEARLY_EXPENSES = "/payrollYearly/get/yearlyExpenses";
         public static final String PAYROLL_SUMMARY = "/payrollYearly/get/monthSummary";
@@ -46,6 +49,12 @@ public final class ApiEndpoints {
         public static final String PAY_GROUP_LIST_MONTH = "/payrollYearly/ExchangeNamesWithMonth";
         public static final String PAY_MANAGEMENT_LIST = "/payrollIndex/get-indexInfo";
         public static final String PAY_MONTHS_List = "/payrollYearly/allMonths";
+        public static final String PAY_EMPLOYEE_MONTHS_List = "/payrollYearly/allMonthsForEmployee";
+        public static final String PAY_GROUP_EMPLOYEE_LIST_MONTH = "/payrollYearly/emplyeeExchangeNamesWithMonth";
+
+        public static final String UPDATE_PAY_GROUP_NAME = "/payrollYearly/update-payGroup-name";
+
+        public static final String GET_DESCRIPTIONS = "/payrollYearly/get-descriptions";
 
     }
 

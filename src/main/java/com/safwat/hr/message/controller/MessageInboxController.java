@@ -8,7 +8,7 @@ import com.safwat.hr.message.service.MessageThread;
 import com.safwat.hr.message.ui.MessageThreadListCell;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
-import com.safwat.hr.ui.util.MultiSelectSearchDialog;
+import com.safwat.hr.shared.ui.MultiSelectSearchDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
