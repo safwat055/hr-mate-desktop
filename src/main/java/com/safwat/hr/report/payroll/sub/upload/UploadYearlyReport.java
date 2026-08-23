@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.upload;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -9,6 +10,12 @@ import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 
+@PayrollReport(
+        code = "UPLOAD_YEARLY_REPORT",
+        displayName = "تقرير الصرفيات السنوى",
+        category = "UPLOAD_PAYROLL",
+        mainReport = "UPLOAD_PAYROLL"
+)
 public class UploadYearlyReport implements ReportStrategy {
     @Override
     public String getCode() {

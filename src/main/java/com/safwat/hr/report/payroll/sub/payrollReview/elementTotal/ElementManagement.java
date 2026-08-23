@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.payrollReview.elementTotal;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -13,6 +14,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "TOTAL_ELEMENT_MANAGEMENT",
+        displayName = "عنصر لادارة",
+        category = "TOTAL_ELEMENT",
+        mainReport = "TOTAL_ELEMENT"
+)
 public class ElementManagement implements ReportStrategy {
     @Override
     public String getCode() {

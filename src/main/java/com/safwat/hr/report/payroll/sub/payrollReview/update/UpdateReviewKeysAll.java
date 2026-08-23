@@ -1,11 +1,18 @@
 package com.safwat.hr.report.payroll.sub.payrollReview.update;
 
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
 
+@PayrollReport(
+        code = "UPDATE_REVIEW_KEYS_ALL",
+        displayName = "كل الشهور",
+        category = "UPDATE_REVIEW_ALL",
+        mainReport = "UPDATE_REVIEW_ALL"
+)
 public class UpdateReviewKeysAll implements ReportStrategy {
     @Override
     public String getCode() {

@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.records.short_;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -12,6 +13,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "SHORT_RECORD_EMPLOYEE",
+        displayName = "سجل 129 مختصر لكل لموظف محددة",
+        category = "SHORT_RECORD",
+        mainReport = "SHORT_RECORD"
+)
 public class ShortRecordEmployee implements ReportStrategy {
     @Override
     public String getCode() {

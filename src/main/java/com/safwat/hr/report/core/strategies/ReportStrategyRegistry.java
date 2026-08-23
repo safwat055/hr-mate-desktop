@@ -1,117 +1,179 @@
 package com.safwat.hr.report.core.strategies;
 
-import java.util.*;
+import com.safwat.hr.report.core.PayrollReport;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * سجل مركزي لجميع استراتيجيات التقارير المسجَّلة في النظام.
- *
- * <p>يُخزِّن الاستراتيجيات في ثلاث خرائط متوازية لدعم البحث بطرق مختلفة:
- * <ul>
- *   <li>بالكود ({@code byCode}) — للتواصل مع الـ Backend</li>
- *   <li>بالاسم ({@code byDisplayName}) — للبحث من القوائم المنسدلة</li>
- *   <li>بالفئة ({@code byCategory}) — لجلب التقارير الفرعية التابعة لتقرير رئيسي</li>
- * </ul>
- *
- * <p>يُستخدَم {@link LinkedHashMap} للحفاظ على ترتيب التسجيل في العرض.
- *
- * <p><b>دورة الحياة:</b>
- * يُنشأ الـ Registry مرة واحدة في {@link ReportRegistryFactory#create()}
- * ثم يُحقَن في الـ Controller.
- *
- * @see ReportRegistryFactory
- * @see ReportStrategy
+ * سجل مركزي — Hybrid:
+ * • Containers: eager (دايماً في الذاكرة)
+ * • Leaves (Direct + Sub): lazy by @PayrollReport annotation + hot cache
  */
+@Slf4j
 public class ReportStrategyRegistry {
 
-    /**
-     * فهرس الاستراتيجيات بكودها الفريد
-     */
-    private final Map<String, ReportStrategy> byCode = new LinkedHashMap<>();
+    // ── Metadata لـ ALL strategies (خفيف جداً — strings بس) ──
+    private final Map<String, StrategyMeta> metaByCode = new LinkedHashMap<>();
+    private final Map<String, String> codeByDisplayName = new LinkedHashMap<>();
+    private final Map<String, List<String>> codesByCategory = new LinkedHashMap<>();
 
-    /**
-     * فهرس الاستراتيجيات باسمها العربي
-     */
-    private final Map<String, ReportStrategy> byDisplayName = new LinkedHashMap<>();
+    // ── Hot Cache: instances (eager + lazily created) ──
+    private final Map<String, ReportStrategy> hotCache = new ConcurrentHashMap<>();
 
-    /**
-     * فهرس الاستراتيجيات بفئتها
-     */
-    private final Map<String, List<ReportStrategy>> byCategory = new LinkedHashMap<>();
-
-    /**
-     * يُسجِّل استراتيجية جديدة في السجل.
-     *
-     * <p>يُضيف الاستراتيجية في الفهارس الثلاثة تلقائيًا.
-     * يُستدعى حصريًا من {@link ReportRegistryFactory}.
-     *
-     * @param strategy الاستراتيجية المُراد تسجيلها
-     */
+    // ═════════════════════════════════════════════════════════════
+    //  1️⃣ Eager — للحاويات (Containers) بس
+    // ═════════════════════════════════════════════════════════════
     public void register(ReportStrategy strategy) {
-        byCode.put(strategy.getCode(), strategy);
-        byDisplayName.put(strategy.getDisplayName(), strategy);
-        byCategory
-                .computeIfAbsent(strategy.getCategory(), k -> new ArrayList<>())
-                .add(strategy);
+        String code = strategy.getCode();
+        metaByCode.put(code, new StrategyMeta(code, strategy.getDisplayName(),
+                strategy.getCategory(), strategy.getMainReport(),
+                strategy.hasSubReports(), null));
+        codeByDisplayName.put(strategy.getDisplayName(), code);
+        codesByCategory.computeIfAbsent(strategy.getCategory(), k -> new ArrayList<>()).add(code);
+        hotCache.put(code, strategy); // ← eager instance
     }
 
     /**
-     * يجلب استراتيجية بكودها.
-     *
-     * @param code كود التقرير (مثال: {@code "payrollYearly_1"})
-     * @return الاستراتيجية المقابلة
-     * @throws IllegalArgumentException إذا لم يُوجَد كود مطابق
+     * Lazy — بيقرأ من @PayrollReport annotation.
+     * لو مفيش annotation، بيعمل fallback لـ eager instantiation (للـ migration التدريجي).
      */
+    public void registerLazy(Class<? extends ReportStrategy> clazz) {
+        PayrollReport ann = clazz.getAnnotation(PayrollReport.class);
+
+        // ═══════════════════════════════════════════════════════
+        //  Fallback: التقرير لسه معدلهوش — نستخدم السلوك القديم
+        // ═══════════════════════════════════════════════════════
+        if (ann == null) {
+            try {
+                ReportStrategy instance = clazz.getDeclaredConstructor().newInstance();
+                register(instance); // ← eager (زي الأول)
+                System.err.println("⚠️ [Fallback] " + clazz.getSimpleName()
+                        + " محمل eager — ضيف @PayrollReport عشان يبقى lazy");
+            } catch (Exception e) {
+                throw new RuntimeException("فشل تسجيل " + clazz.getName()
+                        + " (مفيهوش @PayrollReport ومعرفش أعمله instantiate)", e);
+            }
+            return;
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  Lazy path: metadata من الـ Annotation
+        // ═══════════════════════════════════════════════════════
+        String code = ann.code();
+        metaByCode.put(code, new StrategyMeta(code, ann.displayName(), ann.category(),
+                ann.mainReport(), false, clazz));
+        codeByDisplayName.put(ann.displayName(), code);
+        codesByCategory.computeIfAbsent(ann.category(), k -> new ArrayList<>()).add(code);
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    //  3️⃣ Retrieval — مع Hot Cache
+    // ═════════════════════════════════════════════════════════════
+
     public ReportStrategy getByCode(String code) {
-        return Optional.ofNullable(byCode.get(code))
-                .orElseThrow(() -> new IllegalArgumentException("كود تقرير غير معروف: " + code));
+        // أولاً: Hot Cache
+        ReportStrategy cached = hotCache.get(code);
+        if (cached != null) return cached;
+
+        // ثانياً: Lazy instantiate
+        StrategyMeta meta = metaByCode.get(code);
+        if (meta == null) {
+            throw new IllegalArgumentException("كود تقرير غير معروف: " + code);
+        }
+        if (meta.clazz == null) {
+            throw new IllegalStateException("التقرير " + code + " مسجل eager — لكن مش موجود في cache!");
+        }
+
+        try {
+            ReportStrategy instance = meta.clazz.getDeclaredConstructor().newInstance();
+            hotCache.put(code, instance);
+            return instance;
+        } catch (Exception e) {
+            throw new RuntimeException("فشل إنشاء التقرير: " + code, e);
+        }
     }
 
-    /**
-     * يجلب استراتيجية باسمها العربي.
-     *
-     * <p>يُستخدَم عند تغيير اختيار المستخدم في ComboBox.
-     *
-     * @param displayName الاسم كما يظهر في القائمة المنسدلة
-     * @return الاستراتيجية المقابلة
-     * @throws IllegalArgumentException إذا لم يُوجَد اسم مطابق
-     */
     public ReportStrategy getByDisplayName(String displayName) {
-        return Optional.ofNullable(byDisplayName.get(displayName))
-                .orElseThrow(() -> new IllegalArgumentException("تقرير غير معروف: " + displayName));
+        String code = codeByDisplayName.get(displayName);
+        if (code == null) throw new IllegalArgumentException("تقرير غير معروف: " + displayName);
+        return getByCode(code);
+    }
+
+    public List<String> getDisplayNamesByCategory(String category) {
+        return codesByCategory.getOrDefault(category, List.of()).stream()
+                .map(code -> metaByCode.get(code).displayName)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> getAllDisplayNames() {
+        return List.copyOf(codeByDisplayName.keySet());
     }
 
     /**
-     * يجلب أسماء جميع التقارير المنتمية لفئة معينة.
-     *
-     * <p>يُستخدَم لملء ComboBox الفرعي عند اختيار تقرير حاوٍ.
-     *
-     * @param category الفئة المطلوبة (مثال: {@code "yearly_payroll"})
-     * @return قائمة بالأسماء العربية بترتيب التسجيل، أو قائمة فارغة
+     * بيرجع الـ instances اللي في الـ Cache (eager + مستخدمة قبل كده).
      */
-    public List<String> getDisplayNamesByCategory(String category) {
-        return byCategory.getOrDefault(category, List.of()).stream()
-                .map(ReportStrategy::getDisplayName)
+    public List<ReportStrategy> getAllCached() {
+        return List.copyOf(hotCache.values());
+    }
+
+    /**
+     * بيرجع كل الـ instances — force instantiation على اللي لسه.
+     * استخدمه بحذر.
+     */
+    public List<ReportStrategy> getAll() {
+        return metaByCode.keySet().stream()
+                .map(this::getByCode)
                 .collect(Collectors.toList());
     }
 
     /**
-     * يجلب أسماء جميع الاستراتيجيات المسجَّلة.
-     *
-     * @return قائمة بجميع الأسماء بترتيب التسجيل
+     * بترجع قائمة items (code + name) لفئة معينة — للـ ComboBox الفرعي
      */
-    public List<String> getAllDisplayNames() {
-        return List.copyOf(byDisplayName.keySet());
+    public List<ReportItem> getItemsByCategory(String category) {
+        return codesByCategory.getOrDefault(category, List.of()).stream()
+                .map(code -> {
+                    StrategyMeta meta = metaByCode.get(code);
+                    return new ReportItem(code, meta.displayName);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
-     * يجلب جميع الاستراتيجيات المسجَّلة.
-     *
-     * <p>يُستخدَم في الـ Controller لتصفية التقارير الرئيسية.
-     *
-     * @return قائمة غير قابلة للتعديل بجميع الاستراتيجيات
+     * item بسيط للـ ComboBox — بيحمل الكود والاسم
      */
-    public List<ReportStrategy> getAll() {
-        return List.copyOf(byCode.values());
+    public record ReportItem(String code, String displayName) {
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    //  Inner: Metadata holder (خفيف جداً)
+    // ═════════════════════════════════════════════════════════════
+    private static class StrategyMeta {
+        final String code;
+        final String displayName;
+        final String category;
+        final String mainReport;
+        final boolean hasSubReports;
+        final Class<? extends ReportStrategy> clazz; // null = eager-only
+
+        StrategyMeta(String code, String displayName, String category,
+                     String mainReport, boolean hasSubReports,
+                     Class<? extends ReportStrategy> clazz) {
+            this.code = code;
+            this.displayName = displayName;
+            this.category = category;
+            this.mainReport = mainReport;
+            this.hasSubReports = hasSubReports;
+            this.clazz = clazz;
+        }
     }
 }

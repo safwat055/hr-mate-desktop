@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.payrollReview.elementCodeTotal;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -13,6 +14,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "TOTAL_ELEMENT_CODE_EMPLOYEE",
+        displayName = "عنصر بالكود الاقتصادي لموظف إجمالي",
+        category = "TOTAL_ELEMENT_CODE",
+        mainReport = "TOTAL_ELEMENT_CODE"
+)
 public class ElementCodeEmployeeTotal implements ReportStrategy {
     @Override
     public String getCode() {

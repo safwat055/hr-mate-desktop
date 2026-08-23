@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.payrollReview.reviewReport;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -11,6 +12,12 @@ import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 
+@PayrollReport(
+        code = "MAIN_REVIEW_REPORT",
+        displayName = "تقرير مراجعة للصرفيات الرئيسية",
+        category = "REVIEW_REPORT",
+        mainReport = "REVIEW_REPORT"
+)
 public class MainReviewReport implements ReportStrategy {
     @Override
     public String getCode() {

@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.records.full;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -13,6 +14,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "FULL_RECORD_MANAGEMENT",
+        displayName = "سجل 129 كامل لكل لادارة محددة",
+        category = "FULL_RECORD",
+        mainReport = "FULL_RECORD"
+)
 public class FullRecordManagement implements ReportStrategy {
     @Override
     public String getCode() {
@@ -40,7 +47,6 @@ public class FullRecordManagement implements ReportStrategy {
                 .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_MANAGEMENT))
                 .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_MANAGEMENT))
                 .searchField(SearchFieldConfig.of(UiField.H_MANAGEMENT, "اختر ادارة", "management"))
-
 
                 .build();
     }
