@@ -1,11 +1,18 @@
 package com.safwat.hr.report.public_;
 
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
 
+@PayrollReport(
+        code = "TRANSFER",
+        displayName = "نقل البيانات من HR SALARY SCALE",
+        category = "main_direct",
+        mainReport = "main_direct"
+)
 public class StartTransferData implements ReportStrategy {
     @Override
     public String getCode() {
@@ -38,7 +45,7 @@ public class StartTransferData implements ReportStrategy {
         return PayrollRequest.builder()
                 .user(ApiClient.getUserName())
                 .reportName(context.getReportName())
-                
+
                 .report(getCode())
                 .build();
 

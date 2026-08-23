@@ -3,6 +3,7 @@ package com.safwat.hr.report.payroll.sub.payrollSummary;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -13,7 +14,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-
+@PayrollReport(
+        code = "summaryReport_4",
+        displayName = "إجمالي تكاليف الصرفيات الرئيسية لمدة محدد",
+        category = "payroll_summary",
+        mainReport = "payroll_summary"
+)
 public class MonthlyMainSummaryReportInRange implements ReportStrategy {
     @Override
     public String getCode() {

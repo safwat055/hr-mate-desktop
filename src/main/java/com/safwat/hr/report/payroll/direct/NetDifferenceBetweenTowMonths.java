@@ -1,6 +1,7 @@
 package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -11,6 +12,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "payrollYearly_4",
+        displayName = "تقرير فرق الصافي بين شهريين",
+        category = "main_direct",
+        mainReport = "main_direct"
+)
 public class NetDifferenceBetweenTowMonths implements ReportStrategy {
     @Override
     public String getCode() {

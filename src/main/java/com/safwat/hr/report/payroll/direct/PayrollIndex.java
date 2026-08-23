@@ -1,11 +1,18 @@
 package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
 
+@PayrollReport(
+        code = "PAYROLL_INDEX",
+        displayName = "تقرير الفهرس الكامل",
+        category = "main_direct",
+        mainReport = "main_direct"
+)
 public class PayrollIndex implements ReportStrategy {
     @Override
     public String getCode() {

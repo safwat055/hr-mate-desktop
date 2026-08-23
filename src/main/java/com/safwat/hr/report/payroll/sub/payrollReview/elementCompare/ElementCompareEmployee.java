@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.payrollReview.elementCompare;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -12,6 +13,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "ELEMENT_COMPARE_EMPLOYEE",
+        displayName = "تقرير تعديلات عناصر الصرفية الرئيسية لموظف",
+        category = "ELEMENT_COMPARE",
+        mainReport = "ELEMENT_COMPARE"
+)
 public class ElementCompareEmployee implements ReportStrategy {
     @Override
     public String getCode() {

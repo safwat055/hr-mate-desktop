@@ -148,8 +148,9 @@ public class PayrollReportController implements Initializable {
     // --- القوائم المنسدلة ---
     @FXML
 
-    private ComboBox<String> combo_Format, combo_report, combo_reportType;
-
+    private ComboBox<String> combo_Format, combo_reportType;
+    @FXML
+    private ComboBox<ReportStrategyRegistry.ReportItem> combo_report;
     // --- Labels ---
     @FXML
     private Label lbl_endDate, lbl_name, lbl_nationalId, lbl_payId, lbl_startDate;
@@ -260,7 +261,7 @@ public class PayrollReportController implements Initializable {
 
                     clearSelectedFiles();
 
-                    applyStrategy(registry.getByDisplayName(newVal));
+                    applyStrategy(registry.getByCode(newVal.code()));
                 });
 
         // ── أزرار الشهر المشتركة ──
@@ -305,7 +306,7 @@ public class PayrollReportController implements Initializable {
             uiManager.hideAll();
             combo_report.getItems().clear();
             combo_report.getItems().addAll(
-                    registry.getDisplayNamesByCategory(mainStrategy.getMainReport())
+                    registry.getItemsByCategory(mainStrategy.getMainReport())
             );
             H_report.setManaged(true);
             H_report.setVisible(true);
@@ -716,8 +717,11 @@ public class PayrollReportController implements Initializable {
         // ── 2. لو رئيسي مباشر ──
         if (!"main_direct".equals(strategy.getCategory())) {
             ReportStrategy sub = registry.getByCode(response.reportCode());
-            String subReportName = sub.getDisplayName();
-            combo_report.setValue(subReportName);
+            // نبحث في items الـ ComboBox عن اللي كوده يطابق
+            combo_report.getItems().stream()
+                    .filter(item -> item.code().equals(response.reportCode()))
+                    .findFirst()
+                    .ifPresent(combo_report::setValue);
             Platform.runLater(() -> {
                 applyStrategy(sub);
             });

@@ -2,6 +2,7 @@ package com.safwat.hr.report.payroll.sub.changeCard.month;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -13,6 +14,12 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
+@PayrollReport(
+        code = "CHANGE_MONTH_MANAGEMENT",
+        displayName = "اجر اشتراك شهر لادارة",
+        category = "CHANGE_MONTH",
+        mainReport = "CHANGE_MONTH"
+)
 public class PayrollChangeMonthManagement implements ReportStrategy {
     @Override
     public String getCode() {

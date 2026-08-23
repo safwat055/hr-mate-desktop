@@ -2,11 +2,18 @@ package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.shared.PayrollRequest;
 
+@PayrollReport(
+        code = "ELEMENT_REPORT",
+        displayName = "تقرير العناصر الاقتصادية واكوادها",
+        category = "main_direct",
+        mainReport = "main_direct"
+)
 public class PayrollElementReport implements ReportStrategy {
     @Override
     public String getCode() {
@@ -25,7 +32,7 @@ public class PayrollElementReport implements ReportStrategy {
 
     @Override
     public String getMainReport() {
-        return "ELEMENT_REPORT";
+        return "main_direct";
     }
 
     @Override

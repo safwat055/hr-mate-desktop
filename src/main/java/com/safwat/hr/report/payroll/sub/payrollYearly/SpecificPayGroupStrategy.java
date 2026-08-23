@@ -4,6 +4,7 @@ import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.DataSourceResolver;
+import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -27,7 +28,12 @@ import com.safwat.hr.shared.util.DateUtils;
  *   <li>الـ Endpoint: {@link ApiEndpoints.PayrollYearly#YEARLY_EXPENSES}</li>
  * </ul>
  */
-
+@PayrollReport(
+        code = "payrollYearly_9",
+        displayName = "مجموعة محددة",
+        category = "yearly_payroll",
+        mainReport = "yearly_payroll"
+)
 public class SpecificPayGroupStrategy implements ReportStrategy {
 
     @Override
