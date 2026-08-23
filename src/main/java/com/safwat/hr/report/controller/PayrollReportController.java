@@ -694,41 +694,35 @@ public class PayrollReportController implements Initializable {
             return;
         }
 
-        String reportName = response.reportName(); // الاسم المعروض في الـ response
-        String reportCode = response.reportCode();   // الكود الفريد
+        String reportName = response.reportName();
+        String reportCode = response.reportCode();
         Map<String, Object> payload = response.payload();
 
-        // ── 1. البحث عن الاستراتيجية بالاسم ──
-        ReportStrategy strategy = registry.getByDisplayName(reportName);
-        if (strategy == null) {
+        ReportStrategy mainStrategy = registry.getByDisplayName(reportName);
+        if (mainStrategy == null) {
             SAFNotification.warning("التقرير غير متاح: " + reportName);
             return;
         }
 
-        // نعرض الاسم في الحقل الرئيسي
-        txt_reportSearch.setText(reportName);
-
-        System.out.println(reportName);
-        System.out.println(txt_reportSearch.getText());
+        // كل حاجة UI في runLater واحد ومتسلسل
         Platform.runLater(() -> {
-            selectReport(reportName); // نطبق على طول
+            txt_reportSearch.setText(reportName);
+
+            // 1. نطبق الرئيسي (بيظهر ComboBox لو حاوي)
+            selectReport(reportName);
+
+            // 2. لو مش مباشر (يعني حاوي) → نختار الفرعي من ComboBox
+            //    الـ Listener هيعمل applyStrategy أوتوماتيك
+            if (!"main_direct".equals(mainStrategy.getCategory())) {
+                combo_report.getItems().stream()
+                        .filter(item -> item.code().equals(reportCode))
+                        .findFirst()
+                        .ifPresent(combo_report::setValue);
+            }
+
+            // 3. نملأ الحقول
+            fillFieldsFromPayload(payload);
         });
-
-        // ── 2. لو رئيسي مباشر ──
-        if (!"main_direct".equals(strategy.getCategory())) {
-            ReportStrategy sub = registry.getByCode(response.reportCode());
-            // نبحث في items الـ ComboBox عن اللي كوده يطابق
-            combo_report.getItems().stream()
-                    .filter(item -> item.code().equals(response.reportCode()))
-                    .findFirst()
-                    .ifPresent(combo_report::setValue);
-            Platform.runLater(() -> {
-                applyStrategy(sub);
-            });
-        }
-
-        // ── 4. نملأ الحقول والملفات ──
-        Platform.runLater(() -> fillFieldsFromPayload(payload));
 
         SAFNotification.success("تم تحميل بيانات التقرير — راجع الحقول وأرسل");
     }

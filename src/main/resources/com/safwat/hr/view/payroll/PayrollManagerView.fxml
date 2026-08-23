@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -208,7 +207,7 @@
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                                <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="159.0" promptText="الرقم القومي" />
+                                <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="150.0" promptText="الرقم القومي" />
                         <TextField fx:id="txtMonthForPaymentReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <TextField fx:id="txtPaymentNameReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtEmpNamePaymentReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="271.0" />
@@ -279,13 +278,19 @@
                             <Button fx:id="btnDeleteAllSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                            <ComboBox fx:id="cmbMonthSub" prefHeight="32" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                     <HBox GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <children>
+                           <TextField fx:id="txtMonthSub" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
+                        </children>
+                     </HBox>
                             <Button fx:id="btnDeleteMonthSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف بيانات موظف" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                <ComboBox fx:id="cmbMonthForEmpSub" prefHeight="32" prefWidth="140" promptText="الشهر" />
-                                <TextField fx:id="txtEmpIdSub" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtEmpIdSub" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtMonthForEmpSub" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
+                        <TextField fx:id="txtEmpNameSub" alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="381.0" />
+                        <TextField fx:id="txtEmpCodeSub" alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="200.0" />
                             </HBox>
                             <Button fx:id="btnDeleteEmpSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 

@@ -14,6 +14,21 @@ import java.util.stream.Collectors;
  * سجل مركزي — Hybrid:
  * • Containers: eager (دايماً في الذاكرة)
  * • Leaves (Direct + Sub): lazy by @PayrollReport annotation + hot cache
+ *
+ * <p><b>إصلاح — Race Condition في getByCode:</b>
+ * كان الكود بيعمل:
+ * <pre>
+ *   cached = hotCache.get(code);      // thread A: not found
+ *   cached = hotCache.get(code);      // thread B: not found
+ *   instance = new Strategy();        // thread A: creates instance
+ *   instance = new Strategy();        // thread B: creates ANOTHER instance!
+ *   hotCache.put(code, instance);     // A and B put different instances
+ * </pre>
+ * الحل: {@code computeIfAbsent} اللي هو atomic في {@link ConcurrentHashMap} —
+ * مستحيل يتعمل instance اتنين لنفس الكود حتى في بيئة multi-threaded.
+ *
+ * <p><b>إصلاح — System.err → log.warn:</b>
+ * الـ fallback warning بقى يمشي مع باقي الـ logging في النظام.
  */
 @Slf4j
 public class ReportStrategyRegistry {
@@ -24,79 +39,112 @@ public class ReportStrategyRegistry {
     private final Map<String, List<String>> codesByCategory = new LinkedHashMap<>();
 
     // ── Hot Cache: instances (eager + lazily created) ──
-    private final Map<String, ReportStrategy> hotCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ReportStrategy> hotCache = new ConcurrentHashMap<>();
 
     // ═════════════════════════════════════════════════════════════
     //  1️⃣ Eager — للحاويات (Containers) بس
     // ═════════════════════════════════════════════════════════════
+
     public void register(ReportStrategy strategy) {
         String code = strategy.getCode();
-        metaByCode.put(code, new StrategyMeta(code, strategy.getDisplayName(),
-                strategy.getCategory(), strategy.getMainReport(),
-                strategy.hasSubReports(), null));
+        metaByCode.put(code, new StrategyMeta(
+                code,
+                strategy.getDisplayName(),
+                strategy.getCategory(),
+                strategy.getMainReport(),
+                strategy.hasSubReports(),
+                null));
         codeByDisplayName.put(strategy.getDisplayName(), code);
         codesByCategory.computeIfAbsent(strategy.getCategory(), k -> new ArrayList<>()).add(code);
         hotCache.put(code, strategy); // ← eager instance
     }
 
+    // ═════════════════════════════════════════════════════════════
+    //  2️⃣ Lazy — بيقرأ من @PayrollReport annotation
+    // ═════════════════════════════════════════════════════════════
+
     /**
-     * Lazy — بيقرأ من @PayrollReport annotation.
-     * لو مفيش annotation، بيعمل fallback لـ eager instantiation (للـ migration التدريجي).
+     * Lazy — بيقرأ الـ metadata من {@link PayrollReport} annotation.
+     *
+     * <p>لو مفيش annotation → fallback لـ eager instantiation مع تحذير.
+     * ده للـ migration التدريجي — الهدف إن كل الـ leaves يكون عليها {@link PayrollReport}.
      */
     public void registerLazy(Class<? extends ReportStrategy> clazz) {
         PayrollReport ann = clazz.getAnnotation(PayrollReport.class);
 
-        // ═══════════════════════════════════════════════════════
-        //  Fallback: التقرير لسه معدلهوش — نستخدم السلوك القديم
-        // ═══════════════════════════════════════════════════════
         if (ann == null) {
+            // ── Fallback: مفيهوش annotation — eager بدل lazy ──
             try {
                 ReportStrategy instance = clazz.getDeclaredConstructor().newInstance();
-                register(instance); // ← eager (زي الأول)
-                System.err.println("⚠️ [Fallback] " + clazz.getSimpleName()
-                        + " محمل eager — ضيف @PayrollReport عشان يبقى lazy");
+                register(instance);
+                // إصلاح: log.warn بدل System.err
+                log.warn("⚠️ [Fallback] {} محمل eager — ضيف @PayrollReport عشان يبقى lazy",
+                        clazz.getSimpleName());
             } catch (Exception e) {
-                throw new RuntimeException("فشل تسجيل " + clazz.getName()
-                        + " (مفيهوش @PayrollReport ومعرفش أعمله instantiate)", e);
+                throw new RuntimeException(
+                        "فشل تسجيل " + clazz.getName()
+                                + " (مفيهوش @PayrollReport ومعرفش أعمله instantiate)", e);
             }
             return;
         }
 
-        // ═══════════════════════════════════════════════════════
-        //  Lazy path: metadata من الـ Annotation
-        // ═══════════════════════════════════════════════════════
+        // ── Lazy path: metadata من الـ Annotation فقط ──
         String code = ann.code();
-        metaByCode.put(code, new StrategyMeta(code, ann.displayName(), ann.category(),
-                ann.mainReport(), false, clazz));
+        metaByCode.put(code, new StrategyMeta(
+                code,
+                ann.displayName(),
+                ann.category(),
+                ann.mainReport(),
+                false,
+                clazz));
         codeByDisplayName.put(ann.displayName(), code);
         codesByCategory.computeIfAbsent(ann.category(), k -> new ArrayList<>()).add(code);
+        // ← مش بنضيف في hotCache هنا — بيتضاف أول ما يتطلب
     }
 
     // ═════════════════════════════════════════════════════════════
     //  3️⃣ Retrieval — مع Hot Cache
     // ═════════════════════════════════════════════════════════════
 
+    /**
+     * يجلب استراتيجية بكودها — lazy instantiation مع hot cache.
+     *
+     * <p><b>إصلاح — Race Condition:</b>
+     * استُبدِل:
+     * <pre>
+     *   cached = hotCache.get(code);
+     *   if (cached == null) { instance = new ...; hotCache.put(...); }
+     * </pre>
+     * بـ:
+     * <pre>
+     *   hotCache.computeIfAbsent(code, k -> new ...)
+     * </pre>
+     * {@code computeIfAbsent} في {@link ConcurrentHashMap} atomic —
+     * الـ factory function بتتنفذ مرة واحدة بس حتى لو اتنين threads طلبوا نفس الكود.
+     *
+     * @param code كود التقرير
+     * @return instance الاستراتيجية
+     * @throws IllegalArgumentException لو الكود مش مسجل
+     */
     public ReportStrategy getByCode(String code) {
-        // أولاً: Hot Cache
-        ReportStrategy cached = hotCache.get(code);
-        if (cached != null) return cached;
-
-        // ثانياً: Lazy instantiate
         StrategyMeta meta = metaByCode.get(code);
         if (meta == null) {
             throw new IllegalArgumentException("كود تقرير غير معروف: " + code);
         }
-        if (meta.clazz == null) {
-            throw new IllegalStateException("التقرير " + code + " مسجل eager — لكن مش موجود في cache!");
-        }
 
-        try {
-            ReportStrategy instance = meta.clazz.getDeclaredConstructor().newInstance();
-            hotCache.put(code, instance);
-            return instance;
-        } catch (Exception e) {
-            throw new RuntimeException("فشل إنشاء التقرير: " + code, e);
-        }
+        // computeIfAbsent: atomic — مستحيل instance اتنين لنفس الكود
+        return hotCache.computeIfAbsent(code, k -> {
+            if (meta.clazz == null) {
+                throw new IllegalStateException(
+                        "التقرير " + code + " مسجل eager لكن مش موجود في cache!");
+            }
+            try {
+                log.debug("🔧 Lazy loading: {}", code);
+                return meta.clazz.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException("فشل إنشاء التقرير: " + code, e);
+            }
+        });
     }
 
     public ReportStrategy getByDisplayName(String displayName) {
@@ -116,15 +164,19 @@ public class ReportStrategyRegistry {
     }
 
     /**
-     * بيرجع الـ instances اللي في الـ Cache (eager + مستخدمة قبل كده).
+     * بيرجع الـ instances اللي في الـ Cache فقط (eager + مستخدمة قبل كده).
+     *
+     * <p>آمن للاستخدام في أي وقت — مش بيعمل instantiation إضافي.
      */
     public List<ReportStrategy> getAllCached() {
         return List.copyOf(hotCache.values());
     }
 
     /**
-     * بيرجع كل الـ instances — force instantiation على اللي لسه.
-     * استخدمه بحذر.
+     * بيرجع كل الـ instances — force instantiation على اللي لسه lazy.
+     *
+     * <p><b>⚠️ تحذير:</b> بيكسر الـ lazy loading ويحمل كل التقارير في الذاكرة.
+     * استخدمه فقط في الـ admin diagnostics أو الاختبارات — لا تستدعيه تلقائياً.
      */
     public List<ReportStrategy> getAll() {
         return metaByCode.keySet().stream()
@@ -133,7 +185,9 @@ public class ReportStrategyRegistry {
     }
 
     /**
-     * بترجع قائمة items (code + name) لفئة معينة — للـ ComboBox الفرعي
+     * بترجع قائمة items (code + name) لفئة معينة — للـ ComboBox الفرعي.
+     *
+     * <p>لا تعمل instantiation — بتقرأ من الـ metadata بس.
      */
     public List<ReportItem> getItemsByCategory(String category) {
         return codesByCategory.getOrDefault(category, List.of()).stream()
@@ -145,7 +199,7 @@ public class ReportStrategyRegistry {
     }
 
     /**
-     * item بسيط للـ ComboBox — بيحمل الكود والاسم
+     * item بسيط للـ ComboBox — بيحمل الكود والاسم.
      */
     public record ReportItem(String code, String displayName) {
         @Override
@@ -155,8 +209,9 @@ public class ReportStrategyRegistry {
     }
 
     // ═════════════════════════════════════════════════════════════
-    //  Inner: Metadata holder (خفيف جداً)
+    //  Inner: Metadata holder (خفيف جداً — strings + class ref بس)
     // ═════════════════════════════════════════════════════════════
+
     private static class StrategyMeta {
         final String code;
         final String displayName;

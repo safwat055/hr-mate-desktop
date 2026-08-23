@@ -16,14 +16,16 @@ public final class ApiEndpoints {
         //
         public static final String BASE = "/payrollChange";
         // for search in all employees that in payroll change table
-        public static final String SEARCH = "/payrollChange/get/searchEmployee";
+        public static final String SEARCH = "/payrollChange/searchEmployee";
         // for get change record in view
         public static final String EMPLOYEE_RECORD = "/payrollChange/get/employeeRecord";
         // for download change file in change view
         public static final String DOWNLOAD_CARD = "/payrollChange/download-changeCard";
         public static final String UPDATE_NOTE = "/payrollChange/update-note";
-        public static final String DELETE_RECORD = "/payrollChange/delete-record";
+        public static final String DELETE_EMPLOYEE_MONTH = "/payrollChange/delete-employee-month";
+        public static final String DELETE_MONTH = "/payrollChange/delete-month";
         public static final String ALL_MONTHS_List = "/payrollChange/allMonths";
+        public static final String EMPLOYEE_MONTHS = "/payrollChange/employee-months";
     }
 
     public static class PayrollYearly {

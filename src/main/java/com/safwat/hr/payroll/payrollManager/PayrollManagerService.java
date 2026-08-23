@@ -20,9 +20,7 @@ import static com.safwat.hr.shared.util.DateUtils.getFirstDayOfMonth;
 public class PayrollManagerService {
     private final PayrollManagerApiService apiService;
     private final PayrollManagerController managerController;
-    public List<String> allMonthsYearly = new ArrayList<>();
-    public List<String> allMonthsReview = new ArrayList<>();
-    public List<String> allMonthsChangeCard = new ArrayList<>();
+
 
     public List<String> customList = new ArrayList<>();
 
@@ -35,9 +33,20 @@ public class PayrollManagerService {
 
 
     public void setAllMonthsList() {
-        allMonthsYearly = (apiService.getAllMonthsForYearly());
-        allMonthsReview = apiService.getAllMonthForReview();
-        allMonthsChangeCard = apiService.getAllMonthForChangeCard();
+
+
+    }
+
+    public List<String> getAllMonthsYearly() {
+        return apiService.getAllMonthsForYearly();
+    }
+
+    public List<String> getAllMonthsReview() {
+        return apiService.getAllMonthForReview();
+    }
+
+    public List<String> getAllMonthsChangeCard() {
+        return apiService.getAllMonthForChangeCard();
     }
 
     // ===============================================================================
@@ -343,5 +352,48 @@ public class PayrollManagerService {
                     SAFNotification.error("فشل الإرسال: " + error.getMessage());
                 }
         );
+    }
+
+    public List<SearchEmp> getEmployeeInSub(String searchValue) {
+        PayrollRequest request = PayrollRequest.builder()
+                .searchValue(searchValue)
+                .build();
+        return apiService.getEmployeeInChangeCard(request);
+    }
+
+    public List<String> getEmployeeMonthsSub(String nationalId) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .build();
+        return apiService.getEmployeeMonthsChangeCard(request);
+    }
+
+    public void deleteEmployeeMonthSub(String nationalId, String strDate) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار  " + nationalId, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .nationalId(nationalId)
+                    .startDate(getFirstDayOfMonth(strDate))
+                    .build();
+            Integer deletedRows = apiService.deleteEmployeeMonthChangeCard(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
+    }
+
+    public void deleteFullMonthSub(String strDate) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف الشهر بالكامل في حالة الاستمرار", "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .startDate(getFirstDayOfMonth(strDate))
+                    .build();
+            Integer deletedRows = apiService.deleteFullMonthChangeCard(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
     }
 }

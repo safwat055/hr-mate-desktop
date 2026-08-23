@@ -292,5 +292,65 @@ public class PayrollManagerApiService {
                 Integer.class
         );
     }
+
+
+    // =====================================================================================
+    // =========================== تقرير اجر الاشتراك =======================================
+    // =====================================================================================
+
+    public List<SearchEmp> getEmployeeInChangeCard(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.SEARCH,
+                    request,
+                    new TypeReference<List<SearchEmp>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<String> getEmployeeMonthsChangeCard(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.EMPLOYEE_MONTHS,
+                    request,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Integer deleteEmployeeMonthChangeCard(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.DELETE_EMPLOYEE_MONTH,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Integer deleteFullMonthChangeCard(PayrollRequest request) {
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollChange.DELETE_MONTH,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            SAFNotification.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
 }
 

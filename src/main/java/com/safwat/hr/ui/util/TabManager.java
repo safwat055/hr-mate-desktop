@@ -5,10 +5,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
 
+@Slf4j
 public class TabManager {
     // هذا الماب سيبقى مشترك لكل التابات
 
@@ -40,7 +42,7 @@ public class TabManager {
             Tab tab = new Tab(tabTitle, content);
             tab.setClosable(closAble);
 
-            tab.setOnClosed(e
+            tab.setOnClosed(_
                     -> loadedTabs.remove(fxmlPath)
             );
 
@@ -51,7 +53,7 @@ public class TabManager {
             loadedTabs.put(fxmlPath, tab);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.debug(e.getMessage());
             SAFNotification.error(e.getMessage());
         }
     }

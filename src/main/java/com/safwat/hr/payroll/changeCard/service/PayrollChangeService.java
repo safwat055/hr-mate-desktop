@@ -90,7 +90,7 @@ public class PayrollChangeService {
 
         try {
             return ApiClient.post(
-                    ApiEndpoints.PayrollChange.DELETE_RECORD,
+                    ApiEndpoints.PayrollChange.DELETE_EMPLOYEE_MONTH,
                     request,
                     Integer.class
             ).getData();

@@ -114,13 +114,12 @@ public class PayrollManagerController implements Initializable {
     @FXML
     private Button btnDeleteAllSub;
     @FXML
-    private ComboBox<String> cmbMonthSub;
+    private TextField txtMonthSub;
     @FXML
     private Button btnDeleteMonthSub;
+
     @FXML
-    private ComboBox<String> cmbMonthForEmpSub;
-    @FXML
-    private TextField txtEmpIdSub;
+    private TextField txtMonthForEmpSub, txtEmpIdSub, txtEmpNameSub, txtEmpCodeSub;
     @FXML
     private Button btnDeleteEmpSub;
 
@@ -132,8 +131,10 @@ public class PayrollManagerController implements Initializable {
         fillMainLists();
         setTxtMonthSearchYearly();
         setTxtMonthSearchReview();
+        setTxtMonthSearchSub();
         setButtonsActionsYearly();
         setButtonsActionsReview();
+        setButtonsActionsSub();
     }
 
     /**
@@ -192,28 +193,26 @@ public class PayrollManagerController implements Initializable {
     private void saveDescriptions() {
         String month = txtDescMonthAnnual.getText();
         if (month == null || month.isBlank()) {
-            // SAFNotification.warning("اختر الشهر أولاً");
+            SAFNotification.warning("اختر الشهر أولاً");
             return;
         }
 
         List<GroupDescription> modified = new ArrayList<>(groupDescriptionList);
         boolean success = managerService.saveDescriptions(month, modified);
 
-        if (success) {
-            //SAFNotification.success("تم حفظ الأوصاف بنجاح");
-        } else {
+        if (!success) {
             SAFNotification.error("فشل حفظ الأوصاف");
         }
     }
 
     void setTxtMonthSearchYearly() {
         // ── String simple binds ──
-        SmartSearchHelper.bind(txtAllMonthsYearly, () -> managerService.allMonthsYearly,
+        SmartSearchHelper.bind(txtAllMonthsYearly, () -> managerService.getAllMonthsYearly(),
                 val -> txtAllMonthsYearly.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 ));
 
-        SmartSearchHelper.bind(txtMonthGroupY, () -> managerService.allMonthsYearly,
+        SmartSearchHelper.bind(txtMonthGroupY, () -> managerService.getAllMonthsYearly(),
                 val -> txtMonthGroupY.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 ));
@@ -231,7 +230,7 @@ public class PayrollManagerController implements Initializable {
                         .column("رقم قومى", SearchEmp::getNational_id)
                         .column("رقم موظف", SearchEmp::getPay_id)
                         .column("الاسم", SearchEmp::getEmp_name),
-                emp -> {
+                _ -> {
                 },
                 SmartSearchHelper.FieldBind.of(txtEmpIdAnnual, SearchEmp::getNational_id),
                 SmartSearchHelper.FieldBind.of(txtEmpNameAnnual, SearchEmp::getEmp_name),
@@ -247,7 +246,7 @@ public class PayrollManagerController implements Initializable {
                         .column("رقم قومى", SearchEmp::getNational_id)
                         .column("رقم موظف", SearchEmp::getPay_id)
                         .column("الاسم", SearchEmp::getEmp_name),
-                emp -> {
+                _ -> {
                 },
                 SmartSearchHelper.FieldBind.of(txtEmpIdPaymentAnnual, SearchEmp::getNational_id),
                 SmartSearchHelper.FieldBind.of(txtEmpNameAnnual2, SearchEmp::getEmp_name),
@@ -281,7 +280,7 @@ public class PayrollManagerController implements Initializable {
         );
 
         SmartSearchHelper.bind(txtDescMonthAnnual,
-                () -> managerService.allMonthsYearly,
+                () -> managerService.getAllMonthsYearly(),
                 val -> txtDescMonthAnnual.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 )
@@ -290,13 +289,13 @@ public class PayrollManagerController implements Initializable {
 
     void setTxtMonthSearchReview() {
         SmartSearchHelper.bind(txtMonthReview,
-                () -> managerService.allMonthsReview,
+                () -> managerService.getAllMonthsReview(),
                 val -> txtMonthReview.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 )
         );
         SmartSearchHelper.bind(txtMonthForGroupReview,
-                () -> managerService.allMonthsReview,
+                () -> managerService.getAllMonthsReview(),
                 val -> txtMonthForGroupReview.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 )
@@ -316,7 +315,7 @@ public class PayrollManagerController implements Initializable {
                         .column("رقم قومى", SearchEmp::getNational_id)
                         .column("رقم موظف", SearchEmp::getPay_id)
                         .column("الاسم", SearchEmp::getEmp_name),
-                emp -> {
+                _ -> {
                 },
                 SmartSearchHelper.FieldBind.of(txtEmpIdReview, SearchEmp::getNational_id),
                 SmartSearchHelper.FieldBind.of(txtEmpNameReview, SearchEmp::getEmp_name),
@@ -336,7 +335,7 @@ public class PayrollManagerController implements Initializable {
                         .column("رقم قومى", SearchEmp::getNational_id)
                         .column("رقم موظف", SearchEmp::getPay_id)
                         .column("الاسم", SearchEmp::getEmp_name),
-                emp -> {
+                _ -> {
                 },
                 SmartSearchHelper.FieldBind.of(txtEmpIdPaymentReview, SearchEmp::getNational_id),
                 SmartSearchHelper.FieldBind.of(txtEmpNamePaymentReview, SearchEmp::getEmp_name),
@@ -356,7 +355,7 @@ public class PayrollManagerController implements Initializable {
         );
 
         SmartSearchHelper.bind(txtKeyMonthReview,
-                () -> managerService.allMonthsReview,
+                () -> managerService.getAllMonthsReview(),
                 val -> txtKeyMonthReview.setText(
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 )
@@ -372,6 +371,41 @@ public class PayrollManagerController implements Initializable {
         btnUpdateAllKeysReview.setOnAction(_ -> managerService.updateKeysReviewAllReport());
         btnUpdateKeysReview.setOnAction(_ -> managerService.updateKeysReviewMonth(txtKeyMonthReview.getText()));
     }
+
+    void setTxtMonthSearchSub() {
+        SmartSearchHelper.bind(txtMonthSub,
+                () -> managerService.getAllMonthsChangeCard(),
+                val -> txtMonthSub.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+        SmartSearchHelper.bind(
+                txtEmpIdSub,
+                () -> managerService.getEmployeeInSub(txtEmpIdSub.getText()),
+                SearchDialog.builder(SearchEmp.class)
+                        .title("بحث عن موظف")
+                        .column("رقم قومى", SearchEmp::getNational_id)
+                        .column("رقم موظف", SearchEmp::getPay_id)
+                        .column("الاسم", SearchEmp::getEmp_name),
+                _ -> {
+                },
+                SmartSearchHelper.FieldBind.of(txtEmpIdSub, SearchEmp::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameSub, SearchEmp::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeSub, SearchEmp::getPay_id)
+        );
+        SmartSearchHelper.bind(txtMonthForEmpSub,
+                () -> managerService.getEmployeeMonthsSub(txtEmpIdSub.getText()),
+                val -> txtMonthForEmpSub.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+    }
+
+    void setButtonsActionsSub() {
+        btnDeleteMonthSub.setOnAction(_ -> managerService.deleteFullMonthSub(txtMonthSub.getText()));
+        btnDeleteEmpSub.setOnAction(_ -> managerService.deleteEmployeeMonthSub(txtEmpIdSub.getText(), txtMonthForEmpSub.getText()));
+    }
+
 
     // ═══════════════════════════════════════════════════════════
     //  DTO — Class مع Property (عشان التعديل في الجدول)

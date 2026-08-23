@@ -61,7 +61,7 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.42'
     annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
-
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
 }
 
 shadowJar {
