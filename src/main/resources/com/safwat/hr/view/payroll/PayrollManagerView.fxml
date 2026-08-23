@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -21,7 +20,7 @@
      Single Screen — 3 Report Cards — Styled per Salary Scale v1.0
      ============================================================ -->
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1455.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
 
     <content>
         <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" style="-fx-background-color: #F5F6FA;">
@@ -90,8 +89,8 @@
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                 <TextField fx:id="txtEmpIdAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtMonthForEmpAnnual" alignment="CENTER" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
-                        <TextField fx:id="txtEmpNameAnnual" editable="false" prefHeight="30.0" prefWidth="381.0" />
-                        <TextField fx:id="txtEmpCodeAnnual" editable="false" layoutX="315.0" layoutY="11.0" prefHeight="30.0" prefWidth="212.0" />
+                        <TextField fx:id="txtEmpNameAnnual" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="381.0" />
+                        <TextField fx:id="txtEmpCodeAnnual" alignment="CENTER" editable="false" layoutX="315.0" layoutY="11.0" prefHeight="30.0" prefWidth="212.0" />
                             </HBox>
                             <Button fx:id="btnDeleteEmpMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
@@ -189,30 +188,34 @@
                             <Button fx:id="btnDeleteAllReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                            <ComboBox fx:id="cmbMonthReview" prefHeight="32" promptText="اختر الشهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                             <Button fx:id="btnDeleteMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
-                                <ComboBox fx:id="cmbMonthForGroupReview" prefHeight="32" promptText="الشهر" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtMonthForGroupReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <TextField fx:id="txtGroupReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
                             </HBox>
                             <Button fx:id="btnDeleteGroupReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
-                                <ComboBox fx:id="cmbMonthForEmpReview" prefHeight="32" prefWidth="140" promptText="الشهر" />
-                                <TextField fx:id="txtEmpIdReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtEmpIdReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtMonthForEmpReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
+                        <TextField fx:id="txtEmpNameReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="381.0" />
+                        <TextField fx:id="txtEmpCodeReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="212.0" />
                             </HBox>
                             <Button fx:id="btnDeleteEmpMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
                             <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
-                                <ComboBox fx:id="cmbMonthForPaymentReview" prefHeight="32" prefWidth="120" promptText="الشهر" />
-                                <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" promptText="الرقم القومي" />
+                                <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="159.0" promptText="الرقم القومي" />
+                        <TextField fx:id="txtMonthForPaymentReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <TextField fx:id="txtPaymentNameReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم الصرفية" HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtEmpNamePaymentReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="271.0" />
+                        <TextField fx:id="txtEmpCodePaymentReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="148.0" />
                             </HBox>
                             <Button fx:id="btnDeletePaymentReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                     <TextField fx:id="txtMonthReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                             <rowConstraints>
                                 <RowConstraints />
@@ -234,14 +237,12 @@
                                 <ColumnConstraints hgrow="NEVER" minWidth="100" />
                             </columnConstraints>
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تحديث مفتاح" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تحديث تقرير المراجعة" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
-                                <ComboBox fx:id="cmbKeyMonthReview" prefHeight="32" prefWidth="140" promptText="الشهر (اختياري)" />
-                                <CheckBox fx:id="chkAllMonthsReview" nodeOrientation="RIGHT_TO_LEFT" text="كل الأشهر" />
-                                <TextField fx:id="txtOldKeyReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="المفتاح القديم" HBox.hgrow="ALWAYS" />
-                                <TextField fx:id="txtNewKeyReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="المفتاح الجديد" HBox.hgrow="ALWAYS" />
+                                <TextField fx:id="txtKeyMonthReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="120.0" promptText="اختر شهر" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnUpdateKeysReview" prefHeight="32" prefWidth="104.0" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث شهر" />
                             </HBox>
-                            <Button fx:id="btnUpdateKeysReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Button fx:id="btnUpdateAllKeysReview" prefHeight="30.0" prefWidth="90.0" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث الكل" GridPane.columnIndex="2" />
 
                             <rowConstraints>
                                 <RowConstraints />

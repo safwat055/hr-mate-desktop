@@ -185,4 +185,112 @@ public class PayrollManagerApiService {
                 }
         ).getData();
     }
+
+    //======================================================================================
+    // =========================== تقرير المراجعة ==========================================
+    //======================================================================================
+    @SneakyThrows
+    public List<String> getAllKeys() {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.ALL_GROUP_KEYS,
+                null,
+                new TypeReference<List<String>>() {
+                }
+        ).getData();
+    }
+
+    @SneakyThrows
+    public List<String> getAllKeysForMonth(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.MONTH_GROUP_KEYS,
+                request,
+                new TypeReference<List<String>>() {
+                }
+        ).getData();
+    }
+
+    @SneakyThrows
+    public List<String> getEmployeeMonthKeys(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.EMPLOYEE_MONTH_GROUP_KEYS,
+                request,
+                new TypeReference<List<String>>() {
+                }
+        ).getData();
+    }
+
+    @SneakyThrows
+    public List<String> getEmployeeMonthsReview(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.EMPLOYEE_MONTHS,
+                request,
+                new TypeReference<List<String>>() {
+                }
+        ).getData();
+    }
+
+    @SneakyThrows
+    public List<SearchEmp> getEmployeeInReview(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.SEARCH2,
+                request,
+                new TypeReference<List<SearchEmp>>() {
+                }
+        ).getData();
+    }
+
+    @SneakyThrows
+    public Integer deleteFullMonthReview(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.DELETE_MONTH_ALL,
+                request,
+                Integer.class
+        ).getData();
+    }
+
+    @SneakyThrows
+    public Integer deletePayGroupReview(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.DELETE_GROUP_ALL,
+                request,
+                Integer.class
+        ).getData();
+    }
+
+    @SneakyThrows
+    public Integer deleteEmployeeMonthReview(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_MONTH,
+                request,
+                Integer.class
+        ).getData();
+    }
+
+    @SneakyThrows
+    public Integer deleteEmployeePayGroup(PayrollRequest request) {
+        return ApiClient.post(
+                ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_GROUP_MONTH,
+                request,
+                Integer.class
+        ).getData();
+    }
+
+    @SneakyThrows
+    public void updateKeysReviewAll() {
+        ApiClient.postAsync(
+                ApiEndpoints.PayrollReview.UPDATE_REVIEW_KEYS_ALL,
+                null,
+                Integer.class
+        );
+    }
+
+    @SneakyThrows
+    public void updateKeysReviewMonth(PayrollRequest request) {
+        ApiClient.postAsync(
+                ApiEndpoints.PayrollReview.UPDATE_REVIEW_KEYS_MONTH,
+                request,
+                Integer.class
+        );
+    }
 }
+

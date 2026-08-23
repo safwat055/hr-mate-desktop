@@ -25,16 +25,15 @@ import java.util.ResourceBundle;
 public class PayrollManagerController implements Initializable {
 
     private final ObservableList<GroupDescription> groupDescriptionList = FXCollections.observableArrayList();
+    @FXML
+    TextField txtMonthReview;
     private PayrollManagerService managerService;
-
     // ── Header ──
     @FXML
     private Label lblStatus;
-
     // ── Annual Report ──
     @FXML
     private Button btnRefreshAnnual;
-
     // Deletion
     @FXML
     private Button btnDeleteAllAnnual;
@@ -58,7 +57,6 @@ public class PayrollManagerController implements Initializable {
     private TextField txtEmpNameAnnual2, txtEmpCodeAnnual2;
     @FXML
     private Button btnDeletePaymentAnnual;
-
     // Edit
     @FXML
     private TextField txtOldPaymentName;
@@ -78,48 +76,37 @@ public class PayrollManagerController implements Initializable {
     private TableColumn<GroupDescription, String> colGroupDesc;
     @FXML
     private Button btnSaveDescriptions;
-
     // ── Review Report ──
     @FXML
     private Button btnRefreshReview;
     @FXML
     private Button btnDeleteAllReview;
     @FXML
-    private ComboBox<String> cmbMonthReview;
-    @FXML
     private Button btnDeleteMonthReview;
     @FXML
-    private ComboBox<String> cmbMonthForGroupReview;
-    @FXML
-    private TextField txtGroupReview;
+    private TextField txtMonthForGroupReview, txtGroupReview;
+
     @FXML
     private Button btnDeleteGroupReview;
     @FXML
-    private ComboBox<String> cmbMonthForEmpReview;
-    @FXML
-    private TextField txtEmpIdReview;
+    private TextField txtMonthForEmpReview, txtEmpIdReview, txtEmpNameReview, txtEmpCodeReview;
+
     @FXML
     private Button btnDeleteEmpMonthReview;
+
     @FXML
-    private ComboBox<String> cmbMonthForPaymentReview;
-    @FXML
-    private TextField txtEmpIdPaymentReview;
-    @FXML
-    private TextField txtPaymentNameReview;
+    private TextField txtMonthForPaymentReview, txtEmpIdPaymentReview, txtPaymentNameReview, txtEmpNamePaymentReview, txtEmpCodePaymentReview;
+
     @FXML
     private Button btnDeletePaymentReview;
 
     // Key Update
+
+
     @FXML
-    private ComboBox<String> cmbKeyMonthReview;
+    private TextField txtKeyMonthReview;
     @FXML
-    private CheckBox chkAllMonthsReview;
-    @FXML
-    private TextField txtOldKeyReview;
-    @FXML
-    private TextField txtNewKeyReview;
-    @FXML
-    private Button btnUpdateKeysReview;
+    private Button btnUpdateKeysReview, btnUpdateAllKeysReview;
 
     // ── Subscription Report ──
     @FXML
@@ -143,8 +130,10 @@ public class PayrollManagerController implements Initializable {
 
         setupTableColumns();
         fillMainLists();
-        setTxtMonthSearch();
-        setButtonsActions();
+        setTxtMonthSearchYearly();
+        setTxtMonthSearchReview();
+        setButtonsActionsYearly();
+        setButtonsActionsReview();
     }
 
     /**
@@ -173,7 +162,7 @@ public class PayrollManagerController implements Initializable {
         managerService.setAllMonthsList();
     }
 
-    void setButtonsActions() {
+    void setButtonsActionsYearly() {
         btnDeleteMonthAnnual.setOnAction(_ -> managerService.deleteOneMonthYearly());
         btnDeleteGroupAnnual.setOnAction(_ -> managerService.deleteTargetPayGroup());
         btnDeleteEmpMonthAnnual.setOnAction(_ -> managerService.deleteEmployeeMonth());
@@ -217,7 +206,7 @@ public class PayrollManagerController implements Initializable {
         }
     }
 
-    void setTxtMonthSearch() {
+    void setTxtMonthSearchYearly() {
         // ── String simple binds ──
         SmartSearchHelper.bind(txtAllMonthsYearly, () -> managerService.allMonthsYearly,
                 val -> txtAllMonthsYearly.setText(
@@ -297,6 +286,91 @@ public class PayrollManagerController implements Initializable {
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
                 )
         );
+    }
+
+    void setTxtMonthSearchReview() {
+        SmartSearchHelper.bind(txtMonthReview,
+                () -> managerService.allMonthsReview,
+                val -> txtMonthReview.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+        SmartSearchHelper.bind(txtMonthForGroupReview,
+                () -> managerService.allMonthsReview,
+                val -> txtMonthForGroupReview.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+        SmartSearchHelper.bind(txtGroupReview,
+                () -> managerService.getAllKeysForMonthReview(txtMonthForGroupReview.getText()),
+                val -> txtGroupReview.setText(
+                        val
+                )
+        );
+
+        SmartSearchHelper.bind(
+                txtEmpIdReview,
+                () -> managerService.getEmployeeInReview(txtEmpIdReview.getText()),
+                SearchDialog.builder(SearchEmp.class)
+                        .title("بحث عن موظف")
+                        .column("رقم قومى", SearchEmp::getNational_id)
+                        .column("رقم موظف", SearchEmp::getPay_id)
+                        .column("الاسم", SearchEmp::getEmp_name),
+                emp -> {
+                },
+                SmartSearchHelper.FieldBind.of(txtEmpIdReview, SearchEmp::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameReview, SearchEmp::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeReview, SearchEmp::getPay_id)
+        );
+        SmartSearchHelper.bind(txtMonthForEmpReview,
+                () -> managerService.getEmployeeMonthsReview(txtEmpIdReview.getText()),
+                val -> txtMonthForEmpReview.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+        SmartSearchHelper.bind(
+                txtEmpIdPaymentReview,
+                () -> managerService.getEmployeeInReview(txtEmpIdPaymentReview.getText()),
+                SearchDialog.builder(SearchEmp.class)
+                        .title("بحث عن موظف")
+                        .column("رقم قومى", SearchEmp::getNational_id)
+                        .column("رقم موظف", SearchEmp::getPay_id)
+                        .column("الاسم", SearchEmp::getEmp_name),
+                emp -> {
+                },
+                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentReview, SearchEmp::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNamePaymentReview, SearchEmp::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodePaymentReview, SearchEmp::getPay_id)
+        );
+        SmartSearchHelper.bind(txtMonthForPaymentReview,
+                () -> managerService.getEmployeeMonthsReview(txtEmpIdPaymentReview.getText()),
+                val -> txtMonthForPaymentReview.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+        SmartSearchHelper.bind(txtPaymentNameReview,
+                () -> managerService.getEmployeeMonthKeys(txtEmpIdPaymentReview.getText(), txtMonthForPaymentReview.getText()),
+                val -> txtPaymentNameReview.setText(
+                        val
+                )
+        );
+
+        SmartSearchHelper.bind(txtKeyMonthReview,
+                () -> managerService.allMonthsReview,
+                val -> txtKeyMonthReview.setText(
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
+                )
+        );
+    }
+
+    void setButtonsActionsReview() {
+        btnDeleteMonthReview.setOnAction(_ -> managerService.deleteFullMonthReview(txtMonthReview.getText()));
+        btnDeleteGroupReview.setOnAction(_ -> managerService.deletePayGroupReview(txtMonthForGroupReview.getText(), txtGroupReview.getText()));
+        btnDeleteEmpMonthReview.setOnAction(_ -> managerService.deleteEployeeMonthReviewُ(txtEmpIdReview.getText(), txtMonthForEmpReview.getText()));
+        btnDeletePaymentReview.setOnAction(_ -> managerService.deleteEployeeMonthReviewُ(txtEmpIdPaymentReview.getText(), txtMonthForPaymentReview.getText(), txtPaymentNameReview.getText()));
+
+        btnUpdateAllKeysReview.setOnAction(_ -> managerService.updateKeysReviewAllReport());
+        btnUpdateKeysReview.setOnAction(_ -> managerService.updateKeysReviewMonth(txtKeyMonthReview.getText()));
     }
 
     // ═══════════════════════════════════════════════════════════

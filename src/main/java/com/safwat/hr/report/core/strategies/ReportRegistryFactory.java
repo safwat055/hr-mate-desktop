@@ -32,6 +32,7 @@ import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.FullReviewRep
 
 import com.safwat.hr.report.payroll.sub.payrollReview.reviewReport.MainReviewReport;
 import com.safwat.hr.report.payroll.sub.payrollReview.update.UpdateReviewKeysAll;
+import com.safwat.hr.report.payroll.sub.payrollReview.update.UpdateReviewKeysMonth;
 import com.safwat.hr.report.payroll.sub.payrollSummary.*;
 import com.safwat.hr.report.payroll.sub.payrollYearly.*;
 import com.safwat.hr.report.payroll.sub.records.full.FullRecordAll;
@@ -173,11 +174,11 @@ public class ReportRegistryFactory {
         registry.register(new FullReviewReport());
         registry.register(new MainReviewReport());
 
-
         // ══════════════════════════════════════════
         //  فرعيات payrollReview — update
         // ══════════════════════════════════════════
         registry.register(new UpdateReviewKeysAll());
+        registry.register(new UpdateReviewKeysMonth());
 
         // ══════════════════════════════════════════
         //  فرعيات records — full

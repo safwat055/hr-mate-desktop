@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.payroll.dto.SearchEmp;
+import com.safwat.hr.report.core.ReportContext;
+
+import com.safwat.hr.report.core.strategies.ReportExternalSubmitter;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.DangerConfirmDialog;
 import com.safwat.hr.shared.util.DateUtils;
@@ -174,7 +177,7 @@ public class PayrollManagerService {
         List<Map<String, String>> payload = descriptions.stream()
                 .map(d -> {
                     Map<String, String> map = new HashMap<>();
-                    
+
                     map.put("payGroup", d.getPayGroup());
                     map.put("description", d.getDescription());
                     return map;
@@ -205,5 +208,140 @@ public class PayrollManagerService {
             return false;
         }
     }
+    // ===========================================================
+    // =============== تقارير المراجعة ===========================
+    // ===========================================================
 
+    public List<String> getAllReviewKeys() {
+        return apiService.getAllKeys();
+
+    }
+
+    public List<String> getAllKeysForMonthReview(String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        return apiService.getAllKeysForMonth(request);
+    }
+
+    public List<String> getEmployeeMonthKeys(String nationalId, String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        return apiService.getEmployeeMonthKeys(request);
+    }
+
+    public List<String> getEmployeeMonthsReview(String nationalId) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .build();
+        return apiService.getEmployeeMonthsReview(request);
+    }
+
+    public List<SearchEmp> getEmployeeInReview(String searchValue) {
+
+        PayrollRequest request = PayrollRequest.builder()
+                .searchValue(searchValue)
+                .build();
+
+        return apiService.getEmployeeInReview(request);
+    }
+
+    public void deleteFullMonthReview(String strDate) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف الشهر بالكامل في حالة الاستمرار", "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .startDate(getFirstDayOfMonth(strDate))
+                    .build();
+            Integer deletedRows = apiService.deleteFullMonthReview(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
+    }
+
+    public void deletePayGroupReview(String strDate, String payGroup) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف المجموعة بالكامل في حالة الاستمرار  " + payGroup, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .startDate(getFirstDayOfMonth(strDate))
+                    .payGroup(payGroup)
+                    .build();
+            Integer deletedRows = apiService.deletePayGroupReview(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
+    }
+
+    public void deleteEployeeMonthReviewُ(String nationalId, String strDate) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار  " + nationalId, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .nationalId(nationalId)
+                    .startDate(getFirstDayOfMonth(strDate))
+
+                    .build();
+            Integer deletedRows = apiService.deleteEmployeeMonthReview(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
+    }
+
+    public void deleteEployeeMonthReviewُ(String nationalId, String strDate, String payGroup) {
+        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف مجوعة من الموظف في حالة الاستمرار  " + nationalId + "\n " + payGroup, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
+        if (ok) {
+            PayrollRequest request = PayrollRequest.builder()
+                    .nationalId(nationalId)
+                    .startDate(getFirstDayOfMonth(strDate))
+                    .payGroup(payGroup)
+                    .build();
+            Integer deletedRows = apiService.deleteEmployeePayGroup(request);
+            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+
+        } else {
+            SAFNotification.info("تم إلغاء العملية");
+        }
+    }
+
+    public void updateKeysReviewAllReport() {
+
+        ReportContext ctx = ReportContext.builder()
+
+                .user(ApiClient.getUserName())
+                .build();
+
+        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_ALL", ctx,
+                reportId -> {
+                    // على UI Thread already (شغال جوه Platform.runLater)
+                    SAFNotification.success("تم إرسال الطلب رقم: " + reportId);
+                },
+                error -> {
+                    SAFNotification.error("فشل الإرسال: " + error.getMessage());
+                }
+        );
+
+    }
+
+    public void updateKeysReviewMonth(String strDate) {
+
+        ReportContext ctx = ReportContext.builder()
+                .user(ApiClient.getUserName())
+                .startDate(strDate)
+                .build();
+        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_MONTH", ctx,
+                reportId -> {
+                    // على UI Thread already (شغال جوه Platform.runLater)
+                    SAFNotification.success("تم إرسال الطلب رقم: " + reportId);
+                },
+                error -> {
+                    SAFNotification.error("فشل الإرسال: " + error.getMessage());
+                }
+        );
+    }
 }

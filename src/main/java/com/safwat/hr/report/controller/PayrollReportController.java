@@ -10,7 +10,7 @@ import com.safwat.hr.report.core.DataSourceResolver;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ReportSubmissionService;
 import com.safwat.hr.report.core.ValidationException;
-import com.safwat.hr.report.core.strategies.ReportRegistryFactory;
+import com.safwat.hr.report.core.strategies.ReportRegistryHolder;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.strategies.ReportStrategyRegistry;
 import com.safwat.hr.report.core.ui.PayrollUIManager;
@@ -186,7 +186,7 @@ public class PayrollReportController implements Initializable {
     // ═══════════════════════════════════════════════════════════════
 
     public PayrollReportController() {
-        this.registry = ReportRegistryFactory.create();
+        this.registry = ReportRegistryHolder.getInstance();
         this.uiManager = new PayrollUIManager(this);
         this.submissionService = new ReportSubmissionService();
     }

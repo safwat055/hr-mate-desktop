@@ -61,16 +61,33 @@ public final class ApiEndpoints {
 
     public static class PayrollReview {
         public static final String BASE = "/payroll-review";
-        public static final String SEARCH = "/payroll-review/search-employee";
+        public static final String SEARCH = "/payroll-review/search-employees";
+        public static final String SEARCH2 = "/payroll-review/search-employee";
         public static final String downloadReview = "/payroll-review/download-main-report";
         public static final String downloadCustomReview = "/payroll-review/download-custom-report";
         public static final String downloadCompare = "/payroll-review/download-compare-report";
         public static final String ALL_MONTHS_List = "/payroll-review/allMonths";
+        public static final String ALL_GROUP_KEYS = "/payroll-review/all-group-key";
+        public static final String MONTH_GROUP_KEYS = "/payroll-review/by-month-group-key";
+
+        public static final String EMPLOYEE_MONTH_GROUP_KEYS = "/payroll-review/by-employee-month-group-key";
+        public static final String EMPLOYEE_MONTHS = "/payroll-review/employee-months";
+
+        public static final String DELETE_MONTH_ALL = "/payroll-review/delete-month-all";
+        public static final String DELETE_GROUP_ALL = "/payroll-review/delete-group-all";
+        public static final String DELETE_EMPLOYEE_MONTH = "/payroll-review/delete-month-employee";
+        public static final String DELETE_EMPLOYEE_GROUP_MONTH = "/payroll-review/delete-group-employee";
+
+        public static final String UPDATE_REVIEW_KEYS_MONTH = "/payroll-review/sync-keys-month";
+        public static final String UPDATE_REVIEW_KEYS_ALL = "/payroll-review/sync-keys-all";
+
     }
 
     public static class PayrollElement {
         public static final String BASE = "/element";
         public static final String GET_NAMES = "/element/getElement";
         public static final String GET_CODES = "/element/getAllCodes";
+
+
     }
 }
