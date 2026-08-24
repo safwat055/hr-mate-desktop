@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * السبب: تحميل صورة مباشرة عن طريق رابط نسبي (زي /api/chat/attachments/{token})
  * من غير توثيق (Authorization header) كان بيفشل دايماً. الحل: نحمّل الملف مرة
+ * <p>
  * واحدة بشكل آمن عن طريق {@link ChatApiService#downloadAttachment}
  * (اللي بالفعل بيبعت التوثيق صح)، ونحفظه محلياً، وبعدين أي عرض تاني للصورة
  * (المعاينة داخل الفقاعة أو عارض الصور الداخلي) بيستخدم النسخة المحلية.

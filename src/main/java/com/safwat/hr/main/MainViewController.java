@@ -178,7 +178,7 @@ public class MainViewController implements Initializable {
     @FXML
     void openChatView() {
 
-        TabManager.loadFXMLInTab(tab, "/com/safwat/hr/chat/ChatView.fxml", "محادثات", true);
+        TabManager.loadFXMLInTab(tab, "/com/safwat/hr/view/chat/ChatView.fxml", "محادثات", true);
     }
 
     @FXML
