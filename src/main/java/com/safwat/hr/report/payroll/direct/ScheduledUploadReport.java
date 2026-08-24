@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.sub.upload;
+package com.safwat.hr.report.payroll.direct;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
@@ -11,32 +11,30 @@ import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 
 @PayrollReport(
-        code = "UPLOAD_REVIEW_REPORT",
-        displayName = "تقرير المراجعة",
-        category = "UPLOAD_PAYROLL",
-        mainReport = "UPLOAD_PAYROLL"
+        code = "SCHEDULED_UPLOAD",
+        displayName = "تحميل مجدول للتقارير",
+        category = "main_direct",
+        mainReport = "main_direct"
 )
-public class UploadReviewReport implements ReportStrategy {
+public class ScheduledUploadReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "UPLOAD_REVIEW_REPORT";
+        return "SCHEDULED_UPLOAD";
     }
 
     @Override
     public String getDisplayName() {
-        return "تقرير المراجعة";
+        return "تحميل مجدول للتقارير";
     }
 
     @Override
     public String getCategory() {
-
-        return "UPLOAD_PAYROLL";
-
+        return "main_direct";
     }
 
     @Override
     public String getMainReport() {
-        return "UPLOAD_PAYROLL";
+        return "main_direct";
     }
 
     @Override
@@ -45,12 +43,15 @@ public class UploadReviewReport implements ReportStrategy {
                 .requiredField(UiField.H_FILES)
                 .visibleField(UiField.H_FILES)
                 .build();
+
+
     }
 
     @Override
     public void onApply(PayrollReportController controller) {
         ReportStrategy.super.onApply(controller);
     }
+
 
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
@@ -75,9 +76,9 @@ public class UploadReviewReport implements ReportStrategy {
             }
         }
     }
-
     @Override
     public boolean requiresFiles() {
         return true;
     }
+
 }

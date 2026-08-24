@@ -93,6 +93,7 @@ public class ReportRegistryFactory {
         registry.registerLazy(ScaleReport.class);
         registry.registerLazy(SummaryTotal.class);
         registry.registerLazy(StartTransferData.class);
+        registry.registerLazy(ScheduledUploadReport.class);
 
         // ══════════════════════════════════════════
         //  فرعيات payrollYearly — lazy
@@ -193,7 +194,7 @@ public class ReportRegistryFactory {
         registry.registerLazy(ShortRecordAll.class);
         registry.registerLazy(ShortRecordEmployee.class);
         registry.registerLazy(ShortRecordManagement.class);
-        
+
         registry.registerLazy(ShortRecordPayGroup.class);
 
         // ══════════════════════════════════════════
