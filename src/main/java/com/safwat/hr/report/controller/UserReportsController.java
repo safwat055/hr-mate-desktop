@@ -80,6 +80,7 @@ public class UserReportsController implements Initializable {
      * إعداد أعمدة الجدول + عمود الإجراءات (عرض/نسخ).
      */
     private void setupColumns() {
+
         // الفورمتر بتاعك — هنستخدمه دلوقتي
         DateTimeFormatter formatter = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -109,7 +110,7 @@ public class UserReportsController implements Initializable {
         });
         colFinishedTime.setCellValueFactory(new PropertyValueFactory<>("finishedTime"));
         colMessage.setCellValueFactory(new PropertyValueFactory<>("message"));
-        colMessage.setMaxWidth(90.00);
+        colMessage.setMaxWidth(150.00);
         // ── عمود الإجراءات (عرض + نسخ) ──
         colActions.setCellFactory(param -> new TableCell<>() {
             private final Button btnView = new Button("عرض");
@@ -133,6 +134,13 @@ public class UserReportsController implements Initializable {
                 setGraphic(empty ? null : pane);
             }
         });
+
+        // ============================================================
+        // ✅ تحديد ارتفاع ثابت للصفوف (35 بكسل)
+        // ============================================================
+        reportsTable.setFixedCellSize(35);
+
+
     }
 
     /**
@@ -141,6 +149,7 @@ public class UserReportsController implements Initializable {
     private String formatInstant(String isoString, DateTimeFormatter formatter) {
         try {
             // يقبل: 2026-08-01T23:36:50Z أو 2026-08-01T23:36:50+03:00
+            
             Instant instant = Instant.parse(isoString.replace(" ", "T")); // احتياط
             return formatter.format(instant);
         } catch (Exception e) {
