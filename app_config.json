@@ -1,8 +1,10 @@
-{"connection": {
-  "alone": false,
-  "url2": "ws://",
-  "port": "8080",
-  "masterPC": "localhost",
-  "user": "admin",
-  "url": "http://"
-}}
+{
+  "connection": {
+    "alone": false,
+    "url2": "ws://",
+    "port": "9090",
+    "masterPC": "safwat055",
+    "user": "admin",
+    "url": "http://"
+  }
+}
