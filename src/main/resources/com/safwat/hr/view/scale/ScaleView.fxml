@@ -287,10 +287,6 @@
                                     <TableColumn prefWidth="94.0" text="القيمة" />
                                 </columns>
                             </TableView>
-                            <HBox spacing="4">
-                                <Button fx:id="btn_mogardAddRow" prefHeight="26" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="+ صف" />
-                                <Button fx:id="btn_mogardDelRow" prefHeight="26" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="- حذف" />
-                            </HBox>
                         </VBox>
 
                         <Separator orientation="VERTICAL" />
@@ -304,10 +300,6 @@
                                     <TableColumn prefWidth="80" text="القيمة" />
                                 </columns>
                             </TableView>
-                            <HBox spacing="4">
-                                <Button fx:id="btn_mogardRivalAddRow" prefHeight="26" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="+ صف" />
-                                <Button fx:id="btn_mogardRivalDelRow" prefHeight="26" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="- حذف" />
-                            </HBox>
                         </VBox>
                     </HBox>
                 </VBox>
@@ -319,7 +311,7 @@
                         <padding><Insets bottom="6" left="8" right="8" top="6" /></padding>
 
                         <!-- إضافة للعلاوات -->
-                        <VBox prefHeight="252.0" prefWidth="0.0" spacing="4" HBox.hgrow="ALWAYS">
+                        <VBox prefHeight="201.0" prefWidth="310.0" spacing="4" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #059669;" text="إضافة للعلاوات" />
                             <TableView fx:id="table_bounsAdd" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200" prefWidth="0.0">
                                 <columns>
@@ -327,10 +319,6 @@
                                     <TableColumn prefWidth="80" text="القيمة" />
                                 </columns>
                             </TableView>
-                            <HBox spacing="4">
-                                <Button fx:id="btn_bounsAddRow" prefHeight="26" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="+ صف" />
-                                <Button fx:id="btn_bounsDelRow" prefHeight="26" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="- حذف" />
-                            </HBox>
                         </VBox>
 
                         <Separator orientation="VERTICAL" />
@@ -344,10 +332,6 @@
                                     <TableColumn prefWidth="80" text="القيمة" />
                                 </columns>
                             </TableView>
-                            <HBox spacing="4">
-                                <Button fx:id="btn_bounsRivalAddRow" prefHeight="26" style="-fx-background-color: #D1FAE5; -fx-text-fill: #065F46;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="+ صف" />
-                                <Button fx:id="btn_bounsRivalDelRow" prefHeight="26" style="-fx-background-color: #FEE2E2; -fx-text-fill: #991B1B;                                                -fx-background-radius: 4; -fx-cursor: hand;" text="- حذف" />
-                            </HBox>
                         </VBox>
                     </HBox>
                 </VBox>

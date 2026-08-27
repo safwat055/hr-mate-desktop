@@ -1,13 +1,11 @@
 package com.safwat.hr.scale;
 
 import com.safwat.hr.network.ApiClient;
-
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -46,14 +44,6 @@ public class ScaleController implements Initializable {
     private static final DateTimeFormatter FMT_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter FMT_DISPLAY = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-
-    // ─────────────────────────────────────────────
-    //  ObservableLists للجداول الأربعة
-    // ─────────────────────────────────────────────
-    private final ObservableList<DateValueRow> mogardAddData = FXCollections.observableArrayList();
-    private final ObservableList<DateValueRow> mogardRivalData = FXCollections.observableArrayList();
-    private final ObservableList<DateValueRow> bounsAddData = FXCollections.observableArrayList();
-    private final ObservableList<DateValueRow> bounsRivalData = FXCollections.observableArrayList();
 
     // ─────────────────────────────────────────────
     //  FXML Fields
@@ -125,34 +115,16 @@ public class ScaleController implements Initializable {
     private TableView<PromotionIncentiveRecord> table_promotion;
 
     @FXML
-    private TableView<DateValueRow> table_mogardAdd;
+    private TableView<AdjustmentRecord> table_mogardAdd;
     @FXML
-    private TableView<DateValueRow> table_mogardRival;
+    private TableView<AdjustmentRecord> table_mogardRival;
     @FXML
-    private TableView<DateValueRow> table_bounsAdd;
+    private TableView<AdjustmentRecord> table_bounsAdd;
     @FXML
-    private TableView<DateValueRow> table_bounsRival;
+    private TableView<AdjustmentRecord> table_bounsRival;
     @FXML
     private TableView<ScaleTimelinePoint> table_result;
-
-    // أزرار الصفوف
-    @FXML
-    private Button btn_mogardAddRow;
-    @FXML
-    private Button btn_mogardDelRow;
-    @FXML
-    private Button btn_mogardRivalAddRow;
-    @FXML
-    private Button btn_mogardRivalDelRow;
-    @FXML
-    private Button btn_bounsAddRow;
-    @FXML
-    private Button btn_bounsDelRow;
-    @FXML
-    private Button btn_bounsRivalAddRow;
-    @FXML
-    private Button btn_bounsRivalDelRow;
-
+    
     // أزرار الإجراءات
     @FXML
     private Button btn_search;
@@ -181,15 +153,7 @@ public class ScaleController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        setupEditableTable(table_mogardAdd, mogardAddData);
-        setupEditableTable(table_mogardRival, mogardRivalData);
-        setupEditableTable(table_bounsAdd, bounsAddData);
-        setupEditableTable(table_bounsRival, bounsRivalData);
 
-        setupRowButtons(btn_mogardAddRow, btn_mogardDelRow, table_mogardAdd, mogardAddData);
-        setupRowButtons(btn_mogardRivalAddRow, btn_mogardRivalDelRow, table_mogardRival, mogardRivalData);
-        setupRowButtons(btn_bounsAddRow, btn_bounsDelRow, table_bounsAdd, bounsAddData);
-        setupRowButtons(btn_bounsRivalAddRow, btn_bounsRivalDelRow, table_bounsRival, bounsRivalData);
 
         btn_search.setOnAction(e -> doSearch());
         btn_calculate.setOnAction(e -> doCalculate());
@@ -202,6 +166,10 @@ public class ScaleController implements Initializable {
         setupEncouragementTable();
         setupPromotionTable();
         setupDateFields();
+        setupAdjustmentTable(table_mogardAdd);
+        setupAdjustmentTable(table_mogardRival);
+        setupAdjustmentTable(table_bounsAdd);
+        setupAdjustmentTable(table_bounsRival);
     }
 
     void setupDateFields() {
@@ -328,6 +296,20 @@ public class ScaleController implements Initializable {
         setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
     }
 
+    private void setupAdjustmentTable(TableView<AdjustmentRecord> table) {
+        List<ColumnConfig<AdjustmentRecord>> cols = List.of(
+                new ColumnConfig<>("التاريخ", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("المبلغ", 100,
+                        r -> r.getAmount() != null ? r.getAmount().toString() : "",
+                        (r, v) -> r.setAmount(parseBigDecimal(v)),
+                        true, false)
+        );
+        setupGenericTable(table, cols, 5, AdjustmentRecord::new);
+    }
+
     private void doClear() {
         List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
                         txt_startDate, txt_backStart, txt_debloma, txt_magester,
@@ -338,10 +320,6 @@ public class ScaleController implements Initializable {
                         txt_startCut, txt_endCut)
                 .forEach(TextField::clear);
 
-        mogardAddData.clear();
-        mogardRivalData.clear();
-        bounsAddData.clear();
-        bounsRivalData.clear();
 
         currentDto = null;
     }
@@ -382,27 +360,18 @@ public class ScaleController implements Initializable {
         setText(date_kader, dto.getBasic30Date() != null ? fmt(dto.getBasic30Date()) : null);
 
         // الجداول الأربعة
-        fillTable(mogardAddData, dto.getMogardAdditions());
-        fillTable(mogardRivalData, dto.getMogardRemovals());
-        fillTable(bounsAddData, dto.getBonusAdditions());
-        fillTable(bounsRivalData, dto.getBonusRemovals());
+
 
         fillUpgradeTable(dto.getUpgrades());
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
         fillResultTable(dto.getResult().getTimeline());
+        fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
+        fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
+        fillAdjustmentTable(table_bounsAdd, dto.getBonusAdditions());
+        fillAdjustmentTable(table_bounsRival, dto.getBonusRemovals());
     }
 
-    // ─── fillTable ───
-    private void fillTable(ObservableList<DateValueRow> target,
-                           List<AdjustmentRecord> source) {
-        target.clear();
-        if (source == null) return;
-        source.forEach(adj -> target.add(new DateValueRow(
-                fmt(adj.getDate()),
-                adj.getAmount() != null ? adj.getAmount().toPlainString() : ""
-        )));
-    }
 
     void fillUpgradeTable(List<UpgradeRecord> upgrades) {
         table_upgrade.getItems().clear();
@@ -431,6 +400,13 @@ public class ScaleController implements Initializable {
             table_result.getItems().addAll(result);
         }
     }
+
+    void fillAdjustmentTable(TableView<AdjustmentRecord> table, List<AdjustmentRecord> adjustments) {
+        table.getItems().clear();
+        if (adjustments != null) {
+            table.getItems().addAll(adjustments);
+        }
+    }
     // ─────────────────────────────────────────────
     //  Fill Result — ملء حقول النتيجة فقط
     // ─────────────────────────────────────────────
@@ -457,11 +433,6 @@ public class ScaleController implements Initializable {
             dto.setCutStart(parseDate(txt_startCut.getText()));
             dto.setCutEnd(parseDate(txt_endCut.getText()));
 
-            // الجداول الأربعة
-            dto.setMogardAdditions(toAdjustmentList(mogardAddData));
-            dto.setMogardRemovals(toAdjustmentList(mogardRivalData));
-            dto.setBonusAdditions(toAdjustmentList(bounsAddData));
-            dto.setBonusRemovals(toAdjustmentList(bounsRivalData));
 
             // البيانات اللي مفيهاش حقول في الشاشة — محافظ عليها من currentDto
             if (currentDto != null) {
@@ -544,21 +515,6 @@ public class ScaleController implements Initializable {
         });
     }
 
-    private void setupRowButtons(Button addBtn, Button delBtn,
-                                 TableView<DateValueRow> table,
-                                 ObservableList<DateValueRow> data) {
-        addBtn.setOnAction(e -> {
-            DateValueRow row = new DateValueRow("", "");
-            data.add(row);
-            table.getSelectionModel().select(row);
-            table.scrollTo(row);
-            table.edit(data.size() - 1, table.getColumns().get(0));
-        });
-        delBtn.setOnAction(e -> {
-            DateValueRow selected = table.getSelectionModel().getSelectedItem();
-            if (selected != null) data.remove(selected);
-        });
-    }
 
     // ─────────────────────────────────────────────
     //  Helpers
