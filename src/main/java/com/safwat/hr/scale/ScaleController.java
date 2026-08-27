@@ -1,6 +1,10 @@
 package com.safwat.hr.scale;
 
 import com.safwat.hr.network.ApiClient;
+
+import com.safwat.hr.shared.util.DateUtils;
+import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.table.TableSetupHelper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -16,57 +20,53 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import static com.safwat.hr.ui.table.TableSetupHelper.*;
+
 /**
- * Controller شاشة احتساب السلم الوظيفي.
+ * Controller شاشة السلم الوظيفي.
  *
- * <p><b>العمليات الثلاث:</b>
+ * <p>يتعامل مع {@link ScaleDto} فقط في الاتجاهين — كلاس واحد موحد.
+ *
+ * <p><b>العمليات:</b>
  * <ol>
- *   <li><b>بحث</b>: جلب بيانات موظف من DB وملء الحقول والجداول</li>
- *   <li><b>حفظ</b>: إرسال البيانات للخلفية لحفظها أو تحديثها</li>
- *   <li><b>احتساب</b>: إرسال البيانات للخلفية وعرض النتيجة بدون حفظ</li>
+ *   <li><b>بحث</b>  → GET  /salary-scale/{nationalId}  → يملأ الشاشة + النتيجة</li>
+ *   <li><b>احتساب</b> → POST /salary-scale/calculate     → يملأ النتيجة بدون حفظ</li>
+ *   <li><b>حفظ</b>  → POST /salary-scale/save           → يحفظ + يملأ النتيجة</li>
  * </ol>
  */
 public class ScaleController implements Initializable {
-
-    // ─────────────────────────────────────────────
-    //  ثوابت
-    // ─────────────────────────────────────────────
-
     private static final String API_BASE = "/salary-scale";
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter DATE_DISPLAY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    // ─────────────────────────────────────────────
+    //  ثوابت التنسيق
+    // ─────────────────────────────────────────────
+    private static final DateTimeFormatter FMT_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter FMT_DISPLAY = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
     // ─────────────────────────────────────────────
-    //  ObservableLists للجداول
+    //  ObservableLists للجداول الأربعة
     // ─────────────────────────────────────────────
-
     private final ObservableList<DateValueRow> mogardAddData = FXCollections.observableArrayList();
     private final ObservableList<DateValueRow> mogardRivalData = FXCollections.observableArrayList();
     private final ObservableList<DateValueRow> bounsAddData = FXCollections.observableArrayList();
     private final ObservableList<DateValueRow> bounsRivalData = FXCollections.observableArrayList();
 
     // ─────────────────────────────────────────────
-    //  FXML — حقول البحث
+    //  FXML Fields
     // ─────────────────────────────────────────────
 
     @FXML
-    private TextField txt_Management;
+    private TextField txt_nationalId;
     @FXML
     private TextField txt_empName;
     @FXML
     private TextField txt_empCode;
     @FXML
-    private TextField txt_nationalId;
-    @FXML
-    private Button btn_search;
-
-    // ─────────────────────────────────────────────
-    //  FXML — بيانات الموظف
-    // ─────────────────────────────────────────────
-
+    private TextField txt_Management;
     @FXML
     private TextField txt_group;
     @FXML
@@ -87,11 +87,12 @@ public class ScaleController implements Initializable {
     private TextField txt_doctoraa;
     @FXML
     private TextField txt_ectra;
+    @FXML
+    private TextField txt_startCut;
+    @FXML
+    private TextField txt_endCut;
 
-    // ─────────────────────────────────────────────
-    //  FXML — نتائج التسكين
-    // ─────────────────────────────────────────────
-
+    // نتائج الاحتساب
     @FXML
     private TextField txt_regrade3;
     @FXML
@@ -110,30 +111,19 @@ public class ScaleController implements Initializable {
     private TextField gpNoUp;
     @FXML
     private TextField yearsBack;
-
-    // ─────────────────────────────────────────────
-    //  FXML — جداول الترقيات والتشجيعيات
-    // ─────────────────────────────────────────────
-
     @FXML
     private TextField date_kader;
     @FXML
     private TextField end_day;
-    @FXML
-    private TextField txt_startCut;
-    @FXML
-    private TextField txt_endCut;
 
-    // ─────────────────────────────────────────────
-    //  FXML — جداول الإضافة والخصم
-    // ─────────────────────────────────────────────
+    // الجداول
+    @FXML
+    private TableView<UpgradeRecord> table_upgrade;
+    @FXML
+    private TableView<EncouragementRecord> table_encourge;
+    @FXML
+    private TableView<PromotionIncentiveRecord> table_promotion;
 
-    @FXML
-    private TableView<String[]> table_upgrade;
-    @FXML
-    private TableView<String[]> table_encourge;
-    @FXML
-    private TableView<String[]> table_promotion;
     @FXML
     private TableView<DateValueRow> table_mogardAdd;
     @FXML
@@ -142,11 +132,10 @@ public class ScaleController implements Initializable {
     private TableView<DateValueRow> table_bounsAdd;
     @FXML
     private TableView<DateValueRow> table_bounsRival;
+    @FXML
+    private TableView<ScaleTimelinePoint> table_result;
 
-    // ─────────────────────────────────────────────
-    //  FXML — أزرار الصفوف
-    // ─────────────────────────────────────────────
-
+    // أزرار الصفوف
     @FXML
     private Button btn_mogardAddRow;
     @FXML
@@ -164,34 +153,27 @@ public class ScaleController implements Initializable {
     @FXML
     private Button btn_bounsRivalDelRow;
 
-    // ─────────────────────────────────────────────
-    //  FXML — أزرار الإجراءات
-    // ─────────────────────────────────────────────
-
+    // أزرار الإجراءات
+    @FXML
+    private Button btn_search;
     @FXML
     private Button btn_calculate;
     @FXML
-    private Button btn_pdf;
-    @FXML
     private Button btn_save;
+    @FXML
+    private Button btn_pdf;
     @FXML
     private Button btn_clear;
 
     // ─────────────────────────────────────────────
-    //  FXML — جدول النتائج
-    // ─────────────────────────────────────────────
-
-    @FXML
-    private TableView<?> table_result;
-
-    // ─────────────────────────────────────────────
-    //  State
+    //  State — الـ DTO الحالي
     // ─────────────────────────────────────────────
 
     /**
-     * آخر record تم جلبه أو بناؤه — نستخدمه في الحفظ والاحتساب
+     * الـ DTO الحالي المعروض في الشاشة.
+     * يُحدَّث بعد كل عملية بحث أو حفظ أو احتساب.
      */
-    private EmployeeFullRecord currentRecord = null;
+    private ScaleDto currentDto = null;
 
     // ─────────────────────────────────────────────
     //  Initialize
@@ -215,8 +197,317 @@ public class ScaleController implements Initializable {
         btn_pdf.setOnAction(e -> doPdf());
         btn_clear.setOnAction(e -> doClear());
 
-        // البحث بضغط Enter في حقل الرقم القومي
         txt_nationalId.setOnAction(e -> doSearch());
+        setupUpgradeTable();
+        setupEncouragementTable();
+        setupPromotionTable();
+        setupDateFields();
+    }
+
+    void setupDateFields() {
+        TextFieldSetupHelper.setupDateFields("yyyy-MM-dd", txt_startDate, txt_backStart,
+                txt_startCut, txt_endCut, txt_regrade3, txt_regrade4, txt_regrade5,
+                txt_backRegrade, txt_debloma, txt_magester, txt_doctoraa, date_kader);
+    }
+    // ─────────────────────────────────────────────
+    //  Action — بحث
+    // ─────────────────────────────────────────────
+
+    private void doSearch() {
+        String id = txt_nationalId.getText().trim();
+        if (id.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+        setButtonsDisabled(true);
+
+        ApiClient.getAsync(API_BASE + "/" + id, ScaleDto.class)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("الموظف غير موجود:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                }));
+    }
+
+    // ─────────────────────────────────────────────
+    //  Action — احتساب بدون حفظ
+    // ─────────────────────────────────────────────
+
+    private void doCalculate() {
+        if (!validateForm()) return;
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+
+        ApiClient.postAsync(API_BASE + "/calculate", dto, ScaleDto.class)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل الاحتساب:\n" + response.getMessage());
+                        return;
+                    }
+                    // نحدث النتيجة فقط — البيانات تفضل زي ما هي
+                    currentDto = response.getData();
+                    // fillResult(currentDto);
+                }));
+    }
+
+    // ─────────────────────────────────────────────
+    //  Action — حفظ
+    // ─────────────────────────────────────────────
+
+    private void doSave() {
+        if (!validateForm()) return;
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+
+        ApiClient.postAsync(API_BASE + "/save", dto, ScaleDto.class)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل الحفظ:\n" + response.getMessage());
+                        return;
+                    }
+                    // الخلفية بترجع الـ DTO كامل بعد الحفظ والاحتساب
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                    showInfo("تم الحفظ بنجاح ✓");
+                }));
+    }
+
+    private void doPdf() {
+        // TODO: توليد PDF من currentDto
+    }
+
+    private void setupUpgradeTable() {
+        List<TableSetupHelper.ColumnConfig<UpgradeRecord>> cols = List.of(
+                new TableSetupHelper.ColumnConfig<>("تاريخ الترقية", 100,
+                        r -> formatDateOutput(r.getDate()),           // getter: LocalDate → String
+                        (r, v) -> r.setDate(parseDateInput(v)),       // setter: String → LocalDate
+                        true, true),                                  // editable, isDateColumn
+                new TableSetupHelper.ColumnConfig<>("رقم القرار", 140,
+                        UpgradeRecord::getDecisionNumber,
+                        UpgradeRecord::setDecisionNumber,
+                        true, false)                                  // عمود نصي عادي
+        );
+        setupGenericTable(table_upgrade, cols, 10, UpgradeRecord::new);
+    }
+
+    private void setupEncouragementTable() {
+        List<ColumnConfig<EncouragementRecord>> cols = List.of(
+                new ColumnConfig<>("تاريخ التشجيعية", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("رقم القرار", 140,
+                        EncouragementRecord::getDecisionNumber,
+                        EncouragementRecord::setDecisionNumber,
+                        true, false)
+        );
+        setupGenericTable(table_encourge, cols, 10, EncouragementRecord::new);
+    }
+
+    private void setupPromotionTable() {
+        List<ColumnConfig<PromotionIncentiveRecord>> cols = List.of(
+                new ColumnConfig<>("تاريخ الحافز", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("رقم القرار", 140,
+                        PromotionIncentiveRecord::getDecisionNumber,
+                        PromotionIncentiveRecord::setDecisionNumber,
+                        true, false)
+        );
+        setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
+    }
+
+    private void doClear() {
+        List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
+                        txt_startDate, txt_backStart, txt_debloma, txt_magester,
+                        txt_doctoraa, txt_ectra, txt_regrade3, txt_regrade4,
+                        txt_regrade5, txt_backRegrade, txt_group, txt_law,
+                        txt_code, txt_startDegree, yearUp, yearNoUp, gpUp,
+                        gpNoUp, yearsBack, date_kader, end_day,
+                        txt_startCut, txt_endCut)
+                .forEach(TextField::clear);
+
+        mogardAddData.clear();
+        mogardRivalData.clear();
+        bounsAddData.clear();
+        bounsRivalData.clear();
+
+        currentDto = null;
+    }
+
+    // ─────────────────────────────────────────────
+    //  Fill Form — ملء الشاشة كاملة من ScaleDto
+    // ─────────────────────────────────────────────
+
+    /**
+     * يملأ كل حقول الشاشة والجداول والنتيجة من ScaleDto واحد.
+     */
+    private void fillForm(ScaleDto dto) {
+        Map<String, Object> extraInfo = dto.getExtraInfo();
+        // البيانات الأساسية
+        setText(txt_nationalId, dto.getNationalId());
+        setText(txt_empCode, dto.getCodeId());
+        setText(txt_empName, dto.getEmpName());
+        setText(txt_group, dto.getQualitativeGroup());
+        setText(txt_law, dto.getLaw());
+        setText(txt_code, dto.getLawCode());
+        setText(txt_startDegree, dto.getStartDegree());
+        setText(txt_startDate, fmt(dto.getStartDate()));
+        setText(txt_backStart, fmt(dto.getRestartDate()));
+        setText(txt_startCut, fmt(dto.getCutStart()));
+        setText(txt_endCut, fmt(dto.getCutEnd()));
+        setText(yearUp, extraInfo != null ? extraInfo.getOrDefault("year_up", null) : null);
+        setText(yearNoUp, extraInfo != null ? extraInfo.getOrDefault("year_no_up", null) : null);
+        setText(gpUp, extraInfo != null ? extraInfo.getOrDefault("gp_up", null) : null);
+        setText(gpNoUp, extraInfo != null ? extraInfo.getOrDefault("gp_no_up", null) : null);
+        setText(yearsBack, extraInfo != null ? extraInfo.getOrDefault("year_back", null) : null);
+        setText(txt_regrade3, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_3", null)) : null));
+        setText(txt_regrade4, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_4", null)) : null));
+        setText(txt_regrade5, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_5", null)) : null));
+        setText(txt_debloma, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("debloma", null)) : null));
+        setText(txt_magester, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("magester", null)) : null));
+        setText(txt_doctoraa, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("doctoraa", null)) : null));
+        setText(txt_backRegrade, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("back_regrade", null)) : null));
+        setText(date_kader, dto.getBasic30Date() != null ? fmt(dto.getBasic30Date()) : null);
+
+        // الجداول الأربعة
+        fillTable(mogardAddData, dto.getMogardAdditions());
+        fillTable(mogardRivalData, dto.getMogardRemovals());
+        fillTable(bounsAddData, dto.getBonusAdditions());
+        fillTable(bounsRivalData, dto.getBonusRemovals());
+
+        fillUpgradeTable(dto.getUpgrades());
+        fillEncouragementTable(dto.getEncouragements());
+        fillPromotionTable(dto.getPromotionIncentives());
+        fillResultTable(dto.getResult().getTimeline());
+    }
+
+    // ─── fillTable ───
+    private void fillTable(ObservableList<DateValueRow> target,
+                           List<AdjustmentRecord> source) {
+        target.clear();
+        if (source == null) return;
+        source.forEach(adj -> target.add(new DateValueRow(
+                fmt(adj.getDate()),
+                adj.getAmount() != null ? adj.getAmount().toPlainString() : ""
+        )));
+    }
+
+    void fillUpgradeTable(List<UpgradeRecord> upgrades) {
+        table_upgrade.getItems().clear();
+        if (upgrades != null) {
+            table_upgrade.getItems().addAll(upgrades);
+        }
+    }
+
+    void fillEncouragementTable(List<EncouragementRecord> encouragements) {
+        table_encourge.getItems().clear();
+        if (encouragements != null) {
+            table_encourge.getItems().addAll(encouragements);
+        }
+    }
+
+    void fillPromotionTable(List<PromotionIncentiveRecord> promotions) {
+        table_promotion.getItems().clear();
+        if (promotions != null) {
+            table_promotion.getItems().addAll(promotions);
+        }
+    }
+
+    void fillResultTable(List<ScaleTimelinePoint> result) {
+        table_result.getItems().clear();
+        if (result != null) {
+            table_result.getItems().addAll(result);
+        }
+    }
+    // ─────────────────────────────────────────────
+    //  Fill Result — ملء حقول النتيجة فقط
+    // ─────────────────────────────────────────────
+
+
+    /**
+     * يجمع كل بيانات الشاشة في ScaleDto جاهز للإرسال.
+     * النتيجة تُترك null — الخلفية هي اللي تملأها.
+     *
+     * @return ScaleDto أو null لو في خطأ في التحويل
+     */
+    private ScaleDto buildDto() {
+        try {
+            ScaleDto dto = new ScaleDto();
+
+            dto.setNationalId(txt_nationalId.getText());
+            dto.setEmpName(txt_empName.getText().trim());
+            dto.setQualitativeGroup(txt_group.getText().trim());
+            dto.setLaw(parseInt(txt_law.getText()));
+            dto.setLawCode(parseBigDecimal(txt_code.getText()));
+            dto.setStartDegree(parseInt(txt_startDegree.getText()));
+            dto.setStartDate(parseDate(txt_startDate.getText()));
+            dto.setRestartDate(parseDate(txt_backStart.getText()));
+            dto.setCutStart(parseDate(txt_startCut.getText()));
+            dto.setCutEnd(parseDate(txt_endCut.getText()));
+
+            // الجداول الأربعة
+            dto.setMogardAdditions(toAdjustmentList(mogardAddData));
+            dto.setMogardRemovals(toAdjustmentList(mogardRivalData));
+            dto.setBonusAdditions(toAdjustmentList(bounsAddData));
+            dto.setBonusRemovals(toAdjustmentList(bounsRivalData));
+
+            // البيانات اللي مفيهاش حقول في الشاشة — محافظ عليها من currentDto
+            if (currentDto != null) {
+                dto.setUpgrades(currentDto.getUpgrades());
+                dto.setEncouragements(currentDto.getEncouragements());
+                dto.setPromotionIncentives(currentDto.getPromotionIncentives());
+                dto.setGroupChanges(currentDto.getGroupChanges());
+                dto.setBasic30Date(currentDto.getBasic30Date());
+                dto.setBasic30From(currentDto.getBasic30From());
+                dto.setCodeId(currentDto.getCodeId());
+            } else {
+                dto.setUpgrades(List.of());
+                dto.setEncouragements(List.of());
+                dto.setPromotionIncentives(List.of());
+                dto.setGroupChanges(List.of());
+            }
+
+            return dto;
+
+        } catch (IllegalArgumentException e) {
+            showError("خطأ في البيانات: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  Validation
+    // ─────────────────────────────────────────────
+
+    private boolean validateForm() {
+        if (txt_nationalId.getText().trim().isBlank()) {
+            showWarning("الرقم القومي مطلوب");
+            txt_nationalId.requestFocus();
+            return false;
+        }
+        if (txt_startDate.getText().trim().isBlank()) {
+            showWarning("تاريخ التعيين مطلوب");
+            txt_startDate.requestFocus();
+            return false;
+        }
+        if (txt_law.getText().trim().isBlank()) {
+            showWarning("القانون مطلوب (47 أو 81)");
+            txt_law.requestFocus();
+            return false;
+        }
+        return true;
     }
 
     // ─────────────────────────────────────────────
@@ -231,13 +522,13 @@ public class ScaleController implements Initializable {
 
         TableColumn<DateValueRow, String> dateCol =
                 (TableColumn<DateValueRow, String>) table.getColumns().get(0);
-        dateCol.setCellValueFactory(cell -> cell.getValue().dateProperty());
+        dateCol.setCellValueFactory(c -> c.getValue().dateProperty());
         dateCol.setCellFactory(TextFieldTableCell.forTableColumn());
         dateCol.setOnEditCommit(e -> e.getRowValue().setDate(e.getNewValue()));
 
         TableColumn<DateValueRow, String> valueCol =
                 (TableColumn<DateValueRow, String>) table.getColumns().get(1);
-        valueCol.setCellValueFactory(cell -> cell.getValue().valueProperty());
+        valueCol.setCellValueFactory(c -> c.getValue().valueProperty());
         valueCol.setCellFactory(TextFieldTableCell.forTableColumn());
         valueCol.setOnEditCommit(e -> e.getRowValue().setValue(e.getNewValue()));
 
@@ -257,10 +548,10 @@ public class ScaleController implements Initializable {
                                  TableView<DateValueRow> table,
                                  ObservableList<DateValueRow> data) {
         addBtn.setOnAction(e -> {
-            DateValueRow newRow = new DateValueRow("", "");
-            data.add(newRow);
-            table.getSelectionModel().select(newRow);
-            table.scrollTo(newRow);
+            DateValueRow row = new DateValueRow("", "");
+            data.add(row);
+            table.getSelectionModel().select(row);
+            table.scrollTo(row);
             table.edit(data.size() - 1, table.getColumns().get(0));
         });
         delBtn.setOnAction(e -> {
@@ -270,302 +561,9 @@ public class ScaleController implements Initializable {
     }
 
     // ─────────────────────────────────────────────
-    //  Actions — البحث
+    //  Helpers
     // ─────────────────────────────────────────────
 
-    /**
-     * يبحث عن الموظف بالرقم القومي ويملأ الشاشة بالبيانات.
-     * يستدعي: GET /api/salary-scale/{nationalId}
-     */
-    private void doSearch() {
-        String nationalId = txt_nationalId.getText().trim();
-        if (nationalId.isBlank()) {
-            showWarning("تنبيه", "أدخل الرقم القومي أولاً");
-            return;
-        }
-
-        setFormDisabled(true);
-
-        ApiClient.getAsync(API_BASE + "/" + nationalId, EmployeeFullRecord.class)
-                .thenAcceptAsync(response -> Platform.runLater(() -> {
-                    setFormDisabled(false);
-                    if (!response.isSuccess() || response.getData() == null) {
-                        showError("بحث", "الموظف غير موجود أو حدث خطأ:\n" + response.getMessage());
-                        return;
-                    }
-                    currentRecord = response.getData();
-                    fillForm(currentRecord);
-                    showInfo("تم العثور على الموظف: " + currentRecord.getEmpName());
-                }));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Actions — الحفظ
-    // ─────────────────────────────────────────────
-
-    /**
-     * يحفظ أو يحدث بيانات الموظف.
-     * - لو الموظف موجود (currentRecord != null) → update
-     * - لو مش موجود → insert جديد
-     * يستدعي: POST /api/salary-scale/save
-     */
-    private void doSave() {
-        if (!validateForm()) return;
-
-        EmployeeFullRecord record = buildRecord();
-        if (record == null) return;
-
-        setFormDisabled(true);
-
-        ApiClient.postAsync(API_BASE + "/save", record, Void.class)
-                .thenAcceptAsync(response -> Platform.runLater(() -> {
-                    setFormDisabled(false);
-                    if (response.isSuccess()) {
-                        currentRecord = record;
-                        showInfo("تم حفظ بيانات الموظف بنجاح ✓");
-                    } else {
-                        showError("حفظ", "فشل الحفظ:\n" + response.getMessage());
-                    }
-                }));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Actions — الاحتساب بدون حفظ
-    // ─────────────────────────────────────────────
-
-    /**
-     * يحسب تدرج المرتب بدون حفظ في DB.
-     * يستدعي: POST /api/salary-scale/calculate
-     */
-    private void doCalculate() {
-        if (!validateForm()) return;
-
-        EmployeeFullRecord record = buildRecord();
-        if (record == null) return;
-
-        setFormDisabled(true);
-
-        ApiClient.postAsync(
-                API_BASE + "/calculate",
-                record,
-                ScaleResult.class
-        ).thenAcceptAsync(response -> Platform.runLater(() -> {
-            setFormDisabled(false);
-            if (!response.isSuccess() || response.getData() == null) {
-                showError("احتساب", "فشل الاحتساب:\n" + response.getMessage());
-                return;
-            }
-            fillResult(response.getData());
-        }));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Actions — PDF و Clear
-    // ─────────────────────────────────────────────
-
-    private void doPdf() {
-        // TODO: توليد PDF من currentRecord والنتائج
-    }
-
-    private void doClear() {
-        List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
-                        txt_startDate, txt_backStart, txt_debloma, txt_magester,
-                        txt_doctoraa, txt_ectra, txt_regrade3, txt_regrade4,
-                        txt_regrade5, txt_backRegrade, txt_group, txt_law,
-                        txt_code, txt_startDegree, yearUp, yearNoUp, gpUp,
-                        gpNoUp, yearsBack, date_kader, end_day,
-                        txt_startCut, txt_endCut)
-                .forEach(TextField::clear);
-
-        mogardAddData.clear();
-        mogardRivalData.clear();
-        bounsAddData.clear();
-        bounsRivalData.clear();
-
-        currentRecord = null;
-    }
-
-    // ─────────────────────────────────────────────
-    //  Form Filling — ملء الشاشة من EmployeeFullRecord
-    // ─────────────────────────────────────────────
-
-    /**
-     * يملأ كل حقول الشاشة من بيانات الموظف المجلوبة.
-     *
-     * <p>التحويل:
-     * <ul>
-     *   <li>LocalDate → String بصيغة dd/MM/yyyy</li>
-     *   <li>BigDecimal → String</li>
-     *   <li>List<AdjustmentRecord> → ObservableList<DateValueRow></li>
-     * </ul>
-     */
-    private void fillForm(EmployeeFullRecord r) {
-        // البيانات الأساسية
-        setText(txt_nationalId, r.getId());
-        setText(txt_empName, r.getEmpName());
-        setText(txt_group, r.getQualitativeGroup());
-        setText(txt_law, r.getLaw());
-        setText(txt_code, r.getLawCode());
-        setText(txt_startDegree, r.getStartDegree());
-        setText(txt_startDate, formatDate(r.getStartDate()));
-        setText(txt_backStart, formatDate(r.getRestartDate()));
-
-        // فترة القطع
-        if (r.getCutoff() != null) {
-            setText(txt_startCut, formatDate(r.getCutoff().start()));
-            setText(txt_endCut, formatDate(r.getCutoff().end()));
-        } else {
-            txt_startCut.clear();
-            txt_endCut.clear();
-        }
-
-        // الجداول الأربعة
-        fillAdjustmentTable(mogardAddData, r.getMogardAdditions());
-        fillAdjustmentTable(mogardRivalData, r.getMogardRemovals());
-        fillAdjustmentTable(bounsAddData, r.getBonusAdditions());
-        fillAdjustmentTable(bounsRivalData, r.getBonusRemovals());
-    }
-
-    /**
-     * يملأ ObservableList من List<AdjustmentRecord>
-     */
-    private void fillAdjustmentTable(ObservableList<DateValueRow> target,
-                                     List<AdjustmentRecord> source) {
-        target.clear();
-        if (source == null) return;
-        source.forEach(adj -> target.add(
-                new DateValueRow(
-                        formatDate(adj.date()),
-                        adj.amount() != null ? adj.amount().toPlainString() : ""
-                )
-        ));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Form Building — بناء EmployeeFullRecord من الشاشة
-    // ─────────────────────────────────────────────
-
-    /**
-     * يجمع كل بيانات الشاشة في {@link EmployeeFullRecord}.
-     *
-     * <p>التحويل:
-     * <ul>
-     *   <li>String → LocalDate (yyyy-MM-dd أو dd/MM/yyyy)</li>
-     *   <li>String → BigDecimal</li>
-     *   <li>DateValueRow → AdjustmentRecord</li>
-     * </ul>
-     *
-     * @return EmployeeFullRecord أو null لو في خطأ في التحويل
-     */
-    private EmployeeFullRecord buildRecord() {
-        try {
-            EmployeeFullRecord r = new EmployeeFullRecord();
-
-            r.setId(parseLong(txt_nationalId.getText()));
-            r.setEmpName(txt_empName.getText().trim());
-            r.setQualitativeGroup(txt_group.getText().trim());
-            r.setLaw(parseInt(txt_law.getText()));
-            r.setLawCode(parseBigDecimal(txt_code.getText()));
-            r.setStartDegree(parseInt(txt_startDegree.getText()));
-            r.setStartDate(parseDate(txt_startDate.getText()));
-            r.setRestartDate(parseDate(txt_backStart.getText()));
-
-            // فترة القطع
-            LocalDate cutStart = parseDate(txt_startCut.getText());
-            LocalDate cutEnd = parseDate(txt_endCut.getText());
-            if (cutStart != null && cutEnd != null) {
-                r.setCutoff(new CutoffPeriod(cutStart, cutEnd));
-            }
-
-            // الجداول
-            r.setMogardAdditions(toAdjustmentList(mogardAddData));
-            r.setMogardRemovals(toAdjustmentList(mogardRivalData));
-            r.setBonusAdditions(toAdjustmentList(bounsAddData));
-            r.setBonusRemovals(toAdjustmentList(bounsRivalData));
-
-            // البيانات اللي ما فيهاش حقول في الشاشة — محافظ على القيم الأصلية
-            if (currentRecord != null) {
-                r.setUpgrades(currentRecord.getUpgrades());
-                r.setEncouragements(currentRecord.getEncouragements());
-                r.setGroupChanges(currentRecord.getGroupChanges());
-                r.setPromotionIncentives(currentRecord.getPromotionIncentives());
-                r.setExtraInfo(currentRecord.getExtraInfo());
-                r.setBasic30Date(currentRecord.getBasic30Date());
-                r.setBasic30From(currentRecord.getBasic30From());
-            } else {
-                // موظف جديد — قوائم فارغة
-                r.setUpgrades(List.of());
-                r.setEncouragements(List.of());
-                r.setGroupChanges(List.of());
-                r.setPromotionIncentives(List.of());
-            }
-
-            return r;
-
-        } catch (IllegalArgumentException e) {
-            showError("خطأ في البيانات", e.getMessage());
-            return null;
-        }
-    }
-
-    // ─────────────────────────────────────────────
-    //  Result Filling — ملء نتائج الاحتساب
-    // ─────────────────────────────────────────────
-
-    /**
-     * يملأ حقول النتائج من ScaleResult.
-     * يأخذ آخر نقطة في الـ timeline كنتيجة حالية.
-     */
-    private void fillResult(ScaleResult result) {
-        if (result == null) return;
-
-        // آخر نقطة في الـ timeline = الوضع الحالي
-        result.lastPoint().ifPresent(point -> {
-            setText(txt_regrade3, safeStr(point.mogard()));
-            setText(txt_regrade4, safeStr(point.periodicBonus()));
-            setText(txt_regrade5, safeStr(point.upgradeBonus()));
-            setText(txt_backRegrade, safeStr(point.encourageBonus()));
-            setText(yearUp, safeStr(point.spBonusNotSubject()));
-            setText(yearNoUp, safeStr(point.spBonusSubject()));
-            setText(gpUp, safeStr(point.currentBasic()));
-            setText(date_kader, formatDate(point.date()));
-        });
-
-        // عدد نقاط الـ timeline (عدد الأحداث)
-        setText(yearsBack, String.valueOf(result.timeline().size()));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Validation
-    // ─────────────────────────────────────────────
-
-    private boolean validateForm() {
-        if (txt_nationalId.getText().trim().isBlank()) {
-            showWarning("تحقق", "الرقم القومي مطلوب");
-            txt_nationalId.requestFocus();
-            return false;
-        }
-        if (txt_startDate.getText().trim().isBlank()) {
-            showWarning("تحقق", "تاريخ التعيين مطلوب");
-            txt_startDate.requestFocus();
-            return false;
-        }
-        if (txt_law.getText().trim().isBlank()) {
-            showWarning("تحقق", "القانون مطلوب (47 أو 81)");
-            txt_law.requestFocus();
-            return false;
-        }
-        return true;
-    }
-
-    // ─────────────────────────────────────────────
-    //  Conversion Helpers
-    // ─────────────────────────────────────────────
-
-    /**
-     * يحول ObservableList<DateValueRow> إلى List<AdjustmentRecord>.
-     * يتجاهل الصفوف الفارغة، ويتحقق من صحة التاريخ والمبلغ.
-     */
     private List<AdjustmentRecord> toAdjustmentList(ObservableList<DateValueRow> rows) {
         return rows.stream()
                 .filter(r -> !r.getDate().isBlank() && !r.getValue().isBlank())
@@ -575,31 +573,21 @@ public class ScaleController implements Initializable {
                     if (date == null || amount == null) return null;
                     return new AdjustmentRecord(date, amount);
                 })
-                .filter(adj -> adj != null)
+                .filter(a -> a != null)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * يحول LocalDate → String بصيغة dd/MM/yyyy (أو "" لو null)
-     */
-    private String formatDate(LocalDate date) {
-        if (date == null) return "";
-        return date.format(DATE_DISPLAY);
+    private String fmt(LocalDate date) {
+        return date != null ? date.format(FMT_DISPLAY) : "";
     }
 
-    /**
-     * يحول String → LocalDate.
-     * يقبل صيغتين: dd/MM/yyyy أو yyyy-MM-dd.
-     * يرجع null لو النص فارغ أو غير صالح (بدون exception).
-     */
     private LocalDate parseDate(String text) {
-        if (text == null || text.trim().isBlank()) return null;
+        if (text == null || text.isBlank()) return null;
         text = text.trim();
         try {
-            // dd/MM/yyyy
-            if (text.contains("/")) return LocalDate.parse(text, DATE_DISPLAY);
-            // yyyy-MM-dd
-            return LocalDate.parse(text, DATE_FORMAT);
+            return text.contains("/")
+                    ? LocalDate.parse(text, FMT_DISPLAY)
+                    : LocalDate.parse(text, FMT_ISO);
         } catch (DateTimeParseException e) {
             return null;
         }
@@ -610,7 +598,7 @@ public class ScaleController implements Initializable {
         try {
             return Long.parseLong(text.trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("قيمة غير صالحة: " + text);
+            throw new IllegalArgumentException("الرقم القومي غير صالح: " + text);
         }
     }
 
@@ -632,61 +620,46 @@ public class ScaleController implements Initializable {
         }
     }
 
-    private String safeStr(Object value) {
-        return value != null ? value.toString() : "";
+    private String safeStr(Object v) {
+        return v != null ? v.toString() : "";
+    }
+
+    private void setText(TextField f, Object v) {
+        if (f != null) f.setText(v != null ? v.toString() : "");
+    }
+
+    private void setButtonsDisabled(boolean b) {
+        btn_search.setDisable(b);
+        btn_save.setDisable(b);
+        btn_calculate.setDisable(b);
+        btn_clear.setDisable(b);
+    }
+
+    private void showInfo(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
+    }
+
+    private void showWarning(String msg) {
+        Alert a = new Alert(Alert.AlertType.WARNING);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
+    }
+
+    private void showError(String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
     }
 
     // ─────────────────────────────────────────────
-    //  UI Helpers
+    //  Inner Class — DateValueRow
     // ─────────────────────────────────────────────
 
-    private void setText(TextField field, Object value) {
-        if (field == null) return;
-        field.setText(value != null ? value.toString() : "");
-    }
-
-    private void setFormDisabled(boolean disabled) {
-        btn_search.setDisable(disabled);
-        btn_save.setDisable(disabled);
-        btn_calculate.setDisable(disabled);
-        btn_clear.setDisable(disabled);
-    }
-
-    private void showInfo(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("معلومة");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    private void showWarning(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    private void showError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.show();
-    }
-
-    // ─────────────────────────────────────────────
-    //  Table Setup — Row Buttons
-    // ─────────────────────────────────────────────
-
-    // ─────────────────────────────────────────────
-    //  Inner Classes / Records
-    // ─────────────────────────────────────────────
-
-    /**
-     * نموذج صف الجدول — تاريخ + قيمة
-     */
     public static class DateValueRow {
         private final SimpleStringProperty date;
         private final SimpleStringProperty value;

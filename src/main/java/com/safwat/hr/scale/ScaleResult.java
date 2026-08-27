@@ -1,6 +1,8 @@
 package com.safwat.hr.scale;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 // في package الـ network/dto
 public class ScaleResult {
@@ -9,7 +11,7 @@ public class ScaleResult {
     private int law;
     private LocalDate startDate;
     private List<ScaleTimelinePoint> timeline;
-    // getters & setters
+
 
     public Optional<ScaleTimelinePoint> lastPoint() {
         if (timeline == null || timeline.isEmpty()) return Optional.empty();

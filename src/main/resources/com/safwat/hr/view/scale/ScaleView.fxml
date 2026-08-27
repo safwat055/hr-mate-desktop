@@ -270,21 +270,21 @@
             <!-- ══════════════════════════════════════════════════════
                  4. إضافة/خصم المجرد والعلاوات — TableView بدل حقول يدوية
             ══════════════════════════════════════════════════════ -->
-            <HBox spacing="8">
+            <HBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="322.0" prefWidth="1394.0" spacing="8">
 
                 <!-- المجرد -->
-                <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
+                <VBox prefHeight="285.0" prefWidth="136.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
                     <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="المجرد — إضافة وخصم" />
-                    <HBox spacing="8">
+                    <HBox prefHeight="249.0" prefWidth="502.0" spacing="8">
                         <padding><Insets bottom="6" left="8" right="8" top="6" /></padding>
 
                         <!-- إضافة للمجرد -->
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <VBox prefHeight="237.0" prefWidth="14.0" spacing="4" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #059669;" text="إضافة للمجرد" />
-                            <TableView fx:id="table_mogardAdd" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200">
+                            <TableView fx:id="table_mogardAdd" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="185.0" prefWidth="49.0">
                                 <columns>
                                     <TableColumn prefWidth="120" text="التاريخ" />
-                                    <TableColumn prefWidth="80" text="القيمة" />
+                                    <TableColumn prefWidth="94.0" text="القيمة" />
                                 </columns>
                             </TableView>
                             <HBox spacing="4">
@@ -296,9 +296,9 @@
                         <Separator orientation="VERTICAL" />
 
                         <!-- خصم من المجرد -->
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <VBox prefHeight="237.0" prefWidth="0.0" spacing="4" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #DC2626;" text="خصم من المجرد" />
-                            <TableView fx:id="table_mogardRival" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200">
+                            <TableView fx:id="table_mogardRival" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="185.0" prefWidth="0.0">
                                 <columns>
                                     <TableColumn prefWidth="120" text="التاريخ" />
                                     <TableColumn prefWidth="80" text="القيمة" />
@@ -313,15 +313,15 @@
                 </VBox>
 
                 <!-- العلاوات -->
-                <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
+                <VBox prefHeight="322.0" prefWidth="0.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
                     <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="العلاوات — إضافة وخصم" />
-                    <HBox spacing="8">
+                    <HBox prefHeight="264.0" prefWidth="0.0" spacing="8">
                         <padding><Insets bottom="6" left="8" right="8" top="6" /></padding>
 
                         <!-- إضافة للعلاوات -->
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <VBox prefHeight="252.0" prefWidth="0.0" spacing="4" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #059669;" text="إضافة للعلاوات" />
-                            <TableView fx:id="table_bounsAdd" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200">
+                            <TableView fx:id="table_bounsAdd" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200" prefWidth="0.0">
                                 <columns>
                                     <TableColumn prefWidth="120" text="التاريخ" />
                                     <TableColumn prefWidth="80" text="القيمة" />
@@ -336,9 +336,9 @@
                         <Separator orientation="VERTICAL" />
 
                         <!-- خصم من العلاوات -->
-                        <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <VBox prefHeight="252.0" prefWidth="0.0" spacing="4" HBox.hgrow="ALWAYS">
                             <Label style="-fx-font-weight: bold; -fx-text-fill: #DC2626;" text="خصم من العلاوات" />
-                            <TableView fx:id="table_bounsRival" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200">
+                            <TableView fx:id="table_bounsRival" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="200" prefWidth="0.0">
                                 <columns>
                                     <TableColumn prefWidth="120" text="التاريخ" />
                                     <TableColumn prefWidth="80" text="القيمة" />
