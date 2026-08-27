@@ -65,7 +65,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveBaseName.set('HR_Management')
+    archiveBaseName.set('hr-mate-desktop')
     archiveVersion.set('')
     archiveClassifier.set('')
     manifest {

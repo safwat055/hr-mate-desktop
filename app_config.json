@@ -2,7 +2,7 @@
   "connection": {
     "alone": false,
     "url2": "ws://",
-    "port": "9090",
+    "port": "8080",
     "masterPC": "safwat055",
     "user": "admin",
     "url": "http://"

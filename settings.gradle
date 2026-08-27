@@ -1,6 +1,6 @@
 pluginManagement {
     plugins {
-       
+
     }
 }
-rootProject.name = "HR_Management_Desktop"
+rootProject.name = "hr-mate-desktop"
