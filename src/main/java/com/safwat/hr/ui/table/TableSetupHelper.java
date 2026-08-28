@@ -104,6 +104,11 @@ public class TableSetupHelper {
             @Override
             public void commitEdit(String newValue) {
                 if (isEditing()) {
+                    if (newValue == null || newValue.isBlank()) {
+                        super.commitEdit("");
+                        return;
+
+                    }
                     LocalDate parsed = parseDateInput(newValue);
                     if (parsed != null) {
                         String formatted = formatDateOutput(parsed);

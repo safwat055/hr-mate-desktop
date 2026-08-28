@@ -10,6 +10,7 @@ import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.notification.service.ReportWebSocketService;
 import com.safwat.hr.notification.ui.HRToast;
+import com.safwat.hr.theme.ThemeManager;
 import com.safwat.hr.ui.util.AppTheme;
 import javafx.application.Application;
 import javafx.collections.ListChangeListener;
@@ -57,7 +58,7 @@ public class HR_Client extends Application {
                 HR_Client.class.getResource("/com/safwat/hr/view/MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         AppTheme.apply(scene);
-
+        ThemeManager.applyTheme(scene, ThemeManager.DARK); // أو DARK / BLUE / GRAY
         stage.setTitle("HR_Management");
         stage.setScene(scene);
         stage.show();

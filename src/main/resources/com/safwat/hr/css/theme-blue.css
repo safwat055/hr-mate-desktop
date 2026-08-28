@@ -1,0 +1,580 @@
+/* ═══════════════════════════════════════════════════════════════════
+   theme-blue.css — HR MATE Blue Theme
+   ─────────────────────────────────────────────────────────────────
+   Deep blue corporate theme.
+   Apply: scene.getStylesheets().add(".../theme-blue.css");
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Root Variables ─────────────────────────────────────────────── */
+.root {
+    /* Backgrounds */
+    -bg-primary: #0A1628;
+    -bg-secondary: #0F1D32;
+    -bg-tertiary: #071020;
+    -bg-card: #132238;
+    -bg-input: #1A2D4A;
+    -bg-input-focus: #1E3A5F;
+    -bg-selected: rgba(56, 189, 248, 0.15);
+    -bg-hover: #1A2D4A;
+    -bg-header: #0C4A6E;
+    -bg-header-alt: #075985;
+    -bg-success-header: #065F46;
+    -bg-danger-header: #7F1D1D;
+
+    /* Text */
+    -text-primary: #F0F9FF;
+    -text-secondary: #BAE6FD;
+    -text-muted: #7DD3FC;
+    -text-placeholder: #38BDF8;
+    -text-on-primary: #FFFFFF;
+    -text-on-header: #F0F9FF;
+    -text-success: #34D399;
+    -text-danger: #FCA5A5;
+
+    /* Accents */
+    -primary: #38BDF8;
+    -primary-hover: #0EA5E9;
+    -primary-light: rgba(56, 189, 248, 0.20);
+    -success: #34D399;
+    -success-hover: #10B981;
+    -danger: #FCA5A5;
+    -danger-hover: #F87171;
+    -warning: #FDE047;
+    -warning-hover: #FACC15;
+    -purple: #C084FC;
+    -purple-hover: #A855F7;
+    -secondary: #38BDF8;
+    -secondary-hover: #0EA5E9;
+    -info: #7DD3FC;
+    -info-hover: #38BDF8;
+
+    /* Borders */
+    -border: #1E3A5F;
+    -border-light: #0C4A6E;
+    -border-focus: #38BDF8;
+
+    /* Shadows */
+    -shadow-card: dropshadow(gaussian, rgba(0,0,0,0.35), 6, 0, 0, 3);
+    -shadow-card-hover: dropshadow(gaussian, rgba(0,0,0,0.45), 8, 0, 0, 4);
+    -shadow-focus: dropshadow(gaussian, rgba(56, 189, 248, 0.30), 4, 0, 0, 0);
+    -shadow-dropdown: dropshadow(gaussian, rgba(0,0,0,0.45), 10, 0, 0, 5);
+
+    /* Typography */
+    -font-family: "Cairo", "Noto Sans Arabic", "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    -font-size-xs: 10px;
+    -font-size-sm: 11px;
+    -font-size-base: 13px;
+    -font-size-md: 14px;
+    -font-size-lg: 16px;
+    -font-size-xl: 18px;
+    -font-weight-normal: 400;
+    -font-weight-bold: 700;
+
+    /* Spacing */
+    -radius-sm: 4px;
+    -radius-md: 5px;
+    -radius-lg: 6px;
+    -radius-xl: 8px;
+    -radius-full: 20px;
+
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+}
+
+/* ── ScrollPane ─────────────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: -bg-primary;
+    -fx-border-color: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: -bg-primary;
+}
+.scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #1E3A5F;
+    -fx-background-radius: -radius-full;
+}
+.scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: #38BDF8;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────── */
+.card {
+    -fx-background-color: -bg-card;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-lg;
+    -fx-background-radius: -radius-lg;
+    -fx-effect: -shadow-card;
+}
+.card:hover {
+    -fx-effect: -shadow-card-hover;
+}
+
+/* ── Labels ─────────────────────────────────────────────────────── */
+.label {
+    -fx-font-family: -font-family;
+    -fx-text-fill: -text-secondary;
+}
+.label-header {
+    -fx-background-color: -bg-header;
+    -fx-text-fill: -text-on-header;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-base;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+.label-header-success {
+    -fx-background-color: -bg-success-header;
+    -fx-text-fill: -text-on-header;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-base;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+.label-header-danger {
+    -fx-background-color: -bg-danger-header;
+    -fx-text-fill: -text-on-header;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-base;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+.label-header-alt {
+    -fx-background-color: -bg-header-alt;
+    -fx-text-fill: -text-on-header;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-base;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-padding: 8;
+    -fx-alignment: center;
+}
+.label-title {
+    -fx-font-size: -font-size-lg;
+    -fx-font-weight: -font-weight-bold;
+    -fx-text-fill: -text-primary;
+}
+.label-bold {
+    -fx-font-weight: -font-weight-bold;
+    -fx-text-fill: -text-secondary;
+}
+.label-muted {
+    -fx-font-size: -font-size-sm;
+    -fx-text-fill: -text-muted;
+}
+.label-success {
+    -fx-text-fill: -text-success;
+    -fx-font-weight: -font-weight-bold;
+}
+.label-danger {
+    -fx-text-fill: -text-danger;
+    -fx-font-weight: -font-weight-bold;
+}
+
+/* ── TextField ──────────────────────────────────────────────────── */
+.text-field {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-background-color: -bg-input;
+    -fx-background-radius: -radius-md;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-md;
+    -fx-padding: 7 14 7 14;
+    -fx-prompt-text-fill: -text-placeholder;
+    -fx-text-fill: -text-primary;
+}
+.text-field:focused {
+    -fx-background-color: -bg-input-focus;
+    -fx-border-color: -border-focus;
+    -fx-effect: -shadow-focus;
+}
+.text-field:disabled {
+    -fx-opacity: 0.5;
+    -fx-background-color: derive(-bg-input, -10%);
+}
+
+/* ── TextArea ───────────────────────────────────────────────────── */
+.text-area {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-background-color: -bg-input;
+    -fx-background-radius: -radius-full;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-full;
+    -fx-padding: 9 14 9 14;
+    -fx-prompt-text-fill: -text-placeholder;
+    -fx-text-fill: -text-primary;
+    -fx-wrap-text: true;
+}
+.text-area:focused {
+    -fx-background-color: -bg-input-focus;
+    -fx-border-color: -border-focus;
+}
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+.text-area .scroll-bar {
+    -fx-opacity: 0;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+.button {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-cursor: hand;
+    -fx-background-radius: -radius-md;
+    -fx-padding: 8 16 8 16;
+    -fx-text-fill: -text-on-primary;
+    -fx-font-weight: -font-weight-bold;
+}
+.button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.btn-primary {
+    -fx-background-color: -primary;
+    -fx-text-fill: #0A1628;
+}
+.btn-primary:hover {
+    -fx-background-color: -primary-hover;
+}
+.btn-success {
+    -fx-background-color: -success;
+    -fx-text-fill: #0A1628;
+}
+.btn-success:hover {
+    -fx-background-color: -success-hover;
+}
+.btn-danger {
+    -fx-background-color: -danger;
+    -fx-text-fill: #0A1628;
+}
+.btn-danger:hover {
+    -fx-background-color: -danger-hover;
+}
+.btn-warning {
+    -fx-background-color: -warning;
+    -fx-text-fill: #0A1628;
+}
+.btn-warning:hover {
+    -fx-background-color: -warning-hover;
+}
+.btn-purple {
+    -fx-background-color: -purple;
+    -fx-text-fill: #0A1628;
+}
+.btn-purple:hover {
+    -fx-background-color: -purple-hover;
+}
+.btn-secondary {
+    -fx-background-color: -secondary;
+    -fx-text-fill: #0A1628;
+}
+.btn-secondary:hover {
+    -fx-background-color: -secondary-hover;
+}
+.btn-info {
+    -fx-background-color: -info;
+    -fx-text-fill: #0A1628;
+}
+.btn-info:hover {
+    -fx-background-color: -info-hover;
+}
+.btn-icon {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-muted;
+    -fx-font-size: -font-size-md;
+    -fx-padding: 6;
+    -fx-background-radius: 50%;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+}
+.btn-icon:hover {
+    -fx-background-color: -bg-hover;
+    -fx-text-fill: -text-secondary;
+}
+.btn-round {
+    -fx-background-radius: -radius-full;
+    -fx-padding: 9 20 9 20;
+}
+.btn-sm {
+    -fx-padding: 5 10 5 10;
+    -fx-font-size: -font-size-sm;
+}
+
+/* ── TableView ──────────────────────────────────────────────────── */
+.table-view {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-background-color: -bg-card;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-lg;
+    -fx-padding: 0;
+}
+.table-view .column-header {
+    -fx-background-color: -bg-header;
+    -fx-padding: 8;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-sm;
+}
+.table-view .column-header .label {
+    -fx-text-fill: -text-on-header;
+    -fx-alignment: center;
+}
+.table-view .table-cell {
+    -fx-padding: 6 8 6 8;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: -text-primary;
+}
+.table-view .table-row-cell {
+    -fx-background-color: transparent;
+}
+.table-view .table-row-cell:odd {
+    -fx-background-color: derive(-bg-card, 3%);
+}
+.table-view .table-row-cell:even {
+    -fx-background-color: -bg-card;
+}
+.table-view .table-row-cell:hover {
+    -fx-background-color: -bg-hover;
+}
+.table-view .table-row-cell:selected {
+    -fx-background-color: -bg-selected;
+}
+.table-view .table-row-cell:selected .table-cell {
+    -fx-text-fill: -primary;
+}
+.table-view .scroll-bar .thumb {
+    -fx-background-color: #1E3A5F;
+    -fx-background-radius: -radius-full;
+}
+
+/* ── Separator ──────────────────────────────────────────────────── */
+.separator .line {
+    -fx-border-color: -border;
+    -fx-border-width: 1 0 0 0;
+}
+.separator:vertical .line {
+    -fx-border-width: 0 1 0 0;
+}
+
+/* ── TabPane ────────────────────────────────────────────────────── */
+.tab-pane {
+    -fx-font-family: -font-family;
+    -fx-background-color: -bg-primary;
+    -fx-tab-min-height: 36;
+}
+.tab-pane .tab-header-area {
+    -fx-background-color: -bg-secondary;
+    -fx-padding: 4 8 0 8;
+}
+.tab-pane .tab-header-area .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-padding: 8 16 8 16;
+    -fx-font-size: -font-size-base;
+    -fx-font-weight: -font-weight-bold;
+    -fx-text-fill: -text-muted;
+}
+.tab-pane .tab-header-area .tab:selected {
+    -fx-background-color: -bg-primary;
+    -fx-text-fill: -primary;
+    -fx-border-color: transparent transparent -primary transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.tab-pane .tab-header-area .tab:hover {
+    -fx-background-color: derive(-bg-primary, 5%);
+}
+.tab-pane .tab-content-area {
+    -fx-background-color: -bg-primary;
+    -fx-padding: 8;
+}
+
+/* ── TitledPane ─────────────────────────────────────────────────── */
+.titled-pane {
+    -fx-font-family: -font-family;
+    -fx-text-fill: -text-primary;
+}
+.titled-pane > .title {
+    -fx-background-color: -bg-header;
+    -fx-text-fill: -text-on-header;
+    -fx-font-weight: -font-weight-bold;
+    -fx-font-size: -font-size-base;
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: -radius-lg -radius-lg 0 0;
+}
+.titled-pane > .title > .arrow-button .arrow {
+    -fx-background-color: -text-on-header;
+}
+.titled-pane > .content {
+    -fx-background-color: -bg-card;
+    -fx-border-color: -border;
+    -fx-border-radius: 0 0 -radius-lg -radius-lg;
+    -fx-background-radius: 0 0 -radius-lg -radius-lg;
+}
+
+/* ── Accordion ──────────────────────────────────────────────────── */
+.accordion .titled-pane > .title {
+    -fx-background-color: derive(-bg-header, 15%);
+}
+.accordion .titled-pane > .title > .text {
+    -fx-fill: -text-on-header;
+}
+
+/* ── ListView ───────────────────────────────────────────────────── */
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: -text-primary;
+}
+.list-view .list-cell:hover {
+    -fx-background-color: -bg-hover;
+}
+.list-view .list-cell:selected {
+    -fx-background-color: -bg-selected;
+    -fx-text-fill: -primary;
+}
+
+/* ── ComboBox ───────────────────────────────────────────────────── */
+.combo-box {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-background-color: -bg-input;
+    -fx-background-radius: -radius-md;
+    -fx-border-color: -border;
+    -fx-padding: 2;
+}
+.combo-box:focused {
+    -fx-background-color: -bg-input-focus;
+    -fx-border-color: -border-focus;
+    -fx-effect: -shadow-focus;
+}
+.combo-box .list-cell {
+    -fx-text-fill: -text-primary;
+    -fx-padding: 4 8 4 8;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: -bg-card;
+    -fx-effect: -shadow-dropdown;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-md;
+}
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: -bg-hover;
+}
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: -bg-selected;
+    -fx-text-fill: -primary;
+}
+
+/* ── RadioButton / CheckBox ─────────────────────────────────────── */
+.radio-button, .check-box {
+    -fx-font-family: -font-family;
+    -fx-font-size: -font-size-base;
+    -fx-text-fill: -text-secondary;
+}
+.radio-button .radio {
+    -fx-background-color: -bg-card;
+    -fx-border-color: -border;
+    -fx-border-radius: 50%;
+}
+.radio-button:selected .radio .dot {
+    -fx-background-color: -primary;
+}
+.check-box .box {
+    -fx-background-color: -bg-card;
+    -fx-border-color: -border;
+    -fx-border-radius: -radius-sm;
+}
+.check-box:selected .box .mark {
+    -fx-background-color: -primary;
+}
+
+/* ── ProgressIndicator ──────────────────────────────────────────── */
+.progress-indicator {
+    -fx-progress-color: -primary;
+}
+
+/* ── SplitPane ──────────────────────────────────────────────────── */
+.split-pane {
+    -fx-background-color: -bg-secondary;
+    -fx-padding: 0;
+}
+.split-pane .split-pane-divider {
+    -fx-background-color: -border;
+    -fx-padding: 0 2 0 2;
+}
+
+/* ── Chat-specific ──────────────────────────────────────────────── */
+.chat-root {
+    -fx-background-color: -bg-primary;
+}
+.chat-sidebar {
+    -fx-background-color: -bg-secondary;
+    -fx-effect: -shadow-card;
+}
+.sidebar-header {
+    -fx-background-color: -bg-secondary;
+    -fx-border-color: transparent transparent -border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.sidebar-title {
+    -fx-font-size: -font-size-lg;
+    -fx-font-weight: -font-weight-bold;
+    -fx-text-fill: -text-primary;
+}
+.bubble-outgoing {
+    -fx-background-color: -primary;
+    -fx-background-radius: 16 16 4 16;
+    -fx-effect: -shadow-card;
+}
+.bubble-outgoing .msg-content {
+    -fx-text-fill: #0A1628;
+}
+.bubble-incoming {
+    -fx-background-color: -bg-card;
+    -fx-background-radius: 16 16 16 4;
+    -fx-effect: -shadow-card;
+}
+.bubble-incoming .msg-content {
+    -fx-text-fill: -text-primary;
+}
+.chat-input-area {
+    -fx-background-color: -bg-secondary;
+    -fx-border-color: -border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+.message-input {
+    -fx-background-color: -bg-input;
+    -fx-background-radius: -radius-full;
+    -fx-border-color: -border;
+    -fx-padding: 9 14 9 14;
+    -fx-font-size: -font-size-md;
+    -fx-prompt-text-fill: -text-placeholder;
+    -fx-text-fill: -text-primary;
+}
+.message-input:focused {
+    -fx-background-color: -bg-input-focus;
+    -fx-border-color: -border-focus;
+}
+
+/* ── Emoji support ──────────────────────────────────────────────── */
+.emoji {
+    -fx-font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
