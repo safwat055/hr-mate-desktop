@@ -3,7 +3,7 @@
     "alone": false,
     "url2": "ws://",
     "port": "8080",
-    "masterPC": "safwat055",
+    "masterPC": "localhost",
     "user": "admin",
     "url": "http://"
   }

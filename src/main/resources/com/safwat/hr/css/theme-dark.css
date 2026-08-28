@@ -74,6 +74,7 @@
 .menu-item {
     -fx-background-color: #242830;
     -fx-text-fill: #E5E7EB;
+    -fx-padding: 6 12 6 12;
 }
 
 .menu-item .label {
@@ -110,7 +111,7 @@
 }
 
 .tooltip {
-    -fx-background-color: #E5E7EB;
+    -fx-background-color: #374151;
     -fx-text-fill: white;
     -fx-background-radius: 3;
     -fx-padding: 5 8 5 8;

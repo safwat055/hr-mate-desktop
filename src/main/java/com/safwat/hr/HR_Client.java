@@ -58,7 +58,7 @@ public class HR_Client extends Application {
                 HR_Client.class.getResource("/com/safwat/hr/view/MainView.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         AppTheme.apply(scene);
-        ThemeManager.applyTheme(scene, ThemeManager.DEFAULT); // أو DARK / BLUE / GRAY
+        ThemeManager.applyTheme(scene, ThemeManager.BLUE); // أو DARK / BLUE / GRAY
         stage.setTitle("HR_Management");
         stage.setScene(scene);
         stage.show();
