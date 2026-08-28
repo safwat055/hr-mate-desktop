@@ -5,22 +5,22 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
 
@@ -124,7 +124,7 @@ public class ScaleController implements Initializable {
     private TableView<AdjustmentRecord> table_bounsRival;
     @FXML
     private TableView<ScaleTimelinePoint> table_result;
-    
+
     // أزرار الإجراءات
     @FXML
     private Button btn_search;
@@ -155,17 +155,19 @@ public class ScaleController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
 
 
-        btn_search.setOnAction(e -> doSearch());
-        btn_calculate.setOnAction(e -> doCalculate());
-        btn_save.setOnAction(e -> doSave());
-        btn_pdf.setOnAction(e -> doPdf());
-        btn_clear.setOnAction(e -> doClear());
+        btn_search.setOnAction(_ -> doSearch());
+        btn_calculate.setOnAction(_ -> doCalculate());
+        btn_save.setOnAction(_ -> doSave());
+        btn_pdf.setOnAction(_ -> doPdf());
+        btn_clear.setOnAction(_ -> doClear());
 
-        txt_nationalId.setOnAction(e -> doSearch());
+        txt_nationalId.setOnAction(_ -> doSearch());
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
         setupDateFields();
+        setTable_result();
+
         setupAdjustmentTable(table_mogardAdd);
         setupAdjustmentTable(table_mogardRival);
         setupAdjustmentTable(table_bounsAdd);
@@ -310,6 +312,77 @@ public class ScaleController implements Initializable {
         setupGenericTable(table, cols, 5, AdjustmentRecord::new);
     }
 
+    void setTable_result() {
+        List<ColumnConfig<ScaleTimelinePoint>> cols = new ArrayList<>();
+        cols.add(new ColumnConfig<>("التاريخ", 90,
+                r -> formatDateOutput(r.getDate()),
+                (r, v) -> r.setDate(parseDateInput(v)),
+                false, true));
+        cols.add(new ColumnConfig<>("الاساسي", 90,
+                r -> r.getCurrentBasic() != null ? r.getCurrentBasic().toString() : "",
+                (r, v) -> r.setCurrentBasic(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("الدورية", 70,
+                r -> r.getPeriodicBonus() != null && !r.getPeriodicBonus().equals(BigDecimal.ZERO) ? r.getPeriodicBonus().toString() : "",
+                (r, v) -> r.setPeriodicBonus(parseBigDecimal(v)),
+                false, false));
+
+        //spBonusSubject
+        cols.add(new ColumnConfig<>("خاصة خاضعة", 90,
+                r -> r.getSpBonusSubject() != null ? r.getSpBonusSubject().toString() : "",
+                (r, v) -> r.setSpBonusSubject(parseBigDecimal(v)),
+                false, false));
+        //spBonusNotSubject
+        cols.add(new ColumnConfig<>("خاصة غير خ", 90,
+                r -> r.getSpBonusNotSubject() != null ? r.getSpBonusNotSubject().toString() : "",
+                (r, v) -> r.setSpBonusNotSubject(parseBigDecimal(v)),
+                false, false));
+        //other_sp_subject
+        cols.add(new ColumnConfig<>("أخرى خاضعة", 90,
+                r -> r.getOther_sp_subject() != null ? r.getOther_sp_subject().toString() : "",
+                (r, v) -> r.setOther_sp_subject(parseBigDecimal(v)),
+                false, false));
+        //upgradeBonus
+        cols.add(new ColumnConfig<>("ترقية", 90,
+                r -> r.getUpgradeBonus() != null ? r.getUpgradeBonus().toString() : "",
+                (r, v) -> r.setUpgradeBonus(parseBigDecimal(v)),
+                false, false));
+        //encourageBonus
+        cols.add(new ColumnConfig<>("تشجيعية", 90,
+                r -> r.getEncourageBonus() != null ? r.getEncourageBonus().toString() : "",
+                (r, v) -> r.setEncourageBonus(parseBigDecimal(v)),
+                false, false));
+        //otherBonus
+        cols.add(new ColumnConfig<>("اخرى", 90,
+                r -> r.getOtherBonus() != null ? r.getOtherBonus().toString() : "",
+                (r, v) -> r.setOtherBonus(parseBigDecimal(v)),
+                false, false));
+        //mogard
+        cols.add(new ColumnConfig<>("المجرد", 90,
+                r -> r.getMogard() != null ? r.getMogard().toString() : "",
+                (r, v) -> r.setMogard(parseBigDecimal(v)),
+                false, false));
+        //basic30_6
+        cols.add(new ColumnConfig<>("الأساس 30-6", 90,
+                r -> r.getBasic30_6() != null ? r.getBasic30_6().toString() : "",
+                (r, v) -> r.setBasic30_6(parseBigDecimal(v)),
+                false, false));
+
+        //degreeLabel
+        cols.add(new ColumnConfig<>("الدرجة", 90,
+                ScaleTimelinePoint::getDegreeLabel,
+                ScaleTimelinePoint::setDegreeLabel,
+                false, false));
+        //extraIncentive
+        cols.add(new ColumnConfig<>("حوافز إضافية", 90,
+                r -> r.getExtraIncentive() != null ? r.getExtraIncentive().toString() : "",
+                (r, v) -> r.setExtraIncentive(parseBigDecimal(v)),
+                false, false));
+
+        setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
+
+    }
+
     private void doClear() {
         List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
                         txt_startDate, txt_backStart, txt_debloma, txt_magester,
@@ -365,13 +438,20 @@ public class ScaleController implements Initializable {
         fillUpgradeTable(dto.getUpgrades());
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
-        fillResultTable(dto.getResult().getTimeline());
+        fillResultTable(dto);
         fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
         fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
         fillAdjustmentTable(table_bounsAdd, dto.getBonusAdditions());
         fillAdjustmentTable(table_bounsRival, dto.getBonusRemovals());
     }
 
+    void fillResultTable(ScaleDto dto) {
+        if (dto.getResult() != null) {
+            fillResultTable(dto.getResult().getTimeline());
+        } else {
+            table_result.getItems().clear();
+        }
+    }
 
     void fillUpgradeTable(List<UpgradeRecord> upgrades) {
         table_upgrade.getItems().clear();
@@ -485,53 +565,6 @@ public class ScaleController implements Initializable {
     //  Table Setup
     // ─────────────────────────────────────────────
 
-    @SuppressWarnings("unchecked")
-    private void setupEditableTable(TableView<DateValueRow> table,
-                                    ObservableList<DateValueRow> data) {
-        table.setEditable(true);
-        table.setItems(data);
-
-        TableColumn<DateValueRow, String> dateCol =
-                (TableColumn<DateValueRow, String>) table.getColumns().get(0);
-        dateCol.setCellValueFactory(c -> c.getValue().dateProperty());
-        dateCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        dateCol.setOnEditCommit(e -> e.getRowValue().setDate(e.getNewValue()));
-
-        TableColumn<DateValueRow, String> valueCol =
-                (TableColumn<DateValueRow, String>) table.getColumns().get(1);
-        valueCol.setCellValueFactory(c -> c.getValue().valueProperty());
-        valueCol.setCellFactory(TextFieldTableCell.forTableColumn());
-        valueCol.setOnEditCommit(e -> e.getRowValue().setValue(e.getNewValue()));
-
-        table.setRowFactory(tv -> new TableRow<>() {
-            @Override
-            protected void updateItem(DateValueRow item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) setStyle("");
-                else setStyle(getIndex() % 2 == 0
-                        ? "-fx-background-color: #F9FAFB;"
-                        : "-fx-background-color: white;");
-            }
-        });
-    }
-
-
-    // ─────────────────────────────────────────────
-    //  Helpers
-    // ─────────────────────────────────────────────
-
-    private List<AdjustmentRecord> toAdjustmentList(ObservableList<DateValueRow> rows) {
-        return rows.stream()
-                .filter(r -> !r.getDate().isBlank() && !r.getValue().isBlank())
-                .map(r -> {
-                    LocalDate date = parseDate(r.getDate());
-                    BigDecimal amount = parseBigDecimal(r.getValue());
-                    if (date == null || amount == null) return null;
-                    return new AdjustmentRecord(date, amount);
-                })
-                .filter(a -> a != null)
-                .collect(Collectors.toList());
-    }
 
     private String fmt(LocalDate date) {
         return date != null ? date.format(FMT_DISPLAY) : "";
@@ -549,14 +582,6 @@ public class ScaleController implements Initializable {
         }
     }
 
-    private Long parseLong(String text) {
-        if (text == null || text.isBlank()) return null;
-        try {
-            return Long.parseLong(text.trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("الرقم القومي غير صالح: " + text);
-        }
-    }
 
     private Integer parseInt(String text) {
         if (text == null || text.isBlank()) return null;
@@ -612,41 +637,5 @@ public class ScaleController implements Initializable {
         a.show();
     }
 
-    // ─────────────────────────────────────────────
-    //  Inner Class — DateValueRow
-    // ─────────────────────────────────────────────
 
-    public static class DateValueRow {
-        private final SimpleStringProperty date;
-        private final SimpleStringProperty value;
-
-        public DateValueRow(String date, String value) {
-            this.date = new SimpleStringProperty(date);
-            this.value = new SimpleStringProperty(value);
-        }
-
-        public SimpleStringProperty dateProperty() {
-            return date;
-        }
-
-        public SimpleStringProperty valueProperty() {
-            return value;
-        }
-
-        public String getDate() {
-            return date.get();
-        }
-
-        public void setDate(String v) {
-            date.set(v);
-        }
-
-        public String getValue() {
-            return value.get();
-        }
-
-        public void setValue(String v) {
-            value.set(v);
-        }
-    }
 }

@@ -11,116 +11,102 @@
     5. RTL على المستوى الصح (ScrollPane فقط)
 -->
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT"
-            prefHeight="1144.0"
-            prefWidth="1650.0" style="-fx-background-color: #F5F6FA;"
-            xmlns="http://javafx.com/javafx/26" fx:controller="com.safwat.hr.scale.ScaleController">
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1144.0" prefWidth="1650.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.scale.ScaleController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="1126.0" prefWidth="1247.0" spacing="8"
-              style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="1126.0" prefWidth="1247.0" spacing="8" style="-fx-background-color: #F5F6FA;">
             <padding>
-                <Insets bottom="10" left="10" right="10" top="10"/>
+                <Insets bottom="10" left="10" right="10" top="10" />
             </padding>
 
             <!-- ══════════════════════════════════════════════════════
                  1. شريط البحث
             ══════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8"
-                  style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                 <padding>
-                    <Insets bottom="8" left="12" right="12" top="8"/>
+                    <Insets bottom="8" left="12" right="12" top="8" />
                 </padding>
 
-                <Button fx:id="btn_search" prefHeight="32" prefWidth="80"
-                        style="-fx-background-color: #2563EB; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="🔍 بحث"/>
-                <Label prefHeight="22.0" prefWidth="65" style="-fx-font-weight: bold;" text="رقم قومي"/>
+                <Button fx:id="btn_search" prefHeight="32" prefWidth="80" style="-fx-background-color: #2563EB; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;" text="🔍 بحث" />
+                <Label prefHeight="22.0" prefWidth="65" style="-fx-font-weight: bold;" text="رقم قومي" />
 
-                <TextField fx:id="txt_nationalId" alignment="CENTER" prefHeight="32" prefWidth="150"
-                           promptText="الرقم القومي"/>
+                <TextField fx:id="txt_nationalId" alignment="CENTER" prefHeight="32" prefWidth="150" promptText="الرقم القومي" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefWidth="65" style="-fx-font-weight: bold;" text="رقم موظف"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefWidth="65" style="-fx-font-weight: bold;" text="رقم موظف" />
 
-                <TextField fx:id="txt_empCode" alignment="CENTER" prefHeight="32" prefWidth="120"
-                           promptText="رقم الموظف"/>
+                <TextField fx:id="txt_empCode" alignment="CENTER" prefHeight="32" prefWidth="120" promptText="رقم الموظف" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefHeight="23.0" prefWidth="40" style="-fx-font-weight: bold;" text="الاسم"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefHeight="23.0" prefWidth="40" style="-fx-font-weight: bold;" text="الاسم" />
 
-                <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="32" prefWidth="200"
-                           promptText="اسم الموظف"/>
+                <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="32" prefWidth="200" promptText="اسم الموظف" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefWidth="45" style="-fx-font-weight: bold;" text="الإدارة"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefWidth="45" style="-fx-font-weight: bold;" text="الإدارة" />
 
-                <TextField fx:id="txt_Management" alignment="CENTER" prefHeight="32" prefWidth="200"
-                           promptText="اسم الإدارة"/>
+                <TextField fx:id="txt_Management" alignment="CENTER" prefHeight="32" prefWidth="200" promptText="اسم الإدارة" />
             </HBox>
 
             <!-- ══════════════════════════════════════════════════════
                  2. شريط الأدوات (القانون + الكود + الدرجة + الأزرار)
             ══════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" spacing="8"
-                  style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
                 <padding>
-                    <Insets bottom="8" left="12" right="12" top="8"/>
+                    <Insets bottom="8" left="12" right="12" top="8" />
                 </padding>
 
                 <!-- أزرار الإجراءات -->
-                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70"
-                        style="-fx-background-color: #6B7280; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="مسح"/>
-                <Button fx:id="btn_save" prefHeight="32" prefWidth="70"
-                        style="-fx-background-color: #059669; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="حفظ"/>
-                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70"
-                        style="-fx-background-color: #DC2626; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;"
-                        text="PDF"/>
-                <Button fx:id="btn_calculate" prefHeight="32" prefWidth="100"
-                        style="-fx-background-color: #7C3AED; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;"
-                        text="⚙ احتساب"/>
-                <Label prefWidth="75" style="-fx-font-weight: bold;" text="درجة التعيين"/>
+                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" style="-fx-background-color: #6B7280; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;" text="مسح" />
+                <Button fx:id="btn_save" prefHeight="32" prefWidth="70" style="-fx-background-color: #059669; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;" text="حفظ" />
+                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70" style="-fx-background-color: #DC2626; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand;" text="PDF" />
+                <Button fx:id="btn_calculate" prefHeight="32" prefWidth="100" style="-fx-background-color: #7C3AED; -fx-text-fill: white;                                -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="⚙ احتساب" />
+                <Label prefWidth="75" style="-fx-font-weight: bold;" text="درجة التعيين" />
 
-                <Separator orientation="VERTICAL"/>
+                <Separator orientation="VERTICAL" />
 
-                <TextField fx:id="txt_startDegree" alignment="CENTER" prefHeight="32" prefWidth="80"
-                           promptText="درجة التعيين"/>
+                <TextField fx:id="txt_startDegree" alignment="CENTER" prefHeight="32" prefWidth="80" promptText="درجة التعيين" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefWidth="75" style="-fx-font-weight: bold;" text="كود الوظيفة"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefWidth="75" style="-fx-font-weight: bold;" text="كود الوظيفة" />
 
-                <TextField fx:id="txt_code" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="كود"/>
+                <TextField fx:id="txt_code" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="كود" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefWidth="45" style="-fx-font-weight: bold;" text="قانون"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefWidth="45" style="-fx-font-weight: bold;" text="قانون" />
 
-                <TextField fx:id="txt_law" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="القانون"/>
+                <TextField fx:id="txt_law" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="القانون" />
 
-                <Separator orientation="VERTICAL"/>
-                <Label prefWidth="100" style="-fx-font-weight: bold;" text="المجموعة النوعية"/>
+                <Separator orientation="VERTICAL" />
+                <Label prefWidth="100" style="-fx-font-weight: bold;" text="المجموعة النوعية" />
 
-                <TextField fx:id="txt_group" alignment="CENTER" prefHeight="32" prefWidth="167.0"
-                           promptText="المجموعة النوعية" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="txt_group" alignment="CENTER" prefHeight="32" prefWidth="167.0" promptText="المجموعة النوعية" HBox.hgrow="ALWAYS" />
             </HBox>
             <HBox prefHeight="338.0" prefWidth="951.0" spacing="5.0">
                 <children>
 
                     <!-- ── 3أ. بيانات المؤهلات (يمين) ── -->
-                    <VBox minWidth="240" prefWidth="240" spacing="0"
-                          style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                    <VBox minWidth="240" prefWidth="240" spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
 
-                        <Label alignment="CENTER" maxWidth="Infinity"
-                               style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
-                               text="بيانات المؤهلات والتسويات"/>
+                        <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="بيانات التعيين والتسويات" />
 
                         <VBox spacing="2">
                             <padding>
-                                <Insets bottom="8" left="8" right="8" top="8"/>
+                                <Insets bottom="8" left="8" right="8" top="8" />
                             </padding>
 
                             <fx:define>
@@ -129,242 +115,199 @@
 
                             <!-- تاريخ التعيين -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تاريخ التعيين"/>
-                                <TextField fx:id="txt_startDate" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تاريخ التعيين" />
+                                <TextField fx:id="txt_startDate" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <!-- تاريخ الأقدمية -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تاريخ الأقدمية"/>
-                                <TextField fx:id="txt_backStart" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تاريخ الأقدمية" />
+                                <TextField fx:id="txt_backStart" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <!-- دبلومة -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="دبلومة"/>
-                                <TextField fx:id="txt_debloma" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="دبلومة" />
+                                <TextField fx:id="txt_debloma" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <!-- ماجستير -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="ماجستير"/>
-                                <TextField fx:id="txt_magester" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="ماجستير" />
+                                <TextField fx:id="txt_magester" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <!-- دكتوراة -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="دكتوراة"/>
-                                <TextField fx:id="txt_doctoraa" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="دكتوراة" />
+                                <TextField fx:id="txt_doctoraa" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <!-- تمييز علمي -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تمييز علمي"/>
-                                <TextField fx:id="txt_ectra" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold;" text="تمييز علمي" />
+                                <TextField fx:id="txt_ectra" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
 
-                            <Separator/>
+                            <Separator />
 
                             <!-- تسويات -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
-                                       text="ت. مؤهل عالٍ"/>
-                                <TextField fx:id="txt_regrade3" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="ت. مؤهل عالٍ" />
+                                <TextField fx:id="txt_regrade3" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
-                                       text="ت. مؤهل متوسط"/>
-                                <TextField fx:id="txt_regrade4" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="ت. مؤهل متوسط" />
+                                <TextField fx:id="txt_regrade4" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
-                                       text="ت. إعدادية"/>
-                                <TextField fx:id="txt_regrade5" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="ت. إعدادية" />
+                                <TextField fx:id="txt_regrade5" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                             <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
-                                       text="أقدمية التسوية"/>
-                                <TextField fx:id="txt_backRegrade" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                                <Label prefWidth="110" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="أقدمية التسوية" />
+                                <TextField fx:id="txt_backRegrade" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
                         </VBox>
                     </VBox>
 
                     <!-- ── 3ج. بيانات التسكين (يسار) ── -->
-                    <VBox minWidth="220" prefWidth="220" spacing="0"
-                          style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                    <VBox minWidth="203.0" prefHeight="338.0" prefWidth="203.0" spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                              -fx-border-radius: 6; -fx-background-radius: 6;                              -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
 
-                        <Label alignment="CENTER" maxWidth="Infinity"
-                               style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
-                               text="نتائج التسكين"/>
+                        <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                   -fx-font-weight: bold; -fx-font-size: 13;                                   -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="بيانات اضافية" />
 
-                        <VBox spacing="2">
+                        <VBox prefHeight="302.0" prefWidth="177.0" spacing="2">
                             <padding>
-                                <Insets bottom="8" left="8" right="8" top="8"/>
+                                <Insets bottom="8" left="8" right="8" top="8" />
                             </padding>
 
                             <!-- سنوات الخبرة -->
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="yearUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
-                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="سنوات تدرّج"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="سنوات تدرّج" />
+                                <TextField fx:id="yearUp" alignment="CENTER" prefHeight="28" prefWidth="70" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="yearNoUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
-                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="سنوات لا تدرّج"/>
+                            <HBox alignment="CENTER_LEFT" prefHeight="26.0" prefWidth="190.0" spacing="6">
+                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="سنوات لا تدرّج" />
+                                <TextField fx:id="yearNoUp" alignment="CENTER" prefHeight="28" prefWidth="70" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="gpUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
-                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="خبرة تدرّج"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="خبرة تدرّج" />
+                                <TextField fx:id="gpUp" alignment="CENTER" prefHeight="28" prefWidth="70" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="gpNoUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
-                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="خبرة لا تدرّج"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="خبرة لا تدرّج" />
+                                <TextField fx:id="gpNoUp" alignment="CENTER" prefHeight="28" prefWidth="70" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="yearsBack" alignment="CENTER" prefHeight="28" prefWidth="70"/>
-                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="أقدمية للتسكين"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" style="-fx-font-weight: bold;" text="أقدمية للتسكين" />
+                                <TextField fx:id="yearsBack" alignment="CENTER" prefHeight="28" prefWidth="70" />
                             </HBox>
 
-                            <Separator/>
+                            <Separator />
 
                             <!-- تواريخ مهمة -->
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="date_kader" alignment="CENTER" prefHeight="28" prefWidth="90"
-                                           promptText="تاريخ"/>
-                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="أساسي 30/6"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="أساسي 30/6" />
+                                <TextField fx:id="date_kader" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="تاريخ" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="end_day" alignment="CENTER" prefHeight="28" prefWidth="90"
-                                           promptText="تاريخ"/>
-                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="إنهاء / تقاعد"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="إنهاء / تقاعد" />
+                                <TextField fx:id="end_day" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="تاريخ" />
                             </HBox>
 
-                            <Separator/>
+                            <Separator />
 
                             <!-- انقطاع -->
-                            <Label style="-fx-font-weight: bold; -fx-text-fill: #DC2626; -fx-font-size: 12;"
-                                   text="فترة الانقطاع"/>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="txt_startCut" alignment="CENTER" prefHeight="28" prefWidth="90"
-                                           promptText="بداية"/>
-                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="من"/>
+                            <Label style="-fx-font-weight: bold; -fx-text-fill: #DC2626; -fx-font-size: 12;" text="فترة الانقطاع" />
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="من" />
+                                <TextField fx:id="txt_startCut" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="بداية" />
                             </HBox>
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <TextField fx:id="txt_endCut" alignment="CENTER" prefHeight="28" prefWidth="90"
-                                           promptText="نهاية"/>
-                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="إلى"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" style="-fx-font-weight: bold;" text="إلى" />
+                                <TextField fx:id="txt_endCut" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="نهاية" />
                             </HBox>
                         </VBox>
                     </VBox>
 
                     <!-- ترقيات -->
-                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                          prefHeight="338.0" prefWidth="364.0"
-                          style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                  -fx-border-radius: 6; -fx-background-radius: 6;                                  -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                        <Label alignment="CENTER" maxWidth="Infinity"
-                               style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                       -fx-font-weight: bold; -fx-font-size: 13;                                       -fx-background-radius: 6 6 0 0; -fx-padding: 6;"
-                               text="الترقيات"/>
-                        <TableView fx:id="table_upgrade" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT"
-                                   prefHeight="302.0" prefWidth="368.0">
+                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="364.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                  -fx-border-radius: 6; -fx-background-radius: 6;                                  -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                        <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                       -fx-font-weight: bold; -fx-font-size: 13;                                       -fx-background-radius: 6 6 0 0; -fx-padding: 6;" text="الترقيات" />
+                        <TableView fx:id="table_upgrade" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="302.0" prefWidth="368.0">
                             <columns>
-                                <TableColumn prefWidth="130" text="تاريخ الترقية"/>
-                                <TableColumn prefWidth="100" text="الدرجة"/>
-                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                                <TableColumn prefWidth="130" text="تاريخ الترقية" />
+                                <TableColumn prefWidth="100" text="الدرجة" />
+                                <TableColumn prefWidth="130" text="رقم القرار" />
                             </columns>
                             <padding>
-                                <Insets bottom="4" left="4" right="4" top="2"/>
+                                <Insets bottom="4" left="4" right="4" top="2" />
                             </padding>
                         </TableView>
                     </VBox>
                     <!-- تشجيعيات -->
-                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                          prefHeight="338.0" prefWidth="265.0"
-                          style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                      -fx-border-radius: 6; -fx-background-radius: 6;                                      -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
-                          HBox.hgrow="ALWAYS">
-                        <Label alignment="CENTER" prefHeight="30.0" prefWidth="261.0"
-                               style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                           -fx-font-weight: bold; -fx-font-size: 13;                                           -fx-background-radius: 6 6 0 0; -fx-padding: 6;"
-                               text="التشجيعيات"/>
-                        <TableView fx:id="table_encourge" maxHeight="-Infinity" maxWidth="-Infinity"
-                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="300.0" prefWidth="309.0">
+                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="265.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                      -fx-border-radius: 6; -fx-background-radius: 6;                                      -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
+                        <Label alignment="CENTER" prefHeight="30.0" prefWidth="261.0" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                           -fx-font-weight: bold; -fx-font-size: 13;                                           -fx-background-radius: 6 6 0 0; -fx-padding: 6;" text="التشجيعيات" />
+                        <TableView fx:id="table_encourge" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="300.0" prefWidth="309.0">
                             <columns>
-                                <TableColumn prefWidth="130" text="التاريخ"/>
-                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                                <TableColumn prefWidth="130" text="التاريخ" />
+                                <TableColumn prefWidth="130" text="رقم القرار" />
                             </columns>
                             <padding>
-                                <Insets bottom="4" left="4" right="4" top="2"/>
+                                <Insets bottom="4" left="4" right="4" top="2" />
                             </padding>
                         </TableView>
                     </VBox>
 
                     <!-- حافز ترقية -->
                     <VBox style="-fx-background-color: white; -fx-border-color: #DDE1E7;                                      -fx-border-radius: 6; -fx-background-radius: 6;                                      -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                        <Label alignment="CENTER" maxWidth="Infinity"
-                               style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                           -fx-font-weight: bold; -fx-font-size: 13;                                           -fx-background-radius: 6 6 0 0; -fx-padding: 6;"
-                               text="حافز الترقية"/>
-                        <TableView fx:id="table_promotion" maxHeight="-Infinity" maxWidth="-Infinity"
-                                   minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT"
-                                   prefHeight="294.0" prefWidth="268.0">
+                        <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white;                                           -fx-font-weight: bold; -fx-font-size: 13;                                           -fx-background-radius: 6 6 0 0; -fx-padding: 6;" text="حافز الترقية" />
+                        <TableView fx:id="table_promotion" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="302.0" prefWidth="268.0">
                             <columns>
-                                <TableColumn prefWidth="130" text="التاريخ"/>
-                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                                <TableColumn prefWidth="130" text="التاريخ" />
+                                <TableColumn prefWidth="130" text="رقم القرار" />
                             </columns>
                             <padding>
-                                <Insets bottom="4" left="4" right="4" top="2"/>
+                                <Insets bottom="4" left="4" right="4" top="2" />
                             </padding>
                         </TableView>
                     </VBox>
                     <!-- تسويات المجرد والعلاوات (مضغوطة) -->
 
-                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="338.0"
-                                maxWidth="-Infinity"
-                                minHeight="-Infinity" minWidth="-Infinity" prefHeight="331.0" prefWidth="240.0"
-                                text="تسويات المجرد والعلاوات" HBox.hgrow="ALWAYS"
-                                style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13;">
+                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="338.0" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="331.0" prefWidth="240.0" style="-fx-text-fill: #1E3A5F; -fx-font-weight: bold; -fx-font-size: 13;" text="تسويات المجرد والعلاوات" HBox.hgrow="ALWAYS">
                         <content>
                             <Accordion>
                                 <panes>
-                                    <TitledPane expanded="false" text="خصم علاوات"
-                                                style="-fx-text-fill: #DC2626; -fx-font-weight: bold;">
+                                    <TitledPane expanded="false" style="-fx-text-fill: #DC2626; -fx-font-weight: bold;" text="خصم علاوات">
                                         <content>
-                                            <TableView fx:id="table_bounsRival" editable="true"
-                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="186.0"
-                                                       prefWidth="184.0">
+                                            <TableView fx:id="table_bounsRival" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="186.0" prefWidth="184.0">
                                                 <columns>
-                                                    <TableColumn prefWidth="90" text="التاريخ"/>
-                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                    <TableColumn prefWidth="90" text="التاريخ" />
+                                                    <TableColumn prefWidth="70" text="القيمة" />
                                                 </columns>
                                             </TableView>
                                         </content>
                                     </TitledPane>
-                                    <TitledPane expanded="false" text="خصم مجرد"
-                                                style="-fx-text-fill: #DC2626; -fx-font-weight: bold;">
+                                    <TitledPane expanded="false" style="-fx-text-fill: #DC2626; -fx-font-weight: bold;" text="خصم مجرد">
                                         <content>
-                                            <TableView fx:id="table_mogardRival" editable="true"
-                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="199.0"
-                                                       prefWidth="205.0">
+                                            <TableView fx:id="table_mogardRival" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="199.0" prefWidth="205.0">
                                                 <columns>
-                                                    <TableColumn prefWidth="90" text="التاريخ"/>
-                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                    <TableColumn prefWidth="90" text="التاريخ" />
+                                                    <TableColumn prefWidth="70" text="القيمة" />
                                                 </columns>
                                             </TableView>
                                         </content>
                                     </TitledPane>
-                                    <TitledPane expanded="false" text="إضافة علاوات"
-                                                style="-fx-text-fill: #059669; -fx-font-weight: bold;">
+                                    <TitledPane expanded="false" style="-fx-text-fill: #059669; -fx-font-weight: bold;" text="إضافة علاوات">
                                         <content>
-                                            <TableView fx:id="table_bounsAdd" editable="true"
-                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="189.0"
-                                                       prefWidth="205.0">
+                                            <TableView fx:id="table_bounsAdd" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="189.0" prefWidth="205.0">
                                                 <columns>
-                                                    <TableColumn prefWidth="90" text="التاريخ"/>
-                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                    <TableColumn prefWidth="90" text="التاريخ" />
+                                                    <TableColumn prefWidth="70" text="القيمة" />
                                                 </columns>
                                             </TableView>
                                         </content>
                                     </TitledPane>
-                                    <TitledPane expanded="false" text="إضافة مجرد"
-                                                style="-fx-text-fill: #059669; -fx-font-weight: bold;">
+                                    <TitledPane expanded="false" style="-fx-text-fill: #059669; -fx-font-weight: bold;" text="إضافة مجرد">
                                         <content>
-                                            <TableView fx:id="table_mogardAdd" editable="true"
-                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="205.0"
-                                                       prefWidth="205.0">
+                                            <TableView fx:id="table_mogardAdd" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="205.0" prefWidth="205.0">
                                                 <columns>
-                                                    <TableColumn prefWidth="90" text="التاريخ"/>
-                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                    <TableColumn prefWidth="90" text="التاريخ" />
+                                                    <TableColumn prefWidth="70" text="القيمة" />
                                                 </columns>
                                             </TableView>
                                         </content>
@@ -373,10 +316,10 @@
                             </Accordion>
                         </content>
                     </TitledPane>
-                    <Region maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+                    <Region maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
                 </children>
                 <padding>
-                    <Insets left="5.0" right="5.0"/>
+                    <Insets left="5.0" right="5.0" />
                 </padding>
             </HBox>
 
@@ -384,15 +327,11 @@
             <!-- ══════════════════════════════════════════════════════
                  5. نتائج البحث
             ══════════════════════════════════════════════════════ -->
-            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-                  prefHeight="349.0" prefWidth="1394.0"
-                  style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                <Label alignment="CENTER" maxWidth="Infinity"
-                       style="-fx-background-color: #374151; -fx-text-fill: white;                               -fx-font-weight: bold; -fx-font-size: 13;                               -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
-                       text="تدرج الراتب"/>
-                <TableView fx:id="table_result" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="300">
+            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="589.0" prefWidth="1128.0" style="-fx-background-color: white; -fx-border-color: #DDE1E7;                          -fx-border-radius: 6; -fx-background-radius: 6;                          -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #374151; -fx-text-fill: white;                               -fx-font-weight: bold; -fx-font-size: 13;                               -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="تدرج الراتب" />
+                <TableView fx:id="table_result" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="536.0" prefWidth="1392.0">
                     <padding>
-                        <Insets bottom="6" left="6" right="6" top="4"/>
+                        <Insets bottom="6" left="6" right="6" top="4" />
                     </padding>
                 </TableView>
             </VBox>

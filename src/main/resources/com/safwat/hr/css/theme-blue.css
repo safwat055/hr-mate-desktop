@@ -91,7 +91,7 @@
 }
 .scroll-pane .scroll-bar .thumb {
     -fx-background-color: #1E3A5F;
-    -fx-background-radius: -radius-full;
+    -fx-background-radius: 20px;
 }
 .scroll-pane .scroll-bar .thumb:hover {
     -fx-background-color: #38BDF8;
@@ -101,8 +101,8 @@
 .card {
     -fx-background-color: -bg-card;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-lg;
-    -fx-background-radius: -radius-lg;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
     -fx-effect: -shadow-card;
 }
 .card:hover {
@@ -119,7 +119,7 @@
     -fx-text-fill: -text-on-header;
     -fx-font-weight: -font-weight-bold;
     -fx-font-size: -font-size-base;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
     -fx-padding: 8;
     -fx-alignment: center;
 }
@@ -128,7 +128,7 @@
     -fx-text-fill: -text-on-header;
     -fx-font-weight: -font-weight-bold;
     -fx-font-size: -font-size-base;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
     -fx-padding: 8;
     -fx-alignment: center;
 }
@@ -137,7 +137,7 @@
     -fx-text-fill: -text-on-header;
     -fx-font-weight: -font-weight-bold;
     -fx-font-size: -font-size-base;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
     -fx-padding: 8;
     -fx-alignment: center;
 }
@@ -146,7 +146,7 @@
     -fx-text-fill: -text-on-header;
     -fx-font-weight: -font-weight-bold;
     -fx-font-size: -font-size-base;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
     -fx-padding: 8;
     -fx-alignment: center;
 }
@@ -177,9 +177,9 @@
     -fx-font-family: -font-family;
     -fx-font-size: -font-size-base;
     -fx-background-color: -bg-input;
-    -fx-background-radius: -radius-md;
+    -fx-background-radius: 5px;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-md;
+    -fx-border-radius: 5px;
     -fx-padding: 7 14 7 14;
     -fx-prompt-text-fill: -text-placeholder;
     -fx-text-fill: -text-primary;
@@ -199,9 +199,9 @@
     -fx-font-family: -font-family;
     -fx-font-size: -font-size-base;
     -fx-background-color: -bg-input;
-    -fx-background-radius: -radius-full;
+    -fx-background-radius: 20px;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-full;
+    -fx-border-radius: 20px;
     -fx-padding: 9 14 9 14;
     -fx-prompt-text-fill: -text-placeholder;
     -fx-text-fill: -text-primary;
@@ -227,7 +227,7 @@
     -fx-font-family: -font-family;
     -fx-font-size: -font-size-base;
     -fx-cursor: hand;
-    -fx-background-radius: -radius-md;
+    -fx-background-radius: 5px;
     -fx-padding: 8 16 8 16;
     -fx-text-fill: -text-on-primary;
     -fx-font-weight: -font-weight-bold;
@@ -302,7 +302,7 @@
     -fx-text-fill: -text-secondary;
 }
 .btn-round {
-    -fx-background-radius: -radius-full;
+    -fx-background-radius: 20px;
     -fx-padding: 9 20 9 20;
 }
 .btn-sm {
@@ -316,7 +316,7 @@
     -fx-font-size: -font-size-base;
     -fx-background-color: -bg-card;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-lg;
+    -fx-border-radius: 6px;
     -fx-padding: 0;
 }
 .table-view .column-header {
@@ -355,7 +355,7 @@
 }
 .table-view .scroll-bar .thumb {
     -fx-background-color: #1E3A5F;
-    -fx-background-radius: -radius-full;
+    -fx-background-radius: 20px;
 }
 
 /* ── Separator ──────────────────────────────────────────────────── */
@@ -379,7 +379,7 @@
 }
 .tab-pane .tab-header-area .tab {
     -fx-background-color: transparent;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
     -fx-padding: 8 16 8 16;
     -fx-font-size: -font-size-base;
     -fx-font-weight: -font-weight-bold;
@@ -410,7 +410,7 @@
     -fx-font-weight: -font-weight-bold;
     -fx-font-size: -font-size-base;
     -fx-padding: 8 12 8 12;
-    -fx-background-radius: -radius-lg -radius-lg 0 0;
+    -fx-background-radius: 6px -radius-lg 0 0;
 }
 .titled-pane > .title > .arrow-button .arrow {
     -fx-background-color: -text-on-header;
@@ -456,7 +456,7 @@
     -fx-font-family: -font-family;
     -fx-font-size: -font-size-base;
     -fx-background-color: -bg-input;
-    -fx-background-radius: -radius-md;
+    -fx-background-radius: 5px;
     -fx-border-color: -border;
     -fx-padding: 2;
 }
@@ -473,7 +473,7 @@
     -fx-background-color: -bg-card;
     -fx-effect: -shadow-dropdown;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-md;
+    -fx-border-radius: 5px;
 }
 .combo-box-popup .list-view .list-cell:hover {
     -fx-background-color: -bg-hover;
@@ -500,7 +500,7 @@
 .check-box .box {
     -fx-background-color: -bg-card;
     -fx-border-color: -border;
-    -fx-border-radius: -radius-sm;
+    -fx-border-radius: 4px;
 }
 .check-box:selected .box .mark {
     -fx-background-color: -primary;
@@ -562,7 +562,7 @@
 }
 .message-input {
     -fx-background-color: -bg-input;
-    -fx-background-radius: -radius-full;
+    -fx-background-radius: 20px;
     -fx-border-color: -border;
     -fx-padding: 9 14 9 14;
     -fx-font-size: -font-size-md;

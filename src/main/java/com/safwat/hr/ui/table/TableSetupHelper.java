@@ -165,25 +165,26 @@ public class TableSetupHelper {
         table.getSelectionModel().setCellSelectionEnabled(true);
 
         for (ColumnConfig<T> cfg : columns) {
-            TableColumn<T, String> col = new TableColumn<>(cfg.getTitle());
-            col.setPrefWidth(cfg.getWidth());
-            col.setEditable(cfg.isEditable());
+            TableColumn<T, String> col = new TableColumn<>(cfg.title());
+            col.setPrefWidth(cfg.width());
+            col.setEditable(cfg.editable());
             col.setSortable(false);
             col.setResizable(true);
 
             // ── عرض القيمة ──
             col.setCellValueFactory(cellData ->
                     new javafx.beans.property.SimpleStringProperty(
-                            cfg.getGetter().apply(cellData.getValue())));
+                            cfg.getter().apply(cellData.getValue())));
 
             // ── CellFactory ──
-            if (cfg.isEditable()) {
+            if (cfg.editable()) {
                 if (cfg.isDateColumn()) {
                     // عمود تاريخ → خلية ذكية
-                    col.setCellFactory(c -> createDateCell(c, cfg.getGetter(), cfg.getSetter()));
+                    col.setCellFactory(c -> createDateCell(c, cfg.getter(), cfg.setter()));
                 } else {
                     // عمود عادي → TextField عادي
                     col.setCellFactory(TextFieldTableCell.forTableColumn());
+
                 }
 
                 // ── بعد التحرير (commit) ──
@@ -192,7 +193,7 @@ public class TableSetupHelper {
                     String newVal = event.getNewValue();
 
                     // حط القيمة في الـ object
-                    cfg.getSetter().accept(row, newVal);
+                    cfg.setter().accept(row, newVal);
 
                     int rowIdx = table.getItems().indexOf(row);
                     int lastIdx = table.getItems().size() - 1;
@@ -255,15 +256,11 @@ public class TableSetupHelper {
 
     /**
      * إعدادات عمود واحد في الجدول العام.
+     *
+     * @param isDateColumn هل العمود ده تاريخ؟
      */
-    public static class ColumnConfig<T> {
-        private final String title;
-        private final double width;
-        private final Function<T, String> getter;
-        private final BiConsumer<T, String> setter;
-        private final boolean editable;
-        private final boolean isDateColumn; // هل العمود ده تاريخ؟
-
+    public record ColumnConfig<T>(String title, double width, Function<T, String> getter, BiConsumer<T, String> setter,
+                                  boolean editable, boolean isDateColumn) {
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter) {
@@ -277,41 +274,5 @@ public class TableSetupHelper {
             this(title, width, getter, setter, editable, false);
         }
 
-        public ColumnConfig(String title, double width,
-                            Function<T, String> getter,
-                            BiConsumer<T, String> setter,
-                            boolean editable,
-                            boolean isDateColumn) {
-            this.title = title;
-            this.width = width;
-            this.getter = getter;
-            this.setter = setter;
-            this.editable = editable;
-            this.isDateColumn = isDateColumn;
-        }
-
-        public String getTitle() {
-            return title;
-        }
-
-        public double getWidth() {
-            return width;
-        }
-
-        public Function<T, String> getGetter() {
-            return getter;
-        }
-
-        public BiConsumer<T, String> getSetter() {
-            return setter;
-        }
-
-        public boolean isEditable() {
-            return editable;
-        }
-
-        public boolean isDateColumn() {
-            return isDateColumn;
-        }
     }
 }
