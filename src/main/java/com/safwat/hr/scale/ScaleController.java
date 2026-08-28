@@ -378,7 +378,11 @@ public class ScaleController implements Initializable {
                 r -> r.getExtraIncentive() != null ? r.getExtraIncentive().toString() : "",
                 (r, v) -> r.setExtraIncentive(parseBigDecimal(v)),
                 false, false));
-
+        //socialPackage
+        cols.add(new ColumnConfig<>("المستحقات الاجتماعية", 90,
+                r -> r.getSocialPackage() != null ? r.getSocialPackage().toString() : "",
+                (r, v) -> r.setSocialPackage(parseBigDecimal(v)),
+                false, false));
         setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
 
     }
@@ -438,59 +442,72 @@ public class ScaleController implements Initializable {
         fillUpgradeTable(dto.getUpgrades());
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
-        fillResultTable(dto);
+        fillResultTable(dto.getResult().getTimeline());
         fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
         fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
         fillAdjustmentTable(table_bounsAdd, dto.getBonusAdditions());
         fillAdjustmentTable(table_bounsRival, dto.getBonusRemovals());
     }
 
-    void fillResultTable(ScaleDto dto) {
-        if (dto.getResult() != null) {
-            fillResultTable(dto.getResult().getTimeline());
-        } else {
-            table_result.getItems().clear();
-        }
-    }
 
     void fillUpgradeTable(List<UpgradeRecord> upgrades) {
         table_upgrade.getItems().clear();
-        if (upgrades != null) {
+        if (upgrades != null && !upgrades.isEmpty()) {
             table_upgrade.getItems().addAll(upgrades);
+        } else {
+            // لو null أو فاضي → ضيف صفين فاضيين
+            table_upgrade.getItems().addAll(new UpgradeRecord(), new UpgradeRecord());
         }
     }
 
     void fillEncouragementTable(List<EncouragementRecord> encouragements) {
         table_encourge.getItems().clear();
-        if (encouragements != null) {
+        if (encouragements != null && !encouragements.isEmpty()) {
             table_encourge.getItems().addAll(encouragements);
+        } else {
+            // لو null أو فاضي → ضيف صفين فاضيين
+            table_encourge.getItems().addAll(new EncouragementRecord(), new EncouragementRecord());
         }
     }
 
     void fillPromotionTable(List<PromotionIncentiveRecord> promotions) {
         table_promotion.getItems().clear();
-        if (promotions != null) {
+        if (promotions != null && !promotions.isEmpty()) {
             table_promotion.getItems().addAll(promotions);
+        } else {
+            // لو null أو فاضي → ضيف صفين فاضيين
+            table_promotion.getItems().addAll(new PromotionIncentiveRecord(), new PromotionIncentiveRecord());
         }
     }
 
     void fillResultTable(List<ScaleTimelinePoint> result) {
         table_result.getItems().clear();
-        if (result != null) {
-            table_result.getItems().addAll(result);
+        if (result != null && !result.isEmpty()) {
+            List<ScaleTimelinePoint> resultCopy = new ArrayList<>();
+            // filter all points currentBasic > 0
+            for (ScaleTimelinePoint point : result) {
+                if (point.getCurrentBasic() != null && point.getCurrentBasic().compareTo(BigDecimal.ZERO) > 0) {
+                    resultCopy.add(point);
+                }
+            }
+            table_result.getItems().addAll(resultCopy);
+        } else {
+            // لو null أو فاضي → ضيف صفين فاضيين
+            table_result.getItems().addAll(new ScaleTimelinePoint(), new ScaleTimelinePoint());
         }
     }
 
     void fillAdjustmentTable(TableView<AdjustmentRecord> table, List<AdjustmentRecord> adjustments) {
         table.getItems().clear();
-        if (adjustments != null) {
+
+        if (adjustments != null && !adjustments.isEmpty()) {
             table.getItems().addAll(adjustments);
+        } else {
+            // لو null أو فاضي → ضيف صفين فاضيين
+            table.getItems().addAll(new AdjustmentRecord(), new AdjustmentRecord());
         }
     }
-    // ─────────────────────────────────────────────
-    //  Fill Result — ملء حقول النتيجة فقط
-    // ─────────────────────────────────────────────
-
+   
 
     /**
      * يجمع كل بيانات الشاشة في ScaleDto جاهز للإرسال.

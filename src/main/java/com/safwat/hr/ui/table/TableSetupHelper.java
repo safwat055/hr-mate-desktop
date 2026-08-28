@@ -1,11 +1,13 @@
 package com.safwat.hr.ui.table;
 
-
 import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.util.StringConverter;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,15 +19,6 @@ import java.util.function.Supplier;
 
 /**
  * مساعد عام لإعداد الجداول القابلة للتحرير في JavaFX.
- *
- * <p>المميزات:</p>
- * <ul>
- *   <li>أي عدد أعمدة عبر {@link ColumnConfig}</li>
- *   <li>صفوف افتراضية (default rows)</li>
- *   <li>Enter في آخر صف → يضيف صف جديد + يبدأ تحريره</li>
- *   <li>دعم إدخال التاريخ بصيغ مختلفة → يتحول تلقائياً لـ yyyy-MM-dd</li>
- *   <li>تلوين الصفوف بالتناوب</li>
- * </ul>
  */
 public class TableSetupHelper {
 
@@ -37,8 +30,6 @@ public class TableSetupHelper {
             DateTimeFormatter.ofPattern("dd-MM-yyyy"),
             DateTimeFormatter.ofPattern("dd/MM/yyyy"),
             DateTimeFormatter.ofPattern("d/M/yyyy"),
-
-
             DateTimeFormatter.ofPattern("d-M-yyyy"),
             DateTimeFormatter.ofPattern("yyyy/MM/dd"),
     };
@@ -47,14 +38,9 @@ public class TableSetupHelper {
             DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     // ═══════════════════════════════════════════════════════════════
-    //  ColumnConfig
+    //  parseDate
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * يحاول تحليل نص التاريخ بكل الصيغ المدعومة.
-     *
-     * @return LocalDate أو null لو فشل
-     */
     public static LocalDate parseDateInput(String text) {
         if (text == null || text.isBlank()) return null;
         text = text.trim();
@@ -62,33 +48,24 @@ public class TableSetupHelper {
             try {
                 return LocalDate.parse(text, fmt);
             } catch (DateTimeParseException ignored) {
-                // جرب الصيغة اللي بعدها
             }
         }
         return null;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    //  parseDate — يقبل صيغ متعددة
-    // ═══════════════════════════════════════════════════════════════
-
-    /**
-     * يحوّل LocalDate لنص بالصيغة الموحدة yyyy-MM-dd.
-     */
     public static String formatDateOutput(LocalDate date) {
         return date != null ? date.format(OUTPUT_DATE_FORMAT) : "";
     }
 
-    /**
-     * CellFactory مخصوص للتواريخ:
-     * • يقبل أي صيغة مدخلة
-     * • بعد التحرير يحوّلها لـ yyyy-MM-dd
-     * • لو التاريخ غلط → يرجع للقيمة القديمة + alert
-     */
+    // ═══════════════════════════════════════════════════════════════
+    //  محاذاة الأعمدة
+    // ═══════════════════════════════════════════════════════════════
+
     private static <T> TableCell<T, String> createDateCell(
             TableColumn<T, String> column,
             Function<T, String> getter,
-            BiConsumer<T, String> setter) {
+            BiConsumer<T, String> setter,
+            ColumnAlign align) {
 
         return new TextFieldTableCell<>(new StringConverter<>() {
             @Override
@@ -101,20 +78,24 @@ public class TableSetupHelper {
                 return string;
             }
         }) {
+            {
+                // بادينج 5px لكل الجهات
+                setPadding(new Insets(5));
+                setAlignment(align.getPos());
+            }
+
             @Override
             public void commitEdit(String newValue) {
                 if (isEditing()) {
                     if (newValue == null || newValue.isBlank()) {
                         super.commitEdit("");
                         return;
-
                     }
                     LocalDate parsed = parseDateInput(newValue);
                     if (parsed != null) {
                         String formatted = formatDateOutput(parsed);
                         super.commitEdit(formatted);
                     } else {
-                        // الغي التحرير وارجع للقيمة القديمة
                         cancelEdit();
                         Platform.runLater(() -> {
                             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -131,7 +112,6 @@ public class TableSetupHelper {
             @Override
             public void startEdit() {
                 super.startEdit();
-                // لما نبدأ التحرير، نخلي النص محدد بالكامل عشان يسهل الكتابة
                 if (getGraphic() instanceof TextField tf) {
                     Platform.runLater(() -> {
                         tf.selectAll();
@@ -146,14 +126,29 @@ public class TableSetupHelper {
     //  DateCellFactory — خلية تاريخ ذكية
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * إعداد جدول عام قابل للتحرير.
-     *
-     * @param table       الـ TableView
-     * @param columns     إعدادات الأعمدة
-     * @param defaultRows عدد الصفوف الافتراضية الفارغة
-     * @param rowFactory  Supplier ينشئ صف جديد فارغ
-     */
+    private static <T> TableCell<T, String> createAlignedCell(ColumnAlign align) {
+        return new TableCell<>() {
+            {
+                setPadding(new Insets(5));
+                setAlignment(align.getPos());
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item);
+                }
+            }
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  CellFactory عام — لأي عمود عادي
+    // ═══════════════════════════════════════════════════════════════
+
     public static <T> void setupGenericTable(TableView<T> table,
                                              List<ColumnConfig<T>> columns,
                                              int defaultRows,
@@ -179,26 +174,36 @@ public class TableSetupHelper {
             // ── CellFactory ──
             if (cfg.editable()) {
                 if (cfg.isDateColumn()) {
-                    // عمود تاريخ → خلية ذكية
-                    col.setCellFactory(c -> createDateCell(c, cfg.getter(), cfg.setter()));
+                    col.setCellFactory(c -> createDateCell(c, cfg.getter(), cfg.setter(), cfg.alignment()));
                 } else {
-                    // عمود عادي → TextField عادي
-                    col.setCellFactory(TextFieldTableCell.forTableColumn());
+                    // عمود عادي قابل للتحرير مع محاذاة + بادينج
+                    col.setCellFactory(c -> new TextFieldTableCell<>(new StringConverter<>() {
+                        @Override
+                        public String toString(String object) {
+                            return object != null ? object : "";
+                        }
 
+                        @Override
+                        public String fromString(String string) {
+                            return string;
+                        }
+                    }) {
+                        {
+                            setPadding(new Insets(5));
+                            setAlignment(cfg.alignment().getPos());
+                        }
+                    });
                 }
 
                 // ── بعد التحرير (commit) ──
                 col.setOnEditCommit(event -> {
                     T row = event.getRowValue();
                     String newVal = event.getNewValue();
-
-                    // حط القيمة في الـ object
                     cfg.setter().accept(row, newVal);
 
                     int rowIdx = table.getItems().indexOf(row);
                     int lastIdx = table.getItems().size() - 1;
 
-                    // ── لو في آخر صف → ضيف صف جديد ──
                     if (rowIdx == lastIdx) {
                         T fresh = rowFactory.get();
                         table.getItems().add(fresh);
@@ -206,7 +211,6 @@ public class TableSetupHelper {
                         Platform.runLater(() -> {
                             table.getSelectionModel().select(fresh);
                             table.scrollTo(fresh);
-                            // ابدأ تحرير أول عمود editable
                             for (TableColumn<T, ?> c : table.getColumns()) {
                                 if (c.isEditable()) {
                                     table.edit(table.getItems().size() - 1, c);
@@ -216,6 +220,9 @@ public class TableSetupHelper {
                         });
                     }
                 });
+            } else {
+                // عمود غير قابل للتحرير — بس نطبق المحاذاة والبادينج
+                col.setCellFactory(c -> createAlignedCell(cfg.alignment()));
             }
 
             table.getColumns().add(col);
@@ -241,11 +248,10 @@ public class TableSetupHelper {
             }
         });
 
-        // ── Enter يحرك للخلية اللي تحتها (Tab behavior) ──
+        // ── Enter يحرك للخلية اللي تحتها ──
         table.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
-                // سيب الـ default behavior يشتغل (commit + move)
-                // لو المستخدم عايز Enter يضيف صف → ده بيحصل في OnEditCommit فوق
+                // default behavior
             }
         });
     }
@@ -254,25 +260,55 @@ public class TableSetupHelper {
     //  setupGenericTable — الميثود العامة
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * إعدادات عمود واحد في الجدول العام.
-     *
-     * @param isDateColumn هل العمود ده تاريخ؟
-     */
-    public record ColumnConfig<T>(String title, double width, Function<T, String> getter, BiConsumer<T, String> setter,
-                                  boolean editable, boolean isDateColumn) {
+    @Getter
+    public enum ColumnAlign {
+        LEFT(Pos.CENTER_LEFT),
+        CENTER(Pos.CENTER),
+        RIGHT(Pos.CENTER_RIGHT);
+
+        private final Pos pos;
+
+        ColumnAlign(Pos pos) {
+            this.pos = pos;
+        }
+
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ColumnConfig
+    // ═══════════════════════════════════════════════════════════════
+
+    public record ColumnConfig<T>(
+            String title,
+            double width,
+            Function<T, String> getter,
+            BiConsumer<T, String> setter,
+            boolean editable,
+            boolean isDateColumn,
+            ColumnAlign alignment) {
+
+        // constructor بـ 4 params → editable=true, date=false, align=CENTER
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter) {
-            this(title, width, getter, setter, true, false);
+            this(title, width, getter, setter, true, false, ColumnAlign.CENTER);
         }
 
+        // constructor بـ 5 params → align=CENTER
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter,
                             boolean editable) {
-            this(title, width, getter, setter, editable, false);
+            this(title, width, getter, setter, editable, false, ColumnAlign.CENTER);
         }
 
+        // constructor بـ 6 params → align=CENTER
+        public ColumnConfig(String title, double width,
+                            Function<T, String> getter,
+                            BiConsumer<T, String> setter,
+                            boolean editable,
+                            boolean isDateColumn) {
+            this(title, width, getter, setter, editable, isDateColumn, ColumnAlign.CENTER);
+        }
     }
 }
