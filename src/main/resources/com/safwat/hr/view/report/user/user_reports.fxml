@@ -2,12 +2,12 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-padding: 15;"
+<VBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="pad-15"
       xmlns="http://javafx.com/javafx/26" fx:controller="com.safwat.hr.report.controller.UserReportsController">
 
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label style="-fx-font-size: 18; -fx-font-weight: bold;" text="تقاريري"/>
+        <Label styleClass="bold fs-18" text="تقاريري"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnRefresh" onAction="#loadReports" text="🔄 تحديث"/>
         <Button fx:id="btnNewReport" onAction="#openNewReport" text="➕ تقرير جديد"/>
@@ -27,5 +27,5 @@
     </TableView>
 
     <!-- Status Bar -->
-    <Label fx:id="lblStatus" style="-fx-text-fill: #666;" text="جاري التحميل..."/>
+    <Label fx:id="lblStatus" styleClass="text-muted" text="جاري التحميل..."/>
 </VBox>

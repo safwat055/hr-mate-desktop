@@ -19,10 +19,10 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.table.TableController">
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.table.TableController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="app-bg">
             <padding>
                 <Insets bottom="16" left="16" right="16" top="16" />
             </padding>
@@ -30,16 +30,16 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD: أدوات الجدول (Toolbar)
                  ════════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
                 <padding>
                     <Insets bottom="8" left="12" right="12" top="8" />
                 </padding>
-                <Button fx:id="btn_Refrech" onAction="#refreshTable" prefHeight="32" prefWidth="36" style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="↻" />
-                <Button fx:id="btn_Excel" onAction="#exportToExcel" prefHeight="32" prefWidth="36" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="📊" />
-                <Button fx:id="btn_Pdf" onAction="#exportToPDF" prefHeight="32" prefWidth="36" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="📄" />
-                <Button fx:id="btn_clear" onAction="#clearTableView" prefHeight="32" prefWidth="70" style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="مسح" />
-                <Button fx:id="btn_insertRows" onAction="#add20Rows" prefHeight="32" prefWidth="90" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="+ 20 صف" />
-                <Button fx:id="btn_delete" onAction="#deleteEmptyRows" prefHeight="32" prefWidth="80" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف فارغ" />
+                <Button fx:id="btn_Refrech" onAction="#refreshTable" prefHeight="32" prefWidth="36" styleClass="btn btn-purple" text="↻" />
+                <Button fx:id="btn_Excel" onAction="#exportToExcel" prefHeight="32" prefWidth="36" styleClass="btn btn-success" text="📊" />
+                <Button fx:id="btn_Pdf" onAction="#exportToPDF" prefHeight="32" prefWidth="36" styleClass="btn btn-danger" text="📄" />
+                <Button fx:id="btn_clear" onAction="#clearTableView" prefHeight="32" prefWidth="70" styleClass="btn btn-secondary" text="مسح" />
+                <Button fx:id="btn_insertRows" onAction="#add20Rows" prefHeight="32" prefWidth="90" styleClass="btn btn-primary bold" text="+ 20 صف" />
+                <Button fx:id="btn_delete" onAction="#deleteEmptyRows" prefHeight="32" prefWidth="80" styleClass="btn btn-danger" text="حذف فارغ" />
 
                 <Separator orientation="VERTICAL" />
 
@@ -59,7 +59,7 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD: إعدادات البيانات
                  ════════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
                 <padding>
                     <Insets bottom="10" left="12" right="12" top="10" />
                 </padding>
@@ -68,11 +68,11 @@
                 <VBox spacing="8">
                     <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
                         <ComboBox fx:id="Combo_payrollGroup" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="240" />
-                        <Label prefHeight="28" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="مجموعة التعيين" />
+                        <Label prefHeight="28" styleClass="text-dark bold" text="مجموعة التعيين" />
                     </HBox>
                     <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
                         <ComboBox fx:id="Combo_elements_1" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="240" />
-                        <Label prefHeight="28" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="مجموعة العناصر" />
+                        <Label prefHeight="28" styleClass="text-dark bold" text="مجموعة العناصر" />
                     </HBox>
                 </VBox>
 
@@ -94,8 +94,8 @@
                 <VBox spacing="8">
                     <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
                         <ComboBox fx:id="combo_static" prefHeight="32" prefWidth="220" promptText="اختر من الصرفيات الثابتة" visibleRowCount="15" />
-                        <Button fx:id="btn_savestatic" onAction="#savePayrollTable" prefHeight="32" prefWidth="70" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حفظ" />
-                        <Button fx:id="btn_clearstatic" onAction="#deleteFromPayrollTable" prefHeight="32" prefWidth="42" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="🗑" />
+                        <Button fx:id="btn_savestatic" onAction="#savePayrollTable" prefHeight="32" prefWidth="70" styleClass="btn btn-success bold" text="حفظ" />
+                        <Button fx:id="btn_clearstatic" onAction="#deleteFromPayrollTable" prefHeight="32" prefWidth="42" styleClass="btn btn-danger" text="🗑" />
                     </HBox>
                     <CheckBox fx:id="useVoices" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="24" text="الاجابة الصوتية" />
                 </VBox>
@@ -106,8 +106,8 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD: جدول البيانات
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
-                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="بيانات البيرول" />
+            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="بيانات البيرول" />
                 <TableView fx:id="tableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="600" VBox.vgrow="ALWAYS">
                     <padding>
                         <Insets bottom="8" left="8" right="8" top="8" />

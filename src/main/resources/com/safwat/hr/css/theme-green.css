@@ -1,46 +1,46 @@
 /* ══════════════════════════════════════════════════════════════════
-   theme-dark.css — الثيم الداكن (Dark Mode)
+   theme-green.css — ثيم أخضر (Emerald)
 ══════════════════════════════════════════════════════════════════ */
 
 @import "common.css";
 @import "chat/chat-styles.css";
 
 .root {
-    -app-bg: #1A1D23;
+    -app-bg: #EFF7F3;
 
-    -card-bg: #242830;
-    -card-border: #343A46;
-    -card-shadow: rgba(0, 0, 0, 0.45);
+    -card-bg: white;
+    -card-border: #CFE6D9;
+    -card-shadow: rgba(6, 95, 70, 0.08);
 
-    -text-primary: #E5E7EB;
-    -text-secondary: #9CA3AF;
-    -text-muted: #7C838F;
+    -text-primary: #1F3B33;
+    -text-secondary: #4F6E63;
+    -text-muted: #6E8A7F;
     -on-brand: white;
 
-    -brand-navy: #2E5A8F;
-    -header-alt-bg: #3A4150;
+    -brand-navy: #0E4D3C;
+    -header-alt-bg: #2F5F4E;
 
-    -color-primary: #3B82F6;
-    -color-danger: #EF4444;
-    -color-success: #10B981;
-    -color-purple: #8B5CF6;
-    -color-secondary-btn: #6B7280;
+    -color-primary: #1D7A5F;
+    -color-danger: #C24A3D;
+    -color-success: #0F9D66;
+    -color-purple: #6A5FA6;
+    -color-secondary-btn: #5B7D6E;
 
-    -border-color: #343A46;
-    -border-gray: #4B5563;
-    -divider-color: #343A46;
+    -border-color: #CFE6D9;
+    -border-gray: #9CC2AF;
+    -divider-color: #DCEEE4;
 
-    -soft-box-bg: #1F232B;
-    -soft-box-border: #343A46;
+    -soft-box-bg: #E2F1E9;
+    -soft-box-border: #CFE6D9;
 
-    -control-bg: #2C313B;
-    -table-header-bg: #2E5A8F;
-    -row-alt-bg: #20242C;
-    -selection-bg: #3B82F6;
+    -control-bg: white;
+    -table-header-bg: #0E4D3C;
+    -row-alt-bg: #F3FAF6;
+    -selection-bg: #1D7A5F;
 
-    -color-warning: #F59E0B;
+    -color-warning: #B8862E;
 
-    -nav-gradient: linear-gradient(to bottom, #05060A, #14171D, #1C2027, #101318, #000000);
+    -nav-gradient: linear-gradient(to bottom, #04120D, #0C2A20, #123B2C, #081E17, #020A07);
 
     /* ── تحديد متغيرات Modena الأساسية نفسها ────────────────────
        ده اللي بيخلي أي عنصر تحكّم افتراضي (ComboBox arrow, Spinner,
@@ -65,23 +65,23 @@
 ══════════════════════════════════════════════════════════════════ */
 
 .context-menu {
-    -fx-background-color: #242830;
-    -fx-border-color: #343A46;
+    -fx-background-color: white;
+    -fx-border-color: #CFE6D9;
     -fx-background-radius: 4;
     -fx-border-radius: 4;
 }
 
 .menu-item {
-    -fx-background-color: #242830;
-    -fx-text-fill: #E5E7EB;
+    -fx-background-color: white;
+    -fx-text-fill: #1F3B33;
 }
 
 .menu-item .label {
-    -fx-text-fill: #E5E7EB;
+    -fx-text-fill: #1F3B33;
 }
 
 .menu-item:focused {
-    -fx-background-color: #3B82F6;
+    -fx-background-color: #1D7A5F;
     -fx-text-fill: white;
 }
 
@@ -90,27 +90,27 @@
 }
 
 .combo-box-popup .list-view {
-    -fx-background-color: #242830;
-    -fx-border-color: #343A46;
+    -fx-background-color: white;
+    -fx-border-color: #CFE6D9;
 }
 
 .combo-box-popup .list-cell {
-    -fx-background-color: #242830;
-    -fx-text-fill: #E5E7EB;
+    -fx-background-color: white;
+    -fx-text-fill: #1F3B33;
 }
 
 .combo-box-popup .list-cell:filled:selected,
 .combo-box-popup .list-cell:filled:selected:hover {
-    -fx-background-color: #3B82F6;
+    -fx-background-color: #1D7A5F;
     -fx-text-fill: white;
 }
 
 .combo-box-popup .list-cell:filled:hover {
-    -fx-background-color: derive(#3B82F6, 70%);
+    -fx-background-color: derive(#1D7A5F, 70%);
 }
 
 .tooltip {
-    -fx-background-color: #E5E7EB;
+    -fx-background-color: #1F3B33;
     -fx-text-fill: white;
     -fx-background-radius: 3;
     -fx-padding: 5 8 5 8;

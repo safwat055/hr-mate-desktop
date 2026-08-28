@@ -1,0 +1,508 @@
+/* ══════════════════════════════════════════════════════════════════
+   common.css — الأنماط المشتركة لكل شاشات البرنامج
+   ────────────────────────────────────────────────────────────────
+   ملف واحد لكل التنسيقات الهيكلية (كروت، أزرار، عناوين، نصوص).
+   لا يحتوي على أي لون ثابت (hex) — كل الألوان بتيجي من متغيرات
+   بتتحدد في ملف الـ theme المُحمّل (theme-light.css / theme-dark.css ...).
+
+   الاستخدام: يتحمّل مع ملف theme واحد بس (شوف ملفات theme-*.css)
+══════════════════════════════════════════════════════════════════ */
+
+/* ── الخلفية العامة للصفحة/الشاشة ─────────────────────────────── */
+
+.app-bg {
+    -fx-background-color: -app-bg;
+}
+
+/* ── الكارت (الحاوية البيضاء بظل خفيف) ───────────────────────── */
+
+.card {
+    -fx-background-color: -card-bg;
+    -fx-border-color: -card-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(gaussian, -card-shadow, 4, 0, 0, 2);
+}
+
+/* ── رأس اللوحة (شريط ملوّن فوق الكارت بيه عنوان أبيض) ──────────
+   .panel-header  → اللون الافتراضي (كحلي / Brand)
+   modifiers تتضاف جنبها: success / danger / purple / alt / compact
+──────────────────────────────────────────────────────────────── */
+
+.panel-header {
+    -fx-background-color: -brand-navy;
+    -fx-text-fill: -on-brand;
+    -fx-font-weight: bold;
+    -fx-font-size: 13;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 8;
+}
+
+.panel-header.compact {
+    -fx-padding: 6;
+}
+
+.panel-header.success {
+    -fx-background-color: -color-success;
+}
+
+.panel-header.danger {
+    -fx-background-color: -color-danger;
+}
+
+.panel-header.purple {
+    -fx-background-color: -color-purple;
+}
+
+.panel-header.alt {
+    -fx-background-color: -header-alt-bg;
+}
+
+/* شريط ملوّن بدون تنسيق نص (حاوية فقط) */
+.panel-header-plain {
+    -fx-background-color: -brand-navy;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 8 12 8 12;
+}
+
+/* ── الأزرار ──────────────────────────────────────────────────
+   .button (الكلاس الأساسي اللي JavaFX بتحطه تلقائيًا على أي Button)
+   بقى ليه شكل افتراضي ملوّن بلون الثيم — فأي زرار حتى لو من غير
+   styleClass هيبان ملوّن ومش رمادي زي الشكل الافتراضي.
+
+   .btn + لون (btn-primary/secondary/success/danger/purple) بيبقى
+   فوقه بأولوية أعلى (specificity أكبر) لما تحدده صراحة.
+   .btn-outline بديل بحدود ملوّنة بدل التلوين الكامل.
+──────────────────────────────────────────────────────────────── */
+
+/* الشكل الافتراضي لأي Button في التطبيق (حتى بدون أي styleClass) */
+.button {
+    -fx-background-color: -color-primary;
+    -fx-text-fill: -on-brand;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: derive(-color-primary, -25%);
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: derive(-color-primary, -12%);
+    -fx-scale-x: 1.06;
+    -fx-scale-y: 1.06;
+    -fx-effect: dropshadow(gaussian, -card-shadow, 6, 0, 0, 1);
+}
+
+.button:armed, .button:pressed {
+    -fx-background-color: derive(-color-primary, -28%);
+    -fx-scale-x: 1.0;
+    -fx-scale-y: 1.0;
+}
+
+.button:disabled {
+    -fx-opacity: 0.55;
+    -fx-cursor: default;
+}
+
+/* الكلاس الصريح .btn (لما تحب تتحكم في اللون بنفسك) */
+.btn {
+    -fx-text-fill: -on-brand;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+    -fx-background-color: -color-secondary-btn;
+    -fx-border-color: derive(-color-secondary-btn, -25%);
+    -fx-border-width: 1;
+}
+
+.btn-primary   { -fx-background-color: -color-primary;       -fx-border-color: derive(-color-primary, -25%); }
+.btn-secondary { -fx-background-color: -color-secondary-btn; -fx-border-color: derive(-color-secondary-btn, -25%); }
+.btn-success   { -fx-background-color: -color-success;       -fx-border-color: derive(-color-success, -25%); }
+.btn-danger    { -fx-background-color: -color-danger;        -fx-border-color: derive(-color-danger, -25%); }
+.btn-purple    { -fx-background-color: -color-purple;        -fx-border-color: derive(-color-purple, -25%); }
+
+.btn:hover, .btn-primary:hover, .btn-secondary:hover,
+.btn-success:hover, .btn-danger:hover, .btn-purple:hover {
+    -fx-scale-x: 1.06;
+    -fx-scale-y: 1.06;
+    -fx-effect: dropshadow(gaussian, -card-shadow, 6, 0, 0, 1);
+}
+.btn:hover           { -fx-background-color: derive(-color-secondary-btn, -12%); }
+.btn-primary:hover   { -fx-background-color: derive(-color-primary, -12%); }
+.btn-secondary:hover { -fx-background-color: derive(-color-secondary-btn, -12%); }
+.btn-success:hover   { -fx-background-color: derive(-color-success, -12%); }
+.btn-danger:hover    { -fx-background-color: derive(-color-danger, -12%); }
+.btn-purple:hover     { -fx-background-color: derive(-color-purple, -12%); }
+
+.btn:armed, .btn-primary:armed, .btn-secondary:armed,
+.btn-success:armed, .btn-danger:armed, .btn-purple:armed {
+    -fx-scale-x: 1.0;
+    -fx-scale-y: 1.0;
+}
+
+/* الشكل التاني: زرار بحدود بس (Outline) بدل التعبئة الكاملة —
+   استخدمه زي: styleClass="btn-outline primary" أو "btn-outline danger" ... */
+.btn-outline {
+    -fx-background-color: transparent;
+    -fx-border-width: 1.5;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-cursor: hand;
+    -fx-border-color: -color-primary;
+    -fx-text-fill: -color-primary;
+}
+.btn-outline.primary   { -fx-border-color: -color-primary;       -fx-text-fill: -color-primary; }
+.btn-outline.secondary { -fx-border-color: -color-secondary-btn; -fx-text-fill: -color-secondary-btn; }
+.btn-outline.success   { -fx-border-color: -color-success;       -fx-text-fill: -color-success; }
+.btn-outline.danger    { -fx-border-color: -color-danger;        -fx-text-fill: -color-danger; }
+.btn-outline.purple    { -fx-border-color: -color-purple;        -fx-text-fill: -color-purple; }
+
+.btn-outline:hover {
+    -fx-background-color: derive(-color-primary, 88%);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+.btn-outline.secondary:hover { -fx-background-color: derive(-color-secondary-btn, 88%); }
+.btn-outline.success:hover   { -fx-background-color: derive(-color-success, 88%); }
+.btn-outline.danger:hover    { -fx-background-color: derive(-color-danger, 88%); }
+.btn-outline.purple:hover    { -fx-background-color: derive(-color-purple, 88%); }
+
+/* زرار أيقونة شفاف (بدون خلفية)
+   ملحوظة: الاسم .icon-btn مش .btn-icon عشان ميتعارضش مع كلاس
+   .btn-icon الخاص بشاشة الشات (له تنسيق مختلف داخل chat-styles.css) */
+.icon-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -on-brand;
+    -fx-font-size: 16;
+    -fx-cursor: hand;
+}
+
+.icon-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-radius: 50%;
+    -fx-scale-x: 1.15;
+    -fx-scale-y: 1.15;
+}
+
+/* زرار التنقل بالتدرج (Nav bar الرئيسية) */
+.nav-btn {
+    -fx-background-color: -nav-gradient;
+    -fx-text-fill: -on-brand;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: -color-primary;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.nav-btn:hover {
+    -fx-background-color: derive(-color-primary, -8%);
+    -fx-border-color: derive(-color-primary, 20%);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+    -fx-effect: dropshadow(gaussian, -color-primary, 8, 0.25, 0, 0);
+}
+
+.nav-btn:armed {
+    -fx-scale-x: 1.0;
+    -fx-scale-y: 1.0;
+}
+
+
+/* ── صناديق ثانوية (خلفية رمادية فاتحة داخل الكروت) ──────────── */
+
+.soft-box {
+    -fx-background-color: -soft-box-bg;
+    -fx-border-color: -soft-box-border;
+    -fx-border-radius: 4;
+}
+
+.outline-box {
+    -fx-border-color: -border-color;
+    -fx-border-radius: 4;
+    -fx-padding: 4 8 4 8;
+}
+
+/* ── فواصل / حدود خفيفة ──────────────────────────────────────── */
+
+.divider-border {
+    -fx-border-color: -divider-color;
+}
+
+.border-gray {
+    -fx-border-color: -border-gray;
+}
+
+/* ── Utilities: ألوان النصوص ──────────────────────────────────── */
+
+.text-dark      { -fx-text-fill: -text-primary; }
+.text-secondary { -fx-text-fill: -text-secondary; }
+.text-muted     { -fx-text-fill: -text-muted; }
+.text-navy      { -fx-text-fill: -brand-navy; }
+.text-danger    { -fx-text-fill: -color-danger; }
+.text-success   { -fx-text-fill: -color-success; }
+.text-white     { -fx-text-fill: -on-brand; }
+
+/* ── Utilities: خط ──────────────────────────────────────────── */
+
+.bold   { -fx-font-weight: bold; }
+.fs-12  { -fx-font-size: 12; }
+.fs-13  { -fx-font-size: 13; }
+.fs-14  { -fx-font-size: 14; }
+.fs-16  { -fx-font-size: 16; }
+.fs-18  { -fx-font-size: 18; }
+
+/* ── Utilities: مسافات ────────────────────────────────────────── */
+
+.pad-15 { -fx-padding: 15; }
+
+/* ── تنسيق عام لعناصر التحكّم الافتراضية (توحيد الشكل) ─────────
+   بيخلي أي TextField / TableView / Label ... تتماشى مع الثيم
+   المُحمّل بدل ما تفضل بألوان Modena الافتراضية.
+──────────────────────────────────────────────────────────────── */
+
+.root {
+    -fx-font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    -fx-text-fill: -text-primary;
+}
+
+.label {
+    -fx-text-fill: -text-primary;
+}
+
+.text-field, .text-area, .combo-box-base, .date-picker,
+.password-field, .spinner {
+    -fx-background-color: -control-bg;
+    -fx-text-fill: -text-primary;
+    -fx-border-color: -border-color;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.table-view, .list-view, .tree-view {
+    -fx-background-color: -card-bg;
+    -fx-border-color: -border-color;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -table-header-bg;
+}
+
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: -table-header-bg;
+    -fx-border-color: -border-color;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: -on-brand;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell {
+    -fx-background-color: -card-bg;
+    -fx-text-fill: -text-primary;
+    -fx-border-color: transparent transparent -divider-color transparent;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: -row-alt-bg;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: -selection-bg;
+    -fx-text-fill: -on-brand;
+}
+
+/* التايتيلد بين (الأقسام القابلة للفتح) — حواف دائرية + عنوان ملوّن
+   بدل الشكل الرمادي الحاد الافتراضي */
+.titled-pane > .title {
+    -fx-background-color: -brand-navy;
+    -fx-background-radius: 6 6 0 0;
+    -fx-text-fill: -on-brand;
+    -fx-font-weight: bold;
+    -fx-padding: 6 10 6 10;
+    -fx-cursor: hand;
+}
+
+.titled-pane:expanded > .title {
+    -fx-background-radius: 6 6 0 0;
+}
+
+/* لما يكون مقفول (مش متوسّع) خلي كل الحواف دائرية */
+.titled-pane:collapsed > .title {
+    -fx-background-radius: 6;
+}
+
+.titled-pane > .title > .text {
+    -fx-fill: -on-brand;
+}
+
+.titled-pane > .title .arrow-button .arrow {
+    -fx-background-color: -on-brand;
+}
+
+.titled-pane > .title:hover {
+    -fx-background-color: derive(-brand-navy, -10%);
+}
+
+.titled-pane > .content {
+    -fx-background-color: -card-bg;
+    -fx-border-color: -border-color;
+    -fx-background-radius: 0 0 6 6;
+    -fx-border-radius: 0 0 6 6;
+}
+
+.accordion > .titled-pane {
+    -fx-background-radius: 6;
+}
+
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.separator .line {
+    -fx-border-color: -divider-color;
+}
+
+/* ── MenuBar / Menu / ContextMenu ─────────────────────────────── */
+
+.menu-bar {
+    -fx-background-color: -soft-box-bg;
+    -fx-border-color: transparent transparent -border-color transparent;
+}
+
+.menu-bar .label {
+    -fx-text-fill: -text-primary;
+}
+
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:focused,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color: -color-primary;
+    -fx-background-radius: 3;
+}
+
+.menu-bar > .container > .menu-button:hover .label,
+.menu-bar > .container > .menu-button:focused .label,
+.menu-bar > .container > .menu-button:showing .label {
+    -fx-text-fill: -on-brand;
+}
+
+/* شكل القوائم المنسدلة / ComboBox / Tooltip اتنقل لكل ملف theme
+   لوحده بقيم صريحة (مش متغيرات) — راجع نهاية theme-*.css.
+   السبب: الـ popup ده نافذة منفصلة، وبعض إصدارات JavaFX مش
+   بتوصّل صح للمتغيرات هناك، فكتبناها صراحةً هناك لضمان النتيجة. */
+
+/* ── ScrollBar ────────────────────────────────────────────────── */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: -soft-box-bg;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: -border-gray;
+    -fx-background-radius: 1em;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: -color-secondary-btn;
+}
+
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+}
+
+/* ── TabPane ──────────────────────────────────────────────────── */
+
+.tab-pane {
+    -fx-background-color: -app-bg;
+}
+
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: -soft-box-bg;
+}
+
+.tab-pane .tab {
+    -fx-background-color: -soft-box-bg;
+    -fx-border-color: -border-color;
+    -fx-background-radius: 6 6 0 0;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: -text-secondary;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: -card-bg;
+    -fx-border-color: -border-color -border-color transparent -border-color;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: -brand-navy;
+    -fx-font-weight: bold;
+}
+
+.tab-pane .tab-content-area {
+    -fx-background-color: -card-bg;
+}
+
+/* ── SplitPane ────────────────────────────────────────────────── */
+
+.split-pane {
+    -fx-background-color: -app-bg;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -border-color;
+}
+
+/* ComboBox popup / Tooltip: الشكل بتاعهم اتنقل لكل ملف theme لوحده
+   بقيم صريحة — راجع نهاية theme-*.css (نفس سبب القوائم فوق). */
+
+/* ── CheckBox / RadioButton (لو استُخدموا لاحقًا) ───────────────── */
+
+.check-box, .radio-button {
+    -fx-text-fill: -text-primary;
+}
+
+.check-box > .box {
+    -fx-background-color: -control-bg;
+    -fx-border-color: -border-color;
+    -fx-background-radius: 3;
+    -fx-border-radius: 3;
+}
+
+.check-box:selected > .box {
+    -fx-background-color: -color-primary;
+    -fx-border-color: -color-primary;
+}
+
+.check-box:selected > .box > .mark {
+    -fx-background-color: -on-brand;
+}
+
+.radio-button > .radio {
+    -fx-background-color: -control-bg;
+    -fx-border-color: -border-color;
+}
+
+.radio-button:selected > .radio > .dot {
+    -fx-background-color: -color-primary;
+}
+
+/* ── ProgressBar / ProgressIndicator ─────────────────────────────── */
+
+.progress-bar > .track {
+    -fx-background-color: -soft-box-bg;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: -color-primary;
+}
+

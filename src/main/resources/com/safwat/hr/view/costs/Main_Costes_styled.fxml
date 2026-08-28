@@ -17,10 +17,10 @@
      Styled per Salary Scale v1.0 Design System
      ============================================================ -->
 
-<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="safwat.controllers.humanResources.costes.Main_CostesController">
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="safwat.controllers.humanResources.costes.Main_CostesController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="app-bg">
             <padding>
                 <Insets bottom="16" left="16" right="16" top="16" />
             </padding>
@@ -28,10 +28,10 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD: اختيار النوع
                  ════════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
                 <padding><Insets bottom="8" left="12" right="12" top="8" /></padding>
 
-                <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="اختر نوع" />
+                <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold" text="اختر نوع" />
                 <ComboBox fx:id="combo_costes" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="360" />
 
                 <Separator orientation="VERTICAL" />
@@ -45,21 +45,21 @@
             <HBox spacing="10" VBox.vgrow="ALWAYS">
 
                 <!-- Sidebar: جداول الدرجات واجر الاشتراك -->
-                <VBox spacing="10" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" prefWidth="200">
-                    <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="جدول الدرجات المالية" />
+                <VBox spacing="10" styleClass="card" prefWidth="200">
+                    <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="جدول الدرجات المالية" />
                     <TableView fx:id="table_degree_dates" editable="true" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="260">
                         <padding><Insets bottom="6" left="6" right="6" top="4" /></padding>
                     </TableView>
 
-                    <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-padding: 6;" text="جدول اجر الاشتراك" />
+                    <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header success compact" text="جدول اجر الاشتراك" />
                     <TableView fx:id="table_Change_Month" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="360" VBox.vgrow="ALWAYS">
                         <padding><Insets bottom="6" left="6" right="6" top="4" /></padding>
                     </TableView>
                 </VBox>
 
                 <!-- Main Content -->
-                <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" HBox.hgrow="ALWAYS">
-                    <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="عرض التكاليف" />
+                <VBox spacing="0" styleClass="card" HBox.hgrow="ALWAYS">
+                    <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="عرض التكاليف" />
                     <StackPane fx:id="MainstackPane" alignment="TOP_RIGHT" nodeOrientation="RIGHT_TO_LEFT" VBox.vgrow="ALWAYS">
                         <padding><Insets bottom="8" left="8" right="8" top="8" /></padding>
                     </StackPane>

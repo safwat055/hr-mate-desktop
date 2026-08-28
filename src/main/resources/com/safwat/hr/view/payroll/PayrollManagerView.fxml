@@ -19,10 +19,10 @@
      Single Screen — 3 Report Cards — Styled per Salary Scale v1.0
      ============================================================ -->
 
-<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1455.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1455.0" prefWidth="1280.0" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" styleClass="app-bg">
             <padding>
                 <Insets bottom="16" left="16" right="16" top="16" />
             </padding>
@@ -30,22 +30,22 @@
             <!-- ════════════════════════════════════════════════════════
                  HEADER
                  ════════════════════════════════════════════════════════ -->
-            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="12" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="12" styleClass="card">
                 <padding><Insets bottom="10" left="16" right="16" top="10" /></padding>
-                <Label style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="مدير تقارير البيرول" />
+                <Label styleClass="text-navy bold fs-18" text="مدير تقارير البيرول" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="lblStatus" style="-fx-font-size: 13; -fx-text-fill: #6B7280;" text="جاهز" />
+                <Label fx:id="lblStatus" styleClass="text-secondary fs-13" text="جاهز" />
             </HBox>
 
             <!-- ════════════════════════════════════════════════════════
                  CARD 1: التقرير السنوي
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+            <VBox spacing="0" styleClass="card">
                 <!-- Card Header -->
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
-                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="التقرير السنوي" />
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="panel-header-plain">
+                    <Label styleClass="text-white bold fs-14" text="التقرير السنوي" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshAnnual" prefHeight="32.0" prefWidth="57.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
+                    <Button fx:id="btnRefreshAnnual" prefHeight="32.0" prefWidth="57.0" styleClass="icon-btn" text="↻" />
                 </HBox>
 
                 <VBox spacing="12">
@@ -53,7 +53,7 @@
 
                     <!-- ── قسم الحذف ── -->
                     <VBox spacing="8">
-                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
+                        <Label styleClass="text-navy bold fs-13" text="عمليات الحذف" />
 
                         <GridPane hgap="10" vgap="8">
                             <columnConstraints>
@@ -63,38 +63,38 @@
                             </columnConstraints>
 
                             <!-- حذف الكل -->
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label styleClass="text-dark fs-13" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                            <Button fx:id="btnDeleteAllAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllAnnual" prefHeight="32" prefWidth="90" styleClass="btn btn-danger bold" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
                             <!-- حذف شهر -->
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label styleClass="text-dark fs-13" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                 <TextField fx:id="txtAllMonthsYearly" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
-                                <Label fx:id="lblAllMonthsYearly" alignment="CENTER" prefHeight="28" prefWidth="140" style="-fx-text-fill: #6B7280;" />
+                                <Label fx:id="lblAllMonthsYearly" alignment="CENTER" prefHeight="28" prefWidth="140" styleClass="text-secondary" />
                             </HBox>
-                            <Button fx:id="btnDeleteMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <Button fx:id="btnDeleteMonthAnnual" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
                             <!-- حذف مجموعة في شهر -->
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <Label styleClass="text-dark fs-13" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                 <TextField fx:id="txtMonthGroupY" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="30.0" prefWidth="120.0" promptText="ادخل الشهر" />
                                 <TextField fx:id="txtGroupAnnual" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
                             </HBox>
-                            <Button fx:id="btnDeleteGroupAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <Button fx:id="btnDeleteGroupAnnual" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
                             <!-- حذف صرفيات موظف في شهر -->
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <Label styleClass="text-dark fs-13" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                 <TextField fx:id="txtEmpIdAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtMonthForEmpAnnual" alignment="CENTER" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                         <TextField fx:id="txtEmpNameAnnual" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="381.0" />
                         <TextField fx:id="txtEmpCodeAnnual" alignment="CENTER" editable="false" layoutX="315.0" layoutY="11.0" prefHeight="30.0" prefWidth="212.0" />
                             </HBox>
-                            <Button fx:id="btnDeleteEmpMonthAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                            <Button fx:id="btnDeleteEmpMonthAnnual" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
                             <!-- حذف صرفية معينة لموظف -->
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <Label styleClass="text-dark fs-13" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                 <TextField fx:id="txtEmpIdPaymentAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" />
                         <TextField fx:id="txtMonthForPaymentAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
@@ -102,7 +102,7 @@
                         <TextField fx:id="txtEmpNameAnnual2" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="202.0" />
                         <TextField fx:id="txtEmpCodeAnnual2" alignment="CENTER" editable="false" prefHeight="30.0" />
                             </HBox>
-                            <Button fx:id="btnDeletePaymentAnnual" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                            <Button fx:id="btnDeletePaymentAnnual" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
 
                             <rowConstraints>
                                 <RowConstraints />
@@ -116,7 +116,7 @@
 
                     <!-- ── قسم التعديل ── -->
                     <VBox spacing="8">
-                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات التعديل" />
+                        <Label styleClass="text-navy bold fs-13" text="عمليات التعديل" />
 
                         <!-- تعديل اسم الصرفية -->
                         <GridPane hgap="10" vgap="8">
@@ -126,12 +126,12 @@
                                 <ColumnConstraints hgrow="NEVER" minWidth="100" />
                             </columnConstraints>
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تعديل اسم الصرفية في كل السجلات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label styleClass="text-dark fs-13" text="تعديل اسم الصرفية في كل السجلات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                 <TextField fx:id="txtOldPaymentName" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الاسم القديم" HBox.hgrow="ALWAYS" />
                                 <TextField fx:id="txtNewPaymentName" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="الاسم الجديد" HBox.hgrow="ALWAYS" />
                             </HBox>
-                            <Button fx:id="btnUpdatePaymentName" prefHeight="32" prefWidth="90" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Button fx:id="btnUpdatePaymentName" prefHeight="32" prefWidth="90" styleClass="btn btn-primary bold" text="تحديث" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
                             <rowConstraints>
                                 <RowConstraints />
@@ -141,11 +141,11 @@
                         <!-- إضافة وصف للمجموعات -->
                         <VBox prefHeight="332.0" prefWidth="1206.0" spacing="8">
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
-                                <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="إضافة وصف حسب الشهر والمجموعة" />
+                                <Label styleClass="text-dark fs-13" text="إضافة وصف حسب الشهر والمجموعة" />
                                 <Region HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtDescMonthAnnual" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
-                                <Button fx:id="btnLoadGroupsForDesc" prefHeight="32" prefWidth="110" style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="عرض المجموعات" />
-                                <Button fx:id="btnSaveDescriptions" prefHeight="32" prefWidth="110" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حفظ الأوصاف" />
+                                <Button fx:id="btnLoadGroupsForDesc" prefHeight="32" prefWidth="110" styleClass="btn btn-secondary" text="عرض المجموعات" />
+                                <Button fx:id="btnSaveDescriptions" prefHeight="32" prefWidth="110" styleClass="btn btn-success bold" text="حفظ الأوصاف" />
                             </HBox>
                             <TableView fx:id="tableGroupDescriptions" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="293.0" prefWidth="1206.0">
                                 <columns>
@@ -162,11 +162,11 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD 2: تقرير المراجعة
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
-                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="تقرير المراجعة" />
+            <VBox spacing="0" styleClass="card">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="panel-header-plain">
+                    <Label styleClass="text-white bold fs-14" text="تقرير المراجعة" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshReview" prefHeight="32.0" prefWidth="68.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
+                    <Button fx:id="btnRefreshReview" prefHeight="32.0" prefWidth="68.0" styleClass="icon-btn" text="↻" />
                 </HBox>
 
                 <VBox spacing="12">
@@ -174,7 +174,7 @@
 
                     <!-- قسم الحذف -->
                     <VBox spacing="8">
-                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
+                        <Label styleClass="text-navy bold fs-13" text="عمليات الحذف" />
                         <GridPane hgap="10" vgap="8">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="NEVER" minWidth="200" />
@@ -182,30 +182,30 @@
                                 <ColumnConstraints hgrow="NEVER" minWidth="100" />
                             </columnConstraints>
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label styleClass="text-dark fs-13" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                            <Button fx:id="btnDeleteAllReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllReview" prefHeight="32" prefWidth="90" styleClass="btn btn-danger bold" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                            <Button fx:id="btnDeleteMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <Label styleClass="text-dark fs-13" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Button fx:id="btnDeleteMonthReview" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <Label styleClass="text-dark fs-13" text="حذف مجموعة في شهر" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
                         <TextField fx:id="txtMonthForGroupReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                                 <TextField fx:id="txtGroupReview" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" promptText="اسم المجموعة" HBox.hgrow="ALWAYS" />
                             </HBox>
-                            <Button fx:id="btnDeleteGroupReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <Button fx:id="btnDeleteGroupReview" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                            <Label styleClass="text-dark fs-13" text="حذف صرفيات موظف في شهر" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                 <TextField fx:id="txtEmpIdReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtMonthForEmpReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                         <TextField fx:id="txtEmpNameReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="381.0" />
                         <TextField fx:id="txtEmpCodeReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="212.0" />
                             </HBox>
-                            <Button fx:id="btnDeleteEmpMonthReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                            <Button fx:id="btnDeleteEmpMonthReview" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="3" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                            <Label styleClass="text-dark fs-13" text="حذف صرفية معينة لموظف" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                 <TextField fx:id="txtEmpIdPaymentReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="150.0" promptText="الرقم القومي" />
                         <TextField fx:id="txtMonthForPaymentReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
@@ -213,7 +213,7 @@
                         <TextField fx:id="txtEmpNamePaymentReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="271.0" />
                         <TextField fx:id="txtEmpCodePaymentReview" alignment="CENTER" editable="false" prefHeight="30.0" prefWidth="148.0" />
                             </HBox>
-                            <Button fx:id="btnDeletePaymentReview" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                            <Button fx:id="btnDeletePaymentReview" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="4" />
                      <TextField fx:id="txtMonthReview" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                             <rowConstraints>
@@ -228,7 +228,7 @@
 
                     <!-- قسم تحديث المفاتيح -->
                     <VBox spacing="8">
-                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="تحديث مفاتيح Nested Map" />
+                        <Label styleClass="text-navy bold fs-13" text="تحديث مفاتيح Nested Map" />
                         <GridPane hgap="10" vgap="8">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="NEVER" minWidth="200" />
@@ -236,12 +236,12 @@
                                 <ColumnConstraints hgrow="NEVER" minWidth="100" />
                             </columnConstraints>
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="تحديث تقرير المراجعة" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label styleClass="text-dark fs-13" text="تحديث تقرير المراجعة" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="0">
                                 <TextField fx:id="txtKeyMonthReview" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="30.0" prefWidth="120.0" promptText="اختر شهر" HBox.hgrow="ALWAYS" />
-                        <Button fx:id="btnUpdateKeysReview" prefHeight="32" prefWidth="104.0" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث شهر" />
+                        <Button fx:id="btnUpdateKeysReview" prefHeight="32" prefWidth="104.0" styleClass="btn btn-primary bold" text="تحديث شهر" />
                             </HBox>
-                            <Button fx:id="btnUpdateAllKeysReview" prefHeight="30.0" prefWidth="90.0" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="تحديث الكل" GridPane.columnIndex="2" />
+                            <Button fx:id="btnUpdateAllKeysReview" prefHeight="30.0" prefWidth="90.0" styleClass="btn btn-primary bold" text="تحديث الكل" GridPane.columnIndex="2" />
 
                             <rowConstraints>
                                 <RowConstraints />
@@ -254,18 +254,18 @@
             <!-- ════════════════════════════════════════════════════════
                  CARD 3: إجر الاشتراك
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" style="-fx-background-color: #1E3A5F; -fx-background-radius: 6 6 0 0; -fx-padding: 8 12 8 12;">
-                    <Label style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: white;" text="تقرير إجر الاشتراك" />
+            <VBox spacing="0" styleClass="card">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="panel-header-plain">
+                    <Label styleClass="text-white bold fs-14" text="تقرير إجر الاشتراك" />
                     <Region HBox.hgrow="ALWAYS" />
-                    <Button fx:id="btnRefreshSub" prefHeight="32.0" prefWidth="56.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 16; -fx-cursor: hand;" text="↻" />
+                    <Button fx:id="btnRefreshSub" prefHeight="32.0" prefWidth="56.0" styleClass="icon-btn" text="↻" />
                 </HBox>
 
                 <VBox spacing="12">
                     <padding><Insets bottom="12" left="12" right="12" top="12" /></padding>
 
                     <VBox spacing="8">
-                        <Label style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="عمليات الحذف" />
+                        <Label styleClass="text-navy bold fs-13" text="عمليات الحذف" />
                         <GridPane hgap="10" vgap="8">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="NEVER" minWidth="200" />
@@ -273,26 +273,26 @@
                                 <ColumnConstraints hgrow="NEVER" minWidth="100" />
                             </columnConstraints>
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <Label styleClass="text-dark fs-13" text="حذف كل البيانات" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                             <Region GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                            <Button fx:id="btnDeleteAllSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                            <Button fx:id="btnDeleteAllSub" prefHeight="32" prefWidth="90" styleClass="btn btn-danger bold" text="حذف الكل" GridPane.columnIndex="2" GridPane.rowIndex="0" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label styleClass="text-dark fs-13" text="حذف شهر معين" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                      <HBox GridPane.columnIndex="1" GridPane.rowIndex="1">
                         <children>
                            <TextField fx:id="txtMonthSub" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                         </children>
                      </HBox>
-                            <Button fx:id="btnDeleteMonthSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                            <Button fx:id="btnDeleteMonthSub" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="1" />
 
-                            <Label style="-fx-font-size: 13; -fx-text-fill: #374151;" text="حذف بيانات موظف" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                            <Label styleClass="text-dark fs-13" text="حذف بيانات موظف" GridPane.columnIndex="0" GridPane.rowIndex="2" />
                             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" GridPane.columnIndex="1" GridPane.rowIndex="2">
                                 <TextField fx:id="txtEmpIdSub" alignment="CENTER" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="150.0" promptText="الرقم القومي" HBox.hgrow="ALWAYS" />
                         <TextField fx:id="txtMonthForEmpSub" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="120.0" promptText="ادخل شهر" />
                         <TextField fx:id="txtEmpNameSub" alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="381.0" />
                         <TextField fx:id="txtEmpCodeSub" alignment="CENTER" editable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="30.0" prefWidth="200.0" />
                             </HBox>
-                            <Button fx:id="btnDeleteEmpSub" prefHeight="32" prefWidth="90" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                            <Button fx:id="btnDeleteEmpSub" prefHeight="32" prefWidth="90" styleClass="btn btn-danger" text="حذف" GridPane.columnIndex="2" GridPane.rowIndex="2" />
 
                             <rowConstraints>
                                 <RowConstraints />

@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <HBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" prefHeight="700" prefWidth="1100"
-      stylesheets="@chat-styles.css" xmlns="http://javafx.com/javafx/26"
+      xmlns="http://javafx.com/javafx/26"
       fx:controller="com.safwat.hr.chat.controller.ChatViewController">
     <!-- ══════════════════════════
          الجانب الأيسر — المحادثات
@@ -47,7 +47,7 @@
 
         <!-- حالة فارغة -->
         <VBox fx:id="emptyState" alignment="CENTER" spacing="12" styleClass="empty-state" VBox.vgrow="ALWAYS">
-            <Label style="-fx-font-size: 48px;" text="💬"/>
+            <Label styleClass="emoji-lg" text="💬"/>
             <Label styleClass="empty-state-text" text="اختر محادثة لتبدأ"/>
         </VBox>
 
@@ -101,9 +101,9 @@
 
             <!-- Typing Indicator -->
             <HBox fx:id="typingIndicator" alignment="CENTER_LEFT" managed="false" spacing="6"
-                  style="-fx-padding: 4 16 4 16; -fx-background-color: transparent;" visible="false">
-                <Label style="-fx-font-size: 12px;" text="💬"/>
-                <Label fx:id="typingLabel" style="-fx-font-size: 12px; -fx-text-fill: #6B7280;" text=""/>
+                  styleClass="typing-row" visible="false">
+                <Label styleClass="emoji-sm" text="💬"/>
+                <Label fx:id="typingLabel" styleClass="typing-text" text=""/>
             </HBox>
 
             <!-- ✅ جديد: شريط الرد على رسالة -->

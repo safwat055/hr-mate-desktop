@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.geometry.Rectangle2D?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -20,6 +19,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
@@ -112,13 +112,13 @@
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
-                                                <Button fx:id="btn_payments" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تقارير صرف" />
-                                                <Button fx:id="btn_changeCard" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="اجر الاشتراك" />
-                                                <Button fx:id="btn_PayrollVocab" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مفردات" />
-                                                <Button fx:id="btn_records" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="سجلات" />
-                                                <Button fx:id="btn_tableView" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="شيت الادخال" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="اضافة موظف" />
-                                                <Button fx:id="btn_payManager" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مدير الاستحقاقات" />
+                                                <Button fx:id="btn_payments" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير صرف" />
+                                                <Button fx:id="btn_changeCard" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
+                                                <Button fx:id="btn_PayrollVocab" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات" />
+                                                <Button fx:id="btn_records" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجلات" />
+                                                <Button fx:id="btn_tableView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="شيت الادخال" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اضافة موظف" />
+                                                <Button fx:id="btn_payManager" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاستحقاقات" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -127,12 +127,12 @@
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="البيانات الاساسية" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="بيانات موظف" />
-                                                <Button fx:id="btn_scaleView" prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تدرج راتب" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مدير التسويات" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تقارير" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مدير التقارير" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="البيانات الاساسية" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
+                                                <Button fx:id="btn_scaleView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تدرج راتب" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير التسويات" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير التقارير" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -141,12 +141,12 @@
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="بيانات موظف" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="استمارة التغطية" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="استمارة الاجور" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="اجر الاشتراك" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تقارير" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة الاجور" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -155,10 +155,10 @@
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="بيانات موظف" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تقارير" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مدير الاجازات" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاجازات" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -167,10 +167,10 @@
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="ملف الخدمة" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="انتدابات / اعارات" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="تقارير" />
-                                                <Button prefHeight="26" prefWidth="182" style="-fx-background-color: linear-gradient(to bottom,#090909,#343434,#424243,#232323,#000000); -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" text="مدير م بشرية" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير م بشرية" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -189,17 +189,22 @@
                 <tabs>
                     <Tab fx:id="mainTab" closable="false" text="الرئيسية">
                   <content>
-                     <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                     <BorderPane fx:id="mainImagePane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                        <left>
+                           <VBox fx:id="mainLeftBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
+                        </left>
                         <center>
-                           <ImageView fitHeight="630.0" fitWidth="1020.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER">
-                              <image>
-                                 <Image url="@dashpoard2.jpeg" />
-                              </image>
-                              <viewport>
-                                 <Rectangle2D />
-                              </viewport>
-                           </ImageView>
+                           <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
+                              <ImageView fitHeight="${mainImageCenter.height}" fitWidth="${mainImageCenter.width}" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@dashpoard2.jpeg" />
+                                 </image>
+                              </ImageView>
+                           </StackPane>
                         </center>
+                        <right>
+                           <VBox fx:id="mainRightBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
+                        </right>
                      </BorderPane>
                   </content>
                     </Tab>

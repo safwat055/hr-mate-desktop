@@ -19,11 +19,11 @@ import java.util.Objects;
  */
 public class ThemeManager {
 
-    public static final String DEFAULT = "theme-default.css";
+    public static final String DEFAULT = "theme-light.css";
     public static final String DARK = "theme-dark.css";
     public static final String BLUE = "theme-blue.css";
     public static final String GRAY = "theme-gray.css";
-
+    public static final String GREEN = "theme-green.css";
     private static final String BASE_PATH = "/com/safwat/hr/css/";
 
     /**

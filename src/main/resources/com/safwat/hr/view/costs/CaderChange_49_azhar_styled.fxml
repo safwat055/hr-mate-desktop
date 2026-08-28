@@ -4,21 +4,21 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <ScrollPane xmlns:fx="http://javafx.com/fxml/1" fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0"
-            prefWidth="1280.0" style="-fx-background-color: #F5F6FA;"
+            prefWidth="1280.0" styleClass="app-bg"
             xmlns="http://javafx.com/javafx/26"
             fx:controller="safwat.controllers.humanResources.costes.CaderChange_49_azharController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="app-bg">
             <padding>
                 <Insets bottom="16" left="16" right="16" top="16"/>
             </padding>
 
             <!-- CARD: بيانات البحث -->
             <VBox spacing="0"
-                  style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                  styleClass="card">
                 <Label alignment="CENTER" maxWidth="Infinity"
-                       style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                       styleClass="panel-header"
                        text="بيانات البحث"/>
 
                 <VBox spacing="10">
@@ -37,28 +37,28 @@
 
                         <Separator orientation="VERTICAL"/>
 
-                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                        <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold"
                                text="اساسي قديم"/>
                         <TextField fx:id="txt_costs_old" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
                                    prefHeight="32" prefWidth="70"/>
-                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                        <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold"
                                text="اساسي جديد"/>
                         <TextField fx:id="txt_costs_new" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT"
                                    prefHeight="32" prefWidth="70"/>
-                        <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                        <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold"
                                text="فرق الاساسي"/>
                         <Label fx:id="lbl_Basic_diff" alignment="CENTER" prefHeight="32" prefWidth="70"
-                               style="-fx-border-color: #DDE1E7; -fx-background-color: #F5F6FA; -fx-border-radius: 4;"/>
+                               styleClass="soft-box"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
                     </HBox>
 
                     <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                        <Label prefHeight="28" prefWidth="30" styleClass="text-dark bold"
                                text="من"/>
                         <TextField fx:id="txt_startDate_costs" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
                                    prefHeight="32" prefWidth="100" promptText="تاريخ البداية"/>
-                        <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;"
+                        <Label prefHeight="28" prefWidth="30" styleClass="text-dark bold"
                                text="الى"/>
                         <TextField fx:id="txt_endDate_costs" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT"
                                    prefHeight="32" prefWidth="100" promptText="تاريخ النهاية"/>
@@ -66,16 +66,16 @@
                         <Separator orientation="VERTICAL"/>
 
                         <Button fx:id="btn_getData" prefHeight="32" prefWidth="90"
-                                style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;"
+                                styleClass="btn btn-purple bold"
                                 text="تجهيز"/>
                         <Button fx:id="btn_calc" prefHeight="32" prefWidth="70"
-                                style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                styleClass="btn btn-primary"
                                 text="احتساب"/>
                         <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70"
-                                style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                styleClass="btn btn-danger"
                                 text="PDF"/>
                         <Button fx:id="btn_clear" prefHeight="32" prefWidth="70"
-                                style="-fx-background-color: #6B7280; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"
+                                styleClass="btn btn-secondary"
                                 text="مسح"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
@@ -83,7 +83,7 @@
 
                     <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
                         <VBox spacing="4" prefWidth="130">
-                            <Label style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="نوع الجداول"/>
+                            <Label styleClass="text-navy bold" text="نوع الجداول"/>
                             <CheckBox fx:id="check_1" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
                                       text="عرض الاجمالي"/>
                             <CheckBox fx:id="check_2" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
@@ -95,7 +95,7 @@
                         <Separator orientation="VERTICAL"/>
 
                         <VBox spacing="4" prefWidth="120">
-                            <Label style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="البدلات"/>
+                            <Label styleClass="text-navy bold" text="البدلات"/>
                             <CheckBox fx:id="chek_Credit_Allowance" mnemonicParsing="false"
                                       nodeOrientation="RIGHT_TO_LEFT" selected="true" text="بدل اعتماد"/>
                             <CheckBox fx:id="chek_Reward_Allowence" mnemonicParsing="false"
@@ -116,10 +116,10 @@
             <!-- TABLES -->
             <HBox spacing="10" VBox.vgrow="ALWAYS">
                 <VBox spacing="0"
-                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      styleClass="card"
                       HBox.hgrow="ALWAYS">
                     <Label alignment="CENTER" maxWidth="Infinity"
-                           style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           styleClass="panel-header success"
                            text="بيان تفصيلي للتكاليف"/>
                     <TableView fx:id="table_change_percent" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
                                nodeOrientation="RIGHT_TO_LEFT" prefHeight="300" VBox.vgrow="ALWAYS">
@@ -130,10 +130,10 @@
                 </VBox>
 
                 <VBox spacing="0"
-                      style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);"
+                      styleClass="card"
                       prefWidth="380">
                     <Label alignment="CENTER" maxWidth="Infinity"
-                           style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;"
+                           styleClass="panel-header"
                            text="اجمالى التكاليف"/>
                     <TableView fx:id="table_costes" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
                                nodeOrientation="RIGHT_TO_LEFT" prefHeight="300" VBox.vgrow="ALWAYS">
@@ -146,14 +146,14 @@
 
             <!-- Summary -->
             <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10"
-                  style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                  styleClass="card">
                 <padding>
                     <Insets bottom="8" left="12" right="12" top="8"/>
                 </padding>
-                <Label prefHeight="28" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;"
+                <Label prefHeight="28" styleClass="text-navy bold"
                        text="اجمالي الخاصع لاجر الاشتراك:"/>
                 <Label fx:id="lbl_sum1" alignment="CENTER" prefHeight="28" prefWidth="160"
-                       style="-fx-border-color: #DDE1E7; -fx-background-color: #F5F6FA; -fx-border-radius: 4;"/>
+                       styleClass="soft-box"/>
                 <Region HBox.hgrow="ALWAYS"/>
             </HBox>
 

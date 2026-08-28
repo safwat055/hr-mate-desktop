@@ -4,7 +4,6 @@ import com.safwat.hr.message.controller.MessageInboxController;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
-import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
@@ -106,8 +105,8 @@ public class MainViewController implements Initializable {
     }
 
     void setMainViewIcon() {
-        SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payManager,
-                btn_scaleView, btn_records, btn_tableView);
+        // SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payManager,
+        //   btn_scaleView, btn_records, btn_tableView);
     }
 
     void setButtonsAction() {

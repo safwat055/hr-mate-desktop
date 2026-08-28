@@ -262,10 +262,10 @@ public class ScaleController implements Initializable {
                         r -> formatDateOutput(r.getDate()),           // getter: LocalDate → String
                         (r, v) -> r.setDate(parseDateInput(v)),       // setter: String → LocalDate
                         true, true),                                  // editable, isDateColumn
-                new TableSetupHelper.ColumnConfig<>("رقم القرار", 140,
+                new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
                         UpgradeRecord::getDecisionNumber,
                         UpgradeRecord::setDecisionNumber,
-                        true, false)                                  // عمود نصي عادي
+                        true, false, ColumnAlign.RIGHT, true)                                  // عمود نصي عادي
         );
         setupGenericTable(table_upgrade, cols, 10, UpgradeRecord::new);
     }
@@ -276,10 +276,10 @@ public class ScaleController implements Initializable {
                         r -> formatDateOutput(r.getDate()),
                         (r, v) -> r.setDate(parseDateInput(v)),
                         true, true),
-                new ColumnConfig<>("رقم القرار", 140,
+                new ColumnConfig<>("رقم القرار", 120,
                         EncouragementRecord::getDecisionNumber,
                         EncouragementRecord::setDecisionNumber,
-                        true, false)
+                        true, false, ColumnAlign.RIGHT, true)
         );
         setupGenericTable(table_encourge, cols, 10, EncouragementRecord::new);
     }
@@ -290,10 +290,10 @@ public class ScaleController implements Initializable {
                         r -> formatDateOutput(r.getDate()),
                         (r, v) -> r.setDate(parseDateInput(v)),
                         true, true),
-                new ColumnConfig<>("رقم القرار", 140,
+                new ColumnConfig<>("رقم القرار", 120,
                         PromotionIncentiveRecord::getDecisionNumber,
                         PromotionIncentiveRecord::setDecisionNumber,
-                        true, false)
+                        true, false, ColumnAlign.RIGHT, true)
         );
         setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
     }
@@ -307,7 +307,7 @@ public class ScaleController implements Initializable {
                 new ColumnConfig<>("المبلغ", 100,
                         r -> r.getAmount() != null ? r.getAmount().toString() : "",
                         (r, v) -> r.setAmount(parseBigDecimal(v)),
-                        true, false)
+                        true, false, ColumnAlign.RIGHT, true)
         );
         setupGenericTable(table, cols, 5, AdjustmentRecord::new);
     }
@@ -329,42 +329,42 @@ public class ScaleController implements Initializable {
 
         //spBonusSubject
         cols.add(new ColumnConfig<>("خاصة خاضعة", 90,
-                r -> r.getSpBonusSubject() != null ? r.getSpBonusSubject().toString() : "",
+                r -> r.getSpBonusSubject() != null && !r.getSpBonusSubject().equals(BigDecimal.ZERO) ? r.getSpBonusSubject().toString() : "",
                 (r, v) -> r.setSpBonusSubject(parseBigDecimal(v)),
                 false, false));
         //spBonusNotSubject
         cols.add(new ColumnConfig<>("خاصة غير خ", 90,
-                r -> r.getSpBonusNotSubject() != null ? r.getSpBonusNotSubject().toString() : "",
+                r -> r.getSpBonusNotSubject() != null && !r.getSpBonusNotSubject().equals(BigDecimal.ZERO) ? r.getSpBonusNotSubject().toString() : "",
                 (r, v) -> r.setSpBonusNotSubject(parseBigDecimal(v)),
                 false, false));
         //other_sp_subject
         cols.add(new ColumnConfig<>("أخرى خاضعة", 90,
-                r -> r.getOther_sp_subject() != null ? r.getOther_sp_subject().toString() : "",
+                r -> r.getOther_sp_subject() != null && !r.getOther_sp_subject().equals(BigDecimal.ZERO) ? r.getOther_sp_subject().toString() : "",
                 (r, v) -> r.setOther_sp_subject(parseBigDecimal(v)),
                 false, false));
         //upgradeBonus
         cols.add(new ColumnConfig<>("ترقية", 90,
-                r -> r.getUpgradeBonus() != null ? r.getUpgradeBonus().toString() : "",
+                r -> r.getUpgradeBonus() != null && !r.getUpgradeBonus().equals(BigDecimal.ZERO) ? r.getUpgradeBonus().toString() : "",
                 (r, v) -> r.setUpgradeBonus(parseBigDecimal(v)),
                 false, false));
         //encourageBonus
         cols.add(new ColumnConfig<>("تشجيعية", 90,
-                r -> r.getEncourageBonus() != null ? r.getEncourageBonus().toString() : "",
+                r -> r.getEncourageBonus() != null && !r.getEncourageBonus().equals(BigDecimal.ZERO) ? r.getEncourageBonus().toString() : "",
                 (r, v) -> r.setEncourageBonus(parseBigDecimal(v)),
                 false, false));
         //otherBonus
         cols.add(new ColumnConfig<>("اخرى", 90,
-                r -> r.getOtherBonus() != null ? r.getOtherBonus().toString() : "",
+                r -> r.getOtherBonus() != null && !r.getOtherBonus().equals(BigDecimal.ZERO) ? r.getOtherBonus().toString() : "",
                 (r, v) -> r.setOtherBonus(parseBigDecimal(v)),
                 false, false));
         //mogard
         cols.add(new ColumnConfig<>("المجرد", 90,
-                r -> r.getMogard() != null ? r.getMogard().toString() : "",
+                r -> r.getMogard() != null && !r.getMogard().equals(BigDecimal.ZERO) ? r.getMogard().toString() : "",
                 (r, v) -> r.setMogard(parseBigDecimal(v)),
                 false, false));
         //basic30_6
         cols.add(new ColumnConfig<>("الأساس 30-6", 90,
-                r -> r.getBasic30_6() != null ? r.getBasic30_6().toString() : "",
+                r -> r.getBasic30_6() != null && !r.getBasic30_6().equals(BigDecimal.ZERO) ? r.getBasic30_6().toString() : "",
                 (r, v) -> r.setBasic30_6(parseBigDecimal(v)),
                 false, false));
 
@@ -375,12 +375,12 @@ public class ScaleController implements Initializable {
                 false, false));
         //extraIncentive
         cols.add(new ColumnConfig<>("حوافز إضافية", 90,
-                r -> r.getExtraIncentive() != null ? r.getExtraIncentive().toString() : "",
+                r -> r.getExtraIncentive() != null && !r.getExtraIncentive().equals(BigDecimal.ZERO) ? r.getExtraIncentive().toString() : "",
                 (r, v) -> r.setExtraIncentive(parseBigDecimal(v)),
                 false, false));
         //socialPackage
-        cols.add(new ColumnConfig<>("المستحقات الاجتماعية", 90,
-                r -> r.getSocialPackage() != null ? r.getSocialPackage().toString() : "",
+        cols.add(new ColumnConfig<>("الحزمة الاجتماعية", 90,
+                r -> r.getSocialPackage() != null && !r.getSocialPackage().equals(BigDecimal.ZERO) ? r.getSocialPackage().toString() : "",
                 (r, v) -> r.setSocialPackage(parseBigDecimal(v)),
                 false, false));
         setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
@@ -507,7 +507,7 @@ public class ScaleController implements Initializable {
             table.getItems().addAll(new AdjustmentRecord(), new AdjustmentRecord());
         }
     }
-   
+
 
     /**
      * يجمع كل بيانات الشاشة في ScaleDto جاهز للإرسال.

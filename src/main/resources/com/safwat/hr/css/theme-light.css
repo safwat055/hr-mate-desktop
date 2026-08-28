@@ -1,46 +1,56 @@
 /* ══════════════════════════════════════════════════════════════════
-   theme-dark.css — الثيم الداكن (Dark Mode)
+   theme-light.css — الثيم الافتراضي (Default)
+   نفس ألوان ScaleView الحالية. حمّل الملف ده لوحده وهو هيجيب معاه
+   common.css و chat-styles.css تلقائيًا عن طريق @import.
 ══════════════════════════════════════════════════════════════════ */
 
 @import "common.css";
 @import "chat/chat-styles.css";
 
 .root {
-    -app-bg: #1A1D23;
+    /* خلفية الصفحة */
+    -app-bg: #F5F6FA;
 
-    -card-bg: #242830;
-    -card-border: #343A46;
-    -card-shadow: rgba(0, 0, 0, 0.45);
+    /* الكروت */
+    -card-bg: white;
+    -card-border: #DDE1E7;
+    -card-shadow: rgba(0, 0, 0, 0.06);
 
-    -text-primary: #E5E7EB;
-    -text-secondary: #9CA3AF;
-    -text-muted: #7C838F;
+    /* النصوص */
+    -text-primary: #374151;
+    -text-secondary: #6B7280;
+    -text-muted: #666666;
     -on-brand: white;
 
-    -brand-navy: #2E5A8F;
-    -header-alt-bg: #3A4150;
+    /* الألوان الأساسية / العلامة التجارية */
+    -brand-navy: #1E3A5F;
+    -header-alt-bg: #374151;
 
-    -color-primary: #3B82F6;
-    -color-danger: #EF4444;
-    -color-success: #10B981;
-    -color-purple: #8B5CF6;
+    -color-primary: #2563EB;
+    -color-danger: #DC2626;
+    -color-success: #059669;
+    -color-purple: #7C3AED;
     -color-secondary-btn: #6B7280;
 
-    -border-color: #343A46;
-    -border-gray: #4B5563;
-    -divider-color: #343A46;
+    /* حدود وفواصل */
+    -border-color: #DDE1E7;
+    -border-gray: gray;
+    -divider-color: lightgray;
 
-    -soft-box-bg: #1F232B;
-    -soft-box-border: #343A46;
+    /* صناديق ثانوية */
+    -soft-box-bg: #F5F6FA;
+    -soft-box-border: #DDE1E7;
 
-    -control-bg: #2C313B;
-    -table-header-bg: #2E5A8F;
-    -row-alt-bg: #20242C;
-    -selection-bg: #3B82F6;
+    /* عناصر تحكم */
+    -control-bg: white;
+    -table-header-bg: #1E3A5F;
+    -row-alt-bg: #FAFBFC;
+    -selection-bg: #2563EB;
 
-    -color-warning: #F59E0B;
+    /* Nav bar gradient */
+    -color-warning: #D97706;
 
-    -nav-gradient: linear-gradient(to bottom, #05060A, #14171D, #1C2027, #101318, #000000);
+    -nav-gradient: linear-gradient(to bottom, #090909, #343434, #424243, #232323, #000000);
 
     /* ── تحديد متغيرات Modena الأساسية نفسها ────────────────────
        ده اللي بيخلي أي عنصر تحكّم افتراضي (ComboBox arrow, Spinner,
@@ -65,23 +75,23 @@
 ══════════════════════════════════════════════════════════════════ */
 
 .context-menu {
-    -fx-background-color: #242830;
-    -fx-border-color: #343A46;
+    -fx-background-color: white;
+    -fx-border-color: #DDE1E7;
     -fx-background-radius: 4;
     -fx-border-radius: 4;
 }
 
 .menu-item {
-    -fx-background-color: #242830;
-    -fx-text-fill: #E5E7EB;
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
 }
 
 .menu-item .label {
-    -fx-text-fill: #E5E7EB;
+    -fx-text-fill: #374151;
 }
 
 .menu-item:focused {
-    -fx-background-color: #3B82F6;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
 }
 
@@ -90,27 +100,27 @@
 }
 
 .combo-box-popup .list-view {
-    -fx-background-color: #242830;
-    -fx-border-color: #343A46;
+    -fx-background-color: white;
+    -fx-border-color: #DDE1E7;
 }
 
 .combo-box-popup .list-cell {
-    -fx-background-color: #242830;
-    -fx-text-fill: #E5E7EB;
+    -fx-background-color: white;
+    -fx-text-fill: #374151;
 }
 
 .combo-box-popup .list-cell:filled:selected,
 .combo-box-popup .list-cell:filled:selected:hover {
-    -fx-background-color: #3B82F6;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
 }
 
 .combo-box-popup .list-cell:filled:hover {
-    -fx-background-color: derive(#3B82F6, 70%);
+    -fx-background-color: derive(#2563EB, 70%);
 }
 
 .tooltip {
-    -fx-background-color: #E5E7EB;
+    -fx-background-color: #374151;
     -fx-text-fill: white;
     -fx-background-radius: 3;
     -fx-padding: 5 8 5 8;

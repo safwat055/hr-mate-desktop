@@ -29,9 +29,9 @@
              ════════════════════════════════════════════════════════ -->
         <Tab closable="false" text="صرفيات رئيسية">
             <content>
-                <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;">
+                <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="1200.0" prefWidth="1280.0" styleClass="app-bg">
                     <content>
-                        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+                        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="app-bg">
                             <padding>
                                 <Insets bottom="16" left="16" right="16" top="16" />
                             </padding>
@@ -39,8 +39,8 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: بيانات الموظف + البحث
                                  ═══════════════════════════════════════════ -->
-                            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
-                                <Label alignment="CENTER" maxWidth="Infinity" minHeight="-Infinity" prefHeight="35.0" prefWidth="1363.0" style="-fx-background-color: #1E3A5F; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="بيانات الموظف" />
+                            <VBox spacing="0" styleClass="card">
+                                <Label alignment="CENTER" maxWidth="Infinity" minHeight="-Infinity" prefHeight="35.0" prefWidth="1363.0" styleClass="panel-header" text="بيانات الموظف" />
                         <HBox spacing="5.0">
                            <children>
       
@@ -51,7 +51,7 @@
       
                                           <!-- Row 1: بحث + Radio buttons -->
                                           <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                                              <Label prefHeight="28" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="بحث بـ" />
+                                              <Label prefHeight="28" styleClass="text-dark bold" text="بحث بـ" />
                                               <RadioButton fx:id="rb_national_id" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" selected="true" text="رقم قومي">
                                                   <toggleGroup>
                                                       <ToggleGroup fx:id="searchGroup" />
@@ -63,38 +63,38 @@
                                               <Separator orientation="VERTICAL" />
       
                                               <TextField fx:id="txt_search" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="200" promptText="ادخل اى قيمة للبحث" />
-                                              <Button fx:id="btn_search" defaultButton="true" prefHeight="32" prefWidth="92.0" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="🔍 بحث" />
+                                              <Button fx:id="btn_search" defaultButton="true" prefHeight="32" prefWidth="92.0" styleClass="btn btn-primary bold" text="🔍 بحث" />
       
                                               <Region HBox.hgrow="ALWAYS" />
                                           </HBox>
       
                                           <!-- Row 2: بيانات الموظف -->
                                           <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                                              <Label prefHeight="28" prefWidth="65" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="رقم قومى" />
+                                              <Label prefHeight="28" prefWidth="65" styleClass="text-dark bold" text="رقم قومى" />
                                               <TextField fx:id="txt_id" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="160" />
       
-                                              <Label prefHeight="28" prefWidth="45" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الاسم" />
+                                              <Label prefHeight="28" prefWidth="45" styleClass="text-dark bold" text="الاسم" />
                                               <TextField fx:id="txt_name" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="180" />
       
-                                              <Label prefHeight="28" prefWidth="60" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="رقم صرف" />
+                                              <Label prefHeight="28" prefWidth="60" styleClass="text-dark bold" text="رقم صرف" />
                                               <TextField fx:id="txt_code" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="135.0" />
       
-                                              <Label prefHeight="28" prefWidth="50" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الدرجة" />
+                                              <Label prefHeight="28" prefWidth="50" styleClass="text-dark bold" text="الدرجة" />
                                               <TextField fx:id="txt_degree" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="120" />
                                           </HBox>
       
                                           <!-- Row 3: إضافية -->
                                           <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                                              <Label prefHeight="28" prefWidth="50" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الادارة" />
+                                              <Label prefHeight="28" prefWidth="50" styleClass="text-dark bold" text="الادارة" />
                                               <TextField fx:id="txt_management" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="266.0" />
       
-                                              <Label prefHeight="28" prefWidth="50" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="30-06" />
+                                              <Label prefHeight="28" prefWidth="50" styleClass="text-dark bold" text="30-06" />
                                               <TextField fx:id="txt_basic_30_6" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="80" />
       
-                                              <Label prefHeight="28" prefWidth="45" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="البنك" />
+                                              <Label prefHeight="28" prefWidth="45" styleClass="text-dark bold" text="البنك" />
                                               <TextField fx:id="txt_bank" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" />
       
-                                              <Label prefHeight="28" prefWidth="45" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الفرع" />
+                                              <Label prefHeight="28" prefWidth="45" styleClass="text-dark bold" text="الفرع" />
                                               <TextField fx:id="txt_branch" alignment="CENTER" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" />
                                           </HBox>
       
@@ -106,26 +106,26 @@
                                        <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="10">
                                  <VBox spacing="5.0">
                                     <children>
-                                                   <Label alignment="CENTER" prefHeight="28.0" prefWidth="360.0" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="مفردات" />
+                                                   <Label alignment="CENTER" prefHeight="28.0" prefWidth="360.0" styleClass="text-navy bold" text="مفردات" />
                                                   <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
                                           <TextField fx:id="txt_month" prefHeight="26.0" prefWidth="96.0" promptText="ادخل شهر" />
-                                                      <Button fx:id="btn_pdf4" prefHeight="18.0" prefWidth="60.0" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="PDF" />
-                                                     <Button fx:id="btn_viewRecord" prefHeight="22.0" prefWidth="100" style="-fx-background-color: #7C3AED; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="ملاحظات" />
+                                                      <Button fx:id="btn_pdf4" prefHeight="18.0" prefWidth="60.0" styleClass="btn btn-danger" text="PDF" />
+                                                     <Button fx:id="btn_viewRecord" prefHeight="22.0" prefWidth="100" styleClass="btn btn-purple bold" text="ملاحظات" />
                                                   </HBox>
                                        <Separator prefWidth="200.0" />
          
                                                     <!-- فترة السجل -->
                                                  <VBox prefHeight="91.0" prefWidth="358.0" spacing="6">
-                                                     <Label alignment="CENTER" maxWidth="Infinity" style="-fx-font-weight: bold; -fx-text-fill: #1E3A5F;" text="فترة السجل" />
+                                                     <Label alignment="CENTER" maxWidth="Infinity" styleClass="text-navy bold" text="فترة السجل" />
                                                      <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
-                                                         <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="من" />
+                                                         <Label prefHeight="28" prefWidth="30" styleClass="text-dark bold" text="من" />
                                              <TextField fx:id="txt_startMonth" prefHeight="26.0" prefWidth="94.0" promptText="ادخل شهر" />
-                                                         <Label prefHeight="28" prefWidth="30" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الى" />
+                                                         <Label prefHeight="28" prefWidth="30" styleClass="text-dark bold" text="الى" />
                                              <TextField fx:id="txt_endMonth" prefHeight="26.0" prefWidth="114.0" promptText="ادخل شهر" />
-                                                         <Button fx:id="btn_pdf2" onAction="#singleRecord" prefHeight="26.0" prefWidth="70" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="PDF" />
+                                                         <Button fx:id="btn_pdf2" onAction="#singleRecord" prefHeight="26.0" prefWidth="70" styleClass="btn btn-danger" text="PDF" />
                                                      </HBox>
                                                      <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
-                                                         <Button fx:id="btn_view_Period" prefHeight="14.0" prefWidth="100" style="-fx-background-color: #2563EB; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" text="عرض الفترة" />
+                                                         <Button fx:id="btn_view_Period" prefHeight="14.0" prefWidth="100" styleClass="btn btn-primary bold" text="عرض الفترة" />
                                                      </HBox>
                                                  </VBox>
                                     </children>
@@ -144,8 +144,8 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: عناصر الاستحقاقات
                                  ═══════════════════════════════════════════ -->
-                            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
-                                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="عناصر الاستحقاقات" />
+                            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header success" text="عناصر الاستحقاقات" />
                                 <TableView fx:id="t_allownces" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="260" VBox.vgrow="ALWAYS">
                                     <padding>
                                         <Insets bottom="8" left="8" right="8" top="8" />
@@ -156,8 +156,8 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: عناصر الاستقطاعات
                                  ═══════════════════════════════════════════ -->
-                            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
-                                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="عناصر الاستقطاعات" />
+                            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header danger" text="عناصر الاستقطاعات" />
                                 <TableView fx:id="t_deductions" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="260" VBox.vgrow="ALWAYS">
                                     <padding>
                                         <Insets bottom="8" left="8" right="8" top="8" />
@@ -176,9 +176,9 @@
              ════════════════════════════════════════════════════════ -->
         <Tab closable="false" text="صرفيات منفصلة">
             <content>
-                <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="1200.0" prefWidth="1280.0" style="-fx-background-color: #F5F6FA;">
+                <ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="1200.0" prefWidth="1280.0" styleClass="app-bg">
                     <content>
-                        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" style="-fx-background-color: #F5F6FA;">
+                        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="app-bg">
                             <padding>
                                 <Insets bottom="16" left="16" right="16" top="16" />
                             </padding>
@@ -186,21 +186,21 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: Toolbar
                                  ═══════════════════════════════════════════ -->
-                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);">
+                            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
                                 <padding>
                                     <Insets bottom="8" left="12" right="12" top="8" />
                                 </padding>
 
-                                <Button fx:id="btn_pdf3" prefHeight="32" prefWidth="70" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="PDF" />
+                                <Button fx:id="btn_pdf3" prefHeight="32" prefWidth="70" styleClass="btn btn-danger" text="PDF" />
 
                                 <Separator orientation="VERTICAL" />
 
-                                <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="فترة السجل" />
+                                <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold" text="فترة السجل" />
                                 <SearchableComboBox fx:id="combo_dates2" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="140" />
 
                                 <Separator orientation="VERTICAL" />
 
-                                <Label prefHeight="28" prefWidth="70" style="-fx-font-weight: bold; -fx-text-fill: #374151;" text="الصرفية" />
+                                <Label prefHeight="28" prefWidth="70" styleClass="text-dark bold" text="الصرفية" />
                                 <SearchableComboBox fx:id="combo_payment" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="200" />
 
                                 <Region HBox.hgrow="ALWAYS" />
@@ -209,8 +209,8 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: عناصر الاستحقاقات
                                  ═══════════════════════════════════════════ -->
-                            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
-                                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #059669; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="عناصر الاستحقاقات" />
+                            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header success" text="عناصر الاستحقاقات" />
                                 <TableView fx:id="t_allownces2" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="260" VBox.vgrow="ALWAYS">
                                     <padding>
                                         <Insets bottom="8" left="8" right="8" top="8" />
@@ -221,8 +221,8 @@
                             <!-- ═══════════════════════════════════════════
                                  CARD: عناصر الاستقطاعات
                                  ═══════════════════════════════════════════ -->
-                            <VBox spacing="0" style="-fx-background-color: white; -fx-border-color: #DDE1E7; -fx-border-radius: 6; -fx-background-radius: 6; -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.06),4,0,0,2);" VBox.vgrow="ALWAYS">
-                                <Label alignment="CENTER" maxWidth="Infinity" style="-fx-background-color: #DC2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13; -fx-background-radius: 6 6 0 0; -fx-padding: 8;" text="عناصر الاستقطاعات" />
+                            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header danger" text="عناصر الاستقطاعات" />
                                 <TableView fx:id="t_deductions2" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="260" VBox.vgrow="ALWAYS">
                                     <padding>
                                         <Insets bottom="8" left="8" right="8" top="8" />
