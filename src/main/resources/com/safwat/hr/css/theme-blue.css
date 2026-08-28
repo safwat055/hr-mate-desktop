@@ -3,7 +3,7 @@
 ══════════════════════════════════════════════════════════════════ */
 
 @import "common.css";
-@import "chat/chat-styles.css";
+@import "chat-styles.css";
 
 .root {
     -app-bg: #EFF4FB;

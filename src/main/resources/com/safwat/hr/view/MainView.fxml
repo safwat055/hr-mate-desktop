@@ -47,21 +47,11 @@
     ══════════════════════════════════════════ -->
     <MenuBar VBox.vgrow="NEVER">
         <menus>
-            <Menu mnemonicParsing="false" text="File">
-                <items>
-                    <MenuItem mnemonicParsing="false" text="New" />
-                    <MenuItem mnemonicParsing="false" text="Open…" />
-                    <Menu mnemonicParsing="false" text="Open Recent" />
-                    <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem mnemonicParsing="false" text="Close" />
-                    <MenuItem mnemonicParsing="false" text="Save" />
-                    <MenuItem mnemonicParsing="false" text="Save As…" />
-                    <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem mnemonicParsing="false" text="Preferences…" />
-                    <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem mnemonicParsing="false" text="Quit" />
-                </items>
-            </Menu>
+         <Menu mnemonicParsing="false" text="Unspecified Menu">
+           <items>
+             <MenuItem mnemonicParsing="false" text="Action 1" />
+           </items>
+         </Menu>
             <Menu mnemonicParsing="false" text="عرض">
                 <items>
                     <Menu mnemonicParsing="false" text="تقارير">
@@ -195,7 +185,7 @@
                         </left>
                         <center>
                            <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
-                              <ImageView fitHeight="${mainImageCenter.height}" fitWidth="${mainImageCenter.width}" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fitHeight="578.0" fitWidth="825.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@dashpoard2.jpeg" />
                                  </image>

@@ -115,11 +115,30 @@
     -fx-border-width: 1;
 }
 
-.btn-primary   { -fx-background-color: -color-primary;       -fx-border-color: derive(-color-primary, -25%); }
-.btn-secondary { -fx-background-color: -color-secondary-btn; -fx-border-color: derive(-color-secondary-btn, -25%); }
-.btn-success   { -fx-background-color: -color-success;       -fx-border-color: derive(-color-success, -25%); }
-.btn-danger    { -fx-background-color: -color-danger;        -fx-border-color: derive(-color-danger, -25%); }
-.btn-purple    { -fx-background-color: -color-purple;        -fx-border-color: derive(-color-purple, -25%); }
+.btn-primary {
+    -fx-background-color: -color-primary;
+    -fx-border-color: derive(-color-primary, -25%);
+}
+
+.btn-secondary {
+    -fx-background-color: -color-secondary-btn;
+    -fx-border-color: derive(-color-secondary-btn, -25%);
+}
+
+.btn-success {
+    -fx-background-color: -color-success;
+    -fx-border-color: derive(-color-success, -25%);
+}
+
+.btn-danger {
+    -fx-background-color: -color-danger;
+    -fx-border-color: derive(-color-danger, -25%);
+}
+
+.btn-purple {
+    -fx-background-color: -color-purple;
+    -fx-border-color: derive(-color-purple, -25%);
+}
 
 .btn:hover, .btn-primary:hover, .btn-secondary:hover,
 .btn-success:hover, .btn-danger:hover, .btn-purple:hover {
@@ -127,12 +146,30 @@
     -fx-scale-y: 1.06;
     -fx-effect: dropshadow(gaussian, -card-shadow, 6, 0, 0, 1);
 }
-.btn:hover           { -fx-background-color: derive(-color-secondary-btn, -12%); }
-.btn-primary:hover   { -fx-background-color: derive(-color-primary, -12%); }
-.btn-secondary:hover { -fx-background-color: derive(-color-secondary-btn, -12%); }
-.btn-success:hover   { -fx-background-color: derive(-color-success, -12%); }
-.btn-danger:hover    { -fx-background-color: derive(-color-danger, -12%); }
-.btn-purple:hover     { -fx-background-color: derive(-color-purple, -12%); }
+
+.btn:hover {
+    -fx-background-color: derive(-color-secondary-btn, -12%);
+}
+
+.btn-primary:hover {
+    -fx-background-color: derive(-color-primary, -12%);
+}
+
+.btn-secondary:hover {
+    -fx-background-color: derive(-color-secondary-btn, -12%);
+}
+
+.btn-success:hover {
+    -fx-background-color: derive(-color-success, -12%);
+}
+
+.btn-danger:hover {
+    -fx-background-color: derive(-color-danger, -12%);
+}
+
+.btn-purple:hover {
+    -fx-background-color: derive(-color-purple, -12%);
+}
 
 .btn:armed, .btn-primary:armed, .btn-secondary:armed,
 .btn-success:armed, .btn-danger:armed, .btn-purple:armed {
@@ -151,21 +188,53 @@
     -fx-border-color: -color-primary;
     -fx-text-fill: -color-primary;
 }
-.btn-outline.primary   { -fx-border-color: -color-primary;       -fx-text-fill: -color-primary; }
-.btn-outline.secondary { -fx-border-color: -color-secondary-btn; -fx-text-fill: -color-secondary-btn; }
-.btn-outline.success   { -fx-border-color: -color-success;       -fx-text-fill: -color-success; }
-.btn-outline.danger    { -fx-border-color: -color-danger;        -fx-text-fill: -color-danger; }
-.btn-outline.purple    { -fx-border-color: -color-purple;        -fx-text-fill: -color-purple; }
+
+.btn-outline.primary {
+    -fx-border-color: -color-primary;
+    -fx-text-fill: -color-primary;
+}
+
+.btn-outline.secondary {
+    -fx-border-color: -color-secondary-btn;
+    -fx-text-fill: -color-secondary-btn;
+}
+
+.btn-outline.success {
+    -fx-border-color: -color-success;
+    -fx-text-fill: -color-success;
+}
+
+.btn-outline.danger {
+    -fx-border-color: -color-danger;
+    -fx-text-fill: -color-danger;
+}
+
+.btn-outline.purple {
+    -fx-border-color: -color-purple;
+    -fx-text-fill: -color-purple;
+}
 
 .btn-outline:hover {
     -fx-background-color: derive(-color-primary, 88%);
     -fx-scale-x: 1.05;
     -fx-scale-y: 1.05;
 }
-.btn-outline.secondary:hover { -fx-background-color: derive(-color-secondary-btn, 88%); }
-.btn-outline.success:hover   { -fx-background-color: derive(-color-success, 88%); }
-.btn-outline.danger:hover    { -fx-background-color: derive(-color-danger, 88%); }
-.btn-outline.purple:hover    { -fx-background-color: derive(-color-purple, 88%); }
+
+.btn-outline.secondary:hover {
+    -fx-background-color: derive(-color-secondary-btn, 88%);
+}
+
+.btn-outline.success:hover {
+    -fx-background-color: derive(-color-success, 88%);
+}
+
+.btn-outline.danger:hover {
+    -fx-background-color: derive(-color-danger, 88%);
+}
+
+.btn-outline.purple:hover {
+    -fx-background-color: derive(-color-purple, 88%);
+}
 
 /* زرار أيقونة شفاف (بدون خلفية)
    ملحوظة: الاسم .icon-btn مش .btn-icon عشان ميتعارضش مع كلاس
@@ -179,7 +248,7 @@
 }
 
 .icon-btn:hover {
-    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-background-color: rgba(255, 255, 255, 0.15);
     -fx-background-radius: 50%;
     -fx-scale-x: 1.15;
     -fx-scale-y: 1.15;
@@ -237,26 +306,65 @@
 
 /* ── Utilities: ألوان النصوص ──────────────────────────────────── */
 
-.text-dark      { -fx-text-fill: -text-primary; }
-.text-secondary { -fx-text-fill: -text-secondary; }
-.text-muted     { -fx-text-fill: -text-muted; }
-.text-navy      { -fx-text-fill: -brand-navy; }
-.text-danger    { -fx-text-fill: -color-danger; }
-.text-success   { -fx-text-fill: -color-success; }
-.text-white     { -fx-text-fill: -on-brand; }
+.text-dark {
+    -fx-text-fill: -text-primary;
+}
+
+.text-secondary {
+    -fx-text-fill: -text-secondary;
+}
+
+.text-muted {
+    -fx-text-fill: -text-muted;
+}
+
+.text-navy {
+    -fx-text-fill: -brand-navy;
+}
+
+.text-danger {
+    -fx-text-fill: -color-danger;
+}
+
+.text-success {
+    -fx-text-fill: -color-success;
+}
+
+.text-white {
+    -fx-text-fill: -on-brand;
+}
 
 /* ── Utilities: خط ──────────────────────────────────────────── */
 
-.bold   { -fx-font-weight: bold; }
-.fs-12  { -fx-font-size: 12; }
-.fs-13  { -fx-font-size: 13; }
-.fs-14  { -fx-font-size: 14; }
-.fs-16  { -fx-font-size: 16; }
-.fs-18  { -fx-font-size: 18; }
+.bold {
+    -fx-font-weight: bold;
+}
+
+.fs-12 {
+    -fx-font-size: 12;
+}
+
+.fs-13 {
+    -fx-font-size: 13;
+}
+
+.fs-14 {
+    -fx-font-size: 14;
+}
+
+.fs-16 {
+    -fx-font-size: 16;
+}
+
+.fs-18 {
+    -fx-font-size: 18;
+}
 
 /* ── Utilities: مسافات ────────────────────────────────────────── */
 
-.pad-15 { -fx-padding: 15; }
+.pad-15 {
+    -fx-padding: 15;
+}
 
 /* ── تنسيق عام لعناصر التحكّم الافتراضية (توحيد الشكل) ─────────
    بيخلي أي TextField / TableView / Label ... تتماشى مع الثيم
@@ -388,6 +496,35 @@
 .menu-bar > .container > .menu-button:focused .label,
 .menu-bar > .container > .menu-button:showing .label {
     -fx-text-fill: -on-brand;
+}
+
+.menu-bar > .container > .menu-button .label {
+    -fx-text-fill: -text-primary; /* ← النص العادي للـ Menu */
+}
+
+.menu-bar > .container > .menu-button:hover .label,
+.menu-bar > .container > .menu-button:focused .label,
+.menu-bar > .container > .menu-button:showing .label {
+    -fx-text-fill: -on-brand; /* ← عند فتح القائمة أو التمرير */
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 6 12 6 12;
+}
+
+.menu-item .label {
+    -fx-text-fill: -text-primary; /* ← دا اللون اللي بيظهر في القائمة */
+}
+
+.menu-item:focused {
+    -fx-background-color: -color-primary;
+    -fx-text-fill: -on-brand;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: -on-brand; /* ← دا اللون اللي بيظهر عند التمرير */
 }
 
 /* شكل القوائم المنسدلة / ComboBox / Tooltip اتنقل لكل ملف theme
