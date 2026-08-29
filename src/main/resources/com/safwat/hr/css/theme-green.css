@@ -73,12 +73,12 @@
 
 .menu-item {
     -fx-background-color: white;
-    -fx-text-fill: #1F3B33;
+    -fx-text-fill: #1F3B33 !important;
     -fx-padding: 6 12 6 12;
 }
 
 .menu-item .label {
-    -fx-text-fill: #1F3B33;
+    -fx-text-fill: #1F3B33 !important;
 }
 
 .menu-item:focused {

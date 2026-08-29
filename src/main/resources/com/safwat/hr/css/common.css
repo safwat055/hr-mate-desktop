@@ -372,7 +372,7 @@
 ──────────────────────────────────────────────────────────────── */
 
 .root {
-    -fx-font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    -fx-font-family: "Cairo";
     -fx-text-fill: -text-primary;
 }
 
@@ -508,11 +508,14 @@
     -fx-text-fill: -on-brand; /* ← عند فتح القائمة أو التمرير */
 }
 
-/* .menu-item: padding فقط هنا — الألوان والخلفية بقيم صريحة (hex)
-   في نهاية كل theme-*.css لأن الـ popup window منفصلة ومش بتحل
-   المتغيرات (-text-primary وغيرها) بشكل موثوق. */
 .menu-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-primary;
     -fx-padding: 6 12 6 12;
+}
+
+.menu-item .label {
+    -fx-text-fill: -text-primary; /* ← دا اللون اللي بيظهر في القائمة */
 }
 
 .menu-item:focused {
@@ -521,7 +524,7 @@
 }
 
 .menu-item:focused .label {
-    -fx-text-fill: -on-brand;
+    -fx-text-fill: -on-brand; /* ← دا اللون اللي بيظهر عند التمرير */
 }
 
 /* شكل القوائم المنسدلة / ComboBox / Tooltip اتنقل لكل ملف theme

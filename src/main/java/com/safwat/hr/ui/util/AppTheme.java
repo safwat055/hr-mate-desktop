@@ -5,70 +5,74 @@ import javafx.scene.text.Font;
 
 /**
  * =====================================================
- * AppTheme — تطبيق خط وستايل موحّد على كل واجهات التطبيق
+ * AppTheme — تحميل الخطوط وتطبيق الستايل على كل واجهات التطبيق
  * =====================================================
  * <p>
- * بيحل مشكلة تشوه الحروف الخاصة (مثل - / ,) وسط النص العربي
- * عن طريق تحميل خط واحد يدعم العربي والرموز بشكل صحيح،
- * وتطبيقه على أي Scene في التطبيق (الشاشة الرئيسية + أي Dialog).
+ * بيحمّل كل أوزان خط Cairo مرة واحدة طوال عمر التطبيق،
+ * ثم يطبّق common.css على أي Scene (الرئيسية + أي Dialog).
  * <p>
  * الاستخدام:
  * <pre>
  * Scene scene = new Scene(root);
  * AppTheme.apply(scene);
  * </pre>
+ * ملاحظة: لا تستخدم @font-face في CSS مع JavaFX — مش مدعوم.
+ * تحميل الخطوط لازم يكون هنا بـ Font.loadFont() فقط.
  */
 public final class AppTheme {
 
-    // ضع ملفات الخط هنا: src/main/resources/com/safwat/hr/fonts/
-    private static final String FONT_REGULAR = "/com/safwat/hr/fonts/Cairo-Regular.ttf";
-    private static final String FONT_MEDIUM = "/com/safwat/hr/fonts/Cairo-Medium.ttf";
-    private static final String FONT_BOLD = "/com/safwat/hr/fonts/Cairo-Bold.ttf";
-
-    // ملف الستايل الموحّد: src/main/resources/com/safwat/hr/css/global.css
-    private static final String GLOBAL_CSS = "/com/safwat/hr/css/global.css";
+    // ── مسارات خطوط Cairo ────────────────────────────────────────
+    private static final String FONTS_BASE = "/com/safwat/hr/fonts/";
+    private static final String[] CAIRO_FILES = {
+            "Cairo-ExtraLight.ttf",
+            "Cairo-Light.ttf",
+            "Cairo-Regular.ttf",
+            "Cairo-Medium.ttf",
+            "Cairo-SemiBold.ttf",
+            "Cairo-Bold.ttf",
+            "Cairo-ExtraBold.ttf",
+            "Cairo-Black.ttf",
+    };
 
     private static boolean fontsLoaded = false;
 
-    private AppTheme() {
-    }
+    private AppTheme() {}
+
+    // ── تحميل الخطوط ─────────────────────────────────────────────
 
     /**
-     * تحميل الخطوط مرة واحدة فقط طوال عمر التطبيق
+     * بيحمّل كل أوزان Cairo مرة واحدة فقط طوال عمر التطبيق.
+     * آمن يتنادى أكتر من مرة.
      */
     public static synchronized void loadFonts() {
         if (fontsLoaded) return;
 
-        loadFontSafely(FONT_REGULAR);
-        loadFontSafely(FONT_MEDIUM);
-        loadFontSafely(FONT_BOLD);
+        for (String file : CAIRO_FILES) {
+            String path = FONTS_BASE + file;
+            try {
+                Font font = Font.loadFont(
+                        AppTheme.class.getResourceAsStream(path), 13);
+                if (font == null) {
+                    System.err.println("⚠ تعذّر تحميل الخط: " + path);
+                }
+            } catch (Exception e) {
+                System.err.println("⚠ خطأ أثناء تحميل الخط " + path
+                        + ": " + e.getMessage());
+            }
+        }
 
         fontsLoaded = true;
     }
 
-    private static void loadFontSafely(String path) {
-        try {
-            Font font = Font.loadFont(AppTheme.class.getResourceAsStream(path), 13);
-            if (font == null) {
-                System.err.println("⚠ تعذّر تحميل الخط: " + path + " (تأكد من مكان الملف)");
-            }
-        } catch (Exception e) {
-            System.err.println("⚠ خطأ أثناء تحميل الخط " + path + ": " + e.getMessage());
-        }
-    }
+    // ── تطبيق الثيم على Scene ────────────────────────────────────
 
     /**
-     * يطبّق الخط والستايل الموحّد على أي Scene.
      * لازم تتنادى على كل Scene بتتعمل في التطبيق (الرئيسية + الـ Dialogs).
+     * بتحمّل الخطوط تلقائيًا لو لسه ما اتحملوش.
      */
     public static void apply(Scene scene) {
         loadFonts();
-        try {
-            scene.getStylesheets().add(
-                    AppTheme.class.getResource(GLOBAL_CSS).toExternalForm()
-            );
-        } catch (Exception e) {
-            System.err.println("⚠ تعذّر تحميل global.css: " + e.getMessage());
-        }
+        // مش محتاج global.css منفصل — الثيم بيتحمّل بعد كده
+        // عن طريق ThemeManager.applyTheme()
     }
 }

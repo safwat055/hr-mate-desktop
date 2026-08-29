@@ -12,6 +12,7 @@ import com.safwat.hr.notification.service.ReportWebSocketService;
 import com.safwat.hr.notification.ui.HRToast;
 import com.safwat.hr.theme.ThemeManager;
 import com.safwat.hr.ui.util.AppTheme;
+import com.safwat.hr.ui.util.FontLoader;   // ← إضافة
 import javafx.application.Application;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXMLLoader;
@@ -23,7 +24,7 @@ import java.io.IOException;
 public class HR_Client extends Application {
 
     private final NotificationService notifService = NotificationService.getInstance();
-    private Stage primaryStage; // ✅ نخزنه هنا
+    private Stage primaryStage;
 
     public static void main(String[] args) {
         launch();
@@ -33,7 +34,11 @@ public class HR_Client extends Application {
     public void init() throws Exception {
         super.init();
 
-        // ── تسجيل الدخول ──
+        // ── تحميل الخطوط قبل أي شيء ──────────────────────────────
+        // لازم يكون هنا في init() عشان يكون جاهز قبل start()
+        FontLoader.load();
+
+        // ── تسجيل الدخول ──────────────────────────────────────────
         LoginRequest request = new LoginRequest();
         request.setUsername("admin");
         request.setPassword("admin");
@@ -46,7 +51,7 @@ public class HR_Client extends Application {
         ApiClient.setAuthToken(response.getData().getToken());
         ApiClient.setUserName(response.getData().getUsername());
 
-        // ── الاتصال بـ WebSocket الرسائل (مش محتاج Stage) ──
+        // ── الاتصال بـ WebSocket الرسائل (مش محتاج Stage) ──────────
         MessageClientService.getInstance().connect();
     }
 
@@ -56,9 +61,11 @@ public class HR_Client extends Application {
 
         FXMLLoader fxmlLoader = new FXMLLoader(
                 HR_Client.class.getResource("/com/safwat/hr/view/MainView.fxml"));
+
         Scene scene = new Scene(fxmlLoader.load());
         AppTheme.apply(scene);
-        ThemeManager.applyTheme(scene, ThemeManager.BLUE); // أو DARK / BLUE / GRAY
+        ThemeManager.applyTheme(scene, ThemeManager.DEFAULT);
+
         stage.setTitle("HR_Management");
         stage.setScene(scene);
         stage.show();
@@ -67,10 +74,9 @@ public class HR_Client extends Application {
         ReportWebSocketService reportWs = new ReportWebSocketService(stage);
         reportWs.connect();
 
-        // لما يقفل التطبيق نقطع الاتصال
         stage.setOnCloseRequest(e -> reportWs.disconnect());
 
-        // ── مستمع Toast للإشعارات الجديدة ──
+        // ── مستمع Toast للإشعارات الجديدة ──────────────────────────
         notifService.getAll().addListener(
                 (ListChangeListener<HRNotification>) change -> {
                     while (change.next()) {
