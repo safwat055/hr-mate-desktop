@@ -40,7 +40,9 @@ public class ScaleDto {
 
     private LocalDate cutStart;
     private LocalDate cutEnd;
-    private Map<String, Object> extraInfo;
+
+
+    private ScaleExtraInfo extraInfo;
     // ══════════════════════════════════════════
     //  الأحداث
     // ══════════════════════════════════════════

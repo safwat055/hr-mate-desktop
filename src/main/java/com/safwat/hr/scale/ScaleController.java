@@ -19,8 +19,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
 
@@ -137,6 +137,14 @@ public class ScaleController implements Initializable {
     @FXML
     private Button btn_clear;
 
+    // ── أزرار إضافة صف فارغ ──
+    @FXML
+    private Button btn_addUpgrade;
+    @FXML
+    private Button btn_addEncouragement;
+    @FXML
+    private Button btn_addPromotion;
+
     // ─────────────────────────────────────────────
     //  State — الـ DTO الحالي
     // ─────────────────────────────────────────────
@@ -154,12 +162,16 @@ public class ScaleController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
-
         btn_search.setOnAction(_ -> doSearch());
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
         btn_clear.setOnAction(_ -> doClear());
+
+        // ── أزرار إضافة صف فارغ ──
+        if (btn_addUpgrade != null) btn_addUpgrade.setOnAction(_ -> addEmptyUpgradeRow());
+        if (btn_addEncouragement != null) btn_addEncouragement.setOnAction(_ -> addEmptyEncouragementRow());
+        if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
 
         txt_nationalId.setOnAction(_ -> doSearch());
         setupUpgradeTable();
@@ -189,6 +201,9 @@ public class ScaleController implements Initializable {
             showWarning("أدخل الرقم القومي أولاً");
             return;
         }
+        // ── فرّغ الشاشة والجداول قبل البحث ──
+        doClear();
+
         setButtonsDisabled(true);
 
         ApiClient.getAsync(API_BASE + "/" + id, ScaleDto.class)
@@ -221,9 +236,9 @@ public class ScaleController implements Initializable {
                         showError("فشل الاحتساب:\n" + response.getMessage());
                         return;
                     }
-                    // نحدث النتيجة فقط — البيانات تفضل زي ما هي
+                    // ── حدّث الواجهة بالبيانات المحسوبة ──
                     currentDto = response.getData();
-                    // fillResult(currentDto);
+                    fillForm(currentDto);
                 }));
     }
 
@@ -265,7 +280,7 @@ public class ScaleController implements Initializable {
                 new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
                         UpgradeRecord::getDecisionNumber,
                         UpgradeRecord::setDecisionNumber,
-                        true, false, ColumnAlign.RIGHT, true)                                  // عمود نصي عادي
+                        true, false, ColumnAlign.LEFT, true)                                  // عمود نصي عادي
         );
         setupGenericTable(table_upgrade, cols, 10, UpgradeRecord::new);
     }
@@ -279,7 +294,7 @@ public class ScaleController implements Initializable {
                 new ColumnConfig<>("رقم القرار", 120,
                         EncouragementRecord::getDecisionNumber,
                         EncouragementRecord::setDecisionNumber,
-                        true, false, ColumnAlign.RIGHT, true)
+                        true, false, ColumnAlign.LEFT, true)
         );
         setupGenericTable(table_encourge, cols, 10, EncouragementRecord::new);
     }
@@ -293,7 +308,7 @@ public class ScaleController implements Initializable {
                 new ColumnConfig<>("رقم القرار", 120,
                         PromotionIncentiveRecord::getDecisionNumber,
                         PromotionIncentiveRecord::setDecisionNumber,
-                        true, false, ColumnAlign.RIGHT, true)
+                        true, false, ColumnAlign.LEFT, true)
         );
         setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
     }
@@ -307,7 +322,7 @@ public class ScaleController implements Initializable {
                 new ColumnConfig<>("المبلغ", 100,
                         r -> r.getAmount() != null ? r.getAmount().toString() : "",
                         (r, v) -> r.setAmount(parseBigDecimal(v)),
-                        true, false, ColumnAlign.RIGHT, true)
+                        true, false, ColumnAlign.LEFT, true)
         );
         setupGenericTable(table, cols, 5, AdjustmentRecord::new);
     }
@@ -387,7 +402,12 @@ public class ScaleController implements Initializable {
 
     }
 
+    // ─────────────────────────────────────────────
+    //  Action — تفريغ الشاشة
+    // ─────────────────────────────────────────────
+
     private void doClear() {
+        // تفريغ الحقول
         List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
                         txt_startDate, txt_backStart, txt_debloma, txt_magester,
                         txt_doctoraa, txt_ectra, txt_regrade3, txt_regrade4,
@@ -397,8 +417,43 @@ public class ScaleController implements Initializable {
                         txt_startCut, txt_endCut)
                 .forEach(TextField::clear);
 
+        // تفريغ كل الجداول
+        table_upgrade.getItems().clear();
+        table_encourge.getItems().clear();
+        table_promotion.getItems().clear();
+        table_result.getItems().clear();
+        table_mogardAdd.getItems().clear();
+        table_mogardRival.getItems().clear();
+        table_bounsAdd.getItems().clear();
+        table_bounsRival.getItems().clear();
 
         currentDto = null;
+    }
+
+    // ─────────────────────────────────────────────
+    //  Action — إضافة صف فارغ في الجداول
+    // ─────────────────────────────────────────────
+
+    private void addEmptyUpgradeRow() {
+        table_upgrade.getItems().add(new UpgradeRecord());
+        // scroll to the new row
+        int lastIdx = table_upgrade.getItems().size() - 1;
+        table_upgrade.scrollTo(lastIdx);
+        table_upgrade.getSelectionModel().select(lastIdx);
+    }
+
+    private void addEmptyEncouragementRow() {
+        table_encourge.getItems().add(new EncouragementRecord());
+        int lastIdx = table_encourge.getItems().size() - 1;
+        table_encourge.scrollTo(lastIdx);
+        table_encourge.getSelectionModel().select(lastIdx);
+    }
+
+    private void addEmptyPromotionRow() {
+        table_promotion.getItems().add(new PromotionIncentiveRecord());
+        int lastIdx = table_promotion.getItems().size() - 1;
+        table_promotion.scrollTo(lastIdx);
+        table_promotion.getSelectionModel().select(lastIdx);
     }
 
     // ─────────────────────────────────────────────
@@ -409,7 +464,7 @@ public class ScaleController implements Initializable {
      * يملأ كل حقول الشاشة والجداول والنتيجة من ScaleDto واحد.
      */
     private void fillForm(ScaleDto dto) {
-        Map<String, Object> extraInfo = dto.getExtraInfo();
+        ScaleExtraInfo extraInfo = dto.getExtraInfo();
         // البيانات الأساسية
         setText(txt_nationalId, dto.getNationalId());
         setText(txt_empCode, dto.getCodeId());
@@ -422,18 +477,20 @@ public class ScaleController implements Initializable {
         setText(txt_backStart, fmt(dto.getRestartDate()));
         setText(txt_startCut, fmt(dto.getCutStart()));
         setText(txt_endCut, fmt(dto.getCutEnd()));
-        setText(yearUp, extraInfo != null ? extraInfo.getOrDefault("year_up", null) : null);
-        setText(yearNoUp, extraInfo != null ? extraInfo.getOrDefault("year_no_up", null) : null);
-        setText(gpUp, extraInfo != null ? extraInfo.getOrDefault("gp_up", null) : null);
-        setText(gpNoUp, extraInfo != null ? extraInfo.getOrDefault("gp_no_up", null) : null);
-        setText(yearsBack, extraInfo != null ? extraInfo.getOrDefault("year_back", null) : null);
-        setText(txt_regrade3, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_3", null)) : null));
-        setText(txt_regrade4, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_4", null)) : null));
-        setText(txt_regrade5, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("regrade_5", null)) : null));
-        setText(txt_debloma, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("debloma", null)) : null));
-        setText(txt_magester, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("magester", null)) : null));
-        setText(txt_doctoraa, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("doctoraa", null)) : null));
-        setText(txt_backRegrade, fmt(extraInfo != null ? DateUtils.parseDate((String) extraInfo.getOrDefault("back_regrade", null)) : null));
+        setText(yearUp, extraInfo != null ? extraInfo.getYearUp() : null);
+        setText(yearNoUp, extraInfo != null ? extraInfo.getYearNoUp() : null);
+        setText(gpUp, extraInfo != null ? extraInfo.getGpUp() : null);
+        setText(gpNoUp, extraInfo != null ? extraInfo.getGpNoUp() : null);
+        setText(yearsBack, extraInfo != null ? extraInfo.getYearBack() : null);
+
+
+        setText(txt_regrade3, fmt(extraInfo != null ? extraInfo.getRegrade3() : null));
+        setText(txt_regrade4, fmt(extraInfo != null ? extraInfo.getRegrade4() : null));
+        setText(txt_regrade5, fmt(extraInfo != null ? extraInfo.getRegrade5() : null));
+        setText(txt_debloma, fmt(extraInfo != null ? extraInfo.getDebloma() : null));
+        setText(txt_magester, fmt(extraInfo != null ? extraInfo.getMagester() : null));
+        setText(txt_doctoraa, fmt(extraInfo != null ? extraInfo.getDoctoraa() : null));
+        setText(txt_backRegrade, fmt(extraInfo != null ? extraInfo.getReBackDate() : null));
         setText(date_kader, dto.getBasic30Date() != null ? fmt(dto.getBasic30Date()) : null);
 
         // الجداول الأربعة
@@ -520,6 +577,7 @@ public class ScaleController implements Initializable {
             ScaleDto dto = new ScaleDto();
 
             dto.setNationalId(txt_nationalId.getText());
+            dto.setCodeId(txt_empCode.getText().trim());
             dto.setEmpName(txt_empName.getText().trim());
             dto.setQualitativeGroup(txt_group.getText().trim());
             dto.setLaw(parseInt(txt_law.getText()));
@@ -529,21 +587,45 @@ public class ScaleController implements Initializable {
             dto.setRestartDate(parseDate(txt_backStart.getText()));
             dto.setCutStart(parseDate(txt_startCut.getText()));
             dto.setCutEnd(parseDate(txt_endCut.getText()));
+            dto.setBasic30Date(parseDate(date_kader.getText()));
 
+            // ── extraInfo — كان بيتفقد بالكامل قبل كده لأنه مكنش بيتقرا من الحقول ──
+            ScaleExtraInfo extraInfo = new ScaleExtraInfo();
+            extraInfo.setRegrade3(parseDate(txt_regrade3.getText()));
+            extraInfo.setRegrade4(parseDate(txt_regrade4.getText()));
+            extraInfo.setRegrade5(parseDate(txt_regrade5.getText()));
+            extraInfo.setReBackDate(parseDate(txt_backRegrade.getText()));
+            extraInfo.setDebloma(parseDate(txt_debloma.getText()));
+            extraInfo.setMagester(parseDate(txt_magester.getText()));
+            extraInfo.setDoctoraa(parseDate(txt_doctoraa.getText()));
+            extraInfo.setYearUp(parseInt(yearUp.getText()));
+            extraInfo.setYearNoUp(parseInt(yearNoUp.getText()));
+            extraInfo.setGpUp(parseBigDecimal(gpUp.getText()));
+            extraInfo.setGpNoUp(parseBigDecimal(gpNoUp.getText()));
+            extraInfo.setYearBack(parseInt(yearsBack.getText()));
+            // مفيش حقل في الشاشة لـ periodicCalcType — بنحافظ عليه من آخر نسخة معروفة
+            extraInfo.setPeriodicCalcType(
+                    currentDto != null && currentDto.getExtraInfo() != null
+                            ? currentDto.getExtraInfo().getPeriodicCalcType()
+                            : null
+            );
+            dto.setExtraInfo(extraInfo);
 
-            // البيانات اللي مفيهاش حقول في الشاشة — محافظ عليها من currentDto
+            // ── الجداول القابلة للتعديل — لازم تتقرا من الـ TableView نفسه، مش من currentDto ──
+            // (ده كان الباج الأساسي: أي تعديل المستخدم بيعمله في الجداول كان بيتلغي وقت الحفظ)
+            dto.setUpgrades(extractRows(table_upgrade, r -> r.getDate() != null));
+            dto.setEncouragements(extractRows(table_encourge, r -> r.getDate() != null));
+            dto.setPromotionIncentives(extractRows(table_promotion, r -> r.getDate() != null));
+            dto.setMogardAdditions(extractRows(table_mogardAdd, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setMogardRemovals(extractRows(table_mogardRival, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusAdditions(extractRows(table_bounsAdd, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusRemovals(extractRows(table_bounsRival, r -> r.getDate() != null && r.getAmount() != null));
+
+            // البيانات اللي مفيهاش حقول ولا جداول في الشاشة (groupChanges, basic30From) — محافظ عليها من currentDto
             if (currentDto != null) {
-                dto.setUpgrades(currentDto.getUpgrades());
-                dto.setEncouragements(currentDto.getEncouragements());
-                dto.setPromotionIncentives(currentDto.getPromotionIncentives());
                 dto.setGroupChanges(currentDto.getGroupChanges());
-                dto.setBasic30Date(currentDto.getBasic30Date());
                 dto.setBasic30From(currentDto.getBasic30From());
-                dto.setCodeId(currentDto.getCodeId());
             } else {
-                dto.setUpgrades(List.of());
-                dto.setEncouragements(List.of());
-                dto.setPromotionIncentives(List.of());
                 dto.setGroupChanges(List.of());
             }
 
@@ -551,8 +633,21 @@ public class ScaleController implements Initializable {
 
         } catch (IllegalArgumentException e) {
             showError("خطأ في البيانات: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * يقرأ صفوف جدول معين ويستبعد الصفوف الفاضية (اللي بنضيفها كـ padding في fillXxxTable)
+     * عشان متتبعتش للـ backend كـ سجلات فعلية.
+     */
+    private <T> List<T> extractRows(TableView<T> table, Predicate<T> isValid) {
+        List<T> rows = new ArrayList<>();
+        for (T item : table.getItems()) {
+            if (isValid.test(item)) rows.add(item);
+        }
+        return rows;
     }
 
     // ─────────────────────────────────────────────
