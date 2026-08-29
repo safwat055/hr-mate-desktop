@@ -1,4 +1,4 @@
-package com.safwat.hr.scale;
+package com.safwat.hr.scale.dto;
 
 import lombok.Data;
 

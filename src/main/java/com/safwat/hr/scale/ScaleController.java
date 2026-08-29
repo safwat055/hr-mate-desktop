@@ -1,7 +1,7 @@
 package com.safwat.hr.scale;
 
 import com.safwat.hr.network.ApiClient;
-import com.safwat.hr.shared.util.DateUtils;
+import com.safwat.hr.scale.dto.*;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import javafx.application.Platform;
@@ -11,6 +11,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.net.URL;
@@ -36,6 +37,7 @@ import static com.safwat.hr.ui.table.TableSetupHelper.*;
  *   <li><b>حفظ</b>  → POST /salary-scale/save           → يحفظ + يملأ النتيجة</li>
  * </ol>
  */
+@Getter
 public class ScaleController implements Initializable {
     private static final String API_BASE = "/salary-scale";
     // ─────────────────────────────────────────────
@@ -136,7 +138,7 @@ public class ScaleController implements Initializable {
     private Button btn_pdf;
     @FXML
     private Button btn_clear;
-
+    private ScaleUtilsUi utilsUi;
     // ── أزرار إضافة صف فارغ ──
     @FXML
     private Button btn_addUpgrade;
@@ -161,7 +163,7 @@ public class ScaleController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
+        utilsUi = new ScaleUtilsUi(this);
         btn_search.setOnAction(_ -> doSearch());
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
@@ -177,7 +179,7 @@ public class ScaleController implements Initializable {
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
-        setupDateFields();
+        utilsUi.setupDateFields();
         setTable_result();
 
         setupAdjustmentTable(table_mogardAdd);
@@ -186,11 +188,7 @@ public class ScaleController implements Initializable {
         setupAdjustmentTable(table_bounsRival);
     }
 
-    void setupDateFields() {
-        TextFieldSetupHelper.setupDateFields("yyyy-MM-dd", txt_startDate, txt_backStart,
-                txt_startCut, txt_endCut, txt_regrade3, txt_regrade4, txt_regrade5,
-                txt_backRegrade, txt_debloma, txt_magester, txt_doctoraa, date_kader);
-    }
+
     // ─────────────────────────────────────────────
     //  Action — بحث
     // ─────────────────────────────────────────────
@@ -277,7 +275,11 @@ public class ScaleController implements Initializable {
                         r -> formatDateOutput(r.getDate()),           // getter: LocalDate → String
                         (r, v) -> r.setDate(parseDateInput(v)),       // setter: String → LocalDate
                         true, true),                                  // editable, isDateColumn
-                new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
+                new TableSetupHelper.ColumnConfig<>("الدرجة", 90,
+                        UpgradeRecord::getDegree,
+                        UpgradeRecord::setDegree,
+                        false, false, ColumnAlign.LEFT, true),
+        new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
                         UpgradeRecord::getDecisionNumber,
                         UpgradeRecord::setDecisionNumber,
                         true, false, ColumnAlign.LEFT, true)                                  // عمود نصي عادي

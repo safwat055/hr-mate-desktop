@@ -1,6 +1,9 @@
 package com.safwat.hr.ui.util;
 
+import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.theme.AppTheme;
+import com.safwat.hr.ui.theme.ThemeManager;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -35,7 +38,7 @@ public class ViewManager {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(new Scene(view));
-            AppTheme.apply(stage.getScene());
+            AppTheme.apply(stage.getScene(), AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
             String iconPath = Objects.requireNonNull(
                             ViewManager.class.getResource("/com/safwat/hr/icons/logo.png"))
                     .toExternalForm();

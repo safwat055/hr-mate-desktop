@@ -1,5 +1,7 @@
-package com.safwat.hr.ui.util;
+package com.safwat.hr.ui.theme;
 
+import com.safwat.hr.shared.AppConfig;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.text.Font;
 
@@ -70,9 +72,16 @@ public final class AppTheme {
      * لازم تتنادى على كل Scene بتتعمل في التطبيق (الرئيسية + الـ Dialogs).
      * بتحمّل الخطوط تلقائيًا لو لسه ما اتحملوش.
      */
-    public static void apply(Scene scene) {
+    public static void apply(Scene scene, String themeFile) {
         loadFonts();
-        // مش محتاج global.css منفصل — الثيم بيتحمّل بعد كده
-        // عن طريق ThemeManager.applyTheme()
+
+      ThemeManager.applyTheme(scene, themeFile);
+
+    }
+    public static void apply(Parent scene, String themeFile) {
+        loadFonts();
+
+      ThemeManager.applyTheme(scene, themeFile);
+
     }
 }

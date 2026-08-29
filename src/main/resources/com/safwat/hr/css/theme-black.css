@@ -1,0 +1,112 @@
+/* theme-black.css — ثيم أسود نقي (AMOLED Black) */
+@import "common.css";
+@import "chat-styles.css";
+
+.root {
+    /* خلفية سودا خالصة */
+    -app-bg: #000000;
+
+    /* البطاقات والعناصر تكون رمادية غامقة عشان تبان عن الخلفية */
+    -card-bg: #181818;
+    -card-border: #2A2A2A;
+    -card-shadow: rgba(0, 0, 0, 0.8);
+
+    /* النصوص بيضاء / رمادية فاتحة */
+    -text-primary: #F0F0F0;
+    -text-secondary: #B0B0B0;
+    -text-muted: #707070;
+    -on-brand: #FFFFFF;
+
+    /* الألوان الأساسية (حيادية مع لمسة زرقاء فاتحة للزرار) */
+    -brand-navy: #1A1A1A;
+    -header-alt-bg: #222222;
+
+    -color-primary: #3D8CFF;    /* أزرق نيون خفيف للتباين */
+    -color-danger: #E85A4F;
+    -color-success: #3AAE8A;
+    -color-purple: #9B7AE6;
+    -color-secondary-btn: #555555;
+
+    -border-color: #2A2A2A;
+    -border-gray: #3A3A3A;
+    -divider-color: #222222;
+
+    -soft-box-bg: #141414;
+    -soft-box-border: #2A2A2A;
+
+    -control-bg: #1C1C1C;
+    -table-header-bg: #0A0A0A;
+    -row-alt-bg: #111111;
+    -selection-bg: #3D8CFF;
+
+    -color-warning: #D4A03A;
+
+    -nav-gradient: linear-gradient(to bottom, #000000, #0A0A0A, #141414, #0A0A0A, #000000);
+
+    /* Modena */
+    -fx-base: -soft-box-bg;
+    -fx-background: -app-bg;
+    -fx-control-inner-background: -control-bg;
+    -fx-text-base-color: -text-primary;
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-primary;
+    -fx-faint-focus-color: derive(-color-primary, -30%);
+}
+
+/* ═══════════════════════════════════════════════════
+   Popups (القوائم المنسدلة) بنفس الثيم الأسود
+═══════════════════════════════════════════════════ */
+
+.context-menu {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #2A2A2A;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.menu-item {
+    -fx-background-color: #1A1A1A;
+    -fx-text-fill: #F0F0F0 !important;
+    -fx-padding: 6 12 6 12;
+}
+
+.menu-item .label {
+    -fx-text-fill: #F0F0F0 !important;
+}
+
+.menu-item:focused {
+    -fx-background-color: #3D8CFF;
+    -fx-text-fill: white;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #1A1A1A;
+    -fx-border-color: #2A2A2A;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #1A1A1A;
+    -fx-text-fill: #F0F0F0;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #3D8CFF;
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: derive(#3D8CFF, 60%);
+}
+
+.tooltip {
+    -fx-background-color: #222222;
+    -fx-text-fill: #F0F0F0;
+    -fx-background-radius: 3;
+    -fx-padding: 5 8 5 8;
+    -fx-border-color: #333333;
+}

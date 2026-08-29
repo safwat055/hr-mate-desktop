@@ -1,5 +1,7 @@
 package com.safwat.hr.shared;
 
+
+import com.safwat.hr.ui.theme.ThemeManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -60,7 +62,9 @@ public class AppConfig {
 
         defaultConfig.put("connection", connection);
 
-
+        JSONObject ui = new JSONObject();
+        ui.put("theme", ThemeManager.LIGHT);
+        defaultConfig.put("ui", ui);
         return defaultConfig;
     }
 

@@ -1,4 +1,4 @@
-package com.safwat.hr.scale;
+package com.safwat.hr.scale.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -6,7 +6,6 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 /**
  * الكلاس المجمع لشاشة السلم الوظيفي.

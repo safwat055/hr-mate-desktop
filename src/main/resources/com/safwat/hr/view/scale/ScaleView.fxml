@@ -71,10 +71,10 @@
                 </padding>
 
                 <!-- أزرار الإجراءات -->
-                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" styleClass="btn btn-secondary" text="مسح" />
-                <Button fx:id="btn_save" prefHeight="32" prefWidth="70" styleClass="btn btn-success" text="حفظ" />
-                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70" styleClass="btn btn-danger" text="PDF" />
-                <Button fx:id="btn_calculate" prefHeight="32" prefWidth="100" styleClass="btn btn-purple bold" text="⚙ احتساب" />
+                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" styleClass="btn-secondary" text="مسح" />
+                <Button fx:id="btn_save" prefHeight="32" prefWidth="70" styleClass="btn-success" text="حفظ" />
+                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70" styleClass="btn-danger" text="PDF" />
+                <Button fx:id="btn_calculate" prefHeight="32" prefWidth="100" styleClass="btn-purple" text="⚙ احتساب" />
                 <Label prefWidth="75" styleClass="bold" text="درجة التعيين" />
 
                 <Separator orientation="VERTICAL" />
@@ -96,13 +96,13 @@
 
                 <TextField fx:id="txt_group" alignment="CENTER" prefHeight="32" prefWidth="167.0" promptText="المجموعة النوعية" HBox.hgrow="ALWAYS" />
             </HBox>
-            <HBox prefHeight="338.0" prefWidth="951.0" spacing="5.0">
+            <HBox prefHeight="422.0" prefWidth="1628.0" spacing="5.0">
                 <children>
 
                     <!-- ── 3أ. بيانات المؤهلات (يمين) ── -->
                     <VBox minWidth="240" prefWidth="240" spacing="0" styleClass="card">
 
-                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="بيانات التعيين والتسويات" />
+                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header compact" text="بيانات التعيين والتسويات" />
 
                         <VBox spacing="2">
                             <padding>
@@ -169,7 +169,7 @@
                     <!-- ── 3ج. بيانات التسكين (يسار) ── -->
                     <VBox minWidth="203.0" prefHeight="338.0" prefWidth="203.0" spacing="0" styleClass="card">
 
-                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="بيانات اضافية" />
+                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header.compact" text="بيانات اضافية" />
 
                         <VBox prefHeight="302.0" prefWidth="177.0" spacing="2">
                             <padding>
@@ -226,9 +226,14 @@
                     </VBox>
 
                     <!-- ترقيات -->
-                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="364.0" styleClass="card">
-                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header compact" text="الترقيات" />
-                        <TableView fx:id="table_upgrade" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="302.0" prefWidth="368.0">
+                    <VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0" prefWidth="364.0" styleClass="card">
+                  <HBox alignment="CENTER">
+                     <children>
+                              <Label alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="328.0" styleClass="panel-header compact" text="الترقيات" />
+                        <Button fx:id="btn_addUpgrade" mnemonicParsing="false" prefHeight="26.0" prefWidth="28.0" styleClass="btn-success" text="+" />
+                     </children>
+                  </HBox>
+                        <TableView fx:id="table_upgrade" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="538.0" prefWidth="362.0">
                             <columns>
                                 <TableColumn prefWidth="130" text="تاريخ الترقية" />
                                 <TableColumn prefWidth="100" text="الدرجة" />
@@ -240,9 +245,14 @@
                         </TableView>
                     </VBox>
                     <!-- تشجيعيات -->
-                    <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="338.0" prefWidth="265.0" styleClass="card" HBox.hgrow="ALWAYS">
-                        <Label alignment="CENTER" prefHeight="30.0" prefWidth="261.0" styleClass="panel-header compact" text="التشجيعيات" />
-                        <TableView fx:id="table_encourge" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="300.0" prefWidth="309.0">
+                    <VBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0" prefWidth="265.0" styleClass="card" HBox.hgrow="ALWAYS">
+                  <HBox>
+                     <children>
+                              <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="261.0" styleClass="panel-header compact" text="التشجيعيات" />
+                        <Button fx:id="btn_addEncouragement" mnemonicParsing="false" prefHeight="26.0" prefWidth="28.0" styleClass="btn-success" text="+" />
+                     </children>
+                  </HBox>
+                        <TableView fx:id="table_encourge" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="489.0" prefWidth="263.0">
                             <columns>
                                 <TableColumn prefWidth="130" text="التاريخ" />
                                 <TableColumn prefWidth="130" text="رقم القرار" />
@@ -254,9 +264,14 @@
                     </VBox>
 
                     <!-- حافز ترقية -->
-                    <VBox styleClass="card">
-                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header compact" text="حافز الترقية" />
-                        <TableView fx:id="table_promotion" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="302.0" prefWidth="268.0">
+                    <VBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0" prefWidth="270.0" styleClass="card">
+                  <HBox>
+                     <children>
+                              <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="261.0" styleClass="panel-header compact" text="حافز الترقية" />
+                        <Button fx:id="btn_addPromotion" mnemonicParsing="false" prefHeight="26.0" prefWidth="28.0" styleClass="btn-success" text="+" />
+                     </children>
+                  </HBox>
+                        <TableView fx:id="table_promotion" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="508.0" prefWidth="268.0">
                             <columns>
                                 <TableColumn prefWidth="130" text="التاريخ" />
                                 <TableColumn prefWidth="130" text="رقم القرار" />
@@ -268,7 +283,7 @@
                     </VBox>
                     <!-- تسويات المجرد والعلاوات (مضغوطة) -->
 
-                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="338.0" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="331.0" prefWidth="240.0" styleClass="text-navy bold fs-13" text="تسويات المجرد والعلاوات" HBox.hgrow="ALWAYS">
+                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0" prefWidth="240.0" styleClass="text-navy bold fs-13" text="تسويات المجرد والعلاوات" HBox.hgrow="ALWAYS">
                         <content>
                             <Accordion>
                                 <panes>
@@ -328,7 +343,7 @@
                  5. نتائج البحث
             ══════════════════════════════════════════════════════ -->
             <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="589.0" prefWidth="1128.0" styleClass="card">
-                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header alt" text="تدرج الراتب" />
+                <Label alignment="CENTER" maxWidth="Infinity" prefHeight="30.0" prefWidth="1126.0" styleClass="panel-header alt" text="تدرج الراتب" />
                 <TableView fx:id="table_result" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="536.0" prefWidth="1392.0">
                     <padding>
                         <Insets bottom="6" left="6" right="6" top="4" />

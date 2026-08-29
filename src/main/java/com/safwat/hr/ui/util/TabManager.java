@@ -1,6 +1,9 @@
 package com.safwat.hr.ui.util;
 
+import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.theme.AppTheme;
+import com.safwat.hr.ui.theme.ThemeManager;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
@@ -49,7 +52,7 @@ public class TabManager {
             tabPane.getTabs().add(tab);
 
             tabPane.getSelectionModel().select(tab);
-
+            AppTheme.apply(content.getParent(), AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
             loadedTabs.put(fxmlPath, tab);
 
         } catch (IOException e) {

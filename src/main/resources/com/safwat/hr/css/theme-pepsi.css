@@ -1,0 +1,112 @@
+/* theme-pepsi.css — ثيم مستوحى من ألوان بيبسي مع خلفيات رمادية فاتحة */
+@import "common.css";
+@import "chat-styles.css";
+
+.root {
+    /* خلفيات رمادية فاتحة جداً (احترافي) */
+    -app-bg: #F0F2F5;           /* رمادي فاتح موحد */
+
+    -card-bg: #FFFFFF;          /* البطاقات بيضاء */
+    -card-border: #D0D5DC;      /* حواف رمادية ناعمة */
+    -card-shadow: rgba(0, 0, 0, 0.06); /* ظل خفيف جداً */
+
+    /* نصوص داكنة للتباين الجيد */
+    -text-primary: #1A1F2E;
+    -text-secondary: #4A5366;
+    -text-muted: #7A8396;
+    -on-brand: #FFFFFF;
+
+    /* ألوان بيبسي */
+    -brand-navy: #0A2240;       /* أزرق غامق جداً (زي بيبسي) */
+    -header-alt-bg: #1A3A66;    /* أزرق متوسط للهيدرات */
+
+    -color-primary: #0A3B7A;    /* أزرق بيبسي الأساسي */
+    -color-danger: #D42A2A;     /* أحمر بيبسي (للتنبيهات) - هادئ */
+    -color-success: #2A7A5A;    /* أخضر محايد */
+    -color-purple: #6A5A9A;     /* بنفسجي خفيف */
+    -color-secondary-btn: #5A6A82; /* أزرق رمادي للأزرار الثانوية */
+
+    /* حواف وحدود رمادية موحدة */
+    -border-color: #D0D5DC;
+    -border-gray: #B8C0CC;
+    -divider-color: #E2E6EC;
+
+    -soft-box-bg: #E8ECF2;      /* رمادي فاتح للصناديق الناعمة */
+    -soft-box-border: #D0D5DC;
+
+    -control-bg: #FFFFFF;       /* خلفية الضوابط بيضاء */
+    -table-header-bg: #0A2240;  /* رأس الجدول أزرق غامق */
+    -row-alt-bg: #F4F6F9;       /* صفوف بديلة رمادية فاتحة */
+    -selection-bg: #0A3B7A;     /* تحديد العناصر بالأزرق الداكن */
+
+    -color-warning: #C99A2A;    /* أصفر ذهبي للتحذيرات */
+
+    /* التدرج في الهيدر/الشريط العلوي (أزرق بيبسي) */
+    -nav-gradient: linear-gradient(to bottom, #0A1A30, #0A2A4A, #0A3B7A, #0A2A4A, #0A1A30);
+
+    /* Modena */
+    -fx-base: -soft-box-bg;
+    -fx-background: -app-bg;
+    -fx-control-inner-background: -control-bg;
+    -fx-text-base-color: -text-primary;
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-primary;
+    -fx-faint-focus-color: derive(-color-primary, 85%);
+}
+
+/* ═══════════════════════════════════════════════════
+   Popups (القوائم المنسدلة)
+═══════════════════════════════════════════════════ */
+
+.context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #D0D5DC;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.menu-item {
+    -fx-background-color: white;
+    -fx-text-fill: #1A1F2E !important;
+    -fx-padding: 6 12 6 12;
+}
+
+.menu-item .label {
+    -fx-text-fill: #1A1F2E !important;
+}
+
+.menu-item:focused {
+    -fx-background-color: #0A3B7A;
+    -fx-text-fill: white;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #D0D5DC;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #1A1F2E;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #0A3B7A;
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: derive(#0A3B7A, 70%);
+}
+
+.tooltip {
+    -fx-background-color: #0A2240;
+    -fx-text-fill: white;
+    -fx-background-radius: 3;
+    -fx-padding: 5 8 5 8;
+}

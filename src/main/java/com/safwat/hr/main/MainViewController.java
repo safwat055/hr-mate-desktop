@@ -5,6 +5,8 @@ import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.icons.Icons;
+import com.safwat.hr.ui.theme.AppTheme;
+import com.safwat.hr.ui.theme.ThemeManager;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
@@ -199,5 +201,36 @@ public class MainViewController implements Initializable {
     @FXML
     void openTableView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollTableView(), "واجهة الإدخال", true);
+    }
+
+    @FXML void applyThemeBlack(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.Black);
+    }
+    @FXML void applyThemeBlue(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.BLUE);
+    }@FXML void applyThemeDark1(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.DARK_1);
+    }@FXML void applyThemeDark2(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.DARK_2);
+    }@FXML void applyThemeGray(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.GRAY);
+    }@FXML void applyThemeGreen(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.GREEN);
+    }@FXML void applyThemeIndigo(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.INDIGO);
+    }@FXML void applyThemeLightBlue(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.LIGHT_BLUE);
+    }@FXML void applyThemeBluePepsi(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.PEPSI);
+    }@FXML void applyThemeOlive(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.OLIVE);
+    }@FXML void applyThemePastel(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.PASTEL);
+    }@FXML void applyThemeTeal(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.TEAL);
+    }@FXML void applyThemeWarm(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.WARM);
+    }@FXML void applyThemeLight(){
+        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.LIGHT);
     }
 }

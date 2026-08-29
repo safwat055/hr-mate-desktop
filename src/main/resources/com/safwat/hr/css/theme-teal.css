@@ -1,0 +1,99 @@
+/* theme-teal.css */
+@import "common.css";
+@import "chat-styles.css";
+
+.root {
+    -app-bg: #EAF5F2;
+
+    -card-bg: #FFFFFF;
+    -card-border: #B8D9D0;
+    -card-shadow: rgba(0, 80, 70, 0.10);
+
+    -text-primary: #1A3A35;
+    -text-secondary: #3D6B63;
+    -text-muted: #5F8A80;
+    -on-brand: #FFFFFF;
+
+    -brand-navy: #1D5A50;
+    -header-alt-bg: #278075;
+
+    -color-primary: #1F8A7A;
+    -color-danger: #C94F4A;
+    -color-success: #2A9D8F;
+    -color-purple: #6B5B8C;
+    -color-secondary-btn: #4A7B72;
+
+    -border-color: #B8D9D0;
+    -border-gray: #8CB5A8;
+    -divider-color: #D0E8E2;
+
+    -soft-box-bg: #DEF0EA;
+    -soft-box-border: #B8D9D0;
+
+    -control-bg: #FFFFFF;
+    -table-header-bg: #1D5A50;
+    -row-alt-bg: #F2F9F7;
+    -selection-bg: #1F8A7A;
+
+    -color-warning: #C29B3D;
+
+    -nav-gradient: linear-gradient(to bottom, #0E3D35, #1A5F55, #1F7A6E, #155A4F, #0C332C);
+
+    /* Modena */
+    -fx-base: -soft-box-bg;
+    -fx-background: -app-bg;
+    -fx-control-inner-background: -control-bg;
+    -fx-text-base-color: -text-primary;
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-primary;
+    -fx-faint-focus-color: derive(-color-primary, 85%);
+}
+
+/* Popups بنفس الثيم */
+.context-menu {
+    -fx-background-color: white;
+    -fx-border-color: #B8D9D0;
+}
+
+.menu-item {
+    -fx-background-color: white;
+    -fx-text-fill: #1A3A35 !important;
+}
+
+.menu-item .label {
+    -fx-text-fill: #1A3A35 !important;
+}
+
+.menu-item:focused {
+    -fx-background-color: #1F8A7A;
+    -fx-text-fill: white;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #B8D9D0;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #1A3A35;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #1F8A7A;
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: derive(#1F8A7A, 70%);
+}
+
+.tooltip {
+    -fx-background-color: #1A3A35;
+    -fx-text-fill: white;
+}

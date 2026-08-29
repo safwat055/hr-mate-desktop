@@ -1,4 +1,4 @@
-package com.safwat.hr.scale;
+package com.safwat.hr.scale.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -8,13 +8,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * حافز ترقية — تاريخ + رقم القرار
+ * تشجيعية — تاريخ + رقم القرار
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PromotionIncentiveRecord {
+public class EncouragementRecord {
     private LocalDate date;
     private String decisionNumber;
 }

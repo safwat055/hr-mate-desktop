@@ -47,7 +47,7 @@
     ══════════════════════════════════════════ -->
     <MenuBar VBox.vgrow="NEVER">
         <menus>
-         <Menu mnemonicParsing="false" text="Unspecified Menu">
+         <Menu mnemonicParsing="false" text="ملف">
            <items>
              <MenuItem mnemonicParsing="false" text="Action 1" />
            </items>
@@ -76,9 +76,26 @@
                     </Menu>
                 </items>
             </Menu>
-            <Menu mnemonicParsing="false" text="Help">
+            <Menu mnemonicParsing="false" text="اعدادات">
                 <items>
-                    <MenuItem mnemonicParsing="false" text="About" />
+               <Menu mnemonicParsing="false" text="ثيمات">
+                 <items>
+                   <MenuItem mnemonicParsing="false" onAction="#applyThemeBlack" text="أسود عميق (AMOLED)" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeDark1" text="رمادي داكن" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeDark2" text="فحمي" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeIndigo" text="نيلي (ليلي)" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeGray" text="رمادي كلاسيك" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeLight" text="فاتح (أبيض)" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeLightBlue" text="أزرق فاتح" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeBlue" text="أزرق كوبالت" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeBluePepsi" text="أزرق بيبسي" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeGreen" text="أخضر زاهي" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeTeal" text="ثيان (فيروزي)" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeOlive" text="زيتوني مريح" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemePastel" text="باستيل ناعم" />
+                     <MenuItem mnemonicParsing="false" onAction="#applyThemeWarm" text="دافئ (ترابي)" />
+                 </items>
+               </Menu>
                 </items>
             </Menu>
         </menus>

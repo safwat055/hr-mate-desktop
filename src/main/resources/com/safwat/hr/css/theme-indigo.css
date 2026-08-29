@@ -1,0 +1,99 @@
+/* theme-indigo.css — ثيم داكن بألوان نيلي (مثالي للوضع الليلي) */
+@import "common.css";
+@import "chat-styles.css";
+
+.root {
+    -app-bg: #1A1E2E;
+
+    -card-bg: #29335C;
+    -card-border: #3A4570;
+    -card-shadow: rgba(0, 0, 0, 0.6);
+
+    -text-primary: #E8ECF4;
+    -text-secondary: #B0B8D0;
+    -text-muted: #7A84A6;
+    -on-brand: #FFFFFF;
+
+    -brand-navy: #1F284A;
+    -header-alt-bg: #2E3A6A;
+
+    -color-primary: #5B7BD6;
+    -color-danger: #D96A5A;
+    -color-success: #4A9A8A;
+    -color-purple: #8A7AE6;
+    -color-secondary-btn: #6A7A9A;
+
+    -border-color: #3A4570;
+    -border-gray: #4A557A;
+    -divider-color: #303A5A;
+
+    -soft-box-bg: #222B4A;
+    -soft-box-border: #3A4570;
+
+    -control-bg: #2E3A5A;
+    -table-header-bg: #1A223A;
+    -row-alt-bg: #232C4A;
+    -selection-bg: #5B7BD6;
+
+    -color-warning: #D4A84B;
+
+    -nav-gradient: linear-gradient(to bottom, #0E1426, #1A223A, #29335C, #1A223A, #0E1426);
+
+    /* Modena */
+    -fx-base: -soft-box-bg;
+    -fx-background: -app-bg;
+    -fx-control-inner-background: -control-bg;
+    -fx-text-base-color: -text-primary;
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-primary;
+    -fx-faint-focus-color: derive(-color-primary, 80%);
+}
+
+/* Popups داكنة */
+.context-menu {
+    -fx-background-color: #29335C;
+    -fx-border-color: #3A4570;
+}
+
+.menu-item {
+    -fx-background-color: #29335C;
+    -fx-text-fill: #E8ECF4 !important;
+}
+
+.menu-item .label {
+    -fx-text-fill: #E8ECF4 !important;
+}
+
+.menu-item:focused {
+    -fx-background-color: #5B7BD6;
+    -fx-text-fill: white;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #29335C;
+    -fx-border-color: #3A4570;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #29335C;
+    -fx-text-fill: #E8ECF4;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #5B7BD6;
+    -fx-text-fill: white;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: derive(#5B7BD6, 60%);
+}
+
+.tooltip {
+    -fx-background-color: #1A223A;
+    -fx-text-fill: #E8ECF4;
+}
