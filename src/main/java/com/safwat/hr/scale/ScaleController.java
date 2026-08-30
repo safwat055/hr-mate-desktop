@@ -485,7 +485,7 @@ public class ScaleController implements Initializable {
         setText(gpNoUp, extraInfo != null ? extraInfo.getGpNoUp() : null);
         setText(yearsBack, extraInfo != null ? extraInfo.getYearBack() : null);
 
-
+        System.out.print(extraInfo.getRegrade3());
         setText(txt_regrade3, fmt(extraInfo != null ? extraInfo.getRegrade3() : null));
         setText(txt_regrade4, fmt(extraInfo != null ? extraInfo.getRegrade4() : null));
         setText(txt_regrade5, fmt(extraInfo != null ? extraInfo.getRegrade5() : null));

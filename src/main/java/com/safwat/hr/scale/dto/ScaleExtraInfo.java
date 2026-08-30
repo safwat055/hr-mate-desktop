@@ -25,6 +25,7 @@ public class ScaleExtraInfo {
 
     public static ScaleExtraInfo empty() {
         ScaleExtraInfo info = new ScaleExtraInfo();
+
         info.periodicCalcType = DEFAULT_CALC_TYPE;
         return info;
     }

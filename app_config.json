@@ -1,5 +1,5 @@
 {
-  "ui": {"theme": "theme-warm.css"},
+  "ui": {"theme": "theme-gray.css"},
   "connection": {
     "alone": false,
     "url2": "ws://",

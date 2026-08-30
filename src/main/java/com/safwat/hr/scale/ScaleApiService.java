@@ -5,6 +5,7 @@ public class ScaleApiService {
 public static ScaleApiService getInstance() {
     if (instance == null) {
         instance = new ScaleApiService();
+
     }
     return instance;
 }

@@ -69,7 +69,7 @@ public class ThemeManager {
 
     /**
      *
-     * @param scene
+     * @param scene .
      */
     public static void applyDefault(Scene scene) {
         applyTheme(scene, LIGHT);
