@@ -70,7 +70,7 @@ public class HR_Client extends Application {
         AppTheme.apply(scene, AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
 
 
-        stage.setTitle("HR_Management");
+        stage.setTitle("HR_MATE");
         stage.setScene(scene);
         stage.show();
 
