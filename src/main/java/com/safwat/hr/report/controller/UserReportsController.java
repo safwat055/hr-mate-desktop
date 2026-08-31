@@ -269,6 +269,7 @@ public class UserReportsController implements Initializable {
                     }
                     SAFNotification.withAction("✅ تم التحميل: " + file.getName(), file);
                 } catch (IOException e) {
+
                     SAFNotification.error("خطأ في التحقق من الملف");
                 }
             });

@@ -28,7 +28,7 @@ import static com.safwat.hr.ui.table.TableSetupHelper.*;
 /**
  * Controller شاشة السلم الوظيفي.
  *
- * <p>يتعامل مع {@link ScaleDto} فقط في الاتجاهين — كلاس واحد موحد.
+
  *
  * <p><b>العمليات:</b>
  * <ol>
