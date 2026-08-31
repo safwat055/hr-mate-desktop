@@ -1,31 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="pad-15"
-      xmlns="http://javafx.com/javafx/26" fx:controller="com.safwat.hr.report.controller.UserReportsController">
+<?import java.lang.String?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="pad-15" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.report.controller.UserReportsController">
 
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label styleClass="bold fs-18" text="تقاريري"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnRefresh" onAction="#loadReports" text="🔄 تحديث"/>
-        <Button fx:id="btnNewReport" onAction="#openNewReport" text="➕ تقرير جديد"/>
+        <Label styleClass="bold fs-18" text="تقاريري" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="btnRefresh" onAction="#loadReports" text="🔄 تحديث">
+         <styleClass>
+            <String fx:value="btn-send" />
+            <String fx:value="empty-state-text" />
+         </styleClass></Button>
+        <Button fx:id="btnNewReport" onAction="#openNewReport" styleClass="btn-success" text="➕ تقرير جديد" />
     </HBox>
 
     <!-- Table -->
     <TableView fx:id="reportsTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colReportId" prefWidth="80" text="رقم التقرير"/>
-            <TableColumn fx:id="colReportName" prefWidth="180" text="اسم التقرير"/>
-            <TableColumn fx:id="colStatus" prefWidth="100" text="الحالة"/>
-            <TableColumn fx:id="colSubmittedTime" prefWidth="140" text="وقت التقديم"/>
-            <TableColumn fx:id="colFinishedTime" prefWidth="140" text="وقت الانتهاء"/>
-            <TableColumn fx:id="colMessage" prefWidth="200" text="الرسالة"/>
-            <TableColumn fx:id="colActions" prefWidth="150" text="إجراءات"/>
+            <TableColumn fx:id="colReportId" prefWidth="80" text="رقم التقرير" />
+            <TableColumn fx:id="colReportName" prefWidth="180" text="اسم التقرير" />
+            <TableColumn fx:id="colStatus" prefWidth="100" text="الحالة" />
+            <TableColumn fx:id="colSubmittedTime" prefWidth="140" text="وقت التقديم" />
+            <TableColumn fx:id="colFinishedTime" prefWidth="140" text="وقت الانتهاء" />
+            <TableColumn fx:id="colMessage" prefWidth="200" text="الرسالة" />
+            <TableColumn fx:id="colActions" prefWidth="150" text="إجراءات" />
         </columns>
     </TableView>
 
     <!-- Status Bar -->
-    <Label fx:id="lblStatus" styleClass="text-muted" text="جاري التحميل..."/>
+    <Label fx:id="lblStatus" styleClass="text-muted" text="جاري التحميل..." />
 </VBox>
