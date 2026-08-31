@@ -1,10 +1,10 @@
 {
-  "ui": {"theme": "theme-gray.css"},
+  "ui": {"theme": "theme-light.css"},
   "connection": {
     "alone": false,
     "url2": "ws://",
     "port": "8080",
-    "masterPC": "safwat055",
+    "masterPC": "safwat05",
     "user": "admin",
     "url": "http://"
   }

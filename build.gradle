@@ -81,4 +81,90 @@ shadowJar {
 }
 
 
+// ===============================
+// jpackage Task - تغليف التطبيق
+// ===============================
+tasks.register('jpackageApp', Exec) {
+    group = 'distribution'
+    description = 'يغلف التطبيق باستخدام jpackage مع نسخ الموارد الضرورية'
+    dependsOn shadowJar
 
+    doFirst {
+        // ---- تحديد نظام التشغيل ----
+        def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+
+        // ---- المسارات الأساسية ----
+        def buildDir      = layout.buildDirectory.get().asFile
+        def jpackageInput = new File(buildDir, 'jpackage-input')
+        def shadowJarFile = shadowJar.archiveFile.get().asFile
+
+        // ---- مسار الأيقونة حسب نظام التشغيل ----
+        def iconExt  = isWindows ? 'ico' : 'png'
+        def iconDest = new File(buildDir, "logo.${iconExt}")
+
+        // ---- تنظيف وإعداد مجلد الإدخال ----
+        jpackageInput.deleteDir()
+        jpackageInput.mkdirs()
+
+        // ---- نسخ الـ shadow jar ----
+        project.copy {
+            from shadowJarFile
+            into jpackageInput
+        }
+
+        // ---- استخراج الأيقونة من داخل الـ jar ----
+        project.copy {
+            from project.zipTree(shadowJarFile)
+            include "com/safwat/hr/icons/logo.${iconExt}"
+            into buildDir
+            eachFile { fcd ->
+                fcd.relativePath = new RelativePath(true, fcd.name)
+            }
+            includeEmptyDirs = false
+        }
+
+        // ---- بناء أمر jpackage بدون --app-content ----
+        def jpackageExe = "${System.getProperty('java.home')}/bin/jpackage"
+
+        commandLine([
+            jpackageExe,
+            '--type'        , 'app-image',
+            '--name'        , 'hr-mate',
+            '--app-version' , version.toString(),
+            '--input'       , jpackageInput.absolutePath,
+            '--main-jar'    , shadowJarFile.name,
+            '--main-class'  , 'com.safwat.hr.Launcher',
+            '--dest'        , new File(buildDir, 'jpackage-output').absolutePath,
+            '--icon'        , iconDest.absolutePath,
+        ])
+    }
+
+    doLast {
+        // ---- نسخ subresource بعد ما jpackage يخلص للمسار الصح ----
+        def isWindows     = org.gradle.internal.os.OperatingSystem.current().isWindows()
+        def buildDir      = layout.buildDirectory.get().asFile
+        def appImageRoot  = new File(buildDir, 'jpackage-output/hr-mate')
+
+        // Linux: bin/app/   |   Windows: app/
+        def targetAppDir = isWindows
+            ? new File(appImageRoot, 'app')
+            : new File(appImageRoot, 'bin/app')
+
+        targetAppDir.mkdirs()
+
+        def subresourceRoot = file('subresource')
+        if (!subresourceRoot.exists()) {
+            subresourceRoot = file('src/main/resources/subresource')
+        }
+
+        if (subresourceRoot.exists()) {
+            project.copy {
+                from subresourceRoot        // elevate.exe + pdfjs/
+                into targetAppDir           // → bin/app/elevate.exe + bin/app/pdfjs/...
+            }
+            logger.lifecycle("✅ تم نسخ subresource إلى: ${targetAppDir.absolutePath}")
+        } else {
+            logger.warn("⚠️  مجلد subresource مش موجود: ${subresourceRoot.absolutePath}")
+        }
+    }
+}

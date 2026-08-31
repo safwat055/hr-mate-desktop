@@ -22,7 +22,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
+import javafx.scene.image.Image;
 public class HR_Client extends Application {
 
     private final NotificationService notifService = NotificationService.getInstance();
@@ -60,7 +60,9 @@ public class HR_Client extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.primaryStage = stage;
-
+        stage.getIcons().add(
+                new Image(getClass().getResourceAsStream("/com/safwat/hr/icons/logo.png"))
+        );
         FXMLLoader fxmlLoader = new FXMLLoader(
                 HR_Client.class.getResource("/com/safwat/hr/view/MainView.fxml"));
 
