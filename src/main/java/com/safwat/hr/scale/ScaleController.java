@@ -78,7 +78,7 @@ public class ScaleController implements Initializable {
     @FXML
     private TextField txt_doctoraa;
     @FXML
-    private TextField txt_ectra;
+    private TextField txt_tied;
     @FXML
     private TextField txt_startCut;
     @FXML
@@ -412,7 +412,7 @@ public class ScaleController implements Initializable {
         // تفريغ الحقول
         List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
                         txt_startDate, txt_backStart, txt_debloma, txt_magester,
-                        txt_doctoraa, txt_ectra, txt_regrade3, txt_regrade4,
+                        txt_doctoraa, txt_tied, txt_regrade3, txt_regrade4,
                         txt_regrade5, txt_backRegrade, txt_group, txt_law,
                         txt_code, txt_startDegree, yearUp, yearNoUp, gpUp,
                         gpNoUp, yearsBack, date_kader, end_day,
@@ -484,7 +484,7 @@ public class ScaleController implements Initializable {
         setText(gpUp, extraInfo != null ? extraInfo.getGpUp() : null);
         setText(gpNoUp, extraInfo != null ? extraInfo.getGpNoUp() : null);
         setText(yearsBack, extraInfo != null ? extraInfo.getYearBack() : null);
-
+        setText(txt_tied, dto.getStartTied());
         System.out.print(extraInfo.getRegrade3());
         setText(txt_regrade3, fmt(extraInfo != null ? extraInfo.getRegrade3() : null));
         setText(txt_regrade4, fmt(extraInfo != null ? extraInfo.getRegrade4() : null));
@@ -501,7 +501,7 @@ public class ScaleController implements Initializable {
         fillUpgradeTable(dto.getUpgrades());
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
-        fillResultTable(dto.getResult().getTimeline());
+        fillResultTable(dto.getTimeline());
         fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
         fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
         fillAdjustmentTable(table_bounsAdd, dto.getBonusAdditions());

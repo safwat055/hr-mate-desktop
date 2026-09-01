@@ -32,7 +32,7 @@ public class ScaleDto {
     private LocalDate restartDate;
     private LocalDate basic30Date;
     private LocalDate basic30From;
-
+    private BigDecimal startTied;
     // ══════════════════════════════════════════
     //  فترة القطع
     // ══════════════════════════════════════════
@@ -64,16 +64,12 @@ public class ScaleDto {
     //  نتيجة الاحتساب — null لو مش محسوب
     // ══════════════════════════════════════════
 
-    private ScaleResultDto result;
+    private List<ScaleTimelinePoint> timeline;
 
     // ══════════════════════════════════════════
     //  Inner DTO — النتيجة
     // ══════════════════════════════════════════
 
-    @Data
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class ScaleResultDto {
-        private List<ScaleTimelinePoint> timeline;
-        private ScaleTimelinePoint lastPoint;
-    }
+
+
 }

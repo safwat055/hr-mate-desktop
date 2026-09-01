@@ -47,7 +47,7 @@
                 <TextField fx:id="txt_nationalId" alignment="CENTER" prefHeight="32" prefWidth="150" promptText="الرقم القومي" />
 
                 <Separator orientation="VERTICAL" />
-                <Label prefWidth="65" styleClass="bold" text="رقم موظف" />
+                <Label minWidth="-Infinity" prefWidth="65" styleClass="bold" text="رقم موظف" />
 
                 <TextField fx:id="txt_empCode" alignment="CENTER" prefHeight="32" prefWidth="120" promptText="رقم الموظف" />
 
@@ -123,6 +123,11 @@
                                 <Label prefWidth="110" styleClass="bold" text="تاريخ الأقدمية" />
                                 <TextField fx:id="txt_backStart" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
+                            <!-- تمييز علمي -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="بداية مربوط" />
+                                <TextField fx:id="txt_tied" alignment="CENTER" editable="false" prefHeight="28" prefWidth="120" />
+                            </HBox>
                             <!-- دبلومة -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
                                 <Label prefWidth="110" styleClass="bold" text="دبلومة" />
@@ -137,11 +142,6 @@
                             <HBox alignment="CENTER_RIGHT" spacing="6">
                                 <Label prefWidth="110" styleClass="bold" text="دكتوراة" />
                                 <TextField fx:id="txt_doctoraa" alignment="CENTER" prefHeight="28" prefWidth="120" />
-                            </HBox>
-                            <!-- تمييز علمي -->
-                            <HBox alignment="CENTER_RIGHT" spacing="6">
-                                <Label prefWidth="110" styleClass="bold" text="تمييز علمي" />
-                                <TextField fx:id="txt_ectra" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
 
                             <Separator />
