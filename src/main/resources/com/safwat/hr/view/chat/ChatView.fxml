@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <HBox xmlns:fx="http://javafx.com/fxml/1" nodeOrientation="RIGHT_TO_LEFT" prefHeight="700" prefWidth="1100"
       xmlns="http://javafx.com/javafx/26"
-      fx:controller="com.safwat.hr.chat.controller.ChatViewController">
+      fx:controller="com.safwat.hr.controller.chat.controller.ChatViewController">
     <!-- ══════════════════════════
          الجانب الأيسر — المحادثات
     ══════════════════════════ -->

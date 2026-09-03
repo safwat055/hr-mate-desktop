@@ -49,7 +49,9 @@
         <menus>
          <Menu mnemonicParsing="false" text="ملف">
            <items>
-             <MenuItem mnemonicParsing="false" text="Action 1" />
+             <MenuItem mnemonicParsing="false" onAction="#reLogin" text="إعادة تسجيل الدخول" />
+             <SeparatorMenuItem mnemonicParsing="false" />
+             <MenuItem mnemonicParsing="false" onAction="#logout" text="تسجيل الخروج" />
            </items>
          </Menu>
             <Menu mnemonicParsing="false" text="عرض">

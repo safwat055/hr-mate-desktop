@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="798.0" prefWidth="762.0"
+      spacing="10" styleClass="app-bg"
+      style="-fx-padding: 15;"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.system.MainController">
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label styleClass="fs-18 bold text-navy" text="🔧 إدارة خدمات التطبيق" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="lblStatus" styleClass="bold text-success" text="✅ جاهز" />
+        <ProgressIndicator fx:id="progressIndicator" prefHeight="25" prefWidth="25" visible="false" />
+    </HBox>
+
+    <Separator />
+
+    <!-- TabPane الرئيسي -->
+    <TabPane fx:id="mainTabPane" prefHeight="757.0" prefWidth="669.0" tabClosingPolicy="UNAVAILABLE">
+
+        <!-- ===== TAB: الرئيسية ===== -->
+        <Tab closable="false" text="🏠 الرئيسية">
+            <VBox spacing="15" style="-fx-padding: 15;">
+
+                <!-- أزرار التنقل -->
+                <HBox alignment="CENTER" spacing="15">
+                    <Button fx:id="btnOpenPgTab"      styleClass="btn btn-primary" text="📦 إدارة PostgreSQL" />
+                    <Button fx:id="btnOpenBackendTab"  styleClass="btn btn-primary" text="🚀 إدارة Backend" />
+                    <Button fx:id="btnFixServices"     styleClass="btn btn-purple"  text="🔧 إصلاح الخدمات" />
+                    <Button fx:id="btnOpenLogsTab"     styleClass="btn btn-primary" text="📊 السجلات" />
+                </HBox>
+
+                <!-- بيانات جهاز الماستر -->
+                <TitledPane expanded="true" text="بيانات جهاز الماستر">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label text="اسم جهاز الماستر" />
+                            <TextField fx:id="txtAdminPC" prefHeight="32" prefWidth="150" />
+                            <Label text="رقم البورت" />
+                            <TextField fx:id="txtAdminPort" prefHeight="30" prefWidth="120" />
+                            <Button fx:id="btnSaveAdminSet" styleClass="btn btn-primary"
+                                    prefHeight="30" text="حفظ" />
+                            <CheckBox fx:id="chk_alone" text="تشغيل فردي" />
+                        </HBox>
+                    </VBox>
+                </TitledPane>
+
+                <!-- مسارات التطبيق -->
+                <TitledPane text="📂 مسارات التطبيق">
+                    <VBox spacing="10" style="-fx-padding: 10;">
+
+                        <!-- PostgreSQL Folder -->
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints />
+                            </columnConstraints>
+                            <rowConstraints><RowConstraints /></rowConstraints>
+
+                            <Label styleClass="bold" text="PostgreSQL Folder:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="txtPgFolder" prefWidth="400"
+                                       promptText="اختر المجلد الرئيسي لـ PostgreSQL"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Button fx:id="btnBrowsePgFolder" styleClass="icon-btn"
+                                    text="📁" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                        </GridPane>
+
+                        <!-- المسارات التلقائية -->
+                        <GridPane hgap="10" vgap="5" style="-fx-padding: 5 0 0 20;">
+                            <columnConstraints>
+                                <ColumnConstraints />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+
+                            <Label text="├─ bin:"  GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="txtPgBinPath" editable="false"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Label fx:id="lblPgBinStatus" text="❌"
+                                   GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                            <Label text="└─ data:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <TextField fx:id="txtPgDataPath" editable="false"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <Label fx:id="lblPgDataStatus" text="❌"
+                                   GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                        </GridPane>
+
+                        <Separator />
+
+                        <!-- Backend -->
+                        <GridPane hgap="10" vgap="8">
+                            <columnConstraints>
+                                <ColumnConstraints />
+                                <ColumnConstraints hgrow="ALWAYS" />
+                                <ColumnConstraints />
+                            </columnConstraints>
+                            <rowConstraints><RowConstraints /></rowConstraints>
+
+                            <Label styleClass="bold" text="Backend EXE:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                            <TextField fx:id="txtBackendPath" prefWidth="400"
+                                       promptText="اختر ملف Backend Executable"
+                                       GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Button fx:id="btnBrowseBackend" styleClass="icon-btn"
+                                    text="📁" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                        </GridPane>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="10">
+                            <Button fx:id="btnSavePaths" styleClass="btn btn-primary"
+                                    prefHeight="40" text="💾 حفظ المسارات" />
+                        </HBox>
+                    </VBox>
+                </TitledPane>
+
+                <!-- معلومات سريعة -->
+                <TitledPane expanded="false" text="ℹ️ معلومات سريعة">
+                    <VBox spacing="5" style="-fx-padding: 10;">
+                        <Label fx:id="lblPgInfo"      text="PostgreSQL: غير محدد" />
+                        <Label fx:id="lblBackendInfo"  text="Backend: غير محدد" />
+                        <Label fx:id="lblStatusInfo"   text="الحالة: جاهز" />
+                        <Label fx:id="lblLastUpdate"   styleClass="text-muted" text="آخر تحديث: الآن" />
+                    </VBox>
+                </TitledPane>
+
+                <!-- سجلات سريعة -->
+                <TitledPane expanded="false" text="سجلات">
+                    <TextArea fx:id="txtPgLogs" prefHeight="200" styleClass="mono-log" />
+                </TitledPane>
+
+            </VBox>
+        </Tab>
+
+    </TabPane>
+
+</VBox>

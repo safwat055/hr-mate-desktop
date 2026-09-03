@@ -1,0 +1,38 @@
+2026-09-03 00:19:20.158 EEST [21204] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-03 00:19:20.159 EEST [21204] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-03 00:19:20.160 EEST [21204] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-03 00:19:20.167 EEST [21210] LOG:  database system was interrupted; last known up at 2026-09-02 23:59:28 EEST
+2026-09-03 00:19:20.280 EEST [21210] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-09-03 00:19:20.283 EEST [21210] LOG:  redo starts at 14/6BB42BC8
+2026-09-03 00:19:20.283 EEST [21210] LOG:  invalid record length at 14/6BB42CD0: expected at least 24, got 0
+2026-09-03 00:19:20.283 EEST [21210] LOG:  redo done at 14/6BB42C98 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-09-03 00:19:20.286 EEST [21208] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-09-03 00:19:20.294 EEST [21208] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.002 s, total=0.010 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=14/6BB42CD0, redo lsn=14/6BB42CD0
+2026-09-03 00:19:20.296 EEST [21204] LOG:  database system is ready to accept connections
+2026-09-03 00:24:20.399 EEST [21208] LOG:  checkpoint starting: time
+2026-09-03 00:24:21.864 EEST [21208] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.432 s, sync=0.003 s, total=1.468 s; sync files=11, longest=0.002 s, average=0.001 s; distance=82 kB, estimate=82 kB; lsn=14/6BB57798, redo lsn=14/6BB57740
+2026-09-03 00:30:29.633 EEST [22133] FATAL:  role "postgres" does not exist
+2026-09-03 00:56:36.029 EEST [21204] LOG:  received fast shutdown request
+2026-09-03 00:56:36.031 EEST [21204] LOG:  aborting any active transactions
+2026-09-03 00:56:36.032 EEST [23660] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.033 EEST [23990] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [23643] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [24189] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [23695] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [23624] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [24099] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [24019] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.034 EEST [23913] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.037 EEST [23704] FATAL:  terminating connection due to administrator command
+2026-09-03 00:56:36.042 EEST [21204] LOG:  background worker "logical replication launcher" (PID 21213) exited with exit code 1
+2026-09-03 00:56:36.045 EEST [21208] LOG:  shutting down
+2026-09-03 00:56:36.047 EEST [21208] LOG:  checkpoint starting: shutdown immediate
+2026-09-03 00:56:36.070 EEST [21208] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 0 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.016 s, sync=0.001 s, total=0.025 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=74 kB; lsn=14/6BB57848, redo lsn=14/6BB57848
+2026-09-03 00:56:36.081 EEST [21204] LOG:  database system is shut down
+2026-09-03 01:02:03.252 EEST [25356] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-03 01:02:03.261 EEST [25356] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-03 01:02:03.262 EEST [25356] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-03 01:02:03.268 EEST [25362] LOG:  database system was shut down at 2026-09-03 00:56:36 EEST
+2026-09-03 01:02:03.274 EEST [25356] LOG:  database system is ready to accept connections
+2026-09-03 01:07:03.375 EEST [25360] LOG:  checkpoint starting: time
+2026-09-03 01:07:04.831 EEST [25360] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.436 s, sync=0.004 s, total=1.460 s; sync files=12, longest=0.002 s, average=0.001 s; distance=81 kB, estimate=81 kB; lsn=14/6BB6BE70, redo lsn=14/6BB6BE18

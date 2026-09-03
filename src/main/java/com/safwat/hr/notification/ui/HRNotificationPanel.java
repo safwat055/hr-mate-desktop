@@ -1,6 +1,6 @@
 package com.safwat.hr.notification.ui;
 
-import com.safwat.hr.message.service.MessageClientService;
+import com.safwat.hr.controller.message.service.MessageClientService;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.Attachment;
 import com.safwat.hr.notification.model.HRNotification.NotificationCategory;

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10" styleClass="app-bg" xmlns="http://javafx.com/javafx/25"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.system.BackendController"
+      style="-fx-padding: 15;">
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label styleClass="fs-18 bold text-navy" text="🚀 إدارة Backend" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="lblBackendStatus" styleClass="bold" text="⏹ غير معروف" />
+    </HBox>
+
+    <Separator />
+
+    <!-- معلومات Backend -->
+    <GridPane hgap="15" vgap="8">
+        <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+        </rowConstraints>
+
+        <Label styleClass="bold" text="المسار:"              GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label fx:id="lblBackendPath" text="-"               GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label styleClass="bold" text="الحالة:"              GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label fx:id="lblBackendRunningStatus" text="❌ غير مشغول" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label styleClass="bold" text="المنفذ:"              GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label fx:id="lblBackendPort" text="8080"             GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label styleClass="bold" text="PID:"                 GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <Label fx:id="lblBackendPid" text="-"                GridPane.columnIndex="1" GridPane.rowIndex="3" />
+    </GridPane>
+
+    <Separator />
+
+    <!-- أزرار التحكم -->
+    <TitledPane expanded="true" text="🛠️ العمليات">
+        <VBox spacing="10" style="-fx-padding: 10;">
+
+            <!-- التشغيل -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label styleClass="bold" style="-fx-min-width: 80;" text="التشغيل:" />
+                <Button fx:id="btnStart"   styleClass="btn btn-success" text="▶ تشغيل" />
+                <Button fx:id="btnStop"    styleClass="btn btn-danger"  text="⏹ إيقاف" />
+                <Button fx:id="btnRestart" styleClass="btn btn-purple"  text="🔄 إعادة تشغيل" />
+                <CheckBox fx:id="chkServiceMode" text="خدمة (Windows)" />
+            </HBox>
+
+            <Separator />
+
+            <!-- الخدمة (Windows only — تُخفى على Linux) -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label styleClass="bold" style="-fx-min-width: 80;" text="الخدمة:" />
+                <Button fx:id="btnInstallService" styleClass="btn btn-primary" text="📦 تثبيت" />
+                <Button fx:id="btnDeleteService"  styleClass="btn btn-danger"  text="❌ حذف" />
+                <Button fx:id="btnFixServices"    styleClass="btn btn-purple"  text="🔧 إصلاح الخدمات" />
+            </HBox>
+
+            <Separator />
+
+            <!-- الوضع المحمول (Windows only) -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label styleClass="bold" style="-fx-min-width: 80;" text="وضع محمول:" />
+                <Button fx:id="btnPortable" styleClass="btn btn-secondary" text="📱 تشغيل محمول" />
+            </HBox>
+
+            <!-- التشغيل التلقائي (Windows only) -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label styleClass="bold" style="-fx-min-width: 80;" text="تشغيل تلقائي:" />
+                <Button fx:id="btnAutoStart" onAction="#handleAutoStart"
+                        styleClass="btn btn-purple" text="تشغيل تلقائي 🚀" />
+            </HBox>
+
+        </VBox>
+    </TitledPane>
+
+    <!-- سجل العمليات -->
+    <TitledPane expanded="false" text="📋 سجل العمليات">
+        <TextArea fx:id="txtBackendLogs" editable="false" prefHeight="150"
+                  styleClass="mono-log" wrapText="true" />
+    </TitledPane>
+
+</VBox>

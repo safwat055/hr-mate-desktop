@@ -1,11 +1,13 @@
 {
-  "ui": {"theme": "theme-light.css"},
+  "ui": {"theme": "theme-gray.css"},
   "connection": {
-    "alone": false,
+    "alone": "false",
+    "pgAsService": "false",
     "url2": "ws://",
     "port": "8080",
     "masterPC": "localhost",
     "user": "admin",
-    "url": "http://"
+    "url": "http://",
+    "backendAsService": "false"
   }
 }

@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <SplitPane xmlns:fx="http://javafx.com/fxml/1"
            xmlns="http://javafx.com/javafx/17"
-           fx:controller="com.safwat.hr.message.controller.MessageInboxController"
+           fx:controller="com.safwat.hr.controller.message.controller.MessageInboxController"
            dividerPositions="0.32"
            prefHeight="650.0" prefWidth="950.0"
            style="-fx-background-color:#FFFFFF;">

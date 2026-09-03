@@ -1,12 +1,18 @@
 package com.safwat.hr.main;
 
-import com.safwat.hr.message.controller.MessageInboxController;
+import com.safwat.hr.controller.message.controller.MessageInboxController;
+import com.safwat.hr.main.AppLifecycle;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.ui.HRNotificationBell;
+import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.FXMLPaths;
+import com.safwat.hr.system.AppLogBus;
 import com.safwat.hr.ui.icons.Icons;
+import com.safwat.hr.ui.style.Theme;
 import com.safwat.hr.ui.theme.AppTheme;
 import com.safwat.hr.ui.theme.ThemeManager;
+import com.safwat.hr.ui.util.AlertUtil;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
@@ -15,6 +21,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
@@ -22,7 +29,9 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -62,8 +71,19 @@ public class MainViewController implements Initializable {
         icons = Icons.getInstance();
         setMainViewIcon();
         setButtonsAction();
+
         Platform.runLater(() -> {
             Stage stage = (Stage) toolbar.getScene().getWindow();
+
+            // ✅ ربط زرار X بـ AppLifecycle.shutdown()
+            stage.setOnCloseRequest((WindowEvent event) -> {
+                event.consume(); // منع الإغلاق الفوري
+                boolean confirm = AlertUtil.showConfirmation("إغلاق البرنامج",
+                        "هل أنت متأكد من إغلاق البرنامج؟");
+                if (confirm) {
+                    AppLifecycle.shutdown();
+                }
+            });
 
             HRNotificationBell bell = new HRNotificationBell(stage, bellIcon, badge);
 
@@ -93,6 +113,7 @@ public class MainViewController implements Initializable {
             });
 
             toolbar.getChildren().add(bell);
+            AppTheme.apply(getStageFromNode(tab).getScene(), AppConfig.getString("ui","theme", ThemeManager.LIGHT));
         });
         icons.getBellImage(bellIcon);
         icons.getChatImage(btn_chat);
@@ -122,6 +143,7 @@ public class MainViewController implements Initializable {
 
         btn_scaleView.setOnAction(_ -> openScaleView());
         btn_records.setOnAction(_ -> openRecordsView());
+
         btn_tableView.setOnAction(_ -> openTableView());
     }
 
@@ -207,7 +229,7 @@ public class MainViewController implements Initializable {
         AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.Black);
     }
     @FXML void applyThemeBlue(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.BLUE);
+        AppTheme.apply(getStageFromNode(CentralController.getInstance().getComponent("primaryStage", Node.class)).getScene(), ThemeManager.BLUE);
     }@FXML void applyThemeDark1(){
         AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.DARK_1);
     }@FXML void applyThemeDark2(){
@@ -232,5 +254,66 @@ public class MainViewController implements Initializable {
         AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.WARM);
     }@FXML void applyThemeLight(){
         AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.LIGHT);
+    }
+
+
+    /**
+     * تسجيل الخروج: مسح الجلسة + إيقاف الخدمات المباشرة + إغلاق البرنامج.
+     */
+    @FXML
+    private void logout() {
+        boolean confirm = AlertUtil.showConfirmation("تسجيل الخروج",
+                "هل أنت متأكد من تسجيل الخروج وإغلاق البرنامج؟");
+        if (!confirm) return;
+
+        AppLogBus.getInstance().log("🔴 تسجيل الخروج بواسطة المستخدم");
+        AppLifecycle.shutdown();
+    }
+
+    /**
+     * إعادة تسجيل الدخول: مسح الجلسة + الرجوع لشاشة Login من غير إغلاق البرنامج.
+     * الخدمات (Backend / PostgreSQL) تفضل شغّالة.
+     */
+    @FXML
+    private void reLogin() {
+        boolean confirm = AlertUtil.showConfirmation("إعادة تسجيل الدخول",
+                "هل تريد تسجيل الخروج والرجوع لشاشة تسجيل الدخول؟\n" +
+                "ستظل الخدمات تعمل في الخلفية.");
+        if (!confirm) return;
+
+        AppLogBus.getInstance().log("🔄 إعادة تسجيل الدخول — مسح الجلسة فقط");
+        AppLifecycle.clearSession();
+        navigateToLogin();
+    }
+
+    /**
+     * الانتقال لشاشة تسجيل الدخول في نفس الـ Stage (بدون إغلاق البرنامج).
+     */
+    @FXML
+    private void navigateToLogin() {
+        try {
+            // ✅ المسار الصحيح
+            String fxmlPath = "/com/safwat/hr/view/Login.fxml";
+            URL resource = getClass().getResource(fxmlPath);
+
+            if (resource == null) {
+                throw new IOException("FXML file not found: " + fxmlPath);
+            }
+
+            FXMLLoader loader = new FXMLLoader(resource);
+            Parent loginView = loader.load();
+
+            Stage stage = (Stage) btn_report.getScene().getWindow();
+            // ✅ إزالة الـ CloseRequest القديم قبل تبديل الشاشة
+            stage.setOnCloseRequest(null);
+            stage.setScene(new Scene(loginView));
+            stage.setTitle("HR MATE - تسجيل الدخول");
+            stage.setMaximized(false);
+            stage.show();
+
+        } catch (IOException e) {
+            AlertUtil.showError("خطأ", "فشل تحميل شاشة تسجيل الدخول: " + e.getMessage());
+            Platform.exit();
+        }
     }
 }

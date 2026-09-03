@@ -372,10 +372,12 @@
 ──────────────────────────────────────────────────────────────── */
 
 .root {
-    -fx-font-family: "Cairo";
+    -fx-font-family: "Cairo", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "EmojiOne Color", "Symbola";
     -fx-text-fill: -text-primary;
 }
-
+.special-text {
+    -fx-font-family: "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color";
+}
 .label {
     -fx-text-fill: -text-primary;
 }
@@ -643,3 +645,9 @@
     -fx-background-color: -color-primary;
 }
 
+
+/* ── mono-log: TextArea للسجلات بخط Monospace ──────────────────── */
+.mono-log {
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+}

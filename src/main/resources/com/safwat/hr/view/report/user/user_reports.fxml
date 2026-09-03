@@ -17,10 +17,14 @@
         <Region HBox.hgrow="ALWAYS" />
         <Button fx:id="btnRefresh" onAction="#loadReports" text="🔄 تحديث">
          <styleClass>
-            <String fx:value="btn-send" />
-            <String fx:value="empty-state-text" />
+            <String fx:value="btn-primary" />
+            <String fx:value="special-text" />
          </styleClass></Button>
-        <Button fx:id="btnNewReport" onAction="#openNewReport" styleClass="btn-success" text="➕ تقرير جديد" />
+        <Button fx:id="btnNewReport" onAction="#openNewReport" text="➕ تقرير جديد">
+         <styleClass>
+            <String fx:value="btn-purple" />
+            <String fx:value="special-text" />
+         </styleClass></Button>
     </HBox>
 
     <!-- Table -->
