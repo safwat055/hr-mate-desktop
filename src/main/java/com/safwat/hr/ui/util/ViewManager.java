@@ -1,9 +1,7 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.theme.AppTheme;
-import com.safwat.hr.ui.theme.ThemeManager;
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -21,24 +19,22 @@ import java.util.Optional;
 @Slf4j
 public class ViewManager {
 
-    public static void openIndependentView(String fxmlFile, String cssPath) {
+    public static void openIndependentView(String fxmlFile) {
 
         try {
             Parent view = FXMLLoader.load(
                     Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
 
-            if (cssPath != null && !cssPath.isBlank()) {
-                view.getStylesheets().add(
-                        Objects.requireNonNull(
-                                ViewManager.class.getResource(cssPath)
-                        ).toExternalForm()
-                );
-            }
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setScene(new Scene(view));
-            AppTheme.apply(stage.getScene(), AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
+
+            Scene scene = new Scene(view);
+            stage.setScene(scene);
+
+            // تسجيل الـ Scene: بتطبّق الثيم الحالي فورًا
+            // + تستقبل أي تبديل ثيم لحظي على النافذة المفتوحة
+            ThemeEventBus.register(scene);
+
             String iconPath = Objects.requireNonNull(
                             ViewManager.class.getResource("/com/safwat/hr/icons/logo.png"))
                     .toExternalForm();
@@ -55,23 +51,21 @@ public class ViewManager {
         }
     }
 
-    public static void openNoIndependentView(String fxmlFile, String cssPath) {
+    public static void openNoIndependentView(String fxmlFile) {
 
         try {
             Parent view = FXMLLoader.load(Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
             Stage stage = new Stage();
-            if (cssPath != null && !cssPath.isBlank()) {
-                view.getStylesheets().add(
-                        Objects.requireNonNull(
-                                ViewManager.class.getResource(cssPath)
-                        ).toExternalForm()
-                );
-            }
-            String iconPath = Objects.requireNonNull(ViewManager.class.getResource("/safwat/icons/123.png")).toString();
+
+            String iconPath = Objects.requireNonNull(ViewManager.class.getResource("/com/safwat/hr/icons/logo.png")).toString();
             stage.getIcons().add(new Image(iconPath));
-            stage.setTitle("HR_MANAGEMENT");
+            stage.setTitle("HR MATE");
             stage.setResizable(false);
-            stage.setScene(new Scene(view));
+
+            Scene scene = new Scene(view);
+            stage.setScene(scene);
+            ThemeEventBus.register(scene);
+
             stage.show();
         } catch (IOException ex) {
             SAFNotification.error(ex.getMessage());
@@ -80,23 +74,21 @@ public class ViewManager {
 
     }
 
-    public static void openNoIndependentView(String fxmlFile, String cssPath, boolean isResizeAble) {
+    public static void openNoIndependentView(String fxmlFile, boolean isResizeAble) {
 
         try {
             Parent view = FXMLLoader.load(Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
             Stage stage = new Stage();
-            if (cssPath != null && !cssPath.isBlank()) {
-                view.getStylesheets().add(
-                        Objects.requireNonNull(
-                                ViewManager.class.getResource(cssPath)
-                        ).toExternalForm()
-                );
-            }
-            String iconpath = Objects.requireNonNull(ViewManager.class.getResource("/safwat/icons/123.png")).toString();
-            stage.getIcons().add(new Image(iconpath));
-            stage.setTitle("HR_MANAGEMENT");
+
+            String iconPath = Objects.requireNonNull(ViewManager.class.getResource("/com/safwat/hr/icons/logo.png")).toString();
+            stage.getIcons().add(new Image(iconPath));
+            stage.setTitle("HR MATE");
             stage.setResizable(isResizeAble);
-            stage.setScene(new Scene(view));
+
+            Scene scene = new Scene(view);
+            stage.setScene(scene);
+            ThemeEventBus.register(scene);
+
             stage.show();
         } catch (IOException ex) {
             SAFNotification.error(ex.getMessage());
@@ -124,6 +116,9 @@ public class ViewManager {
 
                 MainstackPane.getChildren().forEach(node -> node.setVisible(false));
                 MainstackPane.getChildren().add(view);
+
+                // لا حاجة لتطبيق الثيم هنا —
+                // الـ view يرث الستايل تلقائيًا من الـ Scene المسجّلة
 
             } catch (IOException ex) {
                 SAFNotification.error(ex.getMessage());

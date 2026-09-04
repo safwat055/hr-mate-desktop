@@ -1,0 +1,115 @@
+21:35:08,432 |-WARN in ch.qos.logback.classic.model.processor.ConfigurationModelHandlerFull - Missing watchable .xml or .properties files.
+21:35:08,486 |-WARN in ch.qos.logback.classic.model.processor.ConfigurationModelHandlerFull - Watching .xml files requires that the main configuration file is reachable as a URL
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.0.1)
+
+2026-09-04 21:35:11.050 [main] INFO  com.safwat.hr.HrApplication - Starting HrApplication v0.0.1 using Java 25.0.3 with PID 19286 (/run/media/safwat055/DIV Linux/projects/hr-mate/build/package/HR_MATE/lib/app/app.jar started by safwat055 in /run/media/safwat055/DIV Linux/projects/hr-mate/build/package/HR_MATE/bin)
+2026-09-04 21:35:11.079 [main] INFO  com.safwat.hr.HrApplication - The following 1 profile is active: "production"
+2026-09-04 21:35:13.279 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 9.0.1.Final
+2026-09-04 21:35:28.621 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-09-04 21:35:28.692 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-04 21:35:31.202 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 2219 ms. Found 19 JPA repository interfaces.
+2026-09-04 21:35:31.657 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-09-04 21:35:31.665 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-09-04 21:35:31.865 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.changeCard.PayrollChangeCardJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.870 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.element.PayrollElementJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.875 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.index.PayrollIndexJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.876 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.review.PayrollReviewJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.880 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.tables.PayrollTablesJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.883 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPayroll.yearly.PayrollYearlyJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.884 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.department.DepartmentJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.884 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.chat.ChatAttachmentJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.885 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.chat.ChatMessageJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.889 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.chat.ConversationJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.891 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.chat.ParticipantJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.895 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.internal.AttachmentJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.897 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.messaging.internal.MessageJPARepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.898 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.user.PermissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.901 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrPublic.user.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.901 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrScale.decisions.DecisionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.906 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.hrScale.scale.SalaryScaleRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.909 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.report.persistence.ReportIdsRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.909 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.safwat.hr.report.persistence.ReportRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-09-04 21:35:31.911 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 165 ms. Found 0 Redis repository interfaces.
+2026-09-04 21:35:40.242 [main] INFO  o.s.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-09-04 21:35:40.506 [main] INFO  o.s.b.w.c.s.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 29125 ms
+2026-09-04 21:35:42.844 [main] INFO  org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-09-04 21:35:43.766 [main] INFO  org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.0.Final
+2026-09-04 21:35:47.818 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-04 21:35:47.857 [main] WARN  org.hibernate.orm.deprecation - HHH90000021: Encountered deprecated setting [hibernate.temp.use_jdbc_metadata_defaults], use [hibernate.boot.allow_jdbc_metadata_access] instead
+2026-09-04 21:35:47.882 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-04 21:35:47.923 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [undefined/unknown]
+	Database driver: undefined/unknown
+	Database dialect: PostgreSQLDialect
+	Database version: 13.0
+	Default catalog/schema: unknown/unknown
+	Autocommit mode: undefined/unknown
+	Isolation level: <unknown>
+	JDBC fetch size: undefined/unknown
+	Pool: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-09-04 21:35:52.606 [main] INFO  org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-04 21:35:52.753 [main] INFO  org.hibernate.orm.jdbc.batch - HHH100501: Automatic JDBC statement batching enabled (maximum batch size 50)
+2026-09-04 21:35:52.997 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-09-04 21:35:54.186 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7c3e94b2
+2026-09-04 21:35:54.196 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-09-04 21:35:54.794 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-04 21:35:55.024 [main] INFO  o.s.d.j.r.q.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-09-04 21:36:00.391 [main] INFO  c.s.hr.shared.files.TempFileManager - مدير الملفات المؤقتة جاهز في: /run/media/safwat055/DIV Linux/projects/hr-mate/build/package/HR_MATE/bin/app/temp
+2026-09-04 21:36:02.914 [queue-1-dispatcher] INFO  c.s.hr.report.queue.QueueManager - 🚀 Dispatcher لـ queue-1 بدأ
+2026-09-04 21:36:02.917 [main] INFO  c.s.hr.report.queue.QueueManager - ✅ queue-1: Dispatcher + ThreadPool(10→50) جاهزان
+2026-09-04 21:36:02.949 [main] INFO  c.s.hr.report.queue.QueueManager - ✅ تم بدء معالجات 10 طابور
+2026-09-04 21:36:02.950 [main] INFO  c.s.hr.report.queue.QueueManager - ✅ تم تهيئة مدير الطوابير بـ 10 طابور
+2026-09-04 21:36:08.772 [main] INFO  c.s.hr.shared.config.GcLogEndpoint - GcLogEndpoint initialized
+✅ File storage directory: /run/media/safwat055/DIV Linux/projects/hr-mate/build/package/HR_MATE/bin/${app.temp.upload.dir
+2026-09-04 21:36:09.934 [main] WARN  o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::loadLibrary has been called by io.netty.util.internal.NativeLibraryUtil in an unnamed module (jar:nested:/run/media/safwat055/DIV%20Linux/projects/hr-mate/build/package/HR_MATE/lib/app/app.jar/!BOOT-INF/lib/netty-common-4.2.9.Final.jar!/)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+2026-09-04 21:36:19.877 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 4 endpoints beneath base path '/actuator'
+2026-09-04 21:36:20.389 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2026-09-04 21:36:20.414 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@6359c701]]
+2026-09-04 21:36:20.416 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2026-09-04 21:36:20.604 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopping...
+2026-09-04 21:36:20.605 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@6359c701]]
+2026-09-04 21:36:20.610 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Stopped.
+2026-09-04 21:36:20.809 [main] WARN  o.s.b.w.s.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-09-04 21:36:20.964 [main] INFO  c.s.hr.report.queue.QueueManager - ⏹️ جاري إغلاق مدير الطوابير...
+2026-09-04 21:36:20.968 [queue-1-dispatcher] INFO  c.s.hr.report.queue.QueueManager - ⏹️ Dispatcher لـ queue-1 توقف
+2026-09-04 21:36:32.917 [health-checker-queue-1] WARN  c.s.hr.report.queue.QueueManager - ⚠️ Dispatcher لـ queue-1 توقف — إعادة تشغيل
+2026-09-04 21:36:32.918 [queue-1-dispatcher] INFO  c.s.hr.report.queue.QueueManager - 🚀 Dispatcher لـ queue-1 بدأ
+2026-09-04 21:36:32.918 [health-checker-queue-1] INFO  c.s.hr.report.queue.QueueManager - ✅ queue-1: Dispatcher + ThreadPool(10→50) جاهزان
+2026-09-04 21:36:32.949 [health-checker-queue-8] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-8: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:36:32.949 [health-checker-queue-9] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-9: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:36:32.950 [health-checker-queue-8] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-8 بـ 2 خيط
+2026-09-04 21:36:32.950 [health-checker-queue-9] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-9 بـ 1 خيط
+2026-09-04 21:37:02.948 [health-checker-queue-4] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-4: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:02.950 [health-checker-queue-7] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-7: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:02.947 [health-checker-queue-5] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-5: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:02.954 [health-checker-queue-4] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-4 بـ 5 خيط
+2026-09-04 21:37:02.955 [health-checker-queue-7] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-7 بـ 2 خيط
+2026-09-04 21:37:02.960 [health-checker-queue-5] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-5 بـ 4 خيط
+2026-09-04 21:37:32.917 [health-checker-queue-1] WARN  c.s.hr.report.queue.QueueManager - ⚠️ ThreadPool لـ queue-1 توقف — إعادة تشغيل
+2026-09-04 21:37:32.917 [queue-1-dispatcher] INFO  c.s.hr.report.queue.QueueManager - 🚀 Dispatcher لـ queue-1 بدأ
+2026-09-04 21:37:32.918 [health-checker-queue-1] INFO  c.s.hr.report.queue.QueueManager - ✅ queue-1: Dispatcher + ThreadPool(10→50) جاهزان
+2026-09-04 21:37:32.943 [health-checker-queue-2] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-2: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:32.945 [health-checker-queue-3] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-3: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:32.946 [health-checker-queue-2] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-2 بـ 8 خيط
+2026-09-04 21:37:32.947 [health-checker-queue-3] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-3 بـ 6 خيط
+2026-09-04 21:37:32.948 [health-checker-queue-6] WARN  c.s.hr.report.queue.QueueManager - ⚠️ الطابور queue-6: الـ executor توقف — إعادة التهيئة
+2026-09-04 21:37:32.949 [health-checker-queue-6] INFO  c.s.hr.report.queue.QueueManager - 🔄 تم إعادة تهيئة الطابور queue-6 بـ 3 خيط
+2026-09-04 21:37:50.980 [main] INFO  c.s.hr.report.queue.QueueManager - ✅ تم إغلاق مدير الطوابير
+2026-09-04 21:37:50.995 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-09-04 21:37:51.029 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-09-04 21:37:51.071 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

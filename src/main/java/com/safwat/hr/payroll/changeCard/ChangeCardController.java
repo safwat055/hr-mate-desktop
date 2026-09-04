@@ -8,7 +8,10 @@ import com.safwat.hr.payroll.dto.SearchEmp;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.ui.controls.*;
+import com.safwat.hr.ui.controls.SAFDialog;
+import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.controls.SAFTextField;
+import com.safwat.hr.ui.controls.SAFTooltip;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.PDFView;
 import javafx.beans.property.BooleanProperty;
@@ -70,7 +73,7 @@ public class ChangeCardController implements Initializable {
      */
     void setView() {
         SAFTextField.apply(txt_empCode, txt_empName, txt_nationalID, txt_searchValue, txt_startMonth, txt_endMonth);
-        SAFButton.flat(true, btn_clear, btn_search, btn_view);
+
         Icons.getInstance().getPDFImage(btn_pdf);
 
         SAFTooltip.install(btn_pdf, "استخراج او عرض بطافة اجر الاشتراك");

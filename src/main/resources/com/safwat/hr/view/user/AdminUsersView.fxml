@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.user.AdminUsersController"
+      styleClass="app-bg" spacing="12.0">
+    <padding>
+        <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+    </padding>
+
+    <!-- شريط الأدوات -->
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Label text="إدارة المستخدمين" styleClass="fs-18, bold, text-navy"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="txtSearch" promptText="بحث بالاسم أو اسم المستخدم..." prefWidth="260.0"/>
+        <Button fx:id="btnRefresh" text="🔄 تحديث" styleClass="btn, btn-secondary" onAction="#refresh"/>
+        <Button fx:id="btnNewPermission" text="＋ صلاحية" styleClass="btn, btn-secondary" onAction="#createPermission"/>
+        <Button fx:id="btnNewUser" text="＋ مستخدم جديد" styleClass="btn, btn-primary" onAction="#createUser"/>
+    </HBox>
+
+    <Label fx:id="lblInfo" text="" styleClass="text-muted" visible="false" managed="false"/>
+
+    <!-- جدول المستخدمين -->
+    <TableView fx:id="table" VBox.vgrow="ALWAYS" styleClass="card">
+        <columns>
+            <TableColumn fx:id="colUsername" text="اسم المستخدم" prefWidth="140.0"/>
+            <TableColumn fx:id="colDisplayName" text="الاسم" prefWidth="200.0"/>
+            <TableColumn fx:id="colJobTitle" text="المسمى الوظيفي" prefWidth="160.0"/>
+            <TableColumn fx:id="colPermissions" text="الصلاحيات" prefWidth="260.0"/>
+            <TableColumn fx:id="colActive" text="الحالة" prefWidth="80.0"/>
+            <TableColumn fx:id="colActions" text="إجراءات" prefWidth="360.0"/>
+        </columns>
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
+        </columnResizePolicy>
+    </TableView>
+</VBox>

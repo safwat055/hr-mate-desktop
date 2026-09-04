@@ -1,11 +1,8 @@
 package com.safwat.hr.main;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.safwat.hr.auth.dto.LoginRequest;
 import com.safwat.hr.auth.dto.LoginResponse;
 import com.safwat.hr.auth.service.AuthService;
-import com.safwat.hr.auth.session.SessionManager;
-import com.safwat.hr.main.AppLifecycle;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.shared.AppConfig;
@@ -14,8 +11,7 @@ import com.safwat.hr.system.BackendService;
 import com.safwat.hr.system.MainController;
 import com.safwat.hr.system.PostgreSQLService;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.theme.AppTheme;
-import com.safwat.hr.ui.theme.ThemeManager;
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import io.github.palexdev.materialfx.controls.MFXProgressBar;
@@ -46,28 +42,32 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    @FXML private MFXButton btn_cancel;
-    @FXML private MFXButton btn_login;
-    @FXML private Label lbl_info;
-    @FXML private MFXPasswordField txt_password;
-    @FXML private MFXTextField txt_userName;
-    @FXML private MFXProgressBar progressIndicator;
+    @FXML
+    private MFXButton btn_cancel;
+    @FXML
+    private MFXButton btn_login;
+    @FXML
+    private Label lbl_info;
+    @FXML
+    private MFXPasswordField txt_password;
+    @FXML
+    private MFXTextField txt_userName;
+    @FXML
+    private MFXProgressBar progressIndicator;
 
     LoginRequest request = new LoginRequest();
 
     // ── ثوابت وضع Standalone ──
-    private static final int  HEALTH_POLL_INTERVAL_MS = 1000; // كل ثانية
-    private static final int  HEALTH_TIMEOUT_ATTEMPTS  = 30;  // 30 ثانية timeout
+    private static final int HEALTH_POLL_INTERVAL_MS = 1000; // كل ثانية
+    private static final int HEALTH_TIMEOUT_ATTEMPTS = 30;  // 30 ثانية timeout
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // ✅ تحميل آخر مستخدم
         String lastUser = AppConfig.getString("connection", "user", "");
-        String lastUser2 = AppConfig.getString("connection", "user", "admin");
         if (!lastUser.isEmpty()) {
             txt_userName.setText(lastUser);
             txt_password.requestFocus();
-            txt_password.setText(lastUser2);
         }
 
         btn_login.setOnAction(e -> handleLogin());
@@ -80,7 +80,6 @@ public class LoginController implements Initializable {
         txt_password.setOnAction(e -> handleLogin());
         txt_userName.setOnAction(e -> txt_password.requestFocus());
 
-        progressIndicator.setVisible(false);
 
         Platform.runLater(this::setupKeyboardShortcut);
     }
@@ -117,7 +116,7 @@ public class LoginController implements Initializable {
 
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
-            AppTheme.apply(root, AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
+            ThemeEventBus.applyTheme(root, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
         } catch (IOException e) {
             e.printStackTrace();
             SAFNotification.error("فشل فتح إدارة الخدمات: " + e.getMessage());
@@ -164,16 +163,27 @@ public class LoginController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void doStandaloneLogin(String username) {
+        // ✅ نفس المصدر اللي بيستخدمه PostgreSQLController/BackendController
+        // لما بتشغّل يدوي — لازم تكون نفس القيم المحفوظة فعليًا من شاشة الإعدادات.
+        // (AppConfig قسم "connection" مفيهوش pgBinPath/pgDataPath/backendPath أصلاً)
+        Config config = Config.getInstance();
+
         // 1. تشغيل PostgreSQL لو مش شغّال
         updateInfo("⏳ فحص PostgreSQL...");
         PostgreSQLService pgService = PostgreSQLService.getInstance();
         if (!pgService.isRunning()) {
+            String pgBin = config.getPgBinPath();
+            String pgData = config.getPgDataPath();
+            boolean pgAsService = AppConfig.getBoolean("connection", "pgAsService", false);
+
+            if (!pgAsService && (pgBin.isEmpty() || pgData.isEmpty())) {
+                showError("❌ مسار PostgreSQL غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) وحدد المسار أولاً");
+                setUiEnabled(true);
+                return;
+            }
+
             updateInfo("⏳ جاري تشغيل PostgreSQL...");
             AppLogBus.getInstance().log("[Login] تشغيل PostgreSQL في وضع Standalone");
-
-            boolean pgAsService = AppConfig.getBoolean("connection", "pgAsService", false);
-            String pgBin  = AppConfig.getString("connection", "pgBinPath", "");
-            String pgData = AppConfig.getString("connection", "pgDataPath", "");
 
             boolean pgOk = pgService.start(pgBin, pgData, pgAsService);
             if (!pgOk) {
@@ -189,11 +199,17 @@ public class LoginController implements Initializable {
         updateInfo("⏳ فحص Backend...");
         BackendService backendService = BackendService.getInstance();
         if (!backendService.isRunning()) {
+            String backendPath = config.getBackendPath();
+            boolean backendAsService = AppConfig.getBoolean("connection", "backendAsService", false);
+
+            if (!backendAsService && backendPath.isEmpty()) {
+                showError("❌ مسار Backend غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) وحدد المسار أولاً");
+                setUiEnabled(true);
+                return;
+            }
+
             updateInfo("⏳ جاري تشغيل Backend...");
             AppLogBus.getInstance().log("[Login] تشغيل Backend في وضع Standalone");
-
-            boolean backendAsService = AppConfig.getBoolean("connection", "backendAsService", false);
-            String backendPath = AppConfig.getString("connection", "backendPath", "");
 
             boolean bkOk = backendService.start(backendPath, backendAsService);
             if (!bkOk) {
@@ -299,7 +315,7 @@ public class LoginController implements Initializable {
             progressIndicator.setVisible(!enabled);
             if (enabled) {
                 progressIndicator.setProgress(0);
-                lbl_info.setVisible(false);
+
             } else {
                 progressIndicator.setProgress(-1); // indeterminate
             }
@@ -328,7 +344,10 @@ public class LoginController implements Initializable {
     }
 
     private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     private void openMainWindow() {
@@ -338,9 +357,16 @@ public class LoginController implements Initializable {
 
             Stage stage = new Stage();
             stage.setTitle("HR MATE");
-            stage.setScene(new Scene(root, 1200, 800));
+            Scene scene = new Scene(root, 1200, 800);
+            stage.setScene(scene);
             stage.setMaximized(true);
-            AppTheme.apply(root, AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
+
+            // ✅ تهيئة ThemeEventBus من AppConfig + تسجيل الـ Scene
+            ThemeEventBus.initFromConfig();
+            ThemeEventBus.register(scene);
+            // تطبيق الثيم المحفوظ
+            ThemeEventBus.applyTheme(scene, ThemeEventBus.getCurrentTheme());
+
             stage.show();
 
         } catch (Exception e) {

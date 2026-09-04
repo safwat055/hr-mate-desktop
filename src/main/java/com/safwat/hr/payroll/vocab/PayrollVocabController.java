@@ -7,9 +7,7 @@ import com.safwat.hr.payroll.vocab.service.PayrollVocabService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
-import com.safwat.hr.ui.controls.SAFButton;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.util.PDFView;
 import javafx.fxml.FXML;
@@ -61,8 +59,8 @@ public class PayrollVocabController implements Initializable {
     }
 
     void setUi() {
-        SAFButton.flat(false, btn_search);
-        SAFTextField.apply(txt_search, txt_nationalID, txt_payID, txt_name, txt_management);
+
+
         Icons.getInstance().getPDFImage(btn_open);
 
     }
@@ -124,11 +122,7 @@ public class PayrollVocabController implements Initializable {
                 SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
                 return;
             }
-            if (!lbl_path.getText().isEmpty()) {
-                openPDF(Path.of(lbl_path.getText()));
-                return;
 
-            }
             PayrollRequest request = PayrollRequest.builder().build();
 
             request.setNationalId(txt_nationalID.getText());

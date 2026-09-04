@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!--
+    الإصلاح الجوهري:
+    ────────────────────────────────────────────────────
+    المشكلة القديمة:
+        SplitPane → ScrollPane → AnchorPane(prefHeight=546) → TabPane
+        ↑ AnchorPane بحجم ثابت يمنع الـ TabPane من الامتداد
+        ↑ ScrollPane الخارجي يلف الكل بدل ما الـ ScrollPane
+          الداخلي (بتاع كل view) يشتغل
+
+    الحل:
+        SplitPane → TabPane مباشرة (بدون ScrollPane أو AnchorPane وسيط)
+        ↑ الـ TabPane بيأخذ كل مساحة الـ SplitPane
+        ↑ كل Tab content = ScrollPane بتاع الـ FXML المحمل
+          وده اللي بيظهر الـ scrollbar لو المحتوى أكبر من المساحة
+-->
+
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
@@ -24,22 +40,6 @@
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
 
-<!--
-    الإصلاح الجوهري:
-    ────────────────────────────────────────────────────
-    المشكلة القديمة:
-        SplitPane → ScrollPane → AnchorPane(prefHeight=546) → TabPane
-        ↑ AnchorPane بحجم ثابت يمنع الـ TabPane من الامتداد
-        ↑ ScrollPane الخارجي يلف الكل بدل ما الـ ScrollPane
-          الداخلي (بتاع كل view) يشتغل
-
-    الحل:
-        SplitPane → TabPane مباشرة (بدون ScrollPane أو AnchorPane وسيط)
-        ↑ الـ TabPane بيأخذ كل مساحة الـ SplitPane
-        ↑ كل Tab content = ScrollPane بتاع الـ FXML المحمل
-          وده اللي بيظهر الـ scrollbar لو المحتوى أكبر من المساحة
--->
-
 <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="807.0" prefWidth="1320.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.main.MainViewController">
 
     <!-- ══════════════════════════════════════════
@@ -47,13 +47,13 @@
     ══════════════════════════════════════════ -->
     <MenuBar VBox.vgrow="NEVER">
         <menus>
-         <Menu mnemonicParsing="false" text="ملف">
-           <items>
-             <MenuItem mnemonicParsing="false" onAction="#reLogin" text="إعادة تسجيل الدخول" />
-             <SeparatorMenuItem mnemonicParsing="false" />
-             <MenuItem mnemonicParsing="false" onAction="#logout" text="تسجيل الخروج" />
-           </items>
-         </Menu>
+            <Menu mnemonicParsing="false" text="ملف">
+                <items>
+                    <MenuItem mnemonicParsing="false" onAction="#reLogin" text="إعادة تسجيل الدخول" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" onAction="#logout" text="تسجيل الخروج" />
+                </items>
+            </Menu>
             <Menu mnemonicParsing="false" text="عرض">
                 <items>
                     <Menu mnemonicParsing="false" text="تقارير">
@@ -80,24 +80,27 @@
             </Menu>
             <Menu mnemonicParsing="false" text="اعدادات">
                 <items>
-               <Menu mnemonicParsing="false" text="ثيمات">
-                 <items>
-                   <MenuItem mnemonicParsing="false" onAction="#applyThemeBlack" text="أسود عميق (AMOLED)" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeDark1" text="رمادي داكن" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeDark2" text="فحمي" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeIndigo" text="نيلي (ليلي)" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeGray" text="رمادي كلاسيك" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeLight" text="فاتح (أبيض)" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeLightBlue" text="أزرق فاتح" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeBlue" text="أزرق كوبالت" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeBluePepsi" text="أزرق بيبسي" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeGreen" text="أخضر زاهي" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeTeal" text="ثيان (فيروزي)" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeOlive" text="زيتوني مريح" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemePastel" text="باستيل ناعم" />
-                     <MenuItem mnemonicParsing="false" onAction="#applyThemeWarm" text="دافئ (ترابي)" />
-                 </items>
-               </Menu>
+                    <MenuItem mnemonicParsing="false" onAction="#openBasicSetting" text="اعدادات المستخدم" />
+               <MenuItem mnemonicParsing="false" onAction="#openAdminUserView" text="ادارة المستخدمين" />
+               <MenuItem mnemonicParsing="false" onAction="#openChangePasswordView" text="تغير كلمة المرور" />
+                    <Menu mnemonicParsing="false" text="ثيمات">
+                        <items>
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeBlack" text="أسود عميق (AMOLED)" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeDark1" text="رمادي داكن" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeDark2" text="فحمي" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeIndigo" text="نيلي (ليلي)" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeGray" text="رمادي كلاسيك" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeLight" text="فاتح (أبيض)" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeLightBlue" text="أزرق فاتح" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeBlue" text="أزرق كوبالت" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeBluePepsi" text="أزرق بيبسي" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeGreen" text="أخضر زاهي" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeTeal" text="ثيان (فيروزي)" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeOlive" text="زيتوني مريح" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemePastel" text="باستيل ناعم" />
+                            <MenuItem mnemonicParsing="false" onAction="#applyThemeWarm" text="دافئ (ترابي)" />
+                        </items>
+                    </Menu>
                 </items>
             </Menu>
         </menus>
@@ -120,7 +123,9 @@
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="استحقاقات">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
+                                                <padding>
+                                                    <Insets bottom="8" left="5" right="5" top="8" />
+                                                </padding>
                                                 <Button fx:id="btn_payments" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير صرف" />
                                                 <Button fx:id="btn_changeCard" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
                                                 <Button fx:id="btn_PayrollVocab" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات" />
@@ -135,7 +140,9 @@
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="تسويات">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
+                                                <padding>
+                                                    <Insets bottom="8" left="5" right="5" top="8" />
+                                                </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="البيانات الاساسية" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button fx:id="btn_scaleView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تدرج راتب" />
@@ -149,7 +156,9 @@
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="اجور متغيرة">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
+                                                <padding>
+                                                    <Insets bottom="8" left="5" right="5" top="8" />
+                                                </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
@@ -163,7 +172,9 @@
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="اجازات">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
+                                                <padding>
+                                                    <Insets bottom="8" left="5" right="5" top="8" />
+                                                </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
@@ -175,7 +186,9 @@
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="موارد بشرية">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding><Insets bottom="8" left="5" right="5" top="8" /></padding>
+                                                <padding>
+                                                    <Insets bottom="8" left="5" right="5" top="8" />
+                                                </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
@@ -197,25 +210,25 @@
             <TabPane fx:id="tab" tabClosingPolicy="ALL_TABS">
                 <tabs>
                     <Tab fx:id="mainTab" closable="false" text="الرئيسية">
-                  <content>
-                     <BorderPane fx:id="mainImagePane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
-                        <left>
-                           <VBox fx:id="mainLeftBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
-                        </left>
-                        <center>
-                           <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
-                              <ImageView fitHeight="578.0" fitWidth="825.0" pickOnBounds="true" preserveRatio="true">
-                                 <image>
-                                    <Image url="@dashpoard2.jpeg" />
-                                 </image>
-                              </ImageView>
-                           </StackPane>
-                        </center>
-                        <right>
-                           <VBox fx:id="mainRightBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
-                        </right>
-                     </BorderPane>
-                  </content>
+                        <content>
+                            <BorderPane fx:id="mainImagePane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+                                <left>
+                                    <VBox fx:id="mainLeftBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
+                                </left>
+                                <center>
+                                    <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
+                                        <ImageView fitHeight="528.0" fitWidth="1152.0" pickOnBounds="true" preserveRatio="true">
+                                            <image>
+                                                <Image url="@dashboard2.png" />
+                                            </image>
+                                        </ImageView>
+                                    </StackPane>
+                                </center>
+                                <right>
+                                    <VBox fx:id="mainRightBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
+                                </right>
+                            </BorderPane>
+                        </content>
                     </Tab>
                 </tabs>
             </TabPane>
@@ -240,15 +253,25 @@
          Status Bar
     ══════════════════════════════════════════ -->
     <HBox alignment="CENTER_LEFT" spacing="5" VBox.vgrow="NEVER">
-        <padding><Insets bottom="3" left="3" right="3" top="3" /></padding>
+        <padding>
+            <Insets bottom="3" left="3" right="3" top="3" />
+        </padding>
         <Label maxWidth="Infinity" prefHeight="16" text="rightstatus" HBox.hgrow="ALWAYS">
-            <font><Font size="11" /></font>
-            <textFill><Color red="0.625" green="0.625" blue="0.625" /></textFill>
+            <font>
+                <Font size="11" />
+            </font>
+            <textFill>
+                <Color red="0.625" green="0.625" blue="0.625" />
+            </textFill>
         </Label>
         <Pane HBox.hgrow="ALWAYS" />
         <Label fx:id="leftLable" prefHeight="16" prefWidth="82" text="leftStatus" HBox.hgrow="NEVER">
-            <font><Font size="11" /></font>
-            <textFill><Color red="0.625" green="0.625" blue="0.625" /></textFill>
+            <font>
+                <Font size="11" />
+            </font>
+            <textFill>
+                <Color red="0.625" green="0.625" blue="0.625" />
+            </textFill>
         </Label>
     </HBox>
 

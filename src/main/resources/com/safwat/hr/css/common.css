@@ -651,3 +651,53 @@
     -fx-font-family: "Consolas", "Courier New", monospace;
     -fx-font-size: 12px;
 }
+
+/* ── btn variants ─────────────────────────────────────────────────── */
+.btn {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-font-size: 13px;
+    -fx-padding: 6 16 6 16;
+    -fx-cursor: hand;
+}
+.btn-primary {
+    -fx-background-color: #003399;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+.btn-success {
+    -fx-background-color: #4caf50;
+    -fx-text-fill: white;
+}
+.btn-danger {
+    -fx-background-color: #f44336;
+    -fx-text-fill: white;
+}
+.btn-purple {
+    -fx-background-color: #7b1fa2;
+    -fx-text-fill: white;
+}
+.btn-secondary {
+    -fx-background-color: #607d8b;
+    -fx-text-fill: white;
+}
+
+/* ── icon-btn ────────────────────────────────────────────────────── */
+.icon-btn {
+    -fx-background-color: #2196f3;
+    -fx-text-fill: white;
+    -fx-background-radius: 4;
+    -fx-padding: 4 10 4 10;
+    -fx-cursor: hand;
+}
+
+/* ── typography helpers ───────────────────────────────────────────── */
+.fs-18  { -fx-font-size: 18px; }
+.bold   { -fx-font-weight: bold; }
+.text-navy    { -fx-text-fill: #2c3e50; }
+.text-success { -fx-text-fill: #4caf50; }
+.text-danger  { -fx-text-fill: #d32f2f; }
+.text-muted   { -fx-text-fill: #757575; }
+
+/* ── app-bg ──────────────────────────────────────────────────────── */
+.app-bg { -fx-background-color: white; }

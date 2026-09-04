@@ -267,7 +267,7 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void createDatabase() {
-        TextInputDialog dialog = new TextInputDialog("hr_db");
+        TextInputDialog dialog = new TextInputDialog("archivemanager_db");
         dialog.setTitle("إنشاء قاعدة بيانات");
         dialog.setHeaderText("أدخل اسم قاعدة البيانات");
         dialog.setContentText("اسم القاعدة:");
@@ -391,8 +391,8 @@ public class PostgreSQLController implements Initializable {
         confirm.setHeaderText("⚠️ تحذير: سيتم مسح قاعدة البيانات الحالية بالكامل!");
         confirm.setContentText(
                 "ستُستعاد قاعدة البيانات من الملف المختار.\n" +
-                        "هذه العملية لا يمكن التراجع عنها.\n\n" +
-                        "هل أنت متأكد من المتابعة؟"
+                "هذه العملية لا يمكن التراجع عنها.\n\n" +
+                "هل أنت متأكد من المتابعة؟"
         );
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
@@ -405,7 +405,7 @@ public class PostgreSQLController implements Initializable {
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
-        java.io.File file = fileChooser.showOpenDialog(btnRestoreFile.getScene().getWindow());
+        File file = fileChooser.showOpenDialog(btnRestoreFile.getScene().getWindow());
         if (file == null) return;
 
         addLog("📂 بدء الاستعادة من ملف: " + file.getName());

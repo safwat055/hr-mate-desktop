@@ -6,6 +6,7 @@ import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.network.dto.ReportStatusResponse;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -149,7 +150,7 @@ public class UserReportsController implements Initializable {
     private String formatInstant(String isoString, DateTimeFormatter formatter) {
         try {
             // يقبل: 2026-08-01T23:36:50Z أو 2026-08-01T23:36:50+03:00
-            
+
             Instant instant = Instant.parse(isoString.replace(" ", "T")); // احتياط
             return formatter.format(instant);
         } catch (Exception e) {
@@ -332,8 +333,10 @@ public class UserReportsController implements Initializable {
             controller.loadFromPayload(response);  // ⬅️ نمرر الـ DTO كامل
 
             Stage stage = new Stage();
+
             stage.setTitle("نسخ تقرير: " + response.reportName());
             stage.setScene(new Scene(root));
+            ThemeEventBus.register(stage.getScene());
             stage.show();
 
         } catch (IOException e) {
@@ -348,7 +351,7 @@ public class UserReportsController implements Initializable {
     @FXML
     void openNewReport() {
 
-        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport(), null);
+        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
 
     }
 }

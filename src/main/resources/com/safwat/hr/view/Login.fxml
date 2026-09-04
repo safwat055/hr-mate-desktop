@@ -12,7 +12,7 @@
 <?import javafx.scene.paint.Stop?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="555.0" spacing="5.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.main.LoginController">
+<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="335.0" prefWidth="555.0" spacing="5.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.main.LoginController">
    <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="29.0" prefWidth="330.0" text="HR MATE" underline="true">
       <textFill>
          <LinearGradient endX="1.0" endY="1.0">
@@ -58,5 +58,5 @@
       </children>
    </HBox>
    <Label fx:id="lbl_info" prefHeight="37.0" prefWidth="545.0" />
-   <MFXProgressBar fx:id="progressIndicator" prefHeight="11.0" prefWidth="455.0" viewOrder="1.0" />
+   <MFXProgressBar fx:id="progressIndicator" prefHeight="5.0" prefWidth="455.0" viewOrder="1.0" />
 </VBox>

@@ -1,11 +1,11 @@
 package com.safwat.hr;
 
-import com.safwat.hr.main.CentralController;
 import com.safwat.hr.notification.service.NotificationService;
 
 import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.ui.theme.AppTheme;
-import com.safwat.hr.ui.theme.ThemeManager;
+
+
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.FontLoader;   // ← إضافة
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -28,7 +28,6 @@ public class HR_Client extends Application {
     @Override
     public void init() throws Exception {
         super.init();
-
 
         // ── تحميل الخطوط قبل أي شيء ──────────────────────────────
         // لازم يكون هنا في init() عشان يكون جاهز قبل start()
@@ -61,9 +60,9 @@ public class HR_Client extends Application {
                 HR_Client.class.getResource("/com/safwat/hr/view/Login.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
-        AppTheme.apply(scene, AppConfig.getString("ui", "theme", ThemeManager.LIGHT));
+        ThemeEventBus.applyTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
 
-        CentralController.getInstance().registerComponent("primaryStage", primaryStage);
+
         stage.setTitle("HR_MATE");
         stage.setScene(scene);
         stage.show();

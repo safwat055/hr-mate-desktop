@@ -6,12 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class PostgreSQLService {
@@ -538,7 +533,10 @@ public class PostgreSQLService {
     public boolean restart(String binPath, String dataPath, boolean asService) {
         log("🔄 إعادة تشغيل PostgreSQL...");
         stop(asService);
-        try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException ignored) {
+        }
         return start(binPath, dataPath, asService);
     }
 
@@ -740,6 +738,7 @@ public class PostgreSQLService {
     // ==================== أدوات مساعدة ====================
 
     private String getOsExt() {
+
         return System.getProperty("os.name").toLowerCase().contains("win") ? ".exe" : "";
     }
 
@@ -759,7 +758,8 @@ public class PostgreSQLService {
                     String line = scanner.nextLine();
                     output.append(line).append("\n");
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
         reader.start();
 

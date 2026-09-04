@@ -15,7 +15,7 @@ public class BackendService {
     private Long currentPid = null;
     private boolean isRunning = false;
     private Config config;
-    private static final String SERVICE_NAME = "ArchiveManager_Backend";
+    private static final String SERVICE_NAME = "HR_MATE_Service";
     private static final String NSSM_EXE = "nssm.exe";
 
     private BackendService() {
@@ -103,7 +103,8 @@ public class BackendService {
                     currentProcess.waitFor();
                     isRunning = false;
                     currentPid = null;
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }).start();
 
             return true;
@@ -152,6 +153,7 @@ public class BackendService {
                 }
 
                 currentProcess = null;
+                
                 currentPid = null;
                 isRunning = false;
                 return true;
@@ -165,78 +167,78 @@ public class BackendService {
 
                 // ===== الطريقة الأولى: taskkill (الأفضل) =====
 
-                // 1. قتل أي Process باسم ArchiveManager.exe
-                Process p1 = Runtime.getRuntime().exec("taskkill /F /IM Archive_Rest.exe");
+                // HR_MATE.exe
+                Process p1 = Runtime.getRuntime().exec("taskkill /F /IM HR_MATE.exe");
                 int exitCode1 = p1.waitFor();
                 if (exitCode1 == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف Archive_Rest.exe");
+                    System.out.println("✅ تم إيقاف HR_MATE.exe");
                 }
 
-                // 2. قتل أي Process بـ Window Title يحتوي على "Archive Management"
-                Process p2 = Runtime.getRuntime().exec("taskkill /F /FI \"WINDOWTITLE eq *Archive_Rest*\"");
+                // 2. قتل أي Process بـ Window Title يحتوي على "HR_MATE"
+                Process p2 = Runtime.getRuntime().exec("taskkill /F /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف نافذة Archive_Rest");
+                    System.out.println("✅ تم إيقاف نافذة HR_MATE");
                 }
 
                 // 3. قتل أي javaw.exe بـ Window Title (لأن JavaFX بيشتغل على javaw.exe)
-                Process p3 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq javaw.exe\" /FI \"WINDOWTITLE eq *Archive_Rest*\"");
+                Process p3 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq javaw.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p3.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف javaw.exe الخاص بـ Archive_Rest");
+                    System.out.println("✅ تم إيقاف javaw.exe الخاص بـ HR_MATE");
                 }
 
                 // 4. قتل أي java.exe بـ Window Title
-                Process p4 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq java.exe\" /FI \"WINDOWTITLE eq *Archive_Rest*\"");
+                Process p4 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq java.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p4.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف java.exe الخاص بـ Archive_Rest");
+                    System.out.println("✅ تم إيقاف java.exe الخاص بـ HR_MATE");
                 }
 
                 // ===== الطريقة الثانية: PowerShell (بديل wmic) =====
-                // قتل أي Process بـ Command Line يحتوي على ArchiveManager
+                // قتل أي Process بـ Command Line يحتوي على HR_MATE
                 Process p5 = Runtime.getRuntime().exec(
-                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*ArchiveManager*' } | Stop-Process -Force\""
+                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*HR_MATE*' } | Stop-Process -Force\""
                 );
                 if (p5.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف عمليات Archive_Rest عبر PowerShell");
+                    System.out.println("✅ تم إيقاف عمليات HR_MATE عبر PowerShell");
                 }
 
-                // قتل أي Process بـ Command Line يحتوي على "Archive Management"
+                // قتل أي Process بـ Command Line يحتوي على "HR_MATE "
                 Process p6 = Runtime.getRuntime().exec(
-                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*Archive_Rest*' } | Stop-Process -Force\""
+                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*HR_MATE*' } | Stop-Process -Force\""
                 );
                 if (p6.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف عمليات Archive_Rest عبر PowerShell");
+                    System.out.println("✅ تم إيقاف عمليات HR_MATE عبر PowerShell");
                 }
 
             } else {
                 // ===== Linux / Mac =====
                 System.out.println("🛑 البحث عن عمليات Linux...");
 
-                // 1. قتل أي Process باسم ArchiveManager
-                Process p1 = Runtime.getRuntime().exec("pkill -f Archive_Rest");
+                // 1. قتل أي Process باسم HR_MATE
+                Process p1 = Runtime.getRuntime().exec("pkill -f HR_MATE");
                 if (p1.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف ArchiveManager");
+                    System.out.println("✅ تم إيقاف HR_MATE");
                 }
 
-                // 2. قتل أي Process بـ Command Line يحتوي على Archive Management
-                Process p2 = Runtime.getRuntime().exec("pkill -f \"Archive_Rest\"");
+                // 2. قتل أي Process بـ Command Line يحتوي على HR_MATE
+                Process p2 = Runtime.getRuntime().exec("pkill -f \"HR_MATE\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف Archive Management");
+                    System.out.println("✅ تم إيقاف HR_MATE ");
                 }
 
                 // 3. قتل أي Process بـ Window Title (X11)
-                Process p3 = Runtime.getRuntime().exec("wmctrl -c \"Archive_Rest\" 2>/dev/null");
+                Process p3 = Runtime.getRuntime().exec("wmctrl -c \"HR_MATE\" 2>/dev/null");
                 p3.waitFor();
 
                 // 4. قتل أي Process بـ PID (للمزيد من التحكم)
-                Process p4 = Runtime.getRuntime().exec("pgrep -f \"Archive_Rest\" | xargs kill -9 2>/dev/null");
+                Process p4 = Runtime.getRuntime().exec("pgrep -f \"HR_MATE\" | xargs kill -9 2>/dev/null");
                 if (p4.waitFor() == 0) {
                     killed = true;
                 }
@@ -273,7 +275,10 @@ public class BackendService {
 
     public boolean restart(String backendPath, boolean asService) {
         stop(asService);
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ignored) {
+        }
         return start(backendPath, asService);
     }
 
@@ -336,8 +341,8 @@ public class BackendService {
                     "AppRotateOnline", "1",
                     "AppRotateSeconds", "86400",
                     "AppRotateBytes", "10485760",
-                    "DisplayName", "ArchiveManager_Backend",
-                    "Description", "ArchiveManager_Backend",
+                    "DisplayName", "AHR_MATE_Service",
+                    "Description", "HR_MATE_Service",
                     "Start", "SERVICE_DELAYED_AUTO_START",  // ✅ بدء متأخر
                     // ✅ إضافة تأخير عند فشل البدء
                     "AppFail", "ignore",                    // تجاهل الفشل
@@ -382,7 +387,8 @@ public class BackendService {
                 try {
                     Process stopProcess = Runtime.getRuntime().exec("net stop \"" + serviceName + "\"");
                     stopProcess.waitFor(5, TimeUnit.SECONDS);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
                 Thread.sleep(1000);
             }
 
@@ -502,8 +508,8 @@ public class BackendService {
                         String[] parts = line.split(":");
                         if (parts.length > 1) {
                             String name = parts[1].trim();
-                            if (name.toLowerCase().contains("Archive_Rest") ||
-                                    name.toLowerCase().contains("Archive_Rest")) {
+                            if (name.toLowerCase().contains("HR_MATE") ||
+                                    name.toLowerCase().contains("HR_MATE")) {
                                 services.add(name);
                             }
                         }
@@ -529,17 +535,17 @@ public class BackendService {
 
         try {
             if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                // البحث عن ArchiveManager.exe
-                Process process = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq Archive_Rest.exe\"");
+                // البحث عن HR_MATE.exe
+                Process process = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq HR_MATE.exe\"");
                 try (Scanner scanner = new Scanner(process.getInputStream())) {
                     while (scanner.hasNextLine()) {
-                        if (scanner.nextLine().contains("Archive_Rest.exe")) {
+                        if (scanner.nextLine().contains("HR_MATE.exe")) {
                             return true;
                         }
                     }
                 }
             } else {
-                Process process = Runtime.getRuntime().exec("ps aux | grep -E 'Archive_Rest|Archive_Rest' | grep -v grep");
+                Process process = Runtime.getRuntime().exec("ps aux | grep -E 'HR_MATE|HR_MATE' | grep -v grep");
                 try (Scanner scanner = new Scanner(process.getInputStream())) {
                     return scanner.hasNext();
                 }
@@ -570,6 +576,7 @@ public class BackendService {
         try {
             Process process = Runtime.getRuntime().exec("sc query \"" + serviceName + "\"");
             try (Scanner scanner = new Scanner(process.getInputStream())) {
+
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
                     if (line.contains("STATE") && line.contains("RUNNING")) {

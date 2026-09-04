@@ -1,9 +1,11 @@
 package com.safwat.hr.network;
 
-
 import com.safwat.hr.controller.message.dto.UserInfo;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -11,8 +13,12 @@ public class SessionManager {
     private static SessionManager instance;
     private String token;
     private String username;
-    private String userRole;
+    private String userRole;          // legacy — يفضّل الاعتماد على permissions
     private String fullName;
+    // ✅ جديد: بيانات العرض والصلاحيات (بتتعبّى من LoginResponse الموسّع)
+    private String displayName;
+    private String jobTitle;
+    private Set<String> permissions = new HashSet<>();
 
     private SessionManager() {
     }
@@ -24,43 +30,45 @@ public class SessionManager {
         return instance;
     }
 
-    // ==================== Getters ====================
-
-    // ==================== Setters ====================
-
     // ==================== Login/Logout ====================
 
-    /**
-     * ✅ Logs in a user and stores session data
-     */
     public void login(String token, UserInfo user) {
         this.token = token;
         this.username = user.getUsername();
         this.fullName = user.getDisplayName();
-
     }
 
-    /**
-     * ✅ Overloaded login method with separate parameters
-     */
     public void login(String token, String username, String role) {
         this.token = token;
         this.username = username;
         this.userRole = role;
         this.fullName = null;
-
     }
 
     /**
-     * ✅ مسح الجلسة (تسجيل الخروج)
+     * ✅ تعبئة الجلسة الكاملة بعد Login ناجح (LoginResponse الموسّع)
+     */
+    public void login(String token, String username, String displayName,
+                      String jobTitle, Set<String> permissions) {
+        this.token = token;
+        this.username = username;
+        this.displayName = displayName;
+        this.fullName = displayName;
+        this.jobTitle = jobTitle;
+        this.permissions = permissions != null ? permissions : new HashSet<>();
+    }
+
+    /**
+     * مسح الجلسة (تسجيل الخروج / إعادة تسجيل الدخول)
      */
     public void clear() {
-        String oldUser = username;
         this.token = null;
         this.username = null;
         this.userRole = null;
         this.fullName = null;
-
+        this.displayName = null;
+        this.jobTitle = null;
+        this.permissions = new HashSet<>();
     }
 
     // ==================== Check Methods ====================
@@ -69,10 +77,18 @@ public class SessionManager {
         return token != null && !token.isEmpty() && username != null;
     }
 
-    public boolean isAdmin() {
-        return userRole != null && userRole.equals("ADMIN");
+    /**
+     * ✅ فحص الصلاحية بالاسم — "ADMIN" / "HR_MANAGER" / ...
+     */
+    public boolean hasPermission(String permission) {
+        return permissions != null && permissions.contains(permission);
     }
 
+    public boolean isAdmin() {
+        return hasPermission("ADMIN") || "ADMIN".equals(userRole);
+    }
+
+    // legacy helpers — ممكن تمسحهم بعد ما الكل ينتقل لـ hasPermission
     public boolean isViewer() {
         return userRole != null && userRole.equals("VIEWER");
     }
@@ -88,14 +104,13 @@ public class SessionManager {
         this.username = username;
         this.userRole = userRole;
         this.fullName = fullName;
-
     }
 
     @Override
     public String toString() {
         return "SessionManager{" +
                 "username='" + username + '\'' +
-                ", userRole='" + userRole + '\'' +
+                ", permissions=" + permissions +
                 ", isLoggedIn=" + isLoggedIn() +
                 '}';
     }

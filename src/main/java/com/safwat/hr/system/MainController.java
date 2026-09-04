@@ -1,7 +1,6 @@
 package com.safwat.hr.system;
 
 import com.safwat.hr.main.Config;
-import com.safwat.hr.system.AppLogBus;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.ui.util.TabManager;
 import javafx.application.Platform;
@@ -18,7 +17,7 @@ import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 
 public class MainController implements Initializable {
-    
+
     // ===== Path Controls =====
     @FXML
     private TextField txtPgFolder, txtAdminPort, txtAdminPC;
@@ -70,7 +69,7 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-       config = Config.getInstance();
+        config = Config.getInstance();
         prefs = Preferences.userNodeForPackage(MainController.class);
         txtAdminPC.setText(AppConfig.getString("connection", "masterPC", "localhost"));
         txtAdminPort.setText(AppConfig.getString("connection", "port", "8080"));
@@ -240,10 +239,7 @@ public class MainController implements Initializable {
         btnBrowseBackend.setOnAction(e -> {
             FileChooser chooser = new FileChooser();
             chooser.setTitle("اختر ملف Backend");
-            chooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Executable Files", "*.exe", "*.jar"),
-                    new FileChooser.ExtensionFilter("All Files", "*.*")
-            );
+           
             File file = chooser.showOpenDialog(stage);
             if (file != null) {
                 txtBackendPath.setText(file.getAbsolutePath());

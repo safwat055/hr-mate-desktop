@@ -1,7 +1,8 @@
 package com.safwat.hr.shared;
 
 
-import com.safwat.hr.ui.theme.ThemeManager;
+
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -63,7 +64,7 @@ public class AppConfig {
         defaultConfig.put("connection", connection);
 
         JSONObject ui = new JSONObject();
-        ui.put("theme", ThemeManager.LIGHT);
+        ui.put("theme", ThemeEventBus.LIGHT);
         defaultConfig.put("ui", ui);
         return defaultConfig;
     }

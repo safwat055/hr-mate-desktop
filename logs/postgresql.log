@@ -36,3 +36,122 @@
 2026-09-03 01:02:03.274 EEST [25356] LOG:  database system is ready to accept connections
 2026-09-03 01:07:03.375 EEST [25360] LOG:  checkpoint starting: time
 2026-09-03 01:07:04.831 EEST [25360] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.436 s, sync=0.004 s, total=1.460 s; sync files=12, longest=0.002 s, average=0.001 s; distance=81 kB, estimate=81 kB; lsn=14/6BB6BE70, redo lsn=14/6BB6BE18
+2026-09-03 21:23:36.106 EEST [23122] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-03 21:23:36.118 EEST [23122] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-03 21:23:36.119 EEST [23122] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-03 21:23:36.129 EEST [23128] LOG:  database system was shut down at 2026-09-03 21:12:51 EEST
+2026-09-03 21:23:36.134 EEST [23122] LOG:  database system is ready to accept connections
+2026-09-03 21:25:02.310 EEST [23725] FATAL:  role "postgres" does not exist
+2026-09-03 21:28:36.223 EEST [23126] LOG:  checkpoint starting: time
+2026-09-03 21:28:37.970 EEST [23126] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.414 s, sync=0.003 s, total=1.748 s; sync files=12, longest=0.002 s, average=0.001 s; distance=78 kB, estimate=78 kB; lsn=14/6BBD3D38, redo lsn=14/6BBD3CE0
+2026-09-03 21:38:37.173 EEST [23126] LOG:  checkpoint starting: time
+2026-09-03 21:38:38.951 EEST [23126] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.422 s, sync=0.003 s, total=1.778 s; sync files=11, longest=0.002 s, average=0.001 s; distance=81 kB, estimate=81 kB; lsn=14/6BBE81D8, redo lsn=14/6BBE8180
+2026-09-03 22:02:48.542 EEST [23122] LOG:  received fast shutdown request
+2026-09-03 22:02:48.626 EEST [23122] LOG:  aborting any active transactions
+2026-09-03 22:02:48.629 EEST [23122] LOG:  background worker "logical replication launcher" (PID 23131) exited with exit code 1
+2026-09-03 22:02:48.630 EEST [23126] LOG:  shutting down
+2026-09-03 22:02:48.633 EEST [23126] LOG:  checkpoint starting: shutdown immediate
+2026-09-03 22:02:48.668 EEST [23126] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 0 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.026 s, sync=0.001 s, total=0.038 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=73 kB; lsn=14/6BBE8288, redo lsn=14/6BBE8288
+2026-09-03 22:02:48.686 EEST [23122] LOG:  database system is shut down
+2026-09-03 22:06:02.052 EEST [25862] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-03 22:06:02.156 EEST [25862] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-03 22:06:02.158 EEST [25862] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-03 22:06:02.168 EEST [25870] LOG:  database system was shut down at 2026-09-03 22:02:48 EEST
+2026-09-03 22:06:02.176 EEST [25862] LOG:  database system is ready to accept connections
+2026-09-03 22:07:09.516 EEST [25862] LOG:  received fast shutdown request
+2026-09-03 22:07:09.591 EEST [25862] LOG:  aborting any active transactions
+2026-09-03 22:07:09.595 EEST [25862] LOG:  background worker "logical replication launcher" (PID 25873) exited with exit code 1
+2026-09-03 22:07:09.596 EEST [25868] LOG:  shutting down
+2026-09-03 22:07:09.598 EEST [25868] LOG:  checkpoint starting: shutdown immediate
+2026-09-03 22:07:09.618 EEST [25868] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.012 s, sync=0.003 s, total=0.022 s; sync files=12, longest=0.002 s, average=0.001 s; distance=83 kB, estimate=83 kB; lsn=14/6BBFD060, redo lsn=14/6BBFD060
+2026-09-03 22:07:09.628 EEST [25862] LOG:  database system is shut down
+2026-09-03 22:13:50.430 EEST [26524] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-03 22:13:50.477 EEST [26524] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-03 22:13:50.480 EEST [26524] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-03 22:13:50.498 EEST [26530] LOG:  database system was shut down at 2026-09-03 22:07:09 EEST
+2026-09-03 22:13:50.506 EEST [26524] LOG:  database system is ready to accept connections
+2026-09-03 22:18:50.596 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 22:18:53.042 EEST [26528] LOG:  checkpoint complete: wrote 21 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.125 s, sync=0.004 s, total=2.447 s; sync files=19, longest=0.003 s, average=0.001 s; distance=95 kB, estimate=95 kB; lsn=14/6BC14F60, redo lsn=14/6BC14F08
+2026-09-03 22:48:50.645 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 22:48:54.516 EEST [26528] LOG:  checkpoint complete: wrote 35 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=3.545 s, sync=0.003 s, total=3.873 s; sync files=23, longest=0.002 s, average=0.001 s; distance=184 kB, estimate=184 kB; lsn=14/6BC43218, redo lsn=14/6BC431C0
+2026-09-03 22:53:50.623 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 22:53:52.206 EEST [26528] LOG:  checkpoint complete: wrote 14 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=1.439 s, sync=0.024 s, total=1.584 s; sync files=11, longest=0.023 s, average=0.003 s; distance=89 kB, estimate=175 kB; lsn=14/6BC59788, redo lsn=14/6BC59730
+2026-09-03 23:08:50.505 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:08:52.815 EEST [26528] LOG:  checkpoint complete: wrote 22 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.223 s, sync=0.003 s, total=2.311 s; sync files=18, longest=0.002 s, average=0.001 s; distance=107 kB, estimate=168 kB; lsn=14/6BC74408, redo lsn=14/6BC74378
+2026-09-03 23:13:50.915 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:13:53.958 EEST [26528] LOG:  checkpoint complete: wrote 29 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.926 s, sync=0.004 s, total=3.044 s; sync files=21, longest=0.002 s, average=0.001 s; distance=151 kB, estimate=166 kB; lsn=14/6BC9A030, redo lsn=14/6BC99FC0
+2026-09-03 23:18:51.062 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:18:53.861 EEST [26528] LOG:  checkpoint complete: wrote 24 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.424 s, sync=0.003 s, total=2.801 s; sync files=18, longest=0.002 s, average=0.001 s; distance=114 kB, estimate=161 kB; lsn=14/6BCB68E0, redo lsn=14/6BCB6888
+2026-09-03 23:38:52.271 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:38:54.868 EEST [26528] LOG:  checkpoint complete: wrote 25 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.557 s, sync=0.003 s, total=2.601 s; sync files=20, longest=0.002 s, average=0.001 s; distance=121 kB, estimate=157 kB; lsn=14/6BCD5068, redo lsn=14/6BCD5010
+2026-09-03 23:43:52.970 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:43:55.403 EEST [26528] LOG:  checkpoint complete: wrote 23 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.324 s, sync=0.005 s, total=2.434 s; sync files=18, longest=0.003 s, average=0.001 s; distance=110 kB, estimate=152 kB; lsn=14/6BCF1C18, redo lsn=14/6BCF0840
+2026-09-03 23:48:52.505 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:48:54.822 EEST [26528] LOG:  checkpoint complete: wrote 22 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.223 s, sync=0.003 s, total=2.317 s; sync files=18, longest=0.002 s, average=0.001 s; distance=103 kB, estimate=147 kB; lsn=14/6BD0A5C0, redo lsn=14/6BD0A568
+2026-09-03 23:53:52.926 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:53:53.848 EEST [26528] LOG:  checkpoint complete: wrote 8 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.818 s, sync=0.003 s, total=0.923 s; sync files=9, longest=0.002 s, average=0.001 s; distance=17 kB, estimate=134 kB; lsn=14/6BD0EB98, redo lsn=14/6BD0EB40
+2026-09-03 23:58:52.949 EEST [26528] LOG:  checkpoint starting: time
+2026-09-03 23:58:55.926 EEST [26528] LOG:  checkpoint complete: wrote 26 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.625 s, sync=0.005 s, total=2.978 s; sync files=15, longest=0.003 s, average=0.001 s; distance=156 kB, estimate=156 kB; lsn=14/6BD35D48, redo lsn=14/6BD35CB8
+2026-09-04 15:15:11.629 EEST [26528] LOG:  checkpoint starting: time
+2026-09-04 15:15:12.898 EEST [26528] LOG:  checkpoint complete: wrote 9 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.919 s, sync=0.003 s, total=1.270 s; sync files=9, longest=0.002 s, average=0.001 s; distance=29 kB, estimate=143 kB; lsn=14/6BD3D398, redo lsn=14/6BD3D340
+2026-09-04 16:00:59.795 EEST [26524] LOG:  received smart shutdown request
+2026-09-04 16:00:59.927 EEST [26524] LOG:  background worker "logical replication launcher" (PID 26533) exited with exit code 1
+2026-09-04 16:00:59.946 EEST [26528] LOG:  shutting down
+2026-09-04 16:00:59.964 EEST [26528] LOG:  checkpoint starting: shutdown immediate
+2026-09-04 16:01:00.112 EEST [26528] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 0 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.068 s, sync=0.001 s, total=0.153 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=129 kB; lsn=14/6BD3D448, redo lsn=14/6BD3D448
+2026-09-04 16:01:00.164 EEST [26524] LOG:  database system is shut down
+2026-09-04 20:48:43.036 EEST [12708] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-04 20:48:43.046 EEST [12708] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-04 20:48:43.047 EEST [12708] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-04 20:48:43.055 EEST [12714] LOG:  database system was shut down at 2026-09-04 20:20:15 EEST
+2026-09-04 20:48:43.064 EEST [12708] LOG:  database system is ready to accept connections
+2026-09-04 20:53:43.159 EEST [12712] LOG:  checkpoint starting: time
+2026-09-04 20:53:47.215 EEST [12712] LOG:  checkpoint complete: wrote 40 buffers (0.2%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=4.029 s, sync=0.004 s, total=4.058 s; sync files=25, longest=0.002 s, average=0.001 s; distance=217 kB, estimate=217 kB; lsn=14/6BEB9850, redo lsn=14/6BEB9510
+2026-09-04 20:58:43.319 EEST [12712] LOG:  checkpoint starting: time
+2026-09-04 20:58:48.026 EEST [12712] LOG:  checkpoint complete: wrote 46 buffers (0.3%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=4.678 s, sync=0.004 s, total=4.708 s; sync files=34, longest=0.002 s, average=0.001 s; distance=168 kB, estimate=212 kB; lsn=14/6BEE3830, redo lsn=14/6BEE37A0
+2026-09-04 20:59:11.795 EEST [12708] LOG:  received fast shutdown request
+2026-09-04 20:59:11.798 EEST [12708] LOG:  aborting any active transactions
+2026-09-04 20:59:11.799 EEST [14232] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.806 EEST [14226] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.806 EEST [14227] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.807 EEST [14225] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.808 EEST [14224] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.808 EEST [13038] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.808 EEST [13030] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.808 EEST [13040] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.809 EEST [13034] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.809 EEST [13039] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.810 EEST [13042] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.810 EEST [13036] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.810 EEST [13041] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.810 EEST [13037] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.811 EEST [13035] FATAL:  terminating connection due to administrator command
+2026-09-04 20:59:11.813 EEST [12708] LOG:  background worker "logical replication launcher" (PID 12717) exited with exit code 1
+2026-09-04 20:59:11.820 EEST [12712] LOG:  shutting down
+2026-09-04 20:59:11.822 EEST [12712] LOG:  checkpoint starting: shutdown immediate
+2026-09-04 20:59:11.835 EEST [12712] LOG:  checkpoint complete: wrote 16 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.004 s, total=0.015 s; sync files=11, longest=0.003 s, average=0.001 s; distance=94 kB, estimate=201 kB; lsn=14/6BEFB348, redo lsn=14/6BEFB348
+2026-09-04 20:59:11.849 EEST [12708] LOG:  database system is shut down
+2026-09-05 00:09:59.957 EEST [30543] LOG:  starting PostgreSQL 18.2 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, 64-bit
+2026-09-05 00:10:00.003 EEST [30543] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2026-09-05 00:10:00.017 EEST [30543] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2026-09-05 00:10:00.034 EEST [30549] LOG:  database system was shut down at 2026-09-04 23:57:10 EEST
+2026-09-05 00:10:00.066 EEST [30543] LOG:  database system is ready to accept connections
+2026-09-05 00:15:00.145 EEST [30547] LOG:  checkpoint starting: time
+2026-09-05 00:15:02.186 EEST [30547] LOG:  checkpoint complete: wrote 19 buffers (0.1%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.007 s, sync=0.004 s, total=2.044 s; sync files=12, longest=0.002 s, average=0.001 s; distance=109 kB, estimate=109 kB; lsn=14/6C350D10, redo lsn=14/6C350CB8
+2026-09-05 00:27:01.605 EEST [30543] LOG:  received fast shutdown request
+2026-09-05 00:27:01.615 EEST [30543] LOG:  aborting any active transactions
+2026-09-05 00:27:01.616 EEST [31950] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.616 EEST [31946] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31956] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31958] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31952] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31955] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31954] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31957] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.617 EEST [31953] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.618 EEST [31951] FATAL:  terminating connection due to administrator command
+2026-09-05 00:27:01.624 EEST [30543] LOG:  background worker "logical replication launcher" (PID 30552) exited with exit code 1
+2026-09-05 00:27:01.627 EEST [30547] LOG:  shutting down
+2026-09-05 00:27:01.629 EEST [30547] LOG:  checkpoint starting: shutdown immediate
+2026-09-05 00:27:01.652 EEST [30547] LOG:  checkpoint complete: wrote 16 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.015 s, sync=0.003 s, total=0.025 s; sync files=11, longest=0.001 s, average=0.001 s; distance=96 kB, estimate=108 kB; lsn=14/6C368E78, redo lsn=14/6C368E78
+2026-09-05 00:27:01.661 EEST [30543] LOG:  database system is shut down

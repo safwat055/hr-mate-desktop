@@ -14,14 +14,14 @@ import javafx.application.Platform;
  * - MainViewController.logout()
  * - stage.setOnCloseRequest() على نافذة MainView (زرار X)
  * - LoginController.confirmAndExit()
- *
  * <p>
  * ملاحظة: reLogin() لا يستدعي shutdown() — هو بيمسح الجلسة بس
  * ويرجّع لـ Login.fxml من غير إيقاف أي خدمة.
  */
 public class AppLifecycle {
 
-    private AppLifecycle() {}
+    private AppLifecycle() {
+    }
 
     /**
      * إغلاق التطبيق بالكامل مع إيقاف أي خدمة مباشرة (non-service) شغّالة.
@@ -61,10 +61,10 @@ public class AppLifecycle {
     private static void stopBackendIfDirect() {
         try {
             BackendService backend = BackendService.getInstance();
-            // نوقف فقط لو مش خدمة (backendAsService = false)
-            boolean asService = com.safwat.hr.shared.AppConfig
-                    .getBoolean("connection", "backendAsService", false);
-            if (!asService && backend.isRunning()) {
+
+            boolean alone = com.safwat.hr.shared.AppConfig
+                    .getBoolean("connection", "alone", false);
+            if (alone && backend.isRunning()) {
                 AppLogBus.getInstance().log("⏹ إيقاف Backend...");
                 backend.stop(false);
                 AppLogBus.getInstance().log("✅ تم إيقاف Backend");
@@ -77,9 +77,9 @@ public class AppLifecycle {
     private static void stopPostgresIfDirect() {
         try {
             PostgreSQLService pg = PostgreSQLService.getInstance();
-            boolean asService = com.safwat.hr.shared.AppConfig
-                    .getBoolean("connection", "pgAsService", false);
-            if (!asService && pg.isRunning()) {
+            boolean alone = com.safwat.hr.shared.AppConfig
+                    .getBoolean("connection", "alone", false);
+            if (alone && pg.isRunning()) {
                 AppLogBus.getInstance().log("⏹ إيقاف PostgreSQL...");
                 pg.stop(false);
                 AppLogBus.getInstance().log("✅ تم إيقاف PostgreSQL");

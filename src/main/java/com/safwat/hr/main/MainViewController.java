@@ -1,17 +1,14 @@
 package com.safwat.hr.main;
 
 import com.safwat.hr.controller.message.controller.MessageInboxController;
-import com.safwat.hr.main.AppLifecycle;
+import com.safwat.hr.controller.user.AdminUsersController;
+import com.safwat.hr.controller.user.ChangePasswordController;
 import com.safwat.hr.network.ApiClient;
-import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.ui.HRNotificationBell;
-import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.system.AppLogBus;
 import com.safwat.hr.ui.icons.Icons;
-import com.safwat.hr.ui.style.Theme;
-import com.safwat.hr.ui.theme.AppTheme;
-import com.safwat.hr.ui.theme.ThemeManager;
+import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.AlertUtil;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
@@ -71,9 +68,11 @@ public class MainViewController implements Initializable {
         icons = Icons.getInstance();
         setMainViewIcon();
         setButtonsAction();
-
         Platform.runLater(() -> {
             Stage stage = (Stage) toolbar.getScene().getWindow();
+
+            // ✅ تسجيل الـ Scene الرئيسية في ThemeEventBus
+            ThemeEventBus.register(toolbar.getScene());
 
             // ✅ ربط زرار X بـ AppLifecycle.shutdown()
             stage.setOnCloseRequest((WindowEvent event) -> {
@@ -110,10 +109,14 @@ public class MainViewController implements Initializable {
                 double x = bell.localToScreen(bell.getBoundsInLocal()).getMaxX() - 440;
                 double y = bell.localToScreen(bell.getBoundsInLocal()).getMaxY() + 8;
                 popup.show(stage, x, y);
+
+                // ✅ تسجيل Scene الـ Popup في ThemeEventBus لتطبيق الثيم عليها فورًا
+                if (popup.getScene() != null) {
+                    ThemeEventBus.register(popup.getScene());
+                }
             });
 
             toolbar.getChildren().add(bell);
-            AppTheme.apply(getStageFromNode(tab).getScene(), AppConfig.getString("ui","theme", ThemeManager.LIGHT));
         });
         icons.getBellImage(bellIcon);
         icons.getChatImage(btn_chat);
@@ -143,7 +146,6 @@ public class MainViewController implements Initializable {
 
         btn_scaleView.setOnAction(_ -> openScaleView());
         btn_records.setOnAction(_ -> openRecordsView());
-
         btn_tableView.setOnAction(_ -> openTableView());
     }
 
@@ -195,7 +197,7 @@ public class MainViewController implements Initializable {
     @FXML
     private void openPayrollReport() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
-        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport(), null);
+        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
     }
 
     @FXML
@@ -225,35 +227,74 @@ public class MainViewController implements Initializable {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollTableView(), "واجهة الإدخال", true);
     }
 
-    @FXML void applyThemeBlack(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.Black);
+    @FXML
+    void applyThemeBlack() {
+        ThemeEventBus.applyTheme(ThemeEventBus.BLACK);
     }
-    @FXML void applyThemeBlue(){
-        AppTheme.apply(getStageFromNode(CentralController.getInstance().getComponent("primaryStage", Node.class)).getScene(), ThemeManager.BLUE);
-    }@FXML void applyThemeDark1(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.DARK_1);
-    }@FXML void applyThemeDark2(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.DARK_2);
-    }@FXML void applyThemeGray(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.GRAY);
-    }@FXML void applyThemeGreen(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.GREEN);
-    }@FXML void applyThemeIndigo(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.INDIGO);
-    }@FXML void applyThemeLightBlue(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.LIGHT_BLUE);
-    }@FXML void applyThemeBluePepsi(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.PEPSI);
-    }@FXML void applyThemeOlive(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.OLIVE);
-    }@FXML void applyThemePastel(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.PASTEL);
-    }@FXML void applyThemeTeal(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.TEAL);
-    }@FXML void applyThemeWarm(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.WARM);
-    }@FXML void applyThemeLight(){
-        AppTheme.apply(getStageFromNode(tab).getScene(), ThemeManager.LIGHT);
+
+    @FXML
+    void applyThemeBlue() {
+        ThemeEventBus.applyTheme(ThemeEventBus.BLUE);
+    }
+
+    @FXML
+    void applyThemeDark1() {
+        ThemeEventBus.applyTheme(ThemeEventBus.DARK_1);
+    }
+
+    @FXML
+    void applyThemeDark2() {
+        ThemeEventBus.applyTheme(ThemeEventBus.DARK_2);
+    }
+
+    @FXML
+    void applyThemeGray() {
+        ThemeEventBus.applyTheme(ThemeEventBus.GRAY);
+    }
+
+    @FXML
+    void applyThemeGreen() {
+        ThemeEventBus.applyTheme(ThemeEventBus.GREEN);
+    }
+
+    @FXML
+    void applyThemeIndigo() {
+        ThemeEventBus.applyTheme(ThemeEventBus.INDIGO);
+    }
+
+    @FXML
+    void applyThemeLightBlue() {
+        ThemeEventBus.applyTheme(ThemeEventBus.LIGHT_BLUE);
+    }
+
+    @FXML
+    void applyThemeBluePepsi() {
+        ThemeEventBus.applyTheme(ThemeEventBus.PEPSI);
+    }
+
+    @FXML
+    void applyThemeOlive() {
+        ThemeEventBus.applyTheme(ThemeEventBus.OLIVE);
+    }
+
+    @FXML
+    void applyThemePastel() {
+        ThemeEventBus.applyTheme(ThemeEventBus.PASTEL);
+    }
+
+    @FXML
+    void applyThemeTeal() {
+        ThemeEventBus.applyTheme(ThemeEventBus.TEAL);
+    }
+
+    @FXML
+    void applyThemeWarm() {
+        ThemeEventBus.applyTheme(ThemeEventBus.WARM);
+    }
+
+    @FXML
+    void applyThemeLight() {
+        ThemeEventBus.applyTheme(ThemeEventBus.LIGHT);
     }
 
 
@@ -278,12 +319,27 @@ public class MainViewController implements Initializable {
     private void reLogin() {
         boolean confirm = AlertUtil.showConfirmation("إعادة تسجيل الدخول",
                 "هل تريد تسجيل الخروج والرجوع لشاشة تسجيل الدخول؟\n" +
-                "ستظل الخدمات تعمل في الخلفية.");
+                        "ستظل الخدمات تعمل في الخلفية.");
         if (!confirm) return;
 
         AppLogBus.getInstance().log("🔄 إعادة تسجيل الدخول — مسح الجلسة فقط");
         AppLifecycle.clearSession();
         navigateToLogin();
+    }
+
+    @FXML
+    void openBasicSetting() {
+        ViewManager.openIndependentView("/com/safwat/hr/view/system/main.fxml");
+    }
+
+    @FXML
+    void openChangePasswordView() {
+        ChangePasswordController.open(getStageFromNode(btn_chat));
+    }
+
+    @FXML
+    void openAdminUserView() {
+        AdminUsersController.open(getStageFromNode(btn_chat));
     }
 
     /**
