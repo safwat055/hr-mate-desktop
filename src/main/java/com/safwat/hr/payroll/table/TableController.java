@@ -17,6 +17,7 @@ import javafx.scene.control.*;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -106,7 +107,7 @@ public class TableController implements Initializable {
         engine = new ExcelEngine(tableView());
         engine.initializeExcelFeatures();
         engine.setSearchHandler(this::handleSearch);
-
+        engine.setNationalIdTooltipProvider(this::fetchPayrollIndexTooltip); // ← الإضافة
         setupSearchFields();
         setupDirectionOptions();
         setupHighlights();
@@ -127,10 +128,12 @@ public class TableController implements Initializable {
 
     private void setupHighlights() {
         // نفس القديم: تمييز التكرارات في القومي/الكود/الاسم + تمييز حالة التعيين
-        engine.highlightDuplicates(2); // الرقم القومي
+        // engine.highlightDuplicates(2); // الرقم القومي
         engine.highlightDuplicates(3); // رقم الموظف
         engine.highlightDuplicates(4); // الاسم
-        engine.highlightState(5);      // الحالة
+        engine.formatStateColumn();
+        engine.formatCategoryColumn();
+        engine.addStatisticalTooltips(tableView());
     }
 
     // ══════════════════════════════════════════════════════════
@@ -205,12 +208,12 @@ public class TableController implements Initializable {
     }
 
     private String[] buildHeaders(List<String> elements) {
-        String[] staticTitles = {"البحث", "المسلسل", "الرقم القومى", "رقم الموظف", "الاسم", "الحالة"};
+        String[] staticTitles = {"البحث", "المسلسل", "الرقم القومى", "رقم الموظف", "الاسم", "الحالة", "الفئة"};
         String[] allColumns = new String[ExcelEngine.COLUMN_COUNT];
         System.arraycopy(staticTitles, 0, allColumns, 0, staticTitles.length);
         if (elements != null) {
-            for (int i = 0; i < elements.size() && (6 + i) < allColumns.length; i++) {
-                allColumns[6 + i] = elements.get(i);
+            for (int i = 0; i < elements.size() && (7 + i) < allColumns.length; i++) {
+                allColumns[7 + i] = elements.get(i);
             }
         }
         return allColumns;
@@ -357,15 +360,49 @@ public class TableController implements Initializable {
         engine.updateCellValue(rowIndex, 5, empStatus);
         engine.updateCellValue(rowIndex, 6, assignmentClass);
 
-
         if (useVoices.isSelected()) {
             TextToSpeech.speak(empName);
         }
 
         engine.adjustColumnWidths();
+        engine.quickRefresh();
         engine.moveAfterSearch(rowIndex);
     }
 
+    private CompletableFuture<String> fetchPayrollIndexTooltip(String nationalId) {
+        return CompletableFuture.supplyAsync(() -> {
+
+            try {
+                var result = PayrollApiClient.getPayrollIndexByNationalId(nationalId);
+
+                return result.map(this::formatPayrollIndexTooltip).orElse(null);
+            } catch (Exception ex) {
+
+
+                throw ex;
+            }
+        });
+    }
+
+    private String formatPayrollIndexTooltip(PayrollApiClient.PayrollIndexEntity e) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("الاسم: ").append(nullToDash(e.empName())).append("\n");
+        sb.append("الرقم القومي: ").append(nullToDash(e.nationalId())).append("\n");
+        sb.append("رقم الصرف: ").append(nullToDash(e.payId())).append("\n");
+        sb.append("الرقم الثانوي: ").append(nullToDash(e.secondaryPayId())).append("\n");
+        sb.append("الحالة: ").append(nullToDash(e.empStatus())).append("\n");
+        sb.append("الفئة: ").append(nullToDash(e.assignmentClass())).append("\n");
+        sb.append("الإدارة: ").append(nullToDash(e.payManagement())).append("\n");
+        sb.append("الدرجة: ").append(nullToDash(e.degree())).append("\n");
+        sb.append("الوظيفة: ").append(nullToDash(e.job())).append("\n");
+        sb.append("30-06 اساسي: ").append(nullToDash(e.basic306().toString())).append("\n");
+        sb.append("المرتب الأساسي: ").append(nullToDash(e.salaryBasic().toString()));
+        return sb.toString();
+    }
+
+    private String nullToDash(String v) {
+        return (v == null || v.isBlank()) ? "-" : v;
+    }
     // ══════════════════════════════════════════════════════════
     //  الحفظ والحذف
     // ══════════════════════════════════════════════════════════

@@ -79,6 +79,7 @@ public class AppLifecycle {
             PostgreSQLService pg = PostgreSQLService.getInstance();
             boolean alone = com.safwat.hr.shared.AppConfig
                     .getBoolean("connection", "alone", false);
+            
             if (alone && pg.isRunning()) {
                 AppLogBus.getInstance().log("⏹ إيقاف PostgreSQL...");
                 pg.stop(false);

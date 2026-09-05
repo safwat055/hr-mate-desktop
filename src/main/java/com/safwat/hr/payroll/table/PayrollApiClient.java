@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -24,6 +25,29 @@ public final class PayrollApiClient {
     private PayrollApiClient() {
     }
 
+    public static Optional<PayrollIndexEntity> getPayrollIndexByNationalId(String nationalId) {
+        ApiResponse<PayrollIndexEntity> response = call(() ->
+                ApiClient.post("/payrollIndex/nationalId",
+                        Map.of("nationalId", nationalId),
+                        PayrollIndexEntity.class));
+        return response.isSuccess() ? Optional.ofNullable(response.getData()) : Optional.empty();
+    }
+
+    public record PayrollIndexEntity(
+            Long id,
+            String nationalId,
+            String payId,
+            String empName,
+            String empStatus,
+            String assignmentClass,
+            String payManagement,
+            String degree,
+            String job,
+            String secondaryPayId,
+            Double basic306,
+            Double salaryBasic
+    ) {
+    }
     // ==================== DTOs (مطابقة للباك إند) ====================
 
     /**
@@ -90,12 +114,13 @@ public final class PayrollApiClient {
         return getList("/payrollTables/allIds");
     }
 
+    @SneakyThrows
     public static List<String> getElementsByGroup(String groupName) {
         Map<String, String> payload = Map.of("groupName", groupName);
-        ApiResponse<List<String>> response = call(() ->
-                ApiClient.post("/payrollGroups/elements", payload, new TypeReference<List<String>>() {
-                }));
-        return response.isSuccess() && response.getData() != null ? response.getData() : List.of();
+
+        return ApiClient.post("/payrollGroups/elements", payload, new TypeReference<List<String>>() {
+        }).getData();
+
     }
 
     // ==================== الصرفيات الثابتة ====================
