@@ -111,7 +111,7 @@ public class MessageClientService {
      */
     public void connect() {
         if (connected.get() || connecting.getAndSet(true)) {
-            System.out.println("[MessageClientService] Already connected/connecting");
+
             return;
         }
 
@@ -119,7 +119,7 @@ public class MessageClientService {
         String username = ApiClient.getUserName();
 
         if (token == null || token.isEmpty()) {
-            System.err.println("[MessageClientService] لا يوجد token");
+
             scheduleReconnect();
             return;
         }
@@ -142,7 +142,6 @@ public class MessageClientService {
 
         String wsUrl = getWebSocketUrl();
 
-        System.out.println("[MessageClientService] Connecting STOMP to: " + wsUrl);
 
         stompClient.connectAsync(wsUrl, headers, new StompSessionHandlerAdapter() {
 
@@ -151,7 +150,7 @@ public class MessageClientService {
                 stompSession = session;
                 connected.set(true);
                 connecting.set(false);
-                System.out.println("[MessageClientService] STOMP Connected");
+
 
                 subscribeToMessages();
                 loadUnreadMessagesAndNotify();
@@ -194,13 +193,13 @@ public class MessageClientService {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof MessageNotificationDTO dto) {
-                    System.out.println("[MessageClientService] New message via STOMP: id=" + dto.messageId);
+
                     handleIncomingMessage(dto);
                 }
             }
         });
 
-        System.out.println("[MessageClientService] Subscribed to: " + destination);
+
     }
 
     /**
@@ -213,7 +212,7 @@ public class MessageClientService {
         String currentUser = ApiClient.getUserName();
 
         if (currentUser == null || !currentUser.equals(dto.recipientUsername)) {
-            System.out.println("[MessageClientService] Not for me — ignoring");
+
             return;
         }
 
@@ -225,7 +224,7 @@ public class MessageClientService {
                 });
 
         if (exists) {
-            System.out.println("[MessageClientService] Message " + dto.messageId + " already exists — ignoring");
+
             return;
         }
 
@@ -257,7 +256,7 @@ public class MessageClientService {
 
             notifService.send(builder.build());
             notifService.updateUnreadCount();
-            System.out.println("[MessageClientService] Notification added for message " + dto.messageId);
+
         });
     }
 
@@ -293,7 +292,7 @@ public class MessageClientService {
 
         connected.set(false);
         connecting.set(false);
-        System.out.println("[MessageClientService] Disconnected");
+
     }
 
     /**
@@ -342,7 +341,7 @@ public class MessageClientService {
                 Platform.runLater(() -> {
                     int unread = stats.getUnreadCount() > 0 ? (int) stats.getUnreadCount() : 0;
                     notifService.updateUnreadCount(unread);
-                    System.out.println("[LOAD] " + unread + " unread messages — badge updated");
+
                 });
             }
         });
@@ -381,7 +380,7 @@ public class MessageClientService {
                 }
 
                 notifService.updateUnreadCount();
-                System.out.println("[REFRESH] Loaded " + messages.size() + " messages");
+
             });
         });
     }
@@ -457,7 +456,7 @@ public class MessageClientService {
                     return response.getData();
                 return null;
             } catch (Exception e) {
-                System.err.println("[MessageClientService] فشل جلب الإحصائيات: " + e.getMessage());
+
                 return null;
             }
         });
@@ -481,7 +480,7 @@ public class MessageClientService {
                 }
                 return List.of();
             } catch (Exception e) {
-                System.err.println("[MessageClientService] فشل جلب الرسائل: " + e.getMessage());
+
                 return List.of();
             }
         });
@@ -525,8 +524,6 @@ public class MessageClientService {
             try {
                 String url = buildFullUrl("/messages/" + messageId);
 
-                System.out.println("[CLIENT] جاري جلب تفاصيل الرسالة: " + messageId);
-                System.out.println("[CLIENT] URL: " + url);
 
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
@@ -541,7 +538,7 @@ public class MessageClientService {
                 r.close();
 
                 String rawJson = sb.toString();
-                System.out.println("[CLIENT] Raw: " + rawJson);
+
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> root = mapper.readValue(rawJson, Map.class);
@@ -576,8 +573,7 @@ public class MessageClientService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String url = buildFullUrl("/messages/" + messageId + "/thread");
-                System.out.println("[CLIENT] جاري جلب المحادثة: " + messageId);
-                System.out.println("[CLIENT] URL: " + url);
+
 
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
@@ -587,7 +583,7 @@ public class MessageClientService {
                 c.setReadTimeout(10000);
 
                 int status = c.getResponseCode();
-                System.out.println("[CLIENT] Thread HTTP Status: " + status);
+
 
                 if (status != 200) {
                     throw new RuntimeException("HTTP " + status);
@@ -601,7 +597,6 @@ public class MessageClientService {
                 r.close();
 
                 String rawJson = sb.toString();
-                System.out.println("[CLIENT] Thread Raw: " + rawJson.substring(0, Math.min(200, rawJson.length())) + "...");
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> root = mapper.readValue(rawJson, Map.class);
@@ -615,7 +610,7 @@ public class MessageClientService {
                 return null;
 
             } catch (Exception e) {
-                System.err.println("[CLIENT] فشل جلب المحادثة: " + e.getMessage());
+
                 return null;
             }
         });
@@ -720,7 +715,7 @@ public class MessageClientService {
             try {
                 ApiClient.put(buildApiUrl("/messages/" + messageId + "/read"), null, Void.class);
             } catch (Exception e) {
-                System.err.println("[MessageClientService] فشل تعليم مقروء: " + e.getMessage());
+
             }
         });
     }
@@ -745,9 +740,7 @@ public class MessageClientService {
         new Thread(() -> {
             try {
                 String url = buildFullUrl("/messages/attachments/" + token);
-                System.out.println("[DOWNLOAD] Token: " + token);
-                System.out.println("[DOWNLOAD] URL: " + url);
-                System.out.println("[DOWNLOAD] Target: " + targetPath);
+
 
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
@@ -757,7 +750,7 @@ public class MessageClientService {
                 c.setReadTimeout(30000);
 
                 int status = c.getResponseCode();
-                System.out.println("[DOWNLOAD] HTTP Status: " + status);
+
 
                 if (status != 200) {
                     String errMsg = "HTTP " + status;
@@ -780,7 +773,7 @@ public class MessageClientService {
                     Files.copy(in, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 }
 
-                System.out.println("[DOWNLOAD] Saved to: " + targetPath);
+
                 Platform.runLater(onSuccess);
 
             } catch (Exception e) {
@@ -813,11 +806,11 @@ public class MessageClientService {
                 c.setReadTimeout(5000);
 
                 int status = c.getResponseCode();
-                System.out.println("[CHECK] Attachment " + token + " exists: " + (status == 200));
+
                 return status == 200;
 
             } catch (Exception e) {
-                System.err.println("[CHECK] Failed to check attachment: " + e.getMessage());
+
                 return false;
             }
         });
@@ -836,7 +829,6 @@ public class MessageClientService {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 String url = buildFullUrl("/users");
-                System.out.println("[USERS] Fetching from: " + url);
 
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
@@ -859,7 +851,6 @@ public class MessageClientService {
                 r.close();
 
                 String rawJson = sb.toString();
-                System.out.println("[USERS] Raw: " + rawJson.substring(0, Math.min(200, rawJson.length())) + "...");
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> root = mapper.readValue(rawJson, Map.class);
@@ -910,15 +901,6 @@ public class MessageClientService {
         return "" + parts[0].charAt(0) + parts[1].charAt(0);
     }
 
-    /**
-     * طباعة حالة الاتصال الحالية.
-     */
-    public void printStatus() {
-        System.out.println("=== Message WebSocket Status ===");
-        System.out.println("Connected: " + connected.get());
-        System.out.println("Token: " + (ApiClient.getAuthToken() != null ? "YES" : "NO"));
-        System.out.println("========================");
-    }
 
     // =====================================================================
     //  DTOs

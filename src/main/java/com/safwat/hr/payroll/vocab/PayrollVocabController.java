@@ -91,7 +91,7 @@ public class PayrollVocabController implements Initializable {
                 startDate(DateUtils.getFirstDayOfMonth(txt_month.getText())).build();
 
         List<SearchVocab> data = vocabService.searchVocab(request).getData();
-        System.out.println(data.size());
+
         if (data.size() == 1) {
             txt_nationalID.setText(data.getFirst().nationalID());
             txt_payID.setText(data.getFirst().payID());

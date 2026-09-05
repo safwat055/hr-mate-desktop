@@ -473,7 +473,7 @@ public class ExcelEngine {
 
         Platform.runLater(() -> {
             try {
-                System.out.println("🔄 إضافة تولتيب إحصائي للجدول...");
+
 
                 // إضافة تأثيرات التولتيب لجميع الأعمدة
                 for (TableColumn<ObservableList<String>, ?> column : targetTable.getColumns()) {
@@ -491,10 +491,9 @@ public class ExcelEngine {
                     }
                 });
 
-                System.out.println("✅ تم إضافة التولتيب الإحصائي لجميع الأعمدة");
 
             } catch (Exception e) {
-                System.err.println("❌ خطأ في إضافة التولتيب الإحصائي: " + e.getMessage());
+
                 e.printStackTrace();
             }
         });
@@ -1012,7 +1011,6 @@ public class ExcelEngine {
             newColumn.setPrefWidth(currentWidth);
             newColumn.setVisible(isVisible);
 
-            System.out.println("📊 تم تحديث عمود " + columnIndex + " إلى: " + headerText);
         }
     }
 
@@ -1105,7 +1103,6 @@ public class ExcelEngine {
                 // إجبار الجدول على إعادة حساب الأبعاد
                 tableView.layout();
 
-                System.out.println("✅ تم ضبط عرض الأعمدة بنجاح");
 
             } catch (Exception e) {
                 System.err.println("❌ خطأ في ضبط عرض الأعمدة: " + e.getMessage());

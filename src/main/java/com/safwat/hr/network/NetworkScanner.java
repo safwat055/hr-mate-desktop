@@ -123,12 +123,11 @@ public class NetworkScanner {
         Map<String, String> result = new HashMap<>(); // المفتاح: IP, القيمة: الاسم
         String localIP = getRealLocalIPAddress();
         if (localIP == null || localIP.equals("127.0.0.1")) {
-            System.err.println("لا يمكن تحديد الشبكة المحلية.");
+
             return result;
         }
 
         String subnet = localIP.substring(0, localIP.lastIndexOf('.'));
-        System.out.println("مسح الشبكة: " + subnet + ".0/24");
 
         // إضافة الجهاز الحالي
         try {
@@ -245,27 +244,24 @@ public class NetworkScanner {
 
     // ========== اختبار ==========
     public static void main(String[] args) {
-        System.out.println("الـ IP المحلي الحقيقي: " + getRealLocalIPAddress());
+
         long start = System.currentTimeMillis();
       /* Map<String, String> devices = getAllDevicesOnLocalNetwork();
         long end = System.currentTimeMillis();
 
-        System.out.println("\nالوقت المستغرق: " + (end - start) + " مللي ثانية");
-        System.out.println("عدد الأجهزة المكتشفة: " + devices.size());
-        for (Map.Entry<String, String> entry : devices.entrySet()) {
-            System.out.println("الجهاز: " + entry.getKey() + " -> " + entry.getValue());
-        }
+
+
 
         String testName = "Safwat055";
         String ip = getIPFromHostName(testName);
-        System.out.println("\nIP للاسم " + testName + " : " + ip);*/
+
         /*List<String> allNames = getAllDeviceNames();
-        System.out.println("جميع الأسماء: " + allNames);
+
 */
         List<String> realNames = getRealDeviceNames();
-        System.out.println("الأسماء الحقيقية: " + realNames);
+
         long end = System.currentTimeMillis();
 
-        System.out.println("\nالوقت المستغرق: " + (end - start) + " مللي ثانية");
+
     }
 }

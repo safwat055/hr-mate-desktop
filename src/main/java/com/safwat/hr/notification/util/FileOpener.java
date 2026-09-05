@@ -93,7 +93,7 @@ public class FileOpener {
      * @param route المسار الداخلي
      */
     private static void navigateTo(String route) {
-        System.out.println("[FileOpener] التنقل إلى: " + route);
+
         // TODO: AppRouter.getInstance().navigate(route)
     }
 

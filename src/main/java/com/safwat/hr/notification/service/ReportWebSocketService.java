@@ -68,7 +68,6 @@ public class ReportWebSocketService {
     public void connect() {
         intentionalClose.set(false);
         String wsUrl = ApiClient.BASE_URL2();
-        System.out.println("[ReportWS] 🔌 Connecting to: " + wsUrl);
 
         HttpClient client = ApiClient.httpClient;
         WebSocket.Builder builder = client.newWebSocketBuilder();
@@ -84,8 +83,6 @@ public class ReportWebSocketService {
             public void onOpen(WebSocket ws) {
                 webSocket = ws;
                 frameBuffer.setLength(0);
-                System.out.println("[ReportWS] ✅ WebSocket opened — sending STOMP CONNECT");
-
                 // STOMP CONNECT — الـ JWT في Native Header عشان WebSocketAuthInterceptor يقرأه
                 // فراغ بعد ":" مهم للتوافق مع Spring STOMP parser
                 String connectFrame =
@@ -114,8 +111,6 @@ public class ReportWebSocketService {
                 String frame = frameBuffer.toString();
                 frameBuffer.setLength(0);
 
-                System.out.println("[ReportWS] 📩 Frame received:\n" + frame.substring(0, Math.min(200, frame.length())));
-
                 handleFrame(frame);
                 ws.request(1);
                 return null;
@@ -129,14 +124,14 @@ public class ReportWebSocketService {
 
             @Override
             public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-                System.out.println("[ReportWS] 🔌 Closed: " + reason + " (code: " + statusCode + ")");
+
                 if (!intentionalClose.get()) {
                     scheduleReconnect();
                 }
                 return null;
             }
         }).exceptionally(e -> {
-            System.err.println("[ReportWS] ❌ Connection failed: " + e.getMessage());
+
             scheduleReconnect();
             return null;
         });
@@ -148,7 +143,7 @@ public class ReportWebSocketService {
 
     private void handleFrame(String frame) {
         if (frame.startsWith("CONNECTED")) {
-            System.out.println("[ReportWS] ✅ STOMP connected — subscribing to /user/queue/reports");
+
 
             // STOMP SUBSCRIBE
             String subscribeFrame =
@@ -163,7 +158,7 @@ public class ReportWebSocketService {
             }
 
         } else if (frame.startsWith("MESSAGE")) {
-            System.out.println("[ReportWS] 📨 MESSAGE received");
+
             String body = extractStompBody(frame);
             if (body != null && !body.isBlank()) {
                 handleReportNotification(body);
@@ -175,8 +170,8 @@ public class ReportWebSocketService {
         } else if (frame.startsWith("HEARTBEAT") || frame.isBlank() || frame.equals("\n")) {
             // Heartbeat — تجاهل
         } else {
-            System.out.println("[ReportWS] ❓ Unknown frame type: " +
-                    frame.substring(0, Math.min(50, frame.length())));
+
+            frame.substring(0, Math.min(50, frame.length()));
         }
     }
 
@@ -215,8 +210,7 @@ public class ReportWebSocketService {
     private void handleReportNotification(String json) {
         try {
             ReportNotificationPayload payload = mapper.readValue(json, ReportNotificationPayload.class);
-            System.out.println("[ReportWS] 📋 Notification: reportId=" + payload.reportId +
-                    ", status=" + payload.status);
+
 
             Platform.runLater(() -> {
                 var type = switch (payload.status != null ? payload.status : "") {
@@ -257,7 +251,7 @@ public class ReportWebSocketService {
 
     private void scheduleReconnect() {
         if (intentionalClose.get()) return;
-        System.out.println("[ReportWS] ⏳ إعادة الاتصال بعد " + RECONNECT_DELAY_SEC + " ثوانٍ...");
+
         reconnectScheduler.schedule(this::connect, RECONNECT_DELAY_SEC, TimeUnit.SECONDS);
     }
 
@@ -271,7 +265,7 @@ public class ReportWebSocketService {
         if (webSocket != null) {
             webSocket.sendText("DISCONNECT\n\n\u0000", true);
             webSocket.sendClose(1000, "Client closing");
-            System.out.println("[ReportWS] 🔌 Disconnected");
+
         }
     }
 

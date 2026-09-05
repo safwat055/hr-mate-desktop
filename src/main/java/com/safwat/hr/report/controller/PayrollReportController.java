@@ -754,7 +754,7 @@ public class PayrollReportController implements Initializable {
      */
     private void setDateIfNotNull(Object value, TextField field, Label label) {
         if (value == null) return;
-        System.out.println(value);
+
         // نملأ الـ Label بالشهر العربي
         try {
             LocalDate d = DateUtils.parseDate(value.toString());

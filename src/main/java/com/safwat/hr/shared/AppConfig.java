@@ -1,7 +1,6 @@
 package com.safwat.hr.shared;
 
 
-
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,7 +40,7 @@ public class AppConfig {
                 saveConfigToFile();
             }
         } catch (Exception e) {
-            System.out.println("خطأ في تحميل الإعدادات: " + e.getMessage());
+
             config = createDefaultConfig();
         }
     }
@@ -76,7 +75,7 @@ public class AppConfig {
         try (FileWriter file = new FileWriter(CONFIG_FILE)) {
             file.write(config.toString(2));
         } catch (Exception e) {
-            System.out.println("خطأ في حفظ الإعدادات: " + e.getMessage());
+
         }
     }
 
@@ -94,7 +93,7 @@ public class AppConfig {
                 return config.getJSONObject(mainKey).getString(subKey);
             }
         } catch (Exception e) {
-            System.out.println("خطأ في قراءة الإعداد: " + mainKey + "." + subKey);
+
         }
         return defaultValue;
     }
@@ -108,7 +107,7 @@ public class AppConfig {
                 return config.getJSONObject(mainKey).getInt(subKey);
             }
         } catch (Exception e) {
-            System.out.println("خطأ في قراءة الإعداد: " + mainKey + "." + subKey);
+
         }
         return defaultValue;
     }
@@ -122,7 +121,7 @@ public class AppConfig {
                 return config.getJSONObject(mainKey).getBoolean(subKey);
             }
         } catch (Exception e) {
-            System.out.println("خطأ في قراءة الإعداد: " + mainKey + "." + subKey);
+
         }
         return defaultValue;
     }
@@ -136,7 +135,7 @@ public class AppConfig {
                 return config.getJSONObject(mainKey).getJSONArray(subKey);
             }
         } catch (Exception e) {
-            System.out.println("خطأ في قراءة الإعداد: " + mainKey + "." + subKey);
+
         }
         return new JSONArray(); // مصفوفة فارغة افتراضياً
     }
@@ -161,10 +160,10 @@ public class AppConfig {
             // حفظ التغييرات في الملف
             saveConfigToFile();
 
-            System.out.println("تم حفظ الإعداد: " + mainKey + "." + subKey + " = " + value);
+
 
         } catch (Exception e) {
-            System.out.println("خطأ في حفظ الإعداد: " + mainKey + "." + subKey);
+
         }
     }
 
@@ -176,10 +175,10 @@ public class AppConfig {
             if (config.has(mainKey)) {
                 config.getJSONObject(mainKey).remove(subKey);
                 saveConfigToFile();
-                System.out.println("تم حذف الإعداد: " + mainKey + "." + subKey);
+
             }
         } catch (Exception e) {
-            System.out.println("خطأ في حذف الإعداد: " + mainKey + "." + subKey);
+
         }
     }
 
@@ -192,7 +191,7 @@ public class AppConfig {
                 return config.getJSONObject(mainKey);
             }
         } catch (Exception e) {
-            System.out.println("خطأ في قراءة القسم: " + mainKey);
+
         }
         return new JSONObject();
     }

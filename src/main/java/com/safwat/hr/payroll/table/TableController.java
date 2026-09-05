@@ -395,7 +395,7 @@ public class TableController implements Initializable {
         sb.append("الإدارة: ").append(nullToDash(e.payManagement())).append("\n");
         sb.append("الدرجة: ").append(nullToDash(e.degree())).append("\n");
         sb.append("الوظيفة: ").append(nullToDash(e.job())).append("\n");
-        sb.append("30-06 اساسي: ").append(nullToDash(e.basic306().toString())).append("\n");
+        sb.append("اساسي 30-06 : ").append(nullToDash(e.basic306().toString())).append("\n");
         sb.append("المرتب الأساسي: ").append(nullToDash(e.salaryBasic().toString()));
         return sb.toString();
     }

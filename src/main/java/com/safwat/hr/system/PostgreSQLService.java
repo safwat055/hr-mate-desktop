@@ -796,7 +796,7 @@ public class PostgreSQLService {
     private void log(String message) {
         String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         String logMessage = "[" + timestamp + "] " + message;
-        System.out.println(logMessage);
+
         logs.append(logMessage).append("\n");
     }
 

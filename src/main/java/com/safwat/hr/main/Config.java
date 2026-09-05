@@ -38,7 +38,6 @@ public class Config {
         String appDir = Paths.get("").toAbsolutePath().toString();
         configPath = Paths.get(appDir, "config", "config.properties").toString();
 
-        System.out.println("📁 مسار ملف الإعدادات: " + configPath);
 
         try {
             // إنشاء المجلد إذا لم يكن موجوداً
@@ -47,7 +46,7 @@ public class Config {
                 configFile.getParentFile().mkdirs();
                 configFile.createNewFile();
                 saveDefaultConfig();
-                System.out.println("✅ تم إنشاء ملف إعدادات جديد");
+
             }
 
             // تحميل الإعدادات
@@ -63,10 +62,9 @@ public class Config {
             pgPort = properties.getProperty("pg.port", "5432");
             backendPort = properties.getProperty("backend.port", "8080");
 
-            System.out.println("✅ تم تحميل الإعدادات بنجاح");
 
         } catch (Exception e) {
-            System.err.println("❌ فشل تحميل الإعدادات: " + e.getMessage());
+
             saveDefaultConfig();
         }
     }
@@ -97,10 +95,9 @@ public class Config {
                 properties.store(fos, "ArchiveManager Configuration");
             }
 
-            System.out.println("✅ تم حفظ الإعدادات في: " + configPath);
 
         } catch (Exception e) {
-            System.err.println("❌ فشل حفظ الإعدادات: " + e.getMessage());
+
         }
     }
 

@@ -82,7 +82,7 @@ public class ChatStompClient {
                         Consumer<String> onError) {
 
         if (connected.get() || connecting.getAndSet(true)) {
-            System.out.println("[ChatStompClient] Already connected/connecting");
+
             return;
         }
 
@@ -127,7 +127,6 @@ public class ChatStompClient {
 
         String wsUrl = ApiClient.BASE_URL2;
 
-        System.out.println("[ChatStompClient] Connecting to: " + wsUrl);
 
         stompClient.connectAsync(wsUrl, headers, new StompSessionHandlerAdapter() {
 
@@ -137,7 +136,6 @@ public class ChatStompClient {
                 connected.set(true);
                 connecting.set(false);
                 reconnectAttempts.set(0);
-                System.out.println("[ChatStompClient] ✅ Connected");
 
                 subscribeToUserNotifications();
                 subscribeToPresence();
@@ -150,7 +148,7 @@ public class ChatStompClient {
                                         StompHeaders headers,
                                         byte[] payload,
                                         Throwable exception) {
-                System.err.println("[ChatStompClient] ❌ Exception: " + exception.getMessage());
+
                 notifyError("STOMP exception: " + exception.getMessage());
             }
 
@@ -176,7 +174,6 @@ public class ChatStompClient {
         }
 
         long delay = Math.min(INITIAL_RECONNECT_DELAY_MS * (1L << (attempt - 1)), MAX_RECONNECT_DELAY_MS);
-        System.out.println("[ChatStompClient] ⏳ Reconnecting in " + delay + "ms (attempt " + attempt + "/" + MAX_RECONNECT_ATTEMPTS + ")");
 
         reconnectScheduler.schedule(() -> {
             if (shouldReconnect.get() && !connected.get()) {
@@ -249,7 +246,7 @@ public class ChatStompClient {
         connected.set(false);
         connecting.set(false);
         reconnectAttempts.set(0);
-        System.out.println("[ChatStompClient] 🔌 Disconnected");
+
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -270,7 +267,7 @@ public class ChatStompClient {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof ChatDTOs.WsNotificationDTO dto) {
-                    System.out.println("[ChatStompClient] 🔔 Notification from: " + dto.getSenderDisplayName());
+
                     Platform.runLater(() -> {
                         if (onNotification != null) onNotification.accept(dto);
                     });
@@ -278,7 +275,7 @@ public class ChatStompClient {
             }
         });
 
-        System.out.println("[ChatStompClient] 📡 Subscribed to: " + destination);
+
     }
 
     /**
@@ -303,7 +300,7 @@ public class ChatStompClient {
             }
         });
 
-        System.out.println("[ChatStompClient] 📡 Subscribed to: /topic/presence");
+
     }
 
     public void subscribeToConversation(long conversationId,
@@ -326,14 +323,14 @@ public class ChatStompClient {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof ChatDTOs.WsMessageDTO dto) {
-                    System.out.println("[ChatStompClient] 💬 New message in conv " + conversationId);
+
                     Platform.runLater(() -> onMessage.accept(dto));
                 }
             }
         });
 
         convSubscriptions.put(conversationId, sub);
-        System.out.println("[ChatStompClient] 📡 Subscribed to: " + destination);
+
     }
 
     public void subscribeToTyping(long conversationId, Consumer<ChatDTOs.WsMessageDTO> onTypingEvent) {
@@ -364,7 +361,7 @@ public class ChatStompClient {
         });
 
         typingSubscriptions.put(conversationId, sub);
-        System.out.println("[ChatStompClient] 📡 Subscribed to typing: " + destination);
+
     }
 
     public void unsubscribeFromConversation(long conversationId) {
@@ -372,9 +369,9 @@ public class ChatStompClient {
         if (sub != null) {
             try {
                 sub.unsubscribe();
-                System.out.println("[ChatStompClient] 🚫 Unsubscribed from conv " + conversationId);
+
             } catch (Exception e) {
-                System.err.println("[ChatStompClient] Error unsubscribing: " + e.getMessage());
+
             }
         }
 

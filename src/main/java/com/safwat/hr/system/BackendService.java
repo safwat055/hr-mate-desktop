@@ -142,7 +142,7 @@ public class BackendService {
     private boolean stopNormal() {
         try {
             if (currentProcess != null && currentProcess.isAlive()) {
-                System.out.println("🛑 إيقاف العملية الحالية...");
+
                 currentProcess.destroy();
                 // انتظر ثانية عشان العملية تخلص
                 Thread.sleep(1000);
@@ -153,7 +153,7 @@ public class BackendService {
                 }
 
                 currentProcess = null;
-                
+
                 currentPid = null;
                 isRunning = false;
                 return true;
@@ -163,7 +163,7 @@ public class BackendService {
             boolean killed = false;
 
             if (os.contains("win")) {
-                System.out.println("🛑 البحث عن عمليات Windows...");
+
 
                 // ===== الطريقة الأولى: taskkill (الأفضل) =====
 
@@ -172,28 +172,28 @@ public class BackendService {
                 int exitCode1 = p1.waitFor();
                 if (exitCode1 == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف HR_MATE.exe");
+
                 }
 
                 // 2. قتل أي Process بـ Window Title يحتوي على "HR_MATE"
                 Process p2 = Runtime.getRuntime().exec("taskkill /F /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف نافذة HR_MATE");
+
                 }
 
                 // 3. قتل أي javaw.exe بـ Window Title (لأن JavaFX بيشتغل على javaw.exe)
                 Process p3 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq javaw.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p3.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف javaw.exe الخاص بـ HR_MATE");
+
                 }
 
                 // 4. قتل أي java.exe بـ Window Title
                 Process p4 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq java.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p4.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف java.exe الخاص بـ HR_MATE");
+
                 }
 
                 // ===== الطريقة الثانية: PowerShell (بديل wmic) =====
@@ -203,7 +203,7 @@ public class BackendService {
                 );
                 if (p5.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف عمليات HR_MATE عبر PowerShell");
+
                 }
 
                 // قتل أي Process بـ Command Line يحتوي على "HR_MATE "
@@ -212,25 +212,25 @@ public class BackendService {
                 );
                 if (p6.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف عمليات HR_MATE عبر PowerShell");
+
                 }
 
             } else {
                 // ===== Linux / Mac =====
-                System.out.println("🛑 البحث عن عمليات Linux...");
+
 
                 // 1. قتل أي Process باسم HR_MATE
                 Process p1 = Runtime.getRuntime().exec("pkill -f HR_MATE");
                 if (p1.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف HR_MATE");
+
                 }
 
                 // 2. قتل أي Process بـ Command Line يحتوي على HR_MATE
                 Process p2 = Runtime.getRuntime().exec("pkill -f \"HR_MATE\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-                    System.out.println("✅ تم إيقاف HR_MATE ");
+
                 }
 
                 // 3. قتل أي Process بـ Window Title (X11)
@@ -247,7 +247,7 @@ public class BackendService {
             isRunning = false;
             currentPid = null;
 
-            System.out.println(killed ? "✅ تم إيقاف البرنامج بنجاح" : "⚠️ لم يتم العثور على عمليات للإيقاف");
+
             return true;
 
         } catch (Exception e) {
@@ -299,14 +299,14 @@ public class BackendService {
             }
 
             File backendFile = new File(backendPath);
-            System.out.println(backendFile.getAbsoluteFile());
+
             if (!backendFile.exists()) {
                 return false;
             }
 
             // ✅ 1. البحث عن NSSM
             String nssmPath = findNssm();
-            System.out.println(nssmPath);
+
             if (nssmPath == null) {
                 return false;
             }

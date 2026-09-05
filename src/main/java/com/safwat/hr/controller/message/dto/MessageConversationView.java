@@ -310,14 +310,14 @@ public class MessageConversationView extends VBox {
         java.io.File targetFile = chooser.showSaveDialog(this.getScene().getWindow());
         if (targetFile == null) return;
 
-        System.out.println("[Conversation] Downloading: " + att.getFileName() + " | token=" + att.getDownloadToken());
+
 
         MessageClientService.getInstance().downloadAttachment(
                 att.getDownloadToken(),
                 targetFile.toPath(),
                 () -> {
                     javafx.application.Platform.runLater(() -> {
-                        System.out.println("[Conversation] Downloaded: " + att.getFileName());
+
                         try {
                             SAFNotification.withAction("Do you want open this FILE ?", targetFile);
                         } catch (Exception ignored) {

@@ -57,8 +57,6 @@ public class WebSocketClient {
         this.onError = onError;
         this.onClose = onClose;
 
-        System.out.println("[WebSocketClient] Connecting to: " + serverUri);
-        System.out.println("[WebSocketClient] Token present: " + (authToken != null && !authToken.isEmpty()));
     }
 
     /**
@@ -71,9 +69,9 @@ public class WebSocketClient {
 
         if (authToken != null && !authToken.isEmpty()) {
             builder.header("Authorization", "Bearer " + authToken);
-            System.out.println("[WebSocketClient] ✅ Authorization header added");
+
         } else {
-            System.out.println("[WebSocketClient] ⚠️ No token available");
+
         }
 
         builder.header("Origin", "http://localhost:8080");
@@ -84,14 +82,14 @@ public class WebSocketClient {
                     @Override
                     public void onOpen(WebSocket ws) {
                         webSocket = ws;
-                        System.out.println("[WebSocketClient] ✅ Connection opened");
+
                         ws.request(1);
                     }
 
                     @Override
                     public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
                         if (onMessage != null) {
-                            System.out.println("[WebSocketClient] 📩 Received: " + data);
+
                             onMessage.accept(data.toString());
                         }
                         ws.request(1);
@@ -100,20 +98,20 @@ public class WebSocketClient {
 
                     @Override
                     public void onError(WebSocket ws, Throwable error) {
-                        System.err.println("[WebSocketClient] ❌ Error: " + error.getMessage());
+
                         if (onError != null) onError.accept(error);
                     }
 
                     @Override
                     public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-                        System.out.println("[WebSocketClient] 🔌 Closed: " + reason + " (code: " + statusCode + ")");
+
                         if (onClose != null) onClose.run();
                         return null;
                     }
                 })
                 .thenAccept(ws -> webSocket = ws)
                 .exceptionally(e -> {
-                    System.err.println("[WebSocketClient] ❌ Connection failed: " + e.getMessage());
+
                     if (onError != null) onError.accept(e);
                     return null;
                 });
@@ -127,9 +125,7 @@ public class WebSocketClient {
     public void sendMessage(String message) {
         if (webSocket != null) {
             webSocket.sendText(message, true);
-            System.out.println("[WebSocketClient] 📤 Sent: " + message);
-        } else {
-            System.err.println("[WebSocketClient] ⚠️ Cannot send, WebSocket is null");
+
         }
     }
 
@@ -139,7 +135,7 @@ public class WebSocketClient {
     public void close() {
         if (webSocket != null) {
             webSocket.sendClose(1000, "Closing");
-            System.out.println("[WebSocketClient] 🔌 Closing connection");
+
         }
     }
 
