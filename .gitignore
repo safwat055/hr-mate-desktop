@@ -47,3 +47,5 @@ bin/
 /.idea
 /logs
 *.log
+logs/app.log
+/logs
