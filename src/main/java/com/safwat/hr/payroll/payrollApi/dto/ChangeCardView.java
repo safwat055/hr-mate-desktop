@@ -1,4 +1,4 @@
-package com.safwat.hr.payroll.dto;
+package com.safwat.hr.payroll.payrollApi.dto;
 
 import java.time.LocalDate;
 import java.util.List;

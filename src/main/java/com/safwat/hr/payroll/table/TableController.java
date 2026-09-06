@@ -4,6 +4,7 @@ import com.safwat.hr.payroll.table.PayrollApiClient.LookupResult;
 import com.safwat.hr.payroll.table.PayrollApiClient.PayrollTableResponse;
 import com.safwat.hr.payroll.table.PayrollApiClient.SearchEmployeeResult;
 import com.safwat.hr.payroll.table.engine.ExcelEngine;
+import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.TextToSpeech;
 import javafx.application.Platform;
@@ -70,22 +71,23 @@ public class TableController implements Initializable {
     @FXML
     private Button btn_Pdf;
     @FXML
-    private Button btn_Refrech;
+    private Button btn_Refresh;
     @FXML
     private Button btn_clear;
     @FXML
-    private Button btn_clearstatic;
+    private Button btn_clearStatic;
     @FXML
     private Button btn_delete;
     @FXML
     private Button btn_insertRows;
     @FXML
-    private Button btn_savestatic;
+    private Button btn_saveStatic;
     @FXML
     private Button btn_tempSave;
     @FXML
     private Button btn_tempLoad;
-
+    @FXML
+    private CheckBox chk_nationalId, chk_total;
     // ---- الجدول ----
     @FXML
     @SuppressWarnings("rawtypes")
@@ -105,12 +107,32 @@ public class TableController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         engine = new ExcelEngine(tableView());
+        setCheck();
         engine.initializeExcelFeatures();
         engine.setSearchHandler(this::handleSearch);
-        engine.setNationalIdTooltipProvider(this::fetchPayrollIndexTooltip); // ← الإضافة
+        engine.setNationalIdTooltipProvider(this::fetchPayrollIndexTooltip);
+
+
         setupSearchFields();
         setupDirectionOptions();
         setupHighlights();
+    }
+
+    void setCheck() {
+        chk_nationalId.setSelected(AppConfig.getBoolean("ui", "table_chk_nationalId", true));
+        chk_total.setSelected(AppConfig.getBoolean("ui", "table_chk_total", true));
+
+        engine.setNationalIdTooltipEnabled(chk_nationalId.isSelected());
+        engine.setStatisticalTooltipsEnabled(chk_total.isSelected());
+
+        chk_nationalId.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            AppConfig.setValue("ui", "table_chk_nationalId", newValue);
+            engine.setNationalIdTooltipEnabled(chk_nationalId.isSelected());
+        });
+        chk_total.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            engine.setStatisticalTooltipsEnabled(chk_total.isSelected());
+            AppConfig.setValue("ui", "table_chk_total", newValue);
+        });
     }
 
     private void setupDirectionOptions() {

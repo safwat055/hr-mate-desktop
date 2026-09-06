@@ -80,9 +80,14 @@
             </Menu>
             <Menu mnemonicParsing="false" text="اعدادات">
                 <items>
+               <MenuItem mnemonicParsing="false" onAction="#openServerSetting" text="اعدادات السيرفر" />
+               <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#openBasicSetting" text="اعدادات المستخدم" />
+               <SeparatorMenuItem mnemonicParsing="false" />
                <MenuItem mnemonicParsing="false" onAction="#openAdminUserView" text="ادارة المستخدمين" />
+               <SeparatorMenuItem mnemonicParsing="false" />
                <MenuItem mnemonicParsing="false" onAction="#openChangePasswordView" text="تغير كلمة المرور" />
+               <SeparatorMenuItem mnemonicParsing="false" />
                     <Menu mnemonicParsing="false" text="ثيمات">
                         <items>
                             <MenuItem mnemonicParsing="false" onAction="#applyThemeBlack" text="أسود عميق (AMOLED)" />

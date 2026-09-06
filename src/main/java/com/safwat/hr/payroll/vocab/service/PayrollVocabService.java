@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.network.ApiResponse;
-import com.safwat.hr.payroll.dto.SearchVocab;
+import com.safwat.hr.payroll.payrollApi.dto.SearchVocab;
 
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;

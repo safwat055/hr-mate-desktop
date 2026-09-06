@@ -27,6 +27,7 @@ public final class TextToSpeech {
     public static synchronized void speak(String text) {
         if (text == null || text.isBlank()) return;
         try {
+
             stop();
             String url = "https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q="
                     + URLEncoder.encode(text, StandardCharsets.UTF_8);
@@ -34,6 +35,7 @@ public final class TextToSpeech {
             currentPlayer.setOnEndOfMedia(TextToSpeech::stop);
             currentPlayer.play();
         } catch (Exception ignored) {
+         
             // لا نطق متاح — نتجاهل بصمت
         }
     }

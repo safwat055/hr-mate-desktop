@@ -1,8 +1,8 @@
-package com.safwat.hr.shared;
+package com.safwat.hr.shared.ui;
 
-import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 
@@ -23,6 +23,12 @@ import java.util.function.Supplier;
  * 3. Generic Object + تحديث متعدد الحقول (Multi-Field Bind)
  * <p>
  * المشغلات: Enter  |  Double-Click على الحقل الفارغ/المملوء
+ * <p>
+ * ملاحظة مهمة: المطابقة الفورية (single-match) بتتم عن طريق
+ * {@link SearchDialog#matches(Object, String)} — يعني على نفس القيمة
+ * الخام المعروضة/المفلترة داخل الجدول (columns) — وليس عن طريق
+ * extractors الخاصة بـ FieldBind، لأن دي مسؤوليتها الوحيدة هي
+ * تنسيق القيمة بعد الاختيار وكتابتها في الحقول، مش المطابقة.
  * ────────────────────────────────────────────────────────────
  */
 public final class SmartSearchHelper {
@@ -108,14 +114,58 @@ public final class SmartSearchHelper {
             if (onSelect != null) onSelect.accept(obj);
         };
 
-        // ── نص البحث = مجموع كل الحقول ──
-        Function<T, String> combinedSearch = obj -> {
-            StringBuilder sb = new StringBuilder();
-            for (FieldBind<T> b : bindings) {
-                String v = b.extractor().apply(obj);
-                if (v != null) sb.append(v).append(' ');
+        // ── فتح الـ Dialog ──
+        Runnable openSearch = () -> {
+            List<T> dataList = dataSupplier.get();
+            if (dataList == null || dataList.isEmpty()) {
+                SAFNotification.warning("لا توجد بيانات متاحة");
+                return;
             }
-            return sb.toString().trim();
+            dialogConfig.data(dataList).show().ifPresent(updateAll);
+        };
+
+        // ── Enter ──
+        triggerField.setOnAction(_ -> {
+            if (isBlank(triggerField)) {
+                openSearch.run();
+                return;
+            }
+            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
+        });
+
+        // ── Double Click ──
+        triggerField.setOnMouseClicked((MouseEvent event) -> {
+            if (event.getClickCount() == 2) {
+                if (isBlank(triggerField)) {
+                    openSearch.run();
+                    return;
+                }
+                handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
+            }
+        });
+    }
+
+
+
+    @SafeVarargs
+    public static <T> void bind(
+            TextField triggerField, Button actionButton,
+            Supplier<List<T>> dataSupplier,
+            SearchDialog<T> dialogConfig,
+            Consumer<T> onSelect,
+            FieldBind<T>... bindings) {
+
+        if (bindings.length == 0) {
+            throw new IllegalArgumentException("يجب تمرير FieldBind واحد على الأقل");
+        }
+
+        // ── دالة تحديث كل الحقول ──
+        Consumer<T> updateAll = obj -> {
+            for (FieldBind<T> b : bindings) {
+                String val = b.extractor().apply(obj);
+                b.field().setText(val != null ? val : "");
+            }
+            if (onSelect != null) onSelect.accept(obj);
         };
 
         // ── فتح الـ Dialog ──
@@ -134,19 +184,18 @@ public final class SmartSearchHelper {
                 openSearch.run();
                 return;
             }
-            handleInput(triggerField, dataSupplier, combinedSearch, updateAll, openSearch);
+            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
         });
 
-        // ── Double Click ──
-        triggerField.setOnMouseClicked((MouseEvent event) -> {
-            if (event.getClickCount() == 2) {
-                if (isBlank(triggerField)) {
-                    openSearch.run();
-                    return;
-                }
-                handleInput(triggerField, dataSupplier, combinedSearch, updateAll, openSearch);
+        actionButton.setOnAction(_ -> {
+            if (isBlank(triggerField)) {
+                openSearch.run();
+                return;
             }
+            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
         });
+
+
     }
 
     /**
@@ -165,10 +214,20 @@ public final class SmartSearchHelper {
     //  Helpers
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * تحاول مطابقة نص الحقل مع عنصر واحد فقط من البيانات.
+     * <p>
+     * المطابقة تتم عبر {@link SearchDialog#(Object, String)} —
+     * أي بنفس منطق الفلترة الحية المستخدم داخل جدول الـ Dialog نفسه —
+     * بمعزل تام عن أي تنسيق خاص بـ FieldBind (زي تحويل تاريخ إلى
+     * "اسم شهر / سنة" بالعربي، مثلاً)، عشان القيمة المكتوبة في الحقل
+     * تتقارن مع نفس القيمة الخام المعروضة في الجدول، مش مع نسخة منسّقة
+     * منها كانت هتمنع أي تطابق.
+     */
     private static <T> void handleInput(
             TextField triggerField,
             Supplier<List<T>> dataSupplier,
-            Function<T, String> searchTextExtractor,
+            SearchDialog<T> dialogConfig,
             Consumer<T> onSingleMatch,
             Runnable openSearch) {
 
@@ -178,9 +237,9 @@ public final class SmartSearchHelper {
             return;
         }
 
-        String input = normalize(triggerField.getText());
+        String input = triggerField.getText();
         List<T> matches = dataList.stream()
-                .filter(t -> normalize(searchTextExtractor.apply(t)).contains(input))
+                .filter(t -> dialogConfig.matches(t, input))
                 .toList();
 
         if (matches.size() == 1) {

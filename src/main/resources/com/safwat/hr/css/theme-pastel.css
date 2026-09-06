@@ -1,6 +1,7 @@
 /* theme-pastel.css — ثيم بألوان باستيل ناعمة */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     -app-bg: #FAF5FC;

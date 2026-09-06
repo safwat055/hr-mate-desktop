@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.records.full;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
@@ -60,7 +59,6 @@ public class FullRecordManagement implements ReportStrategy {
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
                 .reportName(context.getReportName())
-                .user(ApiClient.getUserName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))

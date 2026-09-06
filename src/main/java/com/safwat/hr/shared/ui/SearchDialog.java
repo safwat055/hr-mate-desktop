@@ -164,6 +164,26 @@ public class SearchDialog<T> {
     }
 
     /**
+     * تفحص إذا كانت هذه القيمة تطابق نص البحث، باستخدام نفس منطق
+     * الفلترة الحيّة المستخدم داخل الجدول (عبر الأعمدة المعرّفة في columns).
+     * <p>
+     * تُستخدم من SmartSearchHelper للمطابقة على القيمة الخام للعنصر،
+     * بمعزل تام عن أي extractor خاص بتنسيق العرض (FieldBind).
+     */
+    public boolean matches(T item, String query) {
+        if (item == null) return false;
+        String q = query == null ? "" : query.trim().toLowerCase();
+        if (q.isEmpty()) return true;
+        for (Column<T> col : columns) {
+            String cell = col.extractor.extract(item);
+            if (cell != null && cell.toLowerCase().contains(q)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * دالة استخراج قيمة نصية من الصف لعمود معين
      */
     @FunctionalInterface

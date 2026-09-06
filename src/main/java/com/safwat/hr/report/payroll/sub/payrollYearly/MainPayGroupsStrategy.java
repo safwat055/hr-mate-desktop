@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.payrollYearly;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
@@ -86,7 +85,6 @@ public class MainPayGroupsStrategy implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext ctx) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
                 .startDate(DateUtils.getFirstDayOfMonth(ctx.getStartDate()))
                 .report(getCode())
                 .reportName(ctx.getReportName())

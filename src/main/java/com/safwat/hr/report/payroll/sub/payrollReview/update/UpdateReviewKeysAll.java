@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.payrollReview.update;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -42,7 +41,6 @@ public class UpdateReviewKeysAll implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
                 .report(getCode())
                 .reportName(context.getReportName())
                 .build();

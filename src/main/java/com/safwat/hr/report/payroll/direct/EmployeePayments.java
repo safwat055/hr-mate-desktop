@@ -76,7 +76,7 @@ public class EmployeePayments implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext ctx) {
         return PayrollRequest.builder()
-                .user(ctx.getUser())
+
                 .reportName(ctx.getReportName())
                 .report(getCode())
                 .format(ctx.getFormat())

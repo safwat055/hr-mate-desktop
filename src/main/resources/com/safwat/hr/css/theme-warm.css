@@ -1,6 +1,7 @@
 /* theme-warm.css — ثيم بألوان ترابية دافئة */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     -app-bg: #FBF3EE;

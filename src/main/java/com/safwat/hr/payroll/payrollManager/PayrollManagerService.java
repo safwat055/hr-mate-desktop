@@ -3,14 +3,17 @@ package com.safwat.hr.payroll.payrollManager;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
-import com.safwat.hr.payroll.dto.SearchEmp;
+import com.safwat.hr.payroll.payrollApi.PayrollChangeCardApi;
+import com.safwat.hr.payroll.payrollApi.PayrollReviewApi;
+import com.safwat.hr.payroll.payrollApi.PayrollYearlyApi;
+import com.safwat.hr.payroll.payrollApi.dto.SearchEmp;
 import com.safwat.hr.report.core.ReportContext;
-
 import com.safwat.hr.report.core.strategies.ReportExternalSubmitter;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.DangerConfirmDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
+import lombok.SneakyThrows;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -18,15 +21,17 @@ import java.util.*;
 import static com.safwat.hr.shared.util.DateUtils.getFirstDayOfMonth;
 
 public class PayrollManagerService {
-    private final PayrollManagerApiService apiService;
-    private final PayrollManagerController managerController;
 
+    private final PayrollManagerController managerController;
+    private final PayrollYearlyApi payrollYearlyApi = PayrollYearlyApi.getInstance();
+    private final PayrollChangeCardApi payrollChangeCardApi = PayrollChangeCardApi.getInstance();
+    private final PayrollReviewApi payrollReviewApi = PayrollReviewApi.getInstance();
 
     public List<String> customList = new ArrayList<>();
 
     public PayrollManagerService(PayrollManagerController payrollManagerController) {
         this.managerController = payrollManagerController;
-        apiService = PayrollManagerApiService.getInstance();
+
 
         setAllMonthsList();
     }
@@ -37,16 +42,17 @@ public class PayrollManagerService {
 
     }
 
+    @SneakyThrows
     public List<String> getAllMonthsYearly() {
-        return apiService.getAllMonthsForYearly();
+        return payrollYearlyApi.getAllMonthsForYearly();
     }
 
     public List<String> getAllMonthsReview() {
-        return apiService.getAllMonthForReview();
+        return payrollReviewApi.getAllMonthForReview();
     }
 
     public List<String> getAllMonthsChangeCard() {
-        return apiService.getAllMonthForChangeCard();
+        return payrollChangeCardApi.getAllMonthForChangeCard();
     }
 
     // ===============================================================================
@@ -56,7 +62,7 @@ public class PayrollManagerService {
         boolean ok = DangerConfirmDialog.show("تأكيد الحذف", "سيتم حذف بيانات الشهر كاملة من تقرير الصرفيات السنوى", "حذف شهر " + managerController.getTxtAllMonthsYearly().getText());
         if (ok) {
             LocalDate date = getFirstDayOfMonth(managerController.getTxtAllMonthsYearly().getText());
-            Integer deletedRows = apiService.deleteFullMonthYearly(date);
+            Integer deletedRows = payrollYearlyApi.deleteFullMonthYearly(date);
 
             managerController.getTxtAllMonthsYearly().clear();
             SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
@@ -70,7 +76,7 @@ public class PayrollManagerService {
         if (ok) {
             LocalDate date = getFirstDayOfMonth(managerController.getTxtMonthGroupY().getText());
             String payGroup = managerController.getTxtGroupAnnual().getText();
-            Integer deletedRows = apiService.deleteTargetGroupByMonth(date, payGroup);
+            Integer deletedRows = payrollYearlyApi.deleteTargetGroupByMonth(date, payGroup);
             managerController.getTxtGroupAnnual().clear();
             managerController.getTxtMonthGroupY().clear();
 
@@ -90,7 +96,7 @@ public class PayrollManagerService {
         if (date == null) {
             return Collections.emptyList();
         }
-        customList.addAll(apiService.getAvailablePayGroupForMonth(date));
+        customList.addAll(payrollYearlyApi.getAvailablePayGroupForMonth(date));
         return customList;
     }
 
@@ -100,14 +106,14 @@ public class PayrollManagerService {
                 .startDate(date)
                 .build();
 
-        return apiService.getEmployeeInYearly(request);
+        return payrollYearlyApi.getEmployeeInYearly(request);
     }
 
     public List<String> getEmployeeMonths(String nationalId) {
         PayrollRequest request = PayrollRequest.builder()
                 .nationalId(nationalId)
                 .build();
-        return apiService.getEmployeeMonths(request);
+        return payrollYearlyApi.getEmployeeMonths(request);
     }
 
     public void deleteEmployeeMonth() {
@@ -118,7 +124,7 @@ public class PayrollManagerService {
                     .nationalId(managerController.getTxtEmpIdAnnual().getText())
                     .startDate(getFirstDayOfMonth(managerController.getTxtMonthForEmpAnnual().getText()))
                     .build();
-            Integer deletedRows = apiService.deleteMonthForEmployee(request);
+            Integer deletedRows = payrollYearlyApi.deleteMonthForEmployee(request);
 
             SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
         } else {
@@ -131,7 +137,7 @@ public class PayrollManagerService {
                 .nationalId(nationalId)
                 .startDate(getFirstDayOfMonth(strDate))
                 .build();
-        return apiService.getPayGroupForEmployeeInMonth(request);
+        return payrollYearlyApi.getPayGroupForEmployeeInMonth(request);
     }
 
     public void deletePayGroupInTargetMonthAndEmployee(String nationalId, String strDate, String payGroup) {
@@ -142,7 +148,7 @@ public class PayrollManagerService {
                     .startDate(getFirstDayOfMonth(strDate))
                     .payGroup(payGroup)
                     .build();
-            Integer deletedRows = apiService.deletePayGroupInTargetMonthAndEmployee(request);
+            Integer deletedRows = payrollYearlyApi.deletePayGroupInTargetMonthAndEmployee(request);
 
             SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
         } else {
@@ -151,7 +157,7 @@ public class PayrollManagerService {
     }
 
     public List<String> getPayGroup() {
-        return apiService.getPayGroup();
+        return payrollYearlyApi.getPayGroup();
     }
 
     public void updatePayGroupName(String oldName, String newName) {
@@ -161,7 +167,7 @@ public class PayrollManagerService {
                 .description(newName)
                 .build();
         try {
-            Integer updatedRows = apiService.updatePayGroupName(request);
+            Integer updatedRows = payrollYearlyApi.updatePayGroupName(request);
             managerController.getTxtOldPaymentName().clear();
             managerController.getTxtNewPaymentName().clear();
             SAFNotification.info("تم تحديث عدد " + updatedRows + " صف");
@@ -175,7 +181,7 @@ public class PayrollManagerService {
         PayrollRequest request = PayrollRequest.builder()
                 .startDate(getFirstDayOfMonth(strDate))
                 .build();
-        return apiService.getDescriptions(request);
+        return payrollYearlyApi.getDescriptions(request);
 
     }
 
@@ -222,7 +228,7 @@ public class PayrollManagerService {
     // ===========================================================
 
     public List<String> getAllReviewKeys() {
-        return apiService.getAllKeys();
+        return payrollReviewApi.getAllKeys();
 
     }
 
@@ -230,7 +236,7 @@ public class PayrollManagerService {
         PayrollRequest request = PayrollRequest.builder()
                 .startDate(getFirstDayOfMonth(strDate))
                 .build();
-        return apiService.getAllKeysForMonth(request);
+        return payrollReviewApi.getAllKeysForMonth(request);
     }
 
     public List<String> getEmployeeMonthKeys(String nationalId, String strDate) {
@@ -238,14 +244,14 @@ public class PayrollManagerService {
                 .nationalId(nationalId)
                 .startDate(getFirstDayOfMonth(strDate))
                 .build();
-        return apiService.getEmployeeMonthKeys(request);
+        return payrollReviewApi.getEmployeeMonthKeys(request);
     }
 
     public List<String> getEmployeeMonthsReview(String nationalId) {
         PayrollRequest request = PayrollRequest.builder()
                 .nationalId(nationalId)
                 .build();
-        return apiService.getEmployeeMonthsReview(request);
+        return payrollReviewApi.getEmployeeMonthsReview(request);
     }
 
     public List<SearchEmp> getEmployeeInReview(String searchValue) {
@@ -254,7 +260,7 @@ public class PayrollManagerService {
                 .searchValue(searchValue)
                 .build();
 
-        return apiService.getEmployeeInReview(request);
+        return payrollReviewApi.searchInEmployee(request);
     }
 
     public void deleteFullMonthReview(String strDate) {
@@ -263,7 +269,7 @@ public class PayrollManagerService {
             PayrollRequest request = PayrollRequest.builder()
                     .startDate(getFirstDayOfMonth(strDate))
                     .build();
-            Integer deletedRows = apiService.deleteFullMonthReview(request);
+            Integer deletedRows = payrollReviewApi.deleteFullMonthReview(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {
@@ -278,7 +284,7 @@ public class PayrollManagerService {
                     .startDate(getFirstDayOfMonth(strDate))
                     .payGroup(payGroup)
                     .build();
-            Integer deletedRows = apiService.deletePayGroupReview(request);
+            Integer deletedRows = payrollReviewApi.deletePayGroupReview(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {
@@ -294,7 +300,7 @@ public class PayrollManagerService {
                     .startDate(getFirstDayOfMonth(strDate))
 
                     .build();
-            Integer deletedRows = apiService.deleteEmployeeMonthReview(request);
+            Integer deletedRows = payrollReviewApi.deleteEmployeeMonthReview(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {
@@ -310,7 +316,7 @@ public class PayrollManagerService {
                     .startDate(getFirstDayOfMonth(strDate))
                     .payGroup(payGroup)
                     .build();
-            Integer deletedRows = apiService.deleteEmployeePayGroup(request);
+            Integer deletedRows = payrollReviewApi.deleteEmployeePayGroup(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {
@@ -358,14 +364,14 @@ public class PayrollManagerService {
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue)
                 .build();
-        return apiService.getEmployeeInChangeCard(request);
+        return payrollChangeCardApi.getEmployeeInChangeCard(request);
     }
 
     public List<String> getEmployeeMonthsSub(String nationalId) {
         PayrollRequest request = PayrollRequest.builder()
                 .nationalId(nationalId)
                 .build();
-        return apiService.getEmployeeMonthsChangeCard(request);
+        return payrollChangeCardApi.getEmployeeMonthsChangeCard(request);
     }
 
     public void deleteEmployeeMonthSub(String nationalId, String strDate) {
@@ -375,7 +381,7 @@ public class PayrollManagerService {
                     .nationalId(nationalId)
                     .startDate(getFirstDayOfMonth(strDate))
                     .build();
-            Integer deletedRows = apiService.deleteEmployeeMonthChangeCard(request);
+            Integer deletedRows = payrollChangeCardApi.deleteEmployeeMonthChangeCard(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {
@@ -389,7 +395,7 @@ public class PayrollManagerService {
             PayrollRequest request = PayrollRequest.builder()
                     .startDate(getFirstDayOfMonth(strDate))
                     .build();
-            Integer deletedRows = apiService.deleteFullMonthChangeCard(request);
+            Integer deletedRows = payrollChangeCardApi.deleteFullMonthChangeCard(request);
             SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
 
         } else {

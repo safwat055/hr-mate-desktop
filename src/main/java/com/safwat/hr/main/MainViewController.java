@@ -197,7 +197,7 @@ public class MainViewController implements Initializable {
     @FXML
     private void openPayrollReport() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
-        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
+        // ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
     }
 
     @FXML
@@ -225,6 +225,11 @@ public class MainViewController implements Initializable {
     @FXML
     void openTableView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollTableView(), "واجهة الإدخال", true);
+    }
+
+    @FXML
+    void openServerSetting() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackendSetting(), "server setting", true);
     }
 
     @FXML

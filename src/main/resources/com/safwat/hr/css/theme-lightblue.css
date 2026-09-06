@@ -1,6 +1,7 @@
 /* theme-lightblue.css */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     -app-bg: #F2F8FF;

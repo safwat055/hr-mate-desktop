@@ -121,9 +121,10 @@ public class UserReportsController implements Initializable {
             private final HBox pane = new HBox(8, btnView, btnCopy, btnCancel);
 
             {
-                btnView.setStyle("-fx-font-size: 11;");
-                btnCopy.setStyle("-fx-font-size: 11;");
-                btnCancel.setStyle("-fx-font-size: 11;");
+
+                btnCancel.getStyleClass().add("btn-danger");
+                btnView.getStyleClass().add("btn-success");
+                btnCopy.getStyleClass().add("btn-purple");
 
                 btnView.setOnAction(e -> handleView(getTableRow().getItem()));
                 btnCopy.setOnAction(e -> handleCopy(getTableRow().getItem()));
@@ -135,7 +136,7 @@ public class UserReportsController implements Initializable {
                 setGraphic(empty ? null : pane);
             }
         });
-
+        colActions.setMinWidth(190.00);
         // ============================================================
         // ✅ تحديد ارتفاع ثابت للصفوف (35 بكسل)
         // ============================================================

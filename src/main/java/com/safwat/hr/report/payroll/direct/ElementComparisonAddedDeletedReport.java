@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.direct;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
@@ -68,7 +67,7 @@ public class ElementComparisonAddedDeletedReport implements ReportStrategy {
     public PayrollRequest buildRequest(ReportContext context) {
 
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
+
                 .reportName(context.getReportName())
                 .report(getCode())
                 .payGroup(context.getPayGroup() == null ? null : context.getPayGroup())

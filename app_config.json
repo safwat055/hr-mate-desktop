@@ -1,5 +1,9 @@
 {
-  "ui": {"theme": "theme-gray.css"},
+  "ui": {
+    "table_chk_total": false,
+    "table_chk_nationalId": true,
+    "theme": "theme-gray.css"
+  },
   "connection": {
     "alone": "false",
     "pgAsService": "false",

@@ -1,6 +1,7 @@
 /* theme-indigo.css — ثيم داكن بألوان نيلي (مثالي للوضع الليلي) */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     -app-bg: #1A1E2E;

@@ -83,6 +83,9 @@ public final class ApiEndpoints {
         public static final String UPDATE_REVIEW_KEYS_MONTH = "/payroll-review/sync-keys-month";
         public static final String UPDATE_REVIEW_KEYS_ALL = "/payroll-review/sync-keys-all";
 
+        public static final String FULL_RECORD_129 = "/payroll-review/record-129-pdf";
+        public static final String MAIN_MONTH_RECORDS = "/payroll-review/main-month-records";
+
     }
 
     public static class PayrollElement {

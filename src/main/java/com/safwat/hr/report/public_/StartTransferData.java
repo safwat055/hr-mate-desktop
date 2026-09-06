@@ -1,6 +1,5 @@
 package com.safwat.hr.report.public_;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -43,7 +42,6 @@ public class StartTransferData implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
                 .reportName(context.getReportName())
 
                 .report(getCode())

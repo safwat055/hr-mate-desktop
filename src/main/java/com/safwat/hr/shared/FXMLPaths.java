@@ -19,6 +19,8 @@ public class FXMLPaths {
     private final String MessageInboxView = "/com/safwat/hr/notification/ui/MessageInboxView.fxml";
 
 
+    private final String backendSetting = "/com/safwat/hr/view/Settings.fxml";
+
     // scale views
     private final String salaryScale = "/com/safwat/hr/view/scale/ScaleView.fxml";
 }

@@ -67,6 +67,7 @@ public class LoginController implements Initializable {
         String lastUser = AppConfig.getString("connection", "user", "");
         if (!lastUser.isEmpty()) {
             txt_userName.setText(lastUser);
+            txt_password.setText(lastUser);
             txt_password.requestFocus();
         }
 
@@ -82,6 +83,8 @@ public class LoginController implements Initializable {
 
 
         Platform.runLater(this::setupKeyboardShortcut);
+
+        btn_login.fire();
     }
 
     // ── اختصارات لوحة المفاتيح ──

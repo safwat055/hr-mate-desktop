@@ -1,13 +1,14 @@
 /* theme-pepsi.css — ثيم مستوحى من ألوان بيبسي مع خلفيات رمادية فاتحة */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     /* خلفيات رمادية فاتحة جداً (احترافي) */
-    -app-bg: #F0F2F5;           /* رمادي فاتح موحد */
+    -app-bg: #F0F2F5; /* رمادي فاتح موحد */
 
-    -card-bg: #FFFFFF;          /* البطاقات بيضاء */
-    -card-border: #D0D5DC;      /* حواف رمادية ناعمة */
+    -card-bg: #FFFFFF; /* البطاقات بيضاء */
+    -card-border: #D0D5DC; /* حواف رمادية ناعمة */
     -card-shadow: rgba(0, 0, 0, 0.06); /* ظل خفيف جداً */
 
     /* نصوص داكنة للتباين الجيد */
@@ -17,13 +18,13 @@
     -on-brand: #FFFFFF;
 
     /* ألوان بيبسي */
-    -brand-navy: #0A2240;       /* أزرق غامق جداً (زي بيبسي) */
-    -header-alt-bg: #1A3A66;    /* أزرق متوسط للهيدرات */
+    -brand-navy: #0A2240; /* أزرق غامق جداً (زي بيبسي) */
+    -header-alt-bg: #1A3A66; /* أزرق متوسط للهيدرات */
 
-    -color-primary: #0A3B7A;    /* أزرق بيبسي الأساسي */
-    -color-danger: #D42A2A;     /* أحمر بيبسي (للتنبيهات) - هادئ */
-    -color-success: #2A7A5A;    /* أخضر محايد */
-    -color-purple: #6A5A9A;     /* بنفسجي خفيف */
+    -color-primary: #0A3B7A; /* أزرق بيبسي الأساسي */
+    -color-danger: #D42A2A; /* أحمر بيبسي (للتنبيهات) - هادئ */
+    -color-success: #2A7A5A; /* أخضر محايد */
+    -color-purple: #6A5A9A; /* بنفسجي خفيف */
     -color-secondary-btn: #5A6A82; /* أزرق رمادي للأزرار الثانوية */
 
     /* حواف وحدود رمادية موحدة */
@@ -31,15 +32,15 @@
     -border-gray: #B8C0CC;
     -divider-color: #E2E6EC;
 
-    -soft-box-bg: #E8ECF2;      /* رمادي فاتح للصناديق الناعمة */
+    -soft-box-bg: #E8ECF2; /* رمادي فاتح للصناديق الناعمة */
     -soft-box-border: #D0D5DC;
 
-    -control-bg: #FFFFFF;       /* خلفية الضوابط بيضاء */
-    -table-header-bg: #0A2240;  /* رأس الجدول أزرق غامق */
-    -row-alt-bg: #F4F6F9;       /* صفوف بديلة رمادية فاتحة */
-    -selection-bg: #0A3B7A;     /* تحديد العناصر بالأزرق الداكن */
+    -control-bg: #FFFFFF; /* خلفية الضوابط بيضاء */
+    -table-header-bg: #0A2240; /* رأس الجدول أزرق غامق */
+    -row-alt-bg: #F4F6F9; /* صفوف بديلة رمادية فاتحة */
+    -selection-bg: #0A3B7A; /* تحديد العناصر بالأزرق الداكن */
 
-    -color-warning: #C99A2A;    /* أصفر ذهبي للتحذيرات */
+    -color-warning: #C99A2A; /* أصفر ذهبي للتحذيرات */
 
     /* التدرج في الهيدر/الشريط العلوي (أزرق بيبسي) */
     -nav-gradient: linear-gradient(to bottom, #0A1A30, #0A2A4A, #0A3B7A, #0A2A4A, #0A1A30);

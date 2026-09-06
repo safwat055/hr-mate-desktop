@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.changeCard.card;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
@@ -59,7 +58,7 @@ public class PayrollChangeCardAll implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext ctx) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
+
                 .startDate(DateUtils.getFirstDayOfMonth(ctx.getStartDate()))
                 .endDate(DateUtils.getFirstDayOfMonth(ctx.getEndDate()))
                 .report(getCode())

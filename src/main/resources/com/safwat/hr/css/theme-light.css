@@ -6,6 +6,7 @@
 
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     /* خلفية الصفحة */

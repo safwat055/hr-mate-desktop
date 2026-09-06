@@ -22,7 +22,7 @@
 <ScrollPane fitToWidth="true" hbarPolicy="NEVER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1455.0" prefWidth="1280.0" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.payroll.payrollManager.PayrollManagerController">
 
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" styleClass="app-bg">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="12" styleClass="card">
             <padding>
                 <Insets bottom="16" left="16" right="16" top="16" />
             </padding>

@@ -1,7 +1,7 @@
 package com.safwat.hr.payroll.payrollManager;
 
-import com.safwat.hr.payroll.dto.SearchEmp;
-import com.safwat.hr.shared.SmartSearchHelper;
+import com.safwat.hr.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;

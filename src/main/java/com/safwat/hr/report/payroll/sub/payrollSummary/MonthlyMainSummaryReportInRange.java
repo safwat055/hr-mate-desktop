@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.payrollSummary;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
@@ -59,7 +58,7 @@ public class MonthlyMainSummaryReportInRange implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
+
                 .reportName(context.getReportName())
                 .report(getCode())
                 .endPoint(ApiEndpoints.PayrollYearly.PAYROLL_SUMMARY)

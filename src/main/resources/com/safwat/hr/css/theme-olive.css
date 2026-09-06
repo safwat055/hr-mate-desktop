@@ -1,6 +1,7 @@
 /* theme-olive.css — ثيم أخضر زيتوني مريح للعين */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     -app-bg: #F4F7F0;

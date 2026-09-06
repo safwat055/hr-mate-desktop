@@ -1,6 +1,5 @@
 package com.safwat.hr.report.payroll.sub.upload;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.report.controller.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
@@ -55,7 +54,7 @@ public class UploadReviewReport implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(ApiClient.getUserName())
+
                 .reportName(context.getReportName())
                 .report(getCode())
                 .build();

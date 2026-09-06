@@ -62,7 +62,7 @@ public class NetDifferenceBetweenTowMonths implements ReportStrategy {
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .user(context.getUser())
+
                 .reportName(context.getReportName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))

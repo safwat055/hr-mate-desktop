@@ -1,7 +1,7 @@
 package com.safwat.hr.payroll.payments;
 
-import com.safwat.hr.payroll.dto.PaymentsView;
-import com.safwat.hr.payroll.dto.SearchEmp;
+import com.safwat.hr.payroll.payrollApi.dto.PaymentsView;
+import com.safwat.hr.payroll.payrollApi.dto.SearchEmp;
 import com.safwat.hr.payroll.payments.service.PayrollPaymentsService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.SearchDialog;

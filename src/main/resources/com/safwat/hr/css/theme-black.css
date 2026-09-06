@@ -1,6 +1,7 @@
 /* theme-black.css — ثيم أسود نقي (AMOLED Black) */
 @import "common.css";
 @import "chat-styles.css";
+@import "settings.css";
 
 .root {
     /* خلفية سودا خالصة */
@@ -21,7 +22,7 @@
     -brand-navy: #1A1A1A;
     -header-alt-bg: #222222;
 
-    -color-primary: #3D8CFF;    /* أزرق نيون خفيف للتباين */
+    -color-primary: #3D8CFF; /* أزرق نيون خفيف للتباين */
     -color-danger: #E85A4F;
     -color-success: #3AAE8A;
     -color-purple: #9B7AE6;
