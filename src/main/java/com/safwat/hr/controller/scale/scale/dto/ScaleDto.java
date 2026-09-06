@@ -66,6 +66,7 @@ public class ScaleDto {
 
     private List<ScaleTimelinePoint> timeline;
 
+    private List<ExtraResultScale> extraResults;
     // ══════════════════════════════════════════
     //  Inner DTO — النتيجة
     // ══════════════════════════════════════════

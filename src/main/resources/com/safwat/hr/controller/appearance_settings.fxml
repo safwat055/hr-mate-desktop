@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ============================================================
+     شاشة "تخصيص الواجهة" — Appearance Settings
+     تحتوي على أقسام: خطوط (شغال) / ألوان (قريبًا) / زوم (قريبًا)
+     ============================================================ -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane nodeOrientation="RIGHT_TO_LEFT" prefHeight="640.0" prefWidth="900.0" style="-fx-background-color:#1a1d2e;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controllers.AppearanceSettingsController">
+
+    <!-- ═══════════════════ HEADER ═══════════════════ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-background-color:#242740; -fx-border-color:#333659; -fx-border-width:0 0 1 0;">
+            <padding><Insets bottom="14" left="20" right="20" top="14" /></padding>
+
+            <Label style="-fx-font-size:20px;" text="🎛" />
+            <VBox spacing="2">
+                <Label style="-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:#e8eaf6;" text="تخصيص الواجهة" />
+                <Label fx:id="subtitleLabel" style="-fx-font-size:11px; -fx-text-fill:#8b90b8;" text="" />
+            </VBox>
+        </HBox>
+    </top>
+
+    <!-- ═══════════════════ BODY ═══════════════════ -->
+    <center>
+        <SplitPane dividerPositions="0.22" style="-fx-background-color:#1a1d2e;" styleClass="sidebar">
+
+            <!-- ── Sidebar: التصنيفات ── -->
+            <VBox maxWidth="230" minWidth="170" style="-fx-background-color:#242740;" styleClass="sidebar">
+                <padding><Insets bottom="10" top="10" /></padding>
+                <Label style="-fx-font-size:11px; -fx-text-fill:#8b90b8;" text="التخصيصات">
+                    <VBox.margin><Insets bottom="6" left="14" /></VBox.margin>
+                </Label>
+                <ListView fx:id="categoryList" prefHeight="449.0" prefWidth="194.0" style="-fx-background-color:#242740;" VBox.vgrow="ALWAYS" />
+            </VBox>
+
+            <!-- ── منطقة المحتوى: بتتغير حسب التصنيف المختار ── -->
+            <StackPane fx:id="contentArea" style="-fx-background-color:#1a1d2e;" />
+
+        </SplitPane>
+    </center>
+
+</BorderPane>

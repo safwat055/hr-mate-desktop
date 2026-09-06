@@ -400,12 +400,13 @@
 ──────────────────────────────────────────────────────────────── */
 
 .root {
-    -fx-font-family: "Cairo", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "EmojiOne Color", "Symbola";
+    -fx-font-family: "Segoe UI", "Cairo", "Tahoma", system;
+    -fx-font-size: 13px;
     -fx-text-fill: -text-primary;
 }
 
 .special-text {
-    -fx-font-family: "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color";
+    -fx-font-family: "Segoe UI", "Cairo", "Tahoma", system;
 }
 
 .label {
@@ -424,6 +425,7 @@
 .table-view, .list-view, .tree-view {
     -fx-background-color: -card-bg;
     -fx-border-color: -border-color;
+    -fx-font-size: 14px;
 }
 
 .table-view .column-header-background {
@@ -440,18 +442,25 @@
     -fx-font-weight: bold;
 }
 
+.table-view-center {
+    -fx-alignment: center;
+}
+
 .table-row-cell {
     -fx-background-color: -card-bg;
     -fx-text-fill: -text-primary;
+    -fx-font-size: 14px;
     -fx-border-color: transparent transparent -divider-color transparent;
 }
 
 .table-row-cell:odd {
+    -fx-font-size: 14px;
     -fx-background-color: -row-alt-bg;
 }
 
 .table-row-cell:selected {
     -fx-background-color: -selection-bg;
+    -fx-font-weight: bold;
     -fx-text-fill: -on-brand;
 }
 

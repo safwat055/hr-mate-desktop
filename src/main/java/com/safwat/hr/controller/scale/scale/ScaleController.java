@@ -120,11 +120,13 @@ public class ScaleController implements Initializable {
     @FXML
     private TableView<AdjustmentRecord> table_mogardRival;
     @FXML
-    private TableView<AdjustmentRecord> table_bounsAdd;
+    private TableView<AdjustmentRecord> table_bonusAdd;
     @FXML
-    private TableView<AdjustmentRecord> table_bounsRival;
+    private TableView<AdjustmentRecord> table_bonusRival;
     @FXML
     private TableView<ScaleTimelinePoint> table_result;
+    @FXML
+    private TableView<ExtraResultScale> table_extraDate;
 
     // أزرار الإجراءات
     @FXML
@@ -178,13 +180,14 @@ public class ScaleController implements Initializable {
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
+        setExtartDataTable();
         utilsUi.setupDateFields();
         setTable_result();
 
         setupAdjustmentTable(table_mogardAdd);
         setupAdjustmentTable(table_mogardRival);
-        setupAdjustmentTable(table_bounsAdd);
-        setupAdjustmentTable(table_bounsRival);
+        setupAdjustmentTable(table_bonusAdd);
+        setupAdjustmentTable(table_bonusRival);
     }
 
 
@@ -328,6 +331,28 @@ public class ScaleController implements Initializable {
         setupGenericTable(table, cols, 5, AdjustmentRecord::new);
     }
 
+    private void setExtartDataTable() {
+        List<TableSetupHelper.ColumnConfig<ExtraResultScale>> cols = List.of(
+                new TableSetupHelper.ColumnConfig<>("بيان 1", 100,
+                        ExtraResultScale::getColumn_1,
+                        ExtraResultScale::setColumn_1,
+                        false, false, ColumnAlign.CENTER, false),                             // editable, isDateColumn
+                new TableSetupHelper.ColumnConfig<>("قيمة 1", 90,
+                        ExtraResultScale::getValue_1,
+                        ExtraResultScale::setValue_1,
+                        false, false, ColumnAlign.CENTER, false),
+                new TableSetupHelper.ColumnConfig<>("بيان 2", 120,
+                        ExtraResultScale::getColumn_2,
+                        ExtraResultScale::setColumn_2,
+                        false, false, ColumnAlign.CENTER, false),
+                new TableSetupHelper.ColumnConfig<>("قيمة 2", 120,
+                        ExtraResultScale::getValue_2,
+                        ExtraResultScale::setValue_2,
+                        false, false, ColumnAlign.CENTER, false)                                  // عمود نصي عادي
+        );
+        setupGenericTable(table_extraDate, cols, 10, ExtraResultScale::new);
+    }
+
     void setTable_result() {
         List<ColumnConfig<ScaleTimelinePoint>> cols = new ArrayList<>();
         cols.add(new ColumnConfig<>("التاريخ", 90,
@@ -425,9 +450,9 @@ public class ScaleController implements Initializable {
         table_result.getItems().clear();
         table_mogardAdd.getItems().clear();
         table_mogardRival.getItems().clear();
-        table_bounsAdd.getItems().clear();
-        table_bounsRival.getItems().clear();
-
+        table_bonusAdd.getItems().clear();
+        table_bonusRival.getItems().clear();
+        table_extraDate.getItems().clear();
         currentDto = null;
     }
 
@@ -498,13 +523,15 @@ public class ScaleController implements Initializable {
 
 
         fillUpgradeTable(dto.getUpgrades());
+
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
         fillResultTable(dto.getTimeline());
+        fillExtraDataTable(dto.getExtraResults());
         fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
         fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
-        fillAdjustmentTable(table_bounsAdd, dto.getBonusAdditions());
-        fillAdjustmentTable(table_bounsRival, dto.getBonusRemovals());
+        fillAdjustmentTable(table_bonusAdd, dto.getBonusAdditions());
+        fillAdjustmentTable(table_bonusRival, dto.getBonusRemovals());
     }
 
 
@@ -552,6 +579,15 @@ public class ScaleController implements Initializable {
         } else {
             // لو null أو فاضي → ضيف صفين فاضيين
             table_result.getItems().addAll(new ScaleTimelinePoint(), new ScaleTimelinePoint());
+        }
+    }
+
+    void fillExtraDataTable(List<ExtraResultScale> extraResultScales) {
+        table_extraDate.getItems().clear();
+        if (extraResultScales != null && !extraResultScales.isEmpty()) {
+            table_extraDate.getItems().addAll(extraResultScales);
+        } else {
+
         }
     }
 
@@ -619,8 +655,8 @@ public class ScaleController implements Initializable {
             dto.setPromotionIncentives(extractRows(table_promotion, r -> r.getDate() != null));
             dto.setMogardAdditions(extractRows(table_mogardAdd, r -> r.getDate() != null && r.getAmount() != null));
             dto.setMogardRemovals(extractRows(table_mogardRival, r -> r.getDate() != null && r.getAmount() != null));
-            dto.setBonusAdditions(extractRows(table_bounsAdd, r -> r.getDate() != null && r.getAmount() != null));
-            dto.setBonusRemovals(extractRows(table_bounsRival, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusAdditions(extractRows(table_bonusAdd, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusRemovals(extractRows(table_bonusRival, r -> r.getDate() != null && r.getAmount() != null));
 
             // البيانات اللي مفيهاش حقول ولا جداول في الشاشة (groupChanges, basic30From) — محافظ عليها من currentDto
             if (currentDto != null) {

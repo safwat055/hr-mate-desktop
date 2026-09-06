@@ -10,6 +10,7 @@ import com.safwat.hr.controller.admin.system.PostgreSQLService;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.shared.ColorSettingsManager;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import io.github.palexdev.materialfx.controls.MFXButton;
@@ -369,7 +370,7 @@ public class LoginController implements Initializable {
             ThemeEventBus.register(scene);
             // تطبيق الثيم المحفوظ
             ThemeEventBus.applyTheme(scene, ThemeEventBus.getCurrentTheme());
-
+            ColorSettingsManager.attachTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
             stage.show();
 
         } catch (Exception e) {

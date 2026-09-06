@@ -2,7 +2,9 @@
   "ui": {
     "table_chk_total": true,
     "table_chk_nationalId": true,
-    "theme": "theme-gray.css"
+    "colorOverridesVersion": "1788730788364",
+    "theme": "theme-black.css",
+    "fontSize": "10.0"
   },
   "connection": {
     "alone": "false",
@@ -13,5 +15,73 @@
     "user": "admin",
     "url": "http://",
     "backendAsService": "false"
+  },
+  "fonts_TABLE_VIEW": {
+    "COMBO_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LIST_VIEW": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_AREA": {
+      "size": 13,
+      "bold": false,
+      "family": "Cairo ExtraBold",
+      "italic": false
+    },
+    "TAB_PANE": {
+      "size": 20,
+      "bold": true,
+      "family": "System",
+      "italic": false
+    },
+    "RADIO_BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TABLE_VIEW": {
+      "size": 14,
+      "bold": false,
+      "family": "DejaVu Sans",
+      "italic": false
+    },
+    "BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LABEL": {
+      "size": 13,
+      "bold": false,
+      "family": "Cairo Light",
+      "italic": false
+    },
+    "CHECK_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_FIELD": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "MENU_BAR": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    }
   }
 }

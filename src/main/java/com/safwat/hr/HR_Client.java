@@ -2,6 +2,7 @@ package com.safwat.hr;
 
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.shared.ColorSettingsManager;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.FontLoader;   // ← إضافة
 import javafx.application.Application;
@@ -58,7 +59,7 @@ public class HR_Client extends Application {
 
         Scene scene = new Scene(fxmlLoader.load());
         ThemeEventBus.applyTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
-
+        ColorSettingsManager.attachTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
 
         stage.setTitle("HR_MATE");
         stage.setScene(scene);

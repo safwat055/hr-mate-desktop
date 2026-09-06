@@ -22,5 +22,5 @@ public class FXMLPaths {
     private final String backendSetting = "/com/safwat/hr/view/Settings.fxml";
 
     // scale views
-    private final String salaryScale = "/com/safwat/hr/controller/scale/ScaleView.fxml";
+    private final String salaryScale = "/com/safwat/hr/controller/scale/scale/ScaleView.fxml";
 }
