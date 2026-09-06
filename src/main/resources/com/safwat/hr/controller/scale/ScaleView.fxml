@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    شاشة احتساب السلم الوظيفي
+    ────────────────────────────────────────────────────────────
+    التغييرات عن النسخة القديمة:
+    1. Layout بـ VBox/HBox بدل absolute positioning
+    2. حقول إضافة/خصم المجرد والعلاوات → TableView بدل 24 حقل يدوي
+    3. أزرار الأدوات أضيف لها fx:id
+    4. تقسيم منطقي واضح: بحث → بيانات → جداول → نتائج
+    5. RTL على المستوى الصح (ScrollPane فقط)
+-->
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1144.0" prefWidth="1650.0"
+            styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.scale.scale.ScaleController">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="1126.0" prefWidth="1247.0" spacing="8" styleClass="card">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </padding>
+
+            <!-- ══════════════════════════════════════════════════════
+                 1. شريط البحث
+            ══════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+
+                <Button fx:id="btn_search" prefHeight="32" prefWidth="80" styleClass="btn btn-primary" text="🔍 بحث"/>
+                <Label prefHeight="22.0" prefWidth="65" styleClass="bold" text="رقم قومي"/>
+
+                <TextField fx:id="txt_nationalId" alignment="CENTER" prefHeight="32" prefWidth="150"
+                           promptText="الرقم القومي"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label minWidth="-Infinity" prefWidth="65" styleClass="bold" text="رقم موظف"/>
+
+                <TextField fx:id="txt_empCode" alignment="CENTER" prefHeight="32" prefWidth="120"
+                           promptText="رقم الموظف"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label prefHeight="23.0" prefWidth="40" styleClass="bold" text="الاسم"/>
+
+                <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="32" prefWidth="200"
+                           promptText="اسم الموظف"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label prefWidth="45" styleClass="bold" text="الإدارة"/>
+
+                <TextField fx:id="txt_Management" alignment="CENTER" prefHeight="32" prefWidth="200"
+                           promptText="اسم الإدارة"/>
+            </HBox>
+
+            <!-- ══════════════════════════════════════════════════════
+                 2. شريط الأدوات (القانون + الكود + الدرجة + الأزرار)
+            ══════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+
+                <!-- أزرار الإجراءات -->
+                <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" styleClass="btn-secondary" text="مسح"/>
+                <Button fx:id="btn_save" prefHeight="32" prefWidth="70" styleClass="btn-success" text="حفظ"/>
+                <Button fx:id="btn_pdf" prefHeight="32" prefWidth="70" styleClass="btn-danger" text="PDF"/>
+                <Button fx:id="btn_calculate" prefHeight="32" prefWidth="100" styleClass="btn-purple" text="⚙ احتساب"/>
+                <Label prefWidth="75" styleClass="bold" text="درجة التعيين"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <TextField fx:id="txt_startDegree" alignment="CENTER" prefHeight="32" prefWidth="80"
+                           promptText="درجة التعيين"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label prefWidth="75" styleClass="bold" text="كود الوظيفة"/>
+
+                <TextField fx:id="txt_code" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="كود"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label prefWidth="45" styleClass="bold" text="قانون"/>
+
+                <TextField fx:id="txt_law" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="القانون"/>
+
+                <Separator orientation="VERTICAL"/>
+                <Label prefWidth="100" styleClass="bold" text="المجموعة النوعية"/>
+
+                <TextField fx:id="txt_group" alignment="CENTER" prefHeight="32" prefWidth="167.0"
+                           promptText="المجموعة النوعية" HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <HBox prefHeight="422.0" prefWidth="1628.0" spacing="5.0">
+                <children>
+
+                    <!-- ── 3أ. بيانات المؤهلات (يمين) ── -->
+                    <VBox minWidth="240" prefWidth="240" spacing="0" styleClass="card">
+
+                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header compact"
+                               text="بيانات التعيين والتسويات"/>
+
+                        <VBox spacing="2">
+                            <padding>
+                                <Insets bottom="8" left="8" right="8" top="8"/>
+                            </padding>
+
+                            <fx:define>
+                                <!-- Template row macro ليست متاحة في FXML — نكتر يدوي لكن منظم -->
+                            </fx:define>
+
+                            <!-- تاريخ التعيين -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="تاريخ التعيين"/>
+                                <TextField fx:id="txt_startDate" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <!-- تاريخ الأقدمية -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="تاريخ الأقدمية"/>
+                                <TextField fx:id="txt_backStart" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <!-- تمييز علمي -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="بداية مربوط"/>
+                                <TextField fx:id="txt_tied" alignment="CENTER" editable="false" prefHeight="28"
+                                           prefWidth="120"/>
+                            </HBox>
+                            <!-- دبلومة -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="دبلومة"/>
+                                <TextField fx:id="txt_debloma" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <!-- ماجستير -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="ماجستير"/>
+                                <TextField fx:id="txt_magester" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <!-- دكتوراة -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="bold" text="دكتوراة"/>
+                                <TextField fx:id="txt_doctoraa" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+
+                            <Separator/>
+
+                            <!-- تسويات -->
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="text-navy bold" text="ت. مؤهل عالٍ"/>
+                                <TextField fx:id="txt_regrade3" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="text-navy bold" text="ت. مؤهل متوسط"/>
+                                <TextField fx:id="txt_regrade4" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="text-navy bold" text="ت. إعدادية"/>
+                                <TextField fx:id="txt_regrade5" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT" spacing="6">
+                                <Label prefWidth="110" styleClass="text-navy bold" text="أقدمية التسوية"/>
+                                <TextField fx:id="txt_backRegrade" alignment="CENTER" prefHeight="28" prefWidth="120"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- ── 3ج. بيانات التسكين (يسار) ── -->
+                    <VBox minWidth="203.0" prefHeight="338.0" prefWidth="203.0" spacing="0" styleClass="card">
+
+                        <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header.compact"
+                               text="بيانات اضافية"/>
+
+                        <VBox prefHeight="302.0" prefWidth="177.0" spacing="2">
+                            <padding>
+                                <Insets bottom="8" left="8" right="8" top="8"/>
+                            </padding>
+
+                            <!-- سنوات الخبرة -->
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" styleClass="bold" text="سنوات تدرّج"/>
+                                <TextField fx:id="yearUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" prefHeight="26.0" prefWidth="190.0" spacing="6">
+                                <Label prefWidth="105" styleClass="bold" text="سنوات لا تدرّج"/>
+                                <TextField fx:id="yearNoUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" styleClass="bold" text="خبرة تدرّج"/>
+                                <TextField fx:id="gpUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" styleClass="bold" text="خبرة لا تدرّج"/>
+                                <TextField fx:id="gpNoUp" alignment="CENTER" prefHeight="28" prefWidth="70"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="105" styleClass="bold" text="أقدمية للتسكين"/>
+                                <TextField fx:id="yearsBack" alignment="CENTER" prefHeight="28" prefWidth="70"/>
+                            </HBox>
+
+                            <Separator/>
+
+                            <!-- تواريخ مهمة -->
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" styleClass="bold" text="أساسي 30/6"/>
+                                <TextField fx:id="date_kader" alignment="CENTER" prefHeight="28" prefWidth="90"
+                                           promptText="تاريخ"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" styleClass="bold" text="إنهاء / تقاعد"/>
+                                <TextField fx:id="end_day" alignment="CENTER" prefHeight="28" prefWidth="90"
+                                           promptText="تاريخ"/>
+                            </HBox>
+
+                            <Separator/>
+
+                            <!-- انقطاع -->
+                            <Label styleClass="text-danger bold fs-12" text="فترة الانقطاع"/>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" styleClass="bold" text="من"/>
+                                <TextField fx:id="txt_startCut" alignment="CENTER" prefHeight="28" prefWidth="90"
+                                           promptText="بداية"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="85" styleClass="bold" text="إلى"/>
+                                <TextField fx:id="txt_endCut" alignment="CENTER" prefHeight="28" prefWidth="90"
+                                           promptText="نهاية"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <!-- ترقيات -->
+                    <VBox minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0" prefWidth="364.0"
+                          styleClass="card">
+                        <HBox alignment="CENTER">
+                            <children>
+                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="30.0"
+                                       prefWidth="328.0" styleClass="panel-header compact" text="الترقيات"/>
+                                <Button fx:id="btn_addUpgrade" mnemonicParsing="false" prefHeight="26.0"
+                                        prefWidth="28.0" styleClass="btn-success" text="+"/>
+                            </children>
+                        </HBox>
+                        <TableView fx:id="table_upgrade" maxHeight="1.7976931348623157E308" maxWidth="-Infinity"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="538.0" prefWidth="362.0">
+                            <columns>
+                                <TableColumn prefWidth="130" text="تاريخ الترقية"/>
+                                <TableColumn prefWidth="100" text="الدرجة"/>
+                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                            </columns>
+                            <padding>
+                                <Insets bottom="4" left="4" right="4" top="2"/>
+                            </padding>
+                        </TableView>
+                    </VBox>
+                    <!-- تشجيعيات -->
+                    <VBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity"
+                          minWidth="-Infinity" prefHeight="330.0" prefWidth="265.0" styleClass="card"
+                          HBox.hgrow="ALWAYS">
+                        <HBox>
+                            <children>
+                                <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="1.7976931348623157E308"
+                                       prefHeight="30.0" prefWidth="261.0" styleClass="panel-header compact"
+                                       text="التشجيعيات"/>
+                                <Button fx:id="btn_addEncouragement" mnemonicParsing="false" prefHeight="26.0"
+                                        prefWidth="28.0" styleClass="btn-success" text="+"/>
+                            </children>
+                        </HBox>
+                        <TableView fx:id="table_encourge" maxHeight="1.7976931348623157E308" maxWidth="-Infinity"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="489.0" prefWidth="263.0">
+                            <columns>
+                                <TableColumn prefWidth="130" text="التاريخ"/>
+                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                            </columns>
+                            <padding>
+                                <Insets bottom="4" left="4" right="4" top="2"/>
+                            </padding>
+                        </TableView>
+                    </VBox>
+
+                    <!-- حافز ترقية -->
+                    <VBox maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity"
+                          minWidth="-Infinity" prefHeight="330.0" prefWidth="270.0" styleClass="card">
+                        <HBox>
+                            <children>
+                                <Label alignment="CENTER" maxHeight="-Infinity" maxWidth="1.7976931348623157E308"
+                                       prefHeight="30.0" prefWidth="261.0" styleClass="panel-header compact"
+                                       text="حافز الترقية"/>
+                                <Button fx:id="btn_addPromotion" mnemonicParsing="false" prefHeight="26.0"
+                                        prefWidth="28.0" styleClass="btn-success" text="+"/>
+                            </children>
+                        </HBox>
+                        <TableView fx:id="table_promotion" maxHeight="1.7976931348623157E308" maxWidth="-Infinity"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="508.0" prefWidth="268.0">
+                            <columns>
+                                <TableColumn prefWidth="130" text="التاريخ"/>
+                                <TableColumn prefWidth="130" text="رقم القرار"/>
+                            </columns>
+                            <padding>
+                                <Insets bottom="4" left="4" right="4" top="2"/>
+                            </padding>
+                        </TableView>
+                    </VBox>
+                    <!-- تسويات المجرد والعلاوات (مضغوطة) -->
+
+                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="-Infinity"
+                                maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="330.0"
+                                prefWidth="240.0" styleClass="text-navy bold fs-13" text="تسويات المجرد والعلاوات"
+                                HBox.hgrow="ALWAYS">
+                        <content>
+                            <Accordion>
+                                <panes>
+                                    <TitledPane expanded="false" styleClass="text-danger bold" text="خصم علاوات">
+                                        <content>
+                                            <TableView fx:id="table_bounsRival" editable="true"
+                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="186.0"
+                                                       prefWidth="184.0">
+                                                <columns>
+                                                    <TableColumn prefWidth="90" text="التاريخ"/>
+                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                </columns>
+                                            </TableView>
+                                        </content>
+                                    </TitledPane>
+                                    <TitledPane expanded="false" styleClass="text-danger bold" text="خصم مجرد">
+                                        <content>
+                                            <TableView fx:id="table_mogardRival" editable="true"
+                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="199.0"
+                                                       prefWidth="205.0">
+                                                <columns>
+                                                    <TableColumn prefWidth="90" text="التاريخ"/>
+                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                </columns>
+                                            </TableView>
+                                        </content>
+                                    </TitledPane>
+                                    <TitledPane expanded="false" styleClass="text-success bold" text="إضافة علاوات">
+                                        <content>
+                                            <TableView fx:id="table_bounsAdd" editable="true"
+                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="189.0"
+                                                       prefWidth="205.0">
+                                                <columns>
+                                                    <TableColumn prefWidth="90" text="التاريخ"/>
+                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                </columns>
+                                            </TableView>
+                                        </content>
+                                    </TitledPane>
+                                    <TitledPane expanded="false" styleClass="text-success bold" text="إضافة مجرد">
+                                        <content>
+                                            <TableView fx:id="table_mogardAdd" editable="true"
+                                                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="205.0"
+                                                       prefWidth="205.0">
+                                                <columns>
+                                                    <TableColumn prefWidth="90" text="التاريخ"/>
+                                                    <TableColumn prefWidth="70" text="القيمة"/>
+                                                </columns>
+                                            </TableView>
+                                        </content>
+                                    </TitledPane>
+                                </panes>
+                            </Accordion>
+                        </content>
+                    </TitledPane>
+                    <Region maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"/>
+                </children>
+                <padding>
+                    <Insets left="5.0" right="5.0"/>
+                </padding>
+            </HBox>
+
+
+            <!-- ══════════════════════════════════════════════════════
+                 5. نتائج البحث
+            ══════════════════════════════════════════════════════ -->
+            <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+                  prefHeight="589.0" prefWidth="1128.0" styleClass="card">
+                <Label alignment="CENTER" maxWidth="Infinity" prefHeight="30.0" prefWidth="1126.0"
+                       styleClass="panel-header alt" text="تدرج الراتب"/>
+                <TableView fx:id="table_result" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="536.0"
+                           prefWidth="1392.0">
+                    <padding>
+                        <Insets bottom="6" left="6" right="6" top="4"/>
+                    </padding>
+                </TableView>
+            </VBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

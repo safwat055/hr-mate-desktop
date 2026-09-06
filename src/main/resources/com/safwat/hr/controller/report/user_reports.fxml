@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import java.lang.String?>
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="pad-15" xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.report.UserReportsController">
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label styleClass="bold fs-18" text="تقاريري"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnRefresh" onAction="#loadReports" text="🔄 تحديث">
+            <styleClass>
+                <String fx:value="btn-primary"/>
+                <String fx:value="special-text"/>
+            </styleClass>
+        </Button>
+        <Button fx:id="btnNewReport" onAction="#openNewReport" text="➕ تقرير جديد">
+            <styleClass>
+                <String fx:value="btn-purple"/>
+                <String fx:value="special-text"/>
+            </styleClass>
+        </Button>
+    </HBox>
+
+    <!-- Table -->
+    <TableView fx:id="reportsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colReportId" prefWidth="80" text="رقم التقرير"/>
+            <TableColumn fx:id="colReportName" prefWidth="180" text="اسم التقرير"/>
+            <TableColumn fx:id="colStatus" prefWidth="100" text="الحالة"/>
+            <TableColumn fx:id="colSubmittedTime" prefWidth="140" text="وقت التقديم"/>
+            <TableColumn fx:id="colFinishedTime" prefWidth="140" text="وقت الانتهاء"/>
+            <TableColumn fx:id="colMessage" prefWidth="200" text="الرسالة"/>
+            <TableColumn fx:id="colActions" prefWidth="150" text="إجراءات"/>
+        </columns>
+    </TableView>
+
+    <!-- Status Bar -->
+    <Label fx:id="lblStatus" styleClass="text-muted" text="جاري التحميل..."/>
+</VBox>

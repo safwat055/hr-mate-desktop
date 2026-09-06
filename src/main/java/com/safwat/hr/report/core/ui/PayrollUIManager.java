@@ -1,6 +1,6 @@
 package com.safwat.hr.report.core.ui;
 
-import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.controller.report.PayrollReportController;
 import com.safwat.hr.report.core.DataSourceResolver;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.shared.ui.MultiSelectSearchDialog;

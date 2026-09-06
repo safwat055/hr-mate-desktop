@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.admin.system.LogsController"
+      styleClass="app-bg"
+      spacing="10" style="-fx-padding: 15;">
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label styleClass="fs-18 bold" style="-fx-text-fill: #ff9800;" text="📊 سجل الأحداث"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblLogCount" styleClass="text-muted" text="السجلات: 0"/>
+    </HBox>
+
+    <Separator/>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Button fx:id="btnRefresh" styleClass="btn" text="🔄 تحديث"/>
+        <Button fx:id="btnClear" styleClass="btn btn-danger" text="🗑 مسح"/>
+        <Button fx:id="btnExport" styleClass="btn btn-success" text="📥 تصدير"/>
+        <CheckBox fx:id="chkAutoScroll" selected="true" text="تمرير تلقائي"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="txtFilter" prefWidth="200" promptText="بحث..."/>
+        <Button fx:id="btnFilter" styleClass="icon-btn" text="🔍"/>
+        <Button fx:id="btnClearFilter" styleClass="icon-btn" text="✖"/>
+    </HBox>
+
+    <TextArea fx:id="txtLogs" VBox.vgrow="ALWAYS" prefHeight="400"
+              editable="false" styleClass="mono-log" wrapText="true"/>
+
+</VBox>

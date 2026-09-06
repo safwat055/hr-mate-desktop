@@ -1,6 +1,6 @@
 package com.safwat.hr.report.payroll.sub.upload;
 
-import com.safwat.hr.report.controller.PayrollReportController;
+import com.safwat.hr.controller.report.PayrollReportController;
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;

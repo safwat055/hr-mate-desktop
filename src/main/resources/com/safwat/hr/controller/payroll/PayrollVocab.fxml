@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ============================================================
+     مفردات المرتب — Payroll Vocabulary
+     Styled per Salary Scale v1.0 Design System
+     Converted from AnchorPane to ScrollPane + VBox
+     ============================================================ -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0"
+            styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.payroll.vocab.PayrollVocabController">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="card">
+            <padding>
+                <Insets bottom="16" left="16" right="16" top="16"/>
+            </padding>
+
+            <!-- ════════════════════════════════════════════════════════
+                 HEADER — شريط البحث
+                 ════════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+                <Separator layoutX="629.0" layoutY="19.0" orientation="VERTICAL"/>
+                <Button fx:id="btn_clear" mnemonicParsing="false" prefHeight="39.0" prefWidth="62.0"
+                        styleClass="btn-secondary" text="مسح"/>
+                <Separator layoutX="549.0" layoutY="19.0" orientation="VERTICAL"/>
+                <Button fx:id="btn_open" prefHeight="36.0" prefWidth="58.0" styleClass="btn-iconFlat"/>
+                <Separator layoutX="615.0" layoutY="19.0" orientation="VERTICAL"/>
+
+                <Button fx:id="btn_search" prefHeight="32" prefWidth="80" styleClass="btn-outline purple" text="🔍 بحث"/>
+                <Separator layoutX="399.0" layoutY="19.0" orientation="VERTICAL"/>
+
+                <TextField fx:id="txt_search" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                           prefWidth="168.0" promptText="ادخل قيمة للبحث"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <TextField fx:id="txt_month" alignment="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="32"
+                           prefWidth="100" promptText="سنة شهر"/>
+                <Separator layoutX="413.0" layoutY="19.0" orientation="VERTICAL"/>
+                <TextField fx:id="txt_recordName" alignment="CENTER" layoutX="441.0" layoutY="23.0"
+                           nodeOrientation="LEFT_TO_RIGHT" prefHeight="32" prefWidth="315.0" promptText="اختر صرفية"/>
+                <Separator layoutX="535.0" layoutY="19.0" orientation="VERTICAL"/>
+                <Label fx:id="lbl_path" prefHeight="22" prefWidth="140" styleClass="text-secondary"/>
+
+                <Region prefHeight="39.0" prefWidth="41.0" HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- ════════════════════════════════════════════════════════
+                 TOOLBAR — شريط بيانات البحث
+                 ════════════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+                <Separator layoutX="628.0" layoutY="19.0" orientation="VERTICAL"/>
+
+                <TextField fx:id="txt_nationalID" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                           prefWidth="200.0" promptText="رقم قومى"/>
+                <Separator orientation="VERTICAL"/>
+                <TextField fx:id="txt_payID" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                           prefWidth="145.0" promptText="رقم صرف"/>
+                <Separator layoutX="212.0" layoutY="19.0" orientation="VERTICAL"/>
+                <TextField fx:id="txt_name" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                           prefWidth="280" promptText="الاسم"/>
+                <Separator layoutX="356.0" layoutY="19.0" orientation="VERTICAL"/>
+                <TextField fx:id="txt_management" alignment="CENTER" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                           prefWidth="428.0" promptText="الادارة" HBox.hgrow="ALWAYS"/>
+                <Separator layoutX="619.0" layoutY="19.0" orientation="VERTICAL"/>
+                <Region prefHeight="36.0" prefWidth="210.0"/>
+            </HBox>
+
+            <!-- ════════════════════════════════════════════════════════
+                 RESULTS — WebView
+                 ════════════════════════════════════════════════════════ -->
+            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+                <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="نتائج البحث"/>
+
+                <WebView fx:id="webView" prefHeight="600" VBox.vgrow="ALWAYS">
+                    <VBox.margin>
+                        <Insets bottom="8" left="8" right="8" top="8"/>
+                    </VBox.margin>
+                </WebView>
+            </VBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

@@ -3,6 +3,7 @@ package com.safwat.hr.network;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiResponse<T> {
     private boolean success;

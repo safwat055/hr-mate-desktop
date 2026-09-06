@@ -140,6 +140,34 @@
     -fx-border-color: derive(-color-purple, -25%);
 }
 
+.btn-iconFlat {
+    -fx-background-color: transparent;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 6;
+    -fx-background-radius: 50%;
+
+    /* ✅ إزالة البوردر نهائياً */
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+
+    /* ✅ إزالة أي تأثير focus أو hover */
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.btn-iconFlat:focused {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-focus-color: transparent;
+}
+
+.btn-iconFlat:hover {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
 .btn:hover, .btn-primary:hover, .btn-secondary:hover,
 .btn-success:hover, .btn-danger:hover, .btn-purple:hover {
     -fx-scale-x: 1.06;
@@ -375,9 +403,11 @@
     -fx-font-family: "Cairo", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "EmojiOne Color", "Symbola";
     -fx-text-fill: -text-primary;
 }
+
 .special-text {
     -fx-font-family: "Segoe UI Emoji", "Noto Color Emoji", "EmojiOne Color";
 }
+
 .label {
     -fx-text-fill: -text-primary;
 }
@@ -660,23 +690,28 @@
     -fx-padding: 6 16 6 16;
     -fx-cursor: hand;
 }
+
 .btn-primary {
     -fx-background-color: #003399;
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
+
 .btn-success {
     -fx-background-color: #4caf50;
     -fx-text-fill: white;
 }
+
 .btn-danger {
     -fx-background-color: #f44336;
     -fx-text-fill: white;
 }
+
 .btn-purple {
     -fx-background-color: #7b1fa2;
     -fx-text-fill: white;
 }
+
 .btn-secondary {
     -fx-background-color: #607d8b;
     -fx-text-fill: white;
@@ -692,12 +727,31 @@
 }
 
 /* ── typography helpers ───────────────────────────────────────────── */
-.fs-18  { -fx-font-size: 18px; }
-.bold   { -fx-font-weight: bold; }
-.text-navy    { -fx-text-fill: #2c3e50; }
-.text-success { -fx-text-fill: #4caf50; }
-.text-danger  { -fx-text-fill: #d32f2f; }
-.text-muted   { -fx-text-fill: #757575; }
+.fs-18 {
+    -fx-font-size: 18px;
+}
+
+.bold {
+    -fx-font-weight: bold;
+}
+
+.text-navy {
+    -fx-text-fill: #2c3e50;
+}
+
+.text-success {
+    -fx-text-fill: #4caf50;
+}
+
+.text-danger {
+    -fx-text-fill: #d32f2f;
+}
+
+.text-muted {
+    -fx-text-fill: #757575;
+}
 
 /* ── app-bg ──────────────────────────────────────────────────────── */
-.app-bg { -fx-background-color: white; }
+.app-bg {
+    -fx-background-color: white;
+}

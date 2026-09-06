@@ -1,6 +1,6 @@
 {
   "ui": {
-    "table_chk_total": false,
+    "table_chk_total": true,
     "table_chk_nationalId": true,
     "theme": "theme-gray.css"
   },
@@ -9,7 +9,7 @@
     "pgAsService": "false",
     "url2": "ws://",
     "port": "8080",
-    "masterPC": "localhost",
+    "masterPC": "safwat055",
     "user": "admin",
     "url": "http://",
     "backendAsService": "false"

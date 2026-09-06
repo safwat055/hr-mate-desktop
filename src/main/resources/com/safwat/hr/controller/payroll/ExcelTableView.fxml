@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ============================================================
+     جدول إدخال البيرول — Excel Payroll Table
+     Styled per Salary Scale v1.0 Design System
+     ملاحظة: لا تستخدم مكونات مخصصة (تعمل في Scene Builder بدون إعداد)
+     ============================================================ -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1200.0" prefWidth="1280.0"
+            styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.payroll.table.TableController">
+
+    <VBox nodeOrientation="RIGHT_TO_LEFT" prefWidth="1240.0" spacing="10" styleClass="card">
+        <padding>
+            <Insets bottom="16" left="16" right="16" top="16"/>
+        </padding>
+
+        <!-- ════════════════════════════════════════════════════════
+                 CARD: أدوات الجدول (Toolbar)
+                 ════════════════════════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+            <padding>
+                <Insets bottom="8" left="12" right="12" top="8"/>
+            </padding>
+            <Button fx:id="btn_Refresh" onAction="#refreshTable" prefHeight="32" prefWidth="36" styleClass="btn-purple"
+                    text="↻"/>
+            <Button fx:id="btn_Excel" onAction="#exportToExcel" prefHeight="32" prefWidth="36"
+                    styleClass="btn-success"/>
+            <Button fx:id="btn_Pdf" onAction="#exportToPDF" prefHeight="32" prefWidth="45.0" styleClass="btn-danger"
+                    text="📄"/>
+            <Button fx:id="btn_clear" onAction="#clearTableView" prefHeight="32" prefWidth="70"
+                    styleClass="btn-secondary" text="مسح"/>
+            <Button fx:id="btn_insertRows" onAction="#add20Rows" prefHeight="32" prefWidth="90" styleClass="btn-primary"
+                    text="+ 20 صف"/>
+            <Button fx:id="btn_delete" onAction="#deleteEmptyRows" prefHeight="32" prefWidth="80"
+                    styleClass="btn-danger" text="حذف فارغ"/>
+            <Button fx:id="btn_tempSave" onAction="#tempSave" prefHeight="32" prefWidth="104.0"
+                    styleClass="btn-secondary" text="حفظ مؤقت"/>
+            <Button fx:id="btn_tempLoad" onAction="#tempLoad" prefHeight="32" prefWidth="80" styleClass="btn-secondary"
+                    text="استدعاء"/>
+
+            <Separator orientation="VERTICAL"/>
+
+            <!-- اتجاه الادخال -->
+            <VBox spacing="4">
+                <RadioButton fx:id="toDown" contentDisplay="RIGHT" mnemonicParsing="false"
+                             nodeOrientation="RIGHT_TO_LEFT" prefHeight="22" text="زر الادخال للانتقال لاسفل">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="group"/>
+                    </toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="toRight" contentDisplay="RIGHT" mnemonicParsing="false"
+                             nodeOrientation="RIGHT_TO_LEFT" prefHeight="22" text="زر الادخال للانتقال لليمين"
+                             toggleGroup="$group"/>
+            </VBox>
+            <Separator layoutX="628.0" layoutY="19.0" orientation="VERTICAL" prefHeight="48.0" prefWidth="3.0"/>
+            <VBox prefHeight="48.0" prefWidth="153.0" spacing="4.0">
+                <CheckBox fx:id="chk_total" mnemonicParsing="false" prefHeight="20.0" prefWidth="149.0"
+                          text="اجماليات العمود"/>
+                <CheckBox fx:id="chk_nationalId" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="20.0"
+                          prefWidth="149.0" text="بيانات الموظف"/>
+            </VBox>
+            <Separator layoutX="806.0" layoutY="19.0" orientation="VERTICAL" prefHeight="48.0" prefWidth="3.0"/>
+            <VBox spacing="4.0">
+                <CheckBox fx:id="useVoices" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="24"
+                          text="الاجابة الصوتية"/>
+            </VBox>
+
+            <Separator orientation="VERTICAL"/>
+
+            <!-- نوع رقم الصرف -->
+            <VBox spacing="4">
+                <RadioButton fx:id="getMainCode" contentDisplay="RIGHT" mnemonicParsing="false"
+                             nodeOrientation="RIGHT_TO_LEFT" prefHeight="22" text="رقم صرف اساسي">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="group1"/>
+                    </toggleGroup>
+                </RadioButton>
+                <RadioButton fx:id="getSecondCode" contentDisplay="RIGHT" mnemonicParsing="false"
+                             nodeOrientation="RIGHT_TO_LEFT" prefHeight="22" text="رقم صرف ثانوى"
+                             toggleGroup="$group1"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- ════════════════════════════════════════════════════════
+                 CARD: إعدادات البيانات — حقول نصية + زر بحث (واجهة البحث)
+                 ════════════════════════════════════════════════════════ -->
+        <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+            <padding>
+                <Insets bottom="10" left="12" right="12" top="10"/>
+            </padding>
+
+            <!-- المجموعات: كتابة مباشرة أو Enter/🔍 للبحث -->
+            <VBox prefHeight="72.0" prefWidth="423.0" spacing="8">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                        <Label prefHeight="28" styleClass="text-dark" text="مجموعة التعيين"/>
+                        <Button fx:id="btnSearchPayrollGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary"
+                                text="🔍"/>
+                        <TextField fx:id="fieldPayrollGroup" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32"
+                                   prefWidth="284.0" promptText="اكتب اسم جديد أو Enter للبحث"/>
+                    </HBox>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                        <Label prefHeight="28" styleClass="text-dark" text="مجموعة العناصر"/>
+                        <Button fx:id="btnSearchElementGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary"
+                                text="🔍"/>
+                        <TextField fx:id="fieldElementGroup" maxHeight="1.7976931348623157E308"
+                                   nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="283.0"
+                                   promptText="اكتب اسم جديد أو Enter للبحث"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+
+            <Separator orientation="VERTICAL"/>
+
+            <!-- الصرفيات الثابتة: حقل بحث + حفظ/حذف + خاصة/عامة -->
+            <VBox spacing="8">
+                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
+                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+                        <Button fx:id="btnSearchStatic" prefHeight="32" prefWidth="38" styleClass="btn-secondary"
+                                text="🔍"/>
+                        <TextField fx:id="fieldStatic" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="170"
+                                   promptText="اسم الصرفية المحفوظة"/>
+                    </HBox>
+                    <Button fx:id="btn_saveStatic" onAction="#savePayrollTable" prefHeight="32" prefWidth="70"
+                            styleClass="btn-purple" text="حفظ"/>
+                    <Button fx:id="btn_clearStatic" onAction="#deleteFromPayrollTable" prefHeight="32" prefWidth="42"
+                            styleClass="btn-danger" text="🗑"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <CheckBox fx:id="privateCheck" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT"
+                              prefHeight="24" prefWidth="136.0" text="مجموعة خاصة"/>
+                </HBox>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <!-- ════════════════════════════════════════════════════════
+                 CARD: جدول البيانات
+                 ════════════════════════════════════════════════════════ -->
+        <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+            <Label alignment="CENTER" maxWidth="Infinity" text="جدول الادحال"/>
+            <TableView fx:id="rawTableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity"
+                       nodeOrientation="RIGHT_TO_LEFT" prefHeight="600" VBox.vgrow="ALWAYS">
+                <padding>
+                    <Insets bottom="8" left="8" right="8" top="8"/>
+                </padding>
+            </TableView>
+        </VBox>
+
+    </VBox>
+</ScrollPane>

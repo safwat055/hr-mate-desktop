@@ -1,21 +1,18 @@
 package com.safwat.hr;
 
 import com.safwat.hr.notification.service.NotificationService;
-
 import com.safwat.hr.shared.AppConfig;
-
-
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.FontLoader;   // ← إضافة
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Objects;
 
-import javafx.scene.image.Image;
 public class HR_Client extends Application {
 
     private final NotificationService notifService = NotificationService.getInstance();
@@ -57,7 +54,7 @@ public class HR_Client extends Application {
                 new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/safwat/hr/icons/logo.png")))
         );
         FXMLLoader fxmlLoader = new FXMLLoader(
-                HR_Client.class.getResource("/com/safwat/hr/view/Login.fxml"));
+                HR_Client.class.getResource("/com/safwat/hr/controller/login/Login.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
         ThemeEventBus.applyTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));

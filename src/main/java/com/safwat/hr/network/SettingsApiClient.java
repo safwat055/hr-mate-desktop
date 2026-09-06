@@ -5,27 +5,20 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * API Client خاص بشاشة إعدادات التطبيق.
  * يُغلّف كل endpoints الـ /api/settings ويستخدم ApiClient الموجود.
- * <p>
- * الاستخدام:
- * SettingsApiClient.getGrouped()
- * SettingsApiClient.update("app.storage.root", "./data")
- * SettingsApiClient.batchUpdate(Map.of("key1","val1"))
  */
 public class SettingsApiClient {
 
     private static final String BASE = "/settings";
 
     // ══════════════════════════════════════════════
-    //  DTOs داخلية (تعكس backend PropertiesDto)
+    //  DTOs
     // ══════════════════════════════════════════════
 
-    /**
-     * يمثّل مفتاحًا واحدًا من الـ properties
-     */
     public record PropertyEntry(
             String key,
             String rawValue,
@@ -59,13 +52,9 @@ public class SettingsApiClient {
     }
 
     // ══════════════════════════════════════════════
-    //  Read
+    //  Sync Methods
     // ══════════════════════════════════════════════
 
-    /**
-     * يجلب كل الإعدادات القابلة للتعديل كـ flat list
-     * GET /api/settings
-     */
     public static ApiResponse<List<PropertyEntry>> getAll()
             throws IOException, InterruptedException {
         return ApiClient.getWithTypeRef(BASE,
@@ -73,11 +62,6 @@ public class SettingsApiClient {
                 });
     }
 
-    /**
-     * يجلب الإعدادات مجمّعة بالتصنيف — للـ Accordion
-     * GET /api/settings/grouped
-     * Response: Map<categoryName, List<PropertyEntry>>
-     */
     public static ApiResponse<Map<String, List<PropertyEntry>>> getGrouped()
             throws IOException, InterruptedException {
         return ApiClient.getWithTypeRef(BASE + "/grouped",
@@ -85,42 +69,30 @@ public class SettingsApiClient {
                 });
     }
 
-    /**
-     * مفتاح واحد بالاسم الكامل
-     * GET /api/settings/{key}
-     */
     public static ApiResponse<PropertyEntry> getOne(String key)
             throws IOException, InterruptedException {
         return ApiClient.get(BASE + "/" + key, PropertyEntry.class);
     }
 
-    // ══════════════════════════════════════════════
-    //  Write
-    // ══════════════════════════════════════════════
+    public static ApiResponse<Map<String, Object>> getFileInfo()
+            throws IOException, InterruptedException {
+        return ApiClient.getWithTypeRef(BASE + "/file-info",
+                new TypeReference<Map<String, Object>>() {
+                });
+    }
 
-    /**
-     * تعديل مفتاح واحد
-     * PUT /api/settings/{key}
-     */
     public static ApiResponse<PropertyEntry> update(String key, String newValue)
             throws IOException, InterruptedException {
         return ApiClient.put(BASE + "/" + key, new UpdateRequest(newValue), PropertyEntry.class);
     }
 
-    /**
-     * تعديل عدة مفاتيح دفعة واحدة (زر "حفظ الكل")
-     * PUT /api/settings/batch
-     */
     public static ApiResponse<List<PropertyEntry>> batchUpdate(Map<String, String> updates)
             throws IOException, InterruptedException {
-        return ApiClient.put(BASE + "/batch", new BatchUpdateRequest(updates),
-                (Class<List<PropertyEntry>>) (Class<?>) List.class);
+        return ApiClient.post(BASE + "/batch", new BatchUpdateRequest(updates),
+                new TypeReference<List<PropertyEntry>>() {
+                });
     }
 
-    /**
-     * إضافة مفتاح جديد
-     * POST /api/settings
-     */
     public static ApiResponse<PropertyEntry> add(String key, String value,
                                                  String category, String comment)
             throws IOException, InterruptedException {
@@ -128,32 +100,16 @@ public class SettingsApiClient {
                 PropertyEntry.class);
     }
 
-    /**
-     * حذف مفتاح
-     * DELETE /api/settings/{key}
-     */
     public static ApiResponse<Void> delete(String key)
             throws IOException, InterruptedException {
         return ApiClient.delete(BASE + "/" + key, Void.class);
     }
 
-    // ══════════════════════════════════════════════
-    //  Backup & Restore
-    // ══════════════════════════════════════════════
-
-    /**
-     * عمل backup يدوي
-     * POST /api/settings/backup
-     */
     public static ApiResponse<String> backup()
             throws IOException, InterruptedException {
         return ApiClient.post(BASE + "/backup", null, String.class);
     }
 
-    /**
-     * قائمة الـ backups المتاحة
-     * GET /api/settings/backups
-     */
     public static ApiResponse<List<String>> listBackups()
             throws IOException, InterruptedException {
         return ApiClient.getWithTypeRef(BASE + "/backups",
@@ -161,10 +117,6 @@ public class SettingsApiClient {
                 });
     }
 
-    /**
-     * استعادة backup بالاسم
-     * POST /api/settings/restore
-     */
     public static ApiResponse<Void> restore(String backupFileName)
             throws IOException, InterruptedException {
         return ApiClient.post(BASE + "/restore",
@@ -172,110 +124,63 @@ public class SettingsApiClient {
     }
 
     // ══════════════════════════════════════════════
-    //  Async variants (تُستخدم من الـ Controller مباشرةً)
+    //  Async Methods — كلها بنفس النمط
     // ══════════════════════════════════════════════
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<Map<String, List<PropertyEntry>>>> getGroupedAsync() {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return getGrouped();
-            } catch (Exception e) {
-                ApiResponse<Map<String, List<PropertyEntry>>> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+    public static CompletableFuture<ApiResponse<Map<String, List<PropertyEntry>>>> getGroupedAsync() {
+        return async(() -> getGrouped());
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<PropertyEntry>> updateAsync(
+    public static CompletableFuture<ApiResponse<Map<String, Object>>> getFileInfoAsync() {
+        return async(() -> getFileInfo());
+    }
+
+    public static CompletableFuture<ApiResponse<PropertyEntry>> updateAsync(
             String key, String value) {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return update(key, value);
-            } catch (Exception e) {
-                ApiResponse<PropertyEntry> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+        return async(() -> update(key, value));
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<List<PropertyEntry>>> batchUpdateAsync(
+    public static CompletableFuture<ApiResponse<List<PropertyEntry>>> batchUpdateAsync(
             Map<String, String> updates) {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return batchUpdate(updates);
-            } catch (Exception e) {
-                ApiResponse<List<PropertyEntry>> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+        return async(() -> batchUpdate(updates));
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<PropertyEntry>> addAsync(
+    public static CompletableFuture<ApiResponse<PropertyEntry>> addAsync(
             String key, String value, String category, String comment) {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return add(key, value, category, comment);
-            } catch (Exception e) {
-                ApiResponse<PropertyEntry> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+        return async(() -> add(key, value, category, comment));
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<Void>> deleteAsync(String key) {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return delete(key);
-            } catch (Exception e) {
-                ApiResponse<Void> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+    public static CompletableFuture<ApiResponse<Void>> deleteAsync(String key) {
+        return async(() -> delete(key));
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<String>> backupAsync() {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return backup();
-            } catch (Exception e) {
-                ApiResponse<String> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+    public static CompletableFuture<ApiResponse<String>> backupAsync() {
+        return async(() -> backup());
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<List<String>>> listBackupsAsync() {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-            try {
-                return listBackups();
-            } catch (Exception e) {
-                ApiResponse<List<String>> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
-            }
-        });
+    public static CompletableFuture<ApiResponse<List<String>>> listBackupsAsync() {
+        return async(() -> listBackups());
     }
 
-    public static java.util.concurrent.CompletableFuture<ApiResponse<Void>> restoreAsync(
-            String backupFileName) {
-        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+    public static CompletableFuture<ApiResponse<Void>> restoreAsync(String backupFileName) {
+        return async(() -> restore(backupFileName));
+    }
+
+    // ══════════════════════════════════════════════
+    //  Helper — يلف أي call في CompletableFuture
+    // ══════════════════════════════════════════════
+
+    @FunctionalInterface
+    private interface CheckedSupplier<T> {
+        T get() throws Exception;
+    }
+
+    private static <T> CompletableFuture<ApiResponse<T>> async(CheckedSupplier<ApiResponse<T>> supplier) {
+        return CompletableFuture.supplyAsync(() -> {
             try {
-                return restore(backupFileName);
+                return supplier.get();
             } catch (Exception e) {
-                ApiResponse<Void> err = new ApiResponse<>();
+                ApiResponse<T> err = new ApiResponse<>();
                 err.setSuccess(false);
                 err.setMessage(e.getMessage());
                 return err;
