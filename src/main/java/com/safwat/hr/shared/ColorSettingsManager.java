@@ -311,11 +311,28 @@ public class ColorSettingsManager {
         }
     }
 
+    public static void resetAllToDefaults() {
+        try {
+            Path file = Paths.get(OVERRIDES_FILE);
+            // نكتب ملف فارغ (بدل الحذف عشان نحافظ على رابط الـ stylesheet)
+            Files.writeString(file, "/* تم إعادة الضبط للإعدادات الافتراضية */\n.root {\n}\n");
+        } catch (IOException ignored) {
+        }
+        AppConfig.removeValue("ui", "colorOverridesVersion");
+        AppConfig.setValue("ui", "colorOverridesVersion", String.valueOf(System.currentTimeMillis()));
+        reapplyToRegisteredScenes();
+    }
+
     // ==================== واجهة التخصيص ====================
 
     /**
      * بيبني واجهة تخصيص الألوان (كارت لكل متغير لون) جاهزة للتركيب جوه أي
      * حاوية (زي منطقة المحتوى في AppearanceSettingsController).
+     */
+    /**
+     * بيبني واجهة تخصيص الألوان (كارت لكل متغير لون) جاهزة للتركيب جوه أي
+     * حاوية (زي منطقة المحتوى في AppearanceSettingsController).
+     * ✅ التعديل: زر "استعادة الكل للافتراضي" عام في الفوتر.
      */
     public static Parent buildPanel() {
         List<ColorVar> vars = loadColorVars();
@@ -347,13 +364,22 @@ public class ColorSettingsManager {
         // ---------- Footer ----------
         Label statusLabel = new Label("جاهز");
         statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+
         Label pendingBadge = new Label("");
         pendingBadge.setVisible(false);
         pendingBadge.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:11px; -fx-font-weight:bold;");
+
         Button discardBtn = new Button("↩ تجاهل");
         discardBtn.setVisible(false);
         discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
                 + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
+
+        // ✅ زر استعادة الكل للافتراضي — عام وشامل
+        Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
+        resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
+                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
+        resetAllBtn.setTooltip(new Tooltip("يمسح كل تخصيصات الألوان ويرجع للثيم الأصلي على الكل"));
+
         Button saveAllBtn = new Button("💾 حفظ وتطبيق الكل");
         saveAllBtn.setDisable(true);
         saveAllBtn.setStyle("-fx-background-color:" + C_ACCENT + "; -fx-text-fill:white;"
@@ -401,15 +427,37 @@ public class ColorSettingsManager {
 
         discardBtn.setOnAction(e -> {
             for (ColorVar v : vars) {
-                v.currentValue = v.themeDefault; // نرجع للقيمة الافتراضية
-                ColorPicker picker = pickers.get(v);
-                picker.setValue(safeWebColor(v.themeDefault));
+                v.currentValue = v.themeDefault;
+                pickers.get(v).setValue(safeWebColor(v.themeDefault));
             }
             dirty.clear();
             cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
             updateFooter.run();
             statusLabel.setText("تم تجاهل التغييرات");
             statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
+        });
+
+        // ✅ استعادة الكل للثيم الافتراضي — يمسح overrides ويطبق فورًا على الكل
+        resetAllBtn.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("استعادة الافتراضي");
+            confirm.setHeaderText("هتمسح كل تخصيصات الألوان اللي حفظتها");
+            confirm.setContentText("هيرجع للثيم الأصلي فورًا على كل الشاشات المفتوحة. متقدرش ترجع لتخصيصاتك القديمة بعد كده. كمّل؟");
+            confirm.showAndWait().ifPresent(btn -> {
+                if (btn == javafx.scene.control.ButtonType.OK) {
+                    resetAllToDefaults();
+                    // إعادة تحميل الـ pickers بقيم الثيم الافتراضية
+                    for (ColorVar v : vars) {
+                        v.currentValue = v.themeDefault;
+                        pickers.get(v).setValue(safeWebColor(v.themeDefault));
+                    }
+                    dirty.clear();
+                    cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
+                    updateFooter.run();
+                    statusLabel.setText("✓ تم الرجوع للثيم الافتراضي على الكل");
+                    statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+                }
+            });
         });
 
         saveAllBtn.setOnAction(e -> {
@@ -421,26 +469,26 @@ public class ColorSettingsManager {
             dirty.clear();
             cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
             updateFooter.run();
-
             reapplyToRegisteredScenes();
-
             statusLabel.setText("✓ تم الحفظ والتطبيق الفوري");
             statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
         });
 
-        HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, saveAllBtn);
+        HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, resetAllBtn, saveAllBtn);
         footer.setAlignment(Pos.CENTER_LEFT);
         footer.setPadding(new Insets(10, 20, 10, 20));
         footer.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
                 + "; -fx-border-width:1 0 0 0;");
 
         BorderPane root = new BorderPane();
+        
         root.setTop(header);
         root.setCenter(scroll);
         root.setBottom(footer);
         root.setStyle("-fx-background-color:" + C_BG + ";");
         return root;
     }
+
 
     private static VBox buildColorRow(ColorVar v, Map<ColorVar, ColorPicker> pickers,
                                       Set<ColorVar> dirty, Runnable updateFooter) {

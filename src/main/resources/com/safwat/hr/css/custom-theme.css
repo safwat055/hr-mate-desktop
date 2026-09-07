@@ -1,0 +1,130 @@
+/* ══════════════════════════════════════════════════════════════════
+   theme-light.css — الثيم المخصص (مستوحى من settings.css)
+   يستورد common.css و chat-styles.css و settings.css
+   مع تعديل المتغيرات لتتناسب مع الألوان المطلوبة وإظهار النصوص بوضوح
+══════════════════════════════════════════════════════════════════ */
+
+@import "common.css";
+@import "chat-styles.css";
+@import "settings.css";
+
+.root {
+    /* ── الخلفيات ── */
+    -app-bg: #1a1d2e;
+    -card-bg: #242740;
+    -sidebar-bg: #1e2136;
+    -input-bg: #1a1d2e;
+
+    /* ── الكروت والحدود ── */
+    -card-border: #333659;
+    -card-shadow: rgba(0, 0, 0, 0.4);
+
+    /* ── النصوص (محسّنة للوضوح) ── */
+    -text-primary: #f0f2ff;
+    -text-secondary: #c8ccf0;
+    -text-muted: #9aa0c8;
+    -text-placeholder: #6a6f9a;
+    -on-brand: #ffffff;
+
+    /* ── الألوان الوظيفية (من settings.css) ── */
+    -brand-navy: #1e3a5f;
+    -header-alt-bg: #2e3154;
+
+    -color-primary: #4f8ef7;
+    -color-primary-hover: #6aa3ff;
+    -color-danger: #e05c5c;
+    -color-success: #43c59e;
+    -color-purple: #6a4fa0;
+    -color-secondary-btn: #6B7280;
+    -color-warning: #f5a623;
+
+    /* ── حدود وفواصل ── */
+    -border-color: #333659;
+    -border-gray: #555880;
+    -divider-color: #3a3f6e;
+
+    /* ── صناديق ثانوية ── */
+    -soft-box-bg: #2a2d4a;
+    -soft-box-border: #3a3f6e;
+
+    /* ── عناصر التحكم ── */
+    -control-bg: #1e2136;
+    -table-header-bg: #2e3154;
+    -row-alt-bg: #222540;
+    -selection-bg: #4f8ef722;
+
+    /* ── متغيرات Modena (لتوحيد ألوان العناصر الافتراضية) ── */
+    -fx-base: -soft-box-bg;
+    -fx-background: -app-bg;
+    -fx-control-inner-background: -control-bg;
+    -fx-text-base-color: -text-primary;
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-primary;
+    -fx-faint-focus-color: derive(-color-primary, 80%);
+
+    -nav-gradient: linear-gradient(to bottom, #090909, #343434, #424243, #232323, #000000);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   تنسيقات الـ Popups (القوائم المنسدلة / ComboBox / Tooltip)
+   بقيم صريحة لضمان الوضوح داخل النوافذ المنبثقة
+══════════════════════════════════════════════════════════════════ */
+
+.context-menu {
+    -fx-background-color: #2e3154;
+    -fx-border-color: #44476a;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+.menu-item {
+    -fx-background-color: #2e3154;
+    -fx-text-fill: #f0f2ff !important;
+    -fx-padding: 6 12 6 12;
+}
+
+.menu-item .label {
+    -fx-text-fill: #f0f2ff !important;
+}
+
+.menu-item:focused {
+    -fx-background-color: #4f8ef7;
+    -fx-text-fill: #ffffff;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: #ffffff;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #2e3154;
+    -fx-border-color: #44476a;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #2e3154;
+    -fx-text-fill: #f0f2ff;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:selected:hover {
+    -fx-background-color: #4f8ef7;
+    -fx-text-fill: #ffffff;
+}
+
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #3a3f6e;
+}
+
+.tooltip {
+    -fx-background-color: #2e3154;
+    -fx-text-fill: #f0f2ff;
+    -fx-border-color: #44476a;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 5 10 5 10;
+    -fx-font-size: 12px;
+}
+
+/* ── تنسيق إضافي لبعض العناصر التي قد تظهر داخل `settings.css` ── */
+

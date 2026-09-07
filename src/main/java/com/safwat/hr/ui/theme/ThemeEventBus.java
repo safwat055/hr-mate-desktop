@@ -28,6 +28,7 @@ public final class ThemeEventBus {
     public static final String TEAL = "theme-teal.css";
     public static final String WARM = "theme-warm.css";
     public static final String PEPSI = "theme-pepsi.css";
+    public static final String CUSTOM = "custom-theme.css";
 
     private static final String BASE_PATH = "/com/safwat/hr/css/";
 
@@ -44,18 +45,6 @@ public final class ThemeEventBus {
             "Cairo-ExtraBold.ttf"
     };
 
-    // Noto Sans Arabic – جميع الأوزان (يمكنك اختيار ما تحتاجه)
-    private static final String[] NOTO_FILES = {
-            "NotoSansArabic-Regular.ttf",
-            "NotoSansArabic-Medium.ttf",
-            "NotoSansArabic-SemiBold.ttf",
-            "NotoSansArabic-Bold.ttf",
-            "NotoSansArabic-ExtraBold.ttf",
-            "NotoSansArabic-Black.ttf",
-            "NotoSansArabic-Light.ttf",
-            "NotoSansArabic-ExtraLight.ttf",
-            "NotoSansArabic-Thin.ttf"
-    };
 
     // ══ الحالة الداخلية ════════════════════════════════════════
     private static final List<WeakReference<Scene>> registeredScenes = new ArrayList<>();
@@ -63,7 +52,7 @@ public final class ThemeEventBus {
     private static boolean fontsLoaded = false;
 
     // اسم العائلة الذي سيُستخدم في CSS كأولوية أولى
-    public static final String DEFAULT_FONT_FAMILY = "Noto Sans Arabic";
+    public static final String DEFAULT_FONT_FAMILY = "Cairo-Regular.ttf";
 
     private ThemeEventBus() {
     }
@@ -75,16 +64,16 @@ public final class ThemeEventBus {
 
         // تحميل Cairo (اختياري، يمكنك إزالتها إذا استغنيت عنها)
         for (String file : CAIRO_FILES) {
-            //  loadFont(FONTS_BASE + file);
+            loadFont(FONTS_BASE + file);
         }
 
         // تحميل Noto Sans Arabic
-        for (String file : NOTO_FILES) {
-            // loadFont(NOTO_BASE + file);
-        }
+        // for (String file : NOTO_FILES) {
+        // loadFont(NOTO_BASE + file);
+        //  }
 
         fontsLoaded = true;
-        //System.out.println("✅ تم تحميل خطوط Noto Sans Arabic و Cairo بنجاح");
+
     }
 
     private static void loadFont(String path) {
@@ -102,7 +91,7 @@ public final class ThemeEventBus {
     // ══ تطبيق الثيم على Scene / Parent ═════════════════════════
 
     public static void applyTheme(Scene scene, String themeFile) {
-        // loadFonts();
+        loadFonts();
         scene.getStylesheets().clear();
         String url = Objects.requireNonNull(
                 ThemeEventBus.class.getResource(BASE_PATH + themeFile),
@@ -114,7 +103,7 @@ public final class ThemeEventBus {
     }
 
     public static void applyTheme(Parent root, String themeFile) {
-        // loadFonts();
+        loadFonts();
         root.getStylesheets().clear();
         String url = Objects.requireNonNull(
                 ThemeEventBus.class.getResource(BASE_PATH + themeFile),

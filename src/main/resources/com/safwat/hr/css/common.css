@@ -400,13 +400,13 @@
 ──────────────────────────────────────────────────────────────── */
 
 .root {
-    -fx-font-family: "Segoe UI", "Cairo", "Tahoma", system;
+    -fx-font-family: "Cairo", "Segoe UI", "Tahoma", system;
     -fx-font-size: 13px;
     -fx-text-fill: -text-primary;
 }
 
 .special-text {
-    -fx-font-family: "Segoe UI", "Cairo", "Tahoma", system;
+    -fx-font-family: "Cairo", "Segoe UI", "Cairo", "Tahoma", system;
 }
 
 .label {

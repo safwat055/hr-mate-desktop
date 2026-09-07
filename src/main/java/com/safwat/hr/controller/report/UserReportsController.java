@@ -4,6 +4,8 @@ import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.network.dto.ReportStatusResponse;
+import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.ThemeEventBus;
@@ -69,12 +71,24 @@ public class UserReportsController implements Initializable {
     @FXML
     private Button btnNewReport;
     @FXML
+    private Button btn_details, btn_view;
+    @FXML
     private Label lblStatus;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupColumns();
         loadReports();
+        setButtonsActions();
+    }
+
+    void setButtonsActions() {
+        btn_details.setOnAction(_ -> handleDetails());
+        btn_view.setOnAction(_ -> {
+            ReportStatusResponse report = reportsTable.getSelectionModel().getSelectedItem();
+            handleView(report);
+        });
+
     }
 
     /**
@@ -122,9 +136,6 @@ public class UserReportsController implements Initializable {
 
             {
 
-                btnCancel.getStyleClass().add("btn-danger");
-                btnView.getStyleClass().add("btn-success");
-                btnCopy.getStyleClass().add("btn-purple");
 
                 btnView.setOnAction(e -> handleView(getTableRow().getItem()));
                 btnCopy.setOnAction(e -> handleCopy(getTableRow().getItem()));
@@ -220,6 +231,41 @@ public class UserReportsController implements Initializable {
         showTextDialog("ℹ️ تقرير " + report.getReportId(), "لا توجد مخرجات متاحة");
     }
 
+    private void handleDetails() {
+
+        ReportStatusResponse report = reportsTable.getSelectionModel().selectedItemProperty().get();
+        if (report == null) {
+            SAFNotification.warning("يجب تحديد صف الجدول اولا");
+        }
+        String status = report.getStatus();
+
+        // فشل → اعرض الخطأ
+        if ("FAILED".equals(status)) {
+            showTextDialog("❌ خطأ في التقرير " + report.getReportId(),
+
+                    report.getErrorMessage() + " \n" + report.getMessage());
+            return;
+        }
+
+        // لسه شغال → اعرض حالة فقط
+        if ("PENDING".equals(status) || "QUEUED".equals(status) || "RUNNING".equals(status)) {
+            showTextDialog("⏳ حالة التقرير " + report.getReportId(),
+                    "الحالة: " + status + "\nنسبة الإنجاز: " + report.getProgress() + "%");
+            return;
+        }
+
+
+        // اكتمل بس مفيش ملف (مثلاً نص) → اعرض الرسالة
+        if (report.getMessage() != null && !report.getMessage().isBlank()) {
+            showTextDialog("📋 مخرجات التقرير " + report.getReportId(),
+                    report.getMessage() + "\n" + report.getOutput() + "\n" + report.getErrorMessage());
+            return;
+        }
+
+        // أي حالة تانية
+        showTextDialog("ℹ️ تقرير " + report.getReportId(), "لا توجد مخرجات متاحة");
+    }
+
     /**
      * يفتح FileChooser ويحمل الملف من السيرفر.
      */
@@ -270,6 +316,17 @@ public class UserReportsController implements Initializable {
                         return;
                     }
                     SAFNotification.withAction("✅ تم التحميل: " + file.getName(), file);
+                    NotificationService.getInstance().send(
+                            HRNotification.builder()
+                                    .type(HRNotification.NotificationType.TASK)
+                                    .priority(HRNotification.Priority.HIGH)
+                                    .title(report.getReportName())
+                                    .message(file.getName())
+                                    .file(target.toString())
+                                    .sender("system")
+                                    .build()
+                    );
+
                 } catch (IOException e) {
 
                     SAFNotification.error("خطأ في التحقق من الملف");

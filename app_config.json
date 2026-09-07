@@ -1,22 +1,5 @@
 {
-  "ui": {
-    "table_chk_total": true,
-    "table_chk_nationalId": true,
-    "colorOverridesVersion": "1788730788364",
-    "theme": "theme-black.css",
-    "fontSize": "10.0"
-  },
-  "connection": {
-    "alone": "false",
-    "pgAsService": "false",
-    "url2": "ws://",
-    "port": "8080",
-    "masterPC": "safwat055",
-    "user": "admin",
-    "url": "http://",
-    "backendAsService": "false"
-  },
-  "fonts_TABLE_VIEW": {
+  "fonts_سجلات": {
     "COMBO_BOX": {
       "size": 13,
       "bold": false,
@@ -32,12 +15,12 @@
     "TEXT_AREA": {
       "size": 13,
       "bold": false,
-      "family": "Cairo ExtraBold",
+      "family": "System",
       "italic": false
     },
     "TAB_PANE": {
-      "size": 20,
-      "bold": true,
+      "size": 13,
+      "bold": false,
       "family": "System",
       "italic": false
     },
@@ -47,10 +30,101 @@
       "family": "System",
       "italic": false
     },
-    "TABLE_VIEW": {
-      "size": 14,
+    "BUTTON": {
+      "size": 13,
       "bold": false,
-      "family": "DejaVu Sans",
+      "family": "System",
+      "italic": false
+    },
+    "TABLE_VIEW": {
+      "size": 16,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LABEL": {
+      "size": 15,
+      "bold": false,
+      "family": "Arial",
+      "italic": false
+    },
+    "CHECK_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_FIELD": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "MENU_BAR": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    }
+  },
+  "ui": {
+    "table_chk_total": true,
+    "table_chk_nationalId": true,
+    "colorOverridesVersion": "1788808069485",
+    "theme": "custom-theme.css",
+    "fontSize": "10.0"
+  },
+  "meta": {"registeredViews": [
+    "اجر الاشتراك",
+    "تدرج راتب",
+    "تقارير صرف",
+    "سجلات",
+    "مدير استحقاقات",
+    "مدير التقارير",
+    "مفردات مرتب",
+    "واجهة الإدخال",
+    "server setting"
+  ]},
+  "connection": {
+    "alone": "false",
+    "pgAsService": "false",
+    "url2": "ws://",
+    "port": "8080",
+    "masterPC": "safwat055",
+    "user": "admin",
+    "url": "http://",
+    "backendAsService": "false"
+  },
+  "zoom": {"واجهة الإدخال": "0.5"},
+  "fonts_واجهة الإدخال": {
+    "COMBO_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LIST_VIEW": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_AREA": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TAB_PANE": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "RADIO_BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
       "italic": false
     },
     "BUTTON": {
@@ -59,10 +133,16 @@
       "family": "System",
       "italic": false
     },
+    "TABLE_VIEW": {
+      "size": 11,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
     "LABEL": {
       "size": 13,
       "bold": false,
-      "family": "Cairo Light",
+      "family": "System",
       "italic": false
     },
     "CHECK_BOX": {

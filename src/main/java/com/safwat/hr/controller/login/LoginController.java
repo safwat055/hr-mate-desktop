@@ -120,7 +120,7 @@ public class LoginController implements Initializable {
 
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
-            ThemeEventBus.applyTheme(root, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
+            //  ThemeEventBus.applyTheme(root, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
         } catch (IOException e) {
             e.printStackTrace();
             SAFNotification.error("فشل فتح إدارة الخدمات: " + e.getMessage());

@@ -4,10 +4,7 @@ import com.safwat.hr.controller.payroll.table.PayrollApiClient.LookupResult;
 import com.safwat.hr.controller.payroll.table.PayrollApiClient.PayrollTableResponse;
 import com.safwat.hr.controller.payroll.table.PayrollApiClient.SearchEmployeeResult;
 import com.safwat.hr.controller.payroll.table.engine.ExcelEngine;
-import com.safwat.hr.controllers.AppearanceSettingsController;
 import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.shared.ColorSettingsManager;
-import com.safwat.hr.shared.FontSettingsManager;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.TextToSpeech;
 import javafx.application.Platform;
@@ -118,17 +115,18 @@ public class TableController implements Initializable {
         engine.setSearchHandler(this::handleSearch);
         engine.setNationalIdTooltipProvider(this::fetchPayrollIndexTooltip);
 
-        FontSettingsManager.applySettings("TABLE_VIEW", rootPane);
+
         setupSearchFields();
         setupDirectionOptions();
         setupHighlights();
 
-        ColorSettingsManager.attachTheme(rootPane.getScene(), AppConfig.getString("ui", "theme", null));
+        //  ColorSettingsManager.attachTheme(rootPane.getScene(), AppConfig.getString("ui", "theme", null));
+
     }
 
     @FXML
     private void onFontSettingsClick() {
-        AppearanceSettingsController.open("TABLE_VIEW");
+
     }
 
     void setCheck() {

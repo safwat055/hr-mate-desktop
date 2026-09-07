@@ -144,6 +144,7 @@ public class TableSetupHelper {
         table.getColumns().clear();
         table.getItems().clear();
         table.setEditable(true);
+        
         table.getSelectionModel().setCellSelectionEnabled(true);
 
         TableColumn<T, String> fillColumn = null;

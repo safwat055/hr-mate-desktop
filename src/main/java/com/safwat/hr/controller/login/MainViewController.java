@@ -4,6 +4,7 @@ import com.safwat.hr.controller.admin.system.AppLogBus;
 import com.safwat.hr.controller.admin.user.AdminUsersController;
 import com.safwat.hr.controller.admin.user.ChangePasswordController;
 import com.safwat.hr.controller.message.controller.MessageInboxController;
+import com.safwat.hr.controllers.AppearanceSettingsController;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
@@ -302,6 +303,11 @@ public class MainViewController implements Initializable {
         ThemeEventBus.applyTheme(ThemeEventBus.LIGHT);
     }
 
+    @FXML
+    void applyThemeCustom() {
+        ThemeEventBus.applyTheme(ThemeEventBus.CUSTOM);
+    }
+
 
     /**
      * تسجيل الخروج: مسح الجلسة + إيقاف الخدمات المباشرة + إغلاق البرنامج.
@@ -345,6 +351,11 @@ public class MainViewController implements Initializable {
     @FXML
     void openAdminUserView() {
         AdminUsersController.open(getStageFromNode(btn_chat));
+    }
+
+    @FXML
+    void openViewSetting() {
+        AppearanceSettingsController.openGeneral();
     }
 
     /**

@@ -415,15 +415,7 @@ public class ScaleController implements Initializable {
                 ScaleTimelinePoint::setDegreeLabel,
                 false, false));
         //extraIncentive
-        cols.add(new ColumnConfig<>("حوافز إضافية", 90,
-                r -> r.getExtraIncentive() != null && !r.getExtraIncentive().equals(BigDecimal.ZERO) ? r.getExtraIncentive().toString() : "",
-                (r, v) -> r.setExtraIncentive(parseBigDecimal(v)),
-                false, false));
-        //socialPackage
-        cols.add(new ColumnConfig<>("الحزمة الاجتماعية", 90,
-                r -> r.getSocialPackage() != null && !r.getSocialPackage().equals(BigDecimal.ZERO) ? r.getSocialPackage().toString() : "",
-                (r, v) -> r.setSocialPackage(parseBigDecimal(v)),
-                false, false));
+
         setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
 
     }

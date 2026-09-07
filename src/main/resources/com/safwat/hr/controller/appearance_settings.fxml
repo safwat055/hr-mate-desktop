@@ -2,48 +2,85 @@
 
 <!-- ============================================================
      شاشة "تخصيص الواجهة" — Appearance Settings
-     تحتوي على أقسام: خطوط (شغال) / ألوان (قريبًا) / زوم (قريبًا)
+     ✅ RTL كامل
+     ✅ لون ListView = نفس لون الخلفية (مش أبيض)
      ============================================================ -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<BorderPane nodeOrientation="RIGHT_TO_LEFT" prefHeight="640.0" prefWidth="900.0" style="-fx-background-color:#1a1d2e;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controllers.AppearanceSettingsController">
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.safwat.hr.controllers.AppearanceSettingsController"
+            prefWidth="900.0" prefHeight="640.0"
+            nodeOrientation="RIGHT_TO_LEFT"
+            style="-fx-background-color:#1a1d2e;">
 
     <!-- ═══════════════════ HEADER ═══════════════════ -->
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="12" style="-fx-background-color:#242740; -fx-border-color:#333659; -fx-border-width:0 0 1 0;">
-            <padding><Insets bottom="14" left="20" right="20" top="14" /></padding>
+        <HBox alignment="CENTER_RIGHT" spacing="12"
+              style="-fx-background-color:#242740; -fx-border-color:#333659; -fx-border-width:0 0 1 0;">
+            <padding>
+                <Insets top="14" right="20" bottom="14" left="20"/>
+            </padding>
 
-            <Label style="-fx-font-size:20px;" text="🎛" />
+            <Label text="🎛" style="-fx-font-size:20px;"/>
             <VBox spacing="2">
-                <Label style="-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:#e8eaf6;" text="تخصيص الواجهة" />
-                <Label fx:id="subtitleLabel" style="-fx-font-size:11px; -fx-text-fill:#8b90b8;" text="" />
+                <Label text="تخصيص الواجهة"
+                       style="-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:#e8eaf6;"/>
+                <Label fx:id="subtitleLabel" text=""
+                       style="-fx-font-size:11px; -fx-text-fill:#8b90b8;"/>
             </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label text="الواجهة:"
+                   style="-fx-font-size:11px; -fx-text-fill:#8b90b8;"/>
+            <ComboBox fx:id="viewCombo" prefWidth="220"
+                      promptText="اختر واجهة..."
+                      style="-fx-background-color:#1a1d2e; -fx-text-fill:#e8eaf6;
+                             -fx-border-color:#333659; -fx-border-radius:6; -fx-background-radius:6;"/>
         </HBox>
     </top>
 
     <!-- ═══════════════════ BODY ═══════════════════ -->
     <center>
-        <SplitPane dividerPositions="0.22" style="-fx-background-color:#1a1d2e;" styleClass="sidebar">
+        <SplitPane dividerPositions="0.22" style="-fx-background-color:#1a1d2e;">
 
             <!-- ── Sidebar: التصنيفات ── -->
-            <VBox maxWidth="230" minWidth="170" style="-fx-background-color:#242740;" styleClass="sidebar">
-                <padding><Insets bottom="10" top="10" /></padding>
-                <Label style="-fx-font-size:11px; -fx-text-fill:#8b90b8;" text="التخصيصات">
-                    <VBox.margin><Insets bottom="6" left="14" /></VBox.margin>
+            <VBox minWidth="170" maxWidth="230"
+                  style="-fx-background-color:#242740;">
+                <padding>
+                    <Insets top="10" bottom="10"/>
+                </padding>
+
+                <Label text="التخصيصات"
+                       style="-fx-font-size:11px; -fx-text-fill:#8b90b8;">
+                    <VBox.margin>
+                        <Insets bottom="6" right="14"/>
+                    </VBox.margin>
                 </Label>
-                <ListView fx:id="categoryList" prefHeight="449.0" prefWidth="194.0" style="-fx-background-color:#242740;" VBox.vgrow="ALWAYS" />
+
+                <!--
+                    ✅ إصلاح اللون الأبيض تحت الكاتيجوريز:
+                    - -fx-background-color على ListView + على .list-view, .virtual-flow, .clipped-container, .sheet
+                    - -fx-control-inner-background يلغي لون Modena الافتراضي
+                    - -fx-focus-color و -fx-faint-focus-color عشان يختفي الـ focus glow الأزرق
+                -->
+                <ListView fx:id="categoryList" VBox.vgrow="ALWAYS"
+                          style="-fx-background-color:#242740;
+                                 -fx-control-inner-background:#242740;
+                                 -fx-background-insets:0;
+                                 -fx-padding:0;
+                                 -fx-focus-color:transparent;
+                                 -fx-faint-focus-color:transparent;
+                                 -fx-border-width:0;"/>
             </VBox>
 
             <!-- ── منطقة المحتوى: بتتغير حسب التصنيف المختار ── -->
-            <StackPane fx:id="contentArea" style="-fx-background-color:#1a1d2e;" />
+            <StackPane fx:id="contentArea"
+                       style="-fx-background-color:#1a1d2e;"/>
 
         </SplitPane>
     </center>

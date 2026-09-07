@@ -409,6 +409,7 @@ public class FontSettingsManager {
         if (root == null || viewId == null) {
             return;
         }
+        ViewRegistry.register(viewId);
         registerRoot(viewId, root);
 
         JSONObject section = AppConfig.getSection(CONFIG_SECTION_PREFIX + viewId);
