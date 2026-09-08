@@ -19,98 +19,57 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * كلاس عام لتخصيص ألوان الثيم النشط بدون تعديل ملف الثيم الأصلي.
- * <p>
- * الفكرة: بيقرأ ملف الثيم الحالي (اسمه محفوظ في AppConfig تحت ui.theme) من classpath،
- * يستخرج منه بس المتغيرات اللي قيمتها لون حقيقي (#hex أو rgba(...))، بيديها
- * اسم عربي مفهوم، ويسيب المستخدم يعدلها. عند الحفظ، بيكتب ملف overrides
- * منفصل ({@value #}) بيتحمّل بعد ملف الثيم في كل Scene، فقيمه
- * بتغلب قيم الثيم الأصلية — من غير ما نلمس ملفات الثيمات نفسها خالص.
- * <p>
- * ⚠️ ملف overrides بيتم حفظه في مجلد config داخل home المستخدم
- * (مثل ~/hr-mate/config/user-theme-overrides.css).
- * <p>
- * طريقة الاستخدام:
- * <ol>
- *   <li>وقت إنشاء أي Scene (بدل الاستدعاء العادي لإضافة ملف الثيم):
- *       {@code ColorSettingsManager.attachTheme(scene, AppConfig.getString("ui","theme","theme-blue.css")); }</li>
- *   <li>لفتح شاشة التعديل: {@code ColorSettingsManager.buildPanel()} (ينفع تركبها
- *       جوه أي حاوية، زي ما بيحصل في AppearanceSettingsController).</li>
- * </ol>
- */
 public class ColorSettingsManager {
 
-    /**
-     * المجلد اللي فيه ملفات الثيمات (common.css, theme-blue.css...) داخل classpath.
-     */
     private static final String THEMES_DIR = "/com/safwat/hr/css/";
-
-    /**
-     * الملف اللي بيتحفظ فيه تخصيصات المستخدم، وبيتحمّل بعد ملف الثيم مباشرة.
-     * موجود في مجلد config داخل home المستخدم.
-     */
     private static final String OVERRIDES_FILE = System.getProperty("user.dir")
             + "/app/config/user-theme-overrides.css";
 
-    // ---- ألوان واجهة التخصيص نفسها (ثابتة، مش من الثيم) ----
-    private static final String C_BG = "#1a1d2e";
-    private static final String C_CARD = "#242740";
+    private static final String C_BG     = "#1a1d2e";
+    private static final String C_CARD   = "#242740";
     private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN = "#43c59e";
-    private static final String C_WARN = "#f5a623";
-    private static final String C_TEXT = "#e8eaf6";
-    private static final String C_MUTED = "#8b90b8";
+    private static final String C_GREEN  = "#43c59e";
+    private static final String C_WARN   = "#f5a623";
+    private static final String C_TEXT   = "#e8eaf6";
+    private static final String C_MUTED  = "#8b90b8";
     private static final String C_BORDER = "#333659";
 
-    /**
-     * قاموس الأسماء العربية لأشهر متغيرات الألوان. أي متغير مش موجود هنا بيتعرض باسمه التقني.
-     */
     private static final Map<String, String> ARABIC_LABELS = new LinkedHashMap<>();
-
     static {
-        ARABIC_LABELS.put("-app-bg", "خلفية التطبيق");
-        ARABIC_LABELS.put("-card-bg", "خلفية الكروت");
-        ARABIC_LABELS.put("-card-border", "حدود الكروت");
-        ARABIC_LABELS.put("-card-shadow", "ظل الكروت");
-        ARABIC_LABELS.put("-text-primary", "لون النص الأساسي");
-        ARABIC_LABELS.put("-text-secondary", "لون النص الثانوي");
-        ARABIC_LABELS.put("-text-muted", "لون النص الباهت");
-        ARABIC_LABELS.put("-on-brand", "لون النص فوق لون العلامة");
-        ARABIC_LABELS.put("-brand-navy", "اللون الكحلي (العلامة)");
-        ARABIC_LABELS.put("-header-alt-bg", "خلفية الهيدر البديلة");
-        ARABIC_LABELS.put("-color-primary", "اللون الأساسي (Primary)");
-        ARABIC_LABELS.put("-color-danger", "لون الخطر / الحذف");
-        ARABIC_LABELS.put("-color-success", "لون النجاح");
-        ARABIC_LABELS.put("-color-purple", "اللون البنفسجي");
-        ARABIC_LABELS.put("-color-secondary-btn", "لون الأزرار الثانوية");
-        ARABIC_LABELS.put("-color-warning", "لون التحذير");
-        ARABIC_LABELS.put("-border-color", "لون الحدود");
-        ARABIC_LABELS.put("-border-gray", "لون الحدود الرمادي");
-        ARABIC_LABELS.put("-divider-color", "لون الفواصل");
-        ARABIC_LABELS.put("-soft-box-bg", "خلفية الصناديق الناعمة");
-        ARABIC_LABELS.put("-soft-box-border", "حدود الصناديق الناعمة");
-        ARABIC_LABELS.put("-control-bg", "خلفية عناصر التحكم");
-        ARABIC_LABELS.put("-table-header-bg", "خلفية رأس الجدول");
-        ARABIC_LABELS.put("-row-alt-bg", "خلفية الصف البديل");
-        ARABIC_LABELS.put("-selection-bg", "لون التحديد");
+        ARABIC_LABELS.put("-app-bg",               "خلفية التطبيق");
+        ARABIC_LABELS.put("-card-bg",               "خلفية الكروت");
+        ARABIC_LABELS.put("-card-border",           "حدود الكروت");
+        ARABIC_LABELS.put("-card-shadow",           "ظل الكروت");
+        ARABIC_LABELS.put("-text-primary",          "لون النص الأساسي");
+        ARABIC_LABELS.put("-text-secondary",        "لون النص الثانوي");
+        ARABIC_LABELS.put("-text-muted",            "لون النص الباهت");
+        ARABIC_LABELS.put("-on-brand",              "لون النص فوق لون العلامة");
+        ARABIC_LABELS.put("-brand-navy",            "اللون الكحلي (العلامة)");
+        ARABIC_LABELS.put("-header-alt-bg",         "خلفية الهيدر البديلة");
+        ARABIC_LABELS.put("-color-primary",         "اللون الأساسي (Primary)");
+        ARABIC_LABELS.put("-color-danger",          "لون الخطر / الحذف");
+        ARABIC_LABELS.put("-color-success",         "لون النجاح");
+        ARABIC_LABELS.put("-color-purple",          "اللون البنفسجي");
+        ARABIC_LABELS.put("-color-secondary-btn",   "لون الأزرار الثانوية");
+        ARABIC_LABELS.put("-color-warning",         "لون التحذير");
+        ARABIC_LABELS.put("-border-color",          "لون الحدود");
+        ARABIC_LABELS.put("-border-gray",           "لون الحدود الرمادي");
+        ARABIC_LABELS.put("-divider-color",         "لون الفواصل");
+        ARABIC_LABELS.put("-soft-box-bg",           "خلفية الصناديق الناعمة");
+        ARABIC_LABELS.put("-soft-box-border",       "حدود الصناديق الناعمة");
+        ARABIC_LABELS.put("-control-bg",            "خلفية عناصر التحكم");
+        ARABIC_LABELS.put("-table-header-bg",       "خلفية رأس الجدول");
+        ARABIC_LABELS.put("-row-alt-bg",            "خلفية الصف البديل");
+        ARABIC_LABELS.put("-selection-bg",          "لون التحديد");
     }
 
-    /**
-     * بيلقط أي سطر شكله: -اسم-المتغير: قيمة-لون؛  (hex أو rgb/rgba)
-     */
     private static final Pattern COLOR_VAR_PATTERN =
             Pattern.compile("(-[a-zA-Z][a-zA-Z0-9-]*)\\s*:\\s*(#[0-9A-Fa-f]{3,8}|rgba?\\([^)]*\\))\\s*;");
 
-    /**
-     * تسجيل كل الـ Scenes المفتوحة عشان نقدر نطبق عليها فورًا عند الحفظ.
-     */
     private static final List<WeakReference<Scene>> REGISTERED_SCENES =
             Collections.synchronizedList(new ArrayList<>());
 
-    private ColorSettingsManager() {
-        // كلاس أدوات ثابت بالكامل - مفيش داعي لإنشاء نسخة منه
-    }
+    private ColorSettingsManager() {}
 
     // ==================== نموذج بيانات المتغير اللوني ====================
 
@@ -121,95 +80,68 @@ public class ColorSettingsManager {
         String currentValue;
 
         ColorVar(String key, String arabicLabel, String themeDefault, String currentValue) {
-            this.key = key;
-            this.arabicLabel = arabicLabel;
+            this.key          = key;
+            this.arabicLabel  = arabicLabel;
             this.themeDefault = themeDefault;
             this.currentValue = currentValue;
         }
     }
 
-    // ==================== قراءة الملفات من classpath ونظام الملفات ====================
+    // ==================== قراءة الملفات ====================
 
-    /**
-     * تقرأ ملف من الـ classpath (داخل الـ JAR أو مجلد resources).
-     */
     private static String readResourceQuietly(String resourcePath) {
         try (InputStream is = ColorSettingsManager.class.getResourceAsStream(resourcePath)) {
-            if (is == null) {
-                System.out.println("Resource not found: " + resourcePath);
-                return "";
-            }
+            if (is == null) return "";
             return new String(is.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            e.printStackTrace();
             return "";
         }
     }
 
-    /**
-     * تقرأ ملف من نظام الملفات (خارج الـ JAR).
-     */
     private static String readFileQuietly(Path filePath) {
         try {
-            if (!Files.exists(filePath)) {
-                return "";
-            }
+            if (!Files.exists(filePath)) return "";
             return Files.readString(filePath);
         } catch (IOException e) {
             return "";
         }
     }
 
-    /**
-     * تضمن وجود مجلد config وملف overrides فارغ إن لزم الأمر.
-     */
     private static void ensureOverridesFileExists() {
         Path file = Paths.get(OVERRIDES_FILE);
-        if (Files.exists(file)) {
-            return;
-        }
+        if (Files.exists(file)) return;
         try {
             Files.createDirectories(file.getParent());
-            Files.writeString(file, "/* ملف تخصيص الألوان — هيتملى تلقائياً أول ما تحفظ من شاشة الألوان */\n.root {\n}\n");
-        } catch (IOException ignored) {
-        }
+            Files.writeString(file, "/* ملف تخصيص الألوان */\n.root {\n}\n");
+        } catch (IOException ignored) {}
     }
 
-    // ==================== استخراج المتغيرات من محتوى CSS ====================
+    // ==================== استخراج المتغيرات ====================
 
     private static Map<String, String> parseColorVars(String css) {
         Map<String, String> result = new LinkedHashMap<>();
-        if (css == null || css.isEmpty()) {
-            return result;
-        }
+        if (css == null || css.isEmpty()) return result;
         Matcher m = COLOR_VAR_PATTERN.matcher(css);
         while (m.find()) {
             String key = m.group(1);
-            if (key.startsWith("-fx-")) {
-                continue; // دي تعريفات محرك Modena، مش متغيرات تخصيص
-            }
+            if (key.startsWith("-fx-")) continue;
             result.putIfAbsent(key, m.group(2));
         }
         return result;
     }
 
-    // ==================== تحميل المتغيرات الحالية ====================
-
     private static List<ColorVar> loadColorVars() {
-        String themeName = AppConfig.getString("ui", "theme", "theme-blue.css");
-        String themePath = THEMES_DIR + themeName;
-        String themeContent = readResourceQuietly(themePath);
-        Map<String, String> themeDefaults = parseColorVars(themeContent);
-
-        // قراءة التخصيصات المحفوظة من ملف overrides
+        String themeName    = AppConfig.getString("ui", "theme", "theme-blue.css");
+        String themeContent = readResourceQuietly(THEMES_DIR + themeName);
+        Map<String, String> themeDefaults  = parseColorVars(themeContent);
         Map<String, String> savedOverrides = parseColorVars(readFileQuietly(Paths.get(OVERRIDES_FILE)));
 
         List<ColorVar> result = new ArrayList<>();
         for (Map.Entry<String, String> e : themeDefaults.entrySet()) {
-            String key = e.getKey();
+            String key          = e.getKey();
             String defaultValue = e.getValue();
-            String current = savedOverrides.getOrDefault(key, defaultValue);
-            String label = ARABIC_LABELS.getOrDefault(key, key);
+            String current      = savedOverrides.getOrDefault(key, defaultValue);
+            String label        = ARABIC_LABELS.getOrDefault(key, key);
             result.add(new ColorVar(key, label, defaultValue, current));
         }
         return result;
@@ -230,9 +162,7 @@ public class ColorSettingsManager {
             Path file = Paths.get(OVERRIDES_FILE);
             Files.createDirectories(file.getParent());
             Files.writeString(file, sb.toString());
-        } catch (IOException ignored) {
-            // تجاهل بصمت
-        }
+        } catch (IOException ignored) {}
 
         AppConfig.setValue("ui", "colorOverridesVersion", String.valueOf(System.currentTimeMillis()));
     }
@@ -243,35 +173,21 @@ public class ColorSettingsManager {
 
     private static String overridesUrlVersioned() {
         String version = AppConfig.getString("ui", "colorOverridesVersion", "0");
-
         return overridesUrlBase() + "?v=" + version;
     }
 
-    /**
-     * بتضيف ملف الثيم + ملف تخصيص الألوان لأي Scene، وتسجّلها عشان تتحدث
-     * فورًا لو المستخدم عدّل الألوان وهي لسه مفتوحة. استخدمها بدل الإضافة
-     * العادية لملف الثيم وقت إنشاء أي Scene جديدة في التطبيق.
-     */
     public static void attachTheme(Scene scene, String themeFileName) {
-        if (scene == null) {
-            return;
-        }
+        if (scene == null) return;
         ensureOverridesFileExists();
-
-        // إضافة ملف الثيم من الـ classpath
         String themeResource = THEMES_DIR + themeFileName;
         try {
-            String themeUrl = Objects.requireNonNull(ColorSettingsManager.class.getResource(themeResource)).toExternalForm();
-            System.out.println(themeUrl);
+            String themeUrl = Objects.requireNonNull(
+                    ColorSettingsManager.class.getResource(themeResource)).toExternalForm();
             scene.getStylesheets().add(themeUrl);
         } catch (Exception e) {
             System.err.println("تعذر تحميل ملف الثيم: " + themeResource);
-            e.printStackTrace();
         }
-
-        // إضافة ملف التخصيص من نظام الملفات
         scene.getStylesheets().add(overridesUrlVersioned());
-        System.out.println(overridesUrlVersioned());
         registerScene(scene);
     }
 
@@ -282,43 +198,32 @@ public class ColorSettingsManager {
         }
     }
 
-    /**
-     * بتعيد تطبيق ملف الألوان (بعد تعديله) على كل الـ Scenes المسجّلة والمفتوحة حاليًا.
-     */
     private static void reapplyToRegisteredScenes() {
-        String base = overridesUrlBase();
+        String base     = overridesUrlBase();
         String freshUrl = overridesUrlVersioned();
-        System.out.println("[ColorSettingsManager] إعادة تطبيق التخصيصات...");
-        System.out.println("  base = " + base);
-        System.out.println("  fresh = " + freshUrl);
         synchronized (REGISTERED_SCENES) {
             Iterator<WeakReference<Scene>> it = REGISTERED_SCENES.iterator();
             while (it.hasNext()) {
                 Scene scene = it.next().get();
-                if (scene == null) {
-                    it.remove();
-                    continue;
-                }
-                boolean removed = scene.getStylesheets().removeIf(s -> s.startsWith(base));
-                System.out.println("  Scene: removed " + (removed ? "yes" : "no") + ", added fresh");
-
+                if (scene == null) { it.remove(); continue; }
+                scene.getStylesheets().removeIf(s -> s.startsWith(base));
                 scene.getStylesheets().add(freshUrl);
-// فرض إعادة تحميل الأنماط
-                scene.getRoot().setStyle("-fx-something: 1;");
                 scene.getRoot().applyCss();
                 scene.getRoot().layout();
             }
         }
     }
 
+    /**
+     * ✅ استعادة كل ألوان الثيم للقيم الافتراضية — يمسح ملف overrides ويطبق فوراً على الكل.
+     */
     public static void resetAllToDefaults() {
         try {
             Path file = Paths.get(OVERRIDES_FILE);
-            // نكتب ملف فارغ (بدل الحذف عشان نحافظ على رابط الـ stylesheet)
+            Files.createDirectories(file.getParent());
+            // نكتب ملف فارغ (مش نحذف) عشان الـ stylesheet URL يفضل صالح
             Files.writeString(file, "/* تم إعادة الضبط للإعدادات الافتراضية */\n.root {\n}\n");
-        } catch (IOException ignored) {
-        }
-        AppConfig.removeValue("ui", "colorOverridesVersion");
+        } catch (IOException ignored) {}
         AppConfig.setValue("ui", "colorOverridesVersion", String.valueOf(System.currentTimeMillis()));
         reapplyToRegisteredScenes();
     }
@@ -326,28 +231,26 @@ public class ColorSettingsManager {
     // ==================== واجهة التخصيص ====================
 
     /**
-     * بيبني واجهة تخصيص الألوان (كارت لكل متغير لون) جاهزة للتركيب جوه أي
-     * حاوية (زي منطقة المحتوى في AppearanceSettingsController).
-     */
-    /**
-     * بيبني واجهة تخصيص الألوان (كارت لكل متغير لون) جاهزة للتركيب جوه أي
-     * حاوية (زي منطقة المحتوى في AppearanceSettingsController).
-     * ✅ التعديل: زر "استعادة الكل للافتراضي" عام في الفوتر.
+     * بيبني panel الألوان جاهز للتركيب جوه AppearanceSettingsController.
+     * ✅ يضم زر "🔄 استعادة الافتراضي" بيرجع الكل للثيم الأصلي فوراً.
      */
     public static Parent buildPanel() {
-        List<ColorVar> vars = loadColorVars();
+        List<ColorVar> vars     = loadColorVars();
         Map<ColorVar, ColorPicker> pickers = new LinkedHashMap<>();
-        Set<ColorVar> dirty = new LinkedHashSet<>();
-        List<VBox> cardNodes = new ArrayList<>();
+        Set<ColorVar> dirty     = new LinkedHashSet<>();
+        List<VBox> cardNodes    = new ArrayList<>();
 
         // ---------- Header ----------
         Label headerIcon = new Label("🎨");
         headerIcon.setStyle("-fx-font-size:20px;");
+
         Label headerTitle = new Label("ألوان الثيم");
         headerTitle.setStyle("-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
-        Label headerSubtitle = new Label("تخصيص ألوان الثيم النشط حاليًا: "
+
+        Label headerSubtitle = new Label("تخصيص ألوان الثيم النشط: "
                 + AppConfig.getString("ui", "theme", "theme-blue.css"));
         headerSubtitle.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_MUTED + ";");
+
         VBox titleBox = new VBox(2, headerTitle, headerSubtitle);
 
         TextField searchField = new TextField();
@@ -374,11 +277,12 @@ public class ColorSettingsManager {
         discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
                 + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
 
-        // ✅ زر استعادة الكل للافتراضي — عام وشامل
+        // ✅ زر استعادة الافتراضي العام
         Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
         resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
                 + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
-        resetAllBtn.setTooltip(new Tooltip("يمسح كل تخصيصات الألوان ويرجع للثيم الأصلي على الكل"));
+        Tooltip.install(resetAllBtn, new Tooltip(
+                "يمسح كل تخصيصات الألوان ويرجع للثيم الأصلي على الكل فوراً"));
 
         Button saveAllBtn = new Button("💾 حفظ وتطبيق الكل");
         saveAllBtn.setDisable(true);
@@ -398,7 +302,7 @@ public class ColorSettingsManager {
             }
         };
 
-        // ---------- Body: كارت لكل متغير لون ----------
+        // ---------- Body ----------
         VBox cardsContainer = new VBox(8);
         cardsContainer.setPadding(new Insets(14));
         cardsContainer.setStyle("-fx-background-color:" + C_BG + ";");
@@ -413,6 +317,7 @@ public class ColorSettingsManager {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background:" + C_BG + "; -fx-background-color:" + C_BG + ";");
 
+        // ---------- بحث ----------
         searchField.textProperty().addListener((obs, o, n) -> {
             String q = n == null ? "" : n.trim().toLowerCase();
             for (int i = 0; i < vars.size(); i++) {
@@ -425,6 +330,7 @@ public class ColorSettingsManager {
             }
         });
 
+        // ---------- تجاهل التغييرات ----------
         discardBtn.setOnAction(e -> {
             for (ColorVar v : vars) {
                 v.currentValue = v.themeDefault;
@@ -437,16 +343,16 @@ public class ColorSettingsManager {
             statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
         });
 
-        // ✅ استعادة الكل للثيم الافتراضي — يمسح overrides ويطبق فورًا على الكل
+        // ✅ استعادة الكل للافتراضي مع تأكيد
         resetAllBtn.setOnAction(e -> {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("استعادة الافتراضي");
             confirm.setHeaderText("هتمسح كل تخصيصات الألوان اللي حفظتها");
-            confirm.setContentText("هيرجع للثيم الأصلي فورًا على كل الشاشات المفتوحة. متقدرش ترجع لتخصيصاتك القديمة بعد كده. كمّل؟");
+            confirm.setContentText("هيرجع للثيم الأصلي فورًا على كل الشاشات المفتوحة.\nمتقدرش ترجع لتخصيصاتك القديمة بعد كده. كمّل؟");
             confirm.showAndWait().ifPresent(btn -> {
-                if (btn == javafx.scene.control.ButtonType.OK) {
+                if (btn == ButtonType.OK) {
                     resetAllToDefaults();
-                    // إعادة تحميل الـ pickers بقيم الثيم الافتراضية
+                    // تحديث الـ pickers بقيم الثيم الأصلية
                     for (ColorVar v : vars) {
                         v.currentValue = v.themeDefault;
                         pickers.get(v).setValue(safeWebColor(v.themeDefault));
@@ -460,6 +366,7 @@ public class ColorSettingsManager {
             });
         });
 
+        // ---------- حفظ وتطبيق ----------
         saveAllBtn.setOnAction(e -> {
             for (ColorVar v : vars) {
                 Color c = pickers.get(v).getValue();
@@ -481,7 +388,6 @@ public class ColorSettingsManager {
                 + "; -fx-border-width:1 0 0 0;");
 
         BorderPane root = new BorderPane();
-        
         root.setTop(header);
         root.setCenter(scroll);
         root.setBottom(footer);
@@ -489,6 +395,7 @@ public class ColorSettingsManager {
         return root;
     }
 
+    // ==================== بناء كارت لون واحد ====================
 
     private static VBox buildColorRow(ColorVar v, Map<ColorVar, ColorPicker> pickers,
                                       Set<ColorVar> dirty, Runnable updateFooter) {
@@ -511,7 +418,7 @@ public class ColorSettingsManager {
         pickers.put(v, picker);
 
         Button resetBtn = new Button("↺");
-        resetBtn.setTooltip(new Tooltip("استعادة لون الثيم الافتراضي"));
+        resetBtn.setTooltip(new Tooltip("استعادة لون الثيم الافتراضي لهذا اللون فقط"));
         resetBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
                 + "; -fx-cursor:hand; -fx-font-size:13px;");
         resetBtn.setOnAction(e -> {
@@ -533,21 +440,19 @@ public class ColorSettingsManager {
         return card;
     }
 
+    // ==================== helpers ====================
+
     private static Color safeWebColor(String cssValue) {
-        try {
-            return Color.web(cssValue);
-        } catch (Exception e) {
-            return Color.GRAY;
-        }
+        try { return Color.web(cssValue); }
+        catch (Exception e) { return Color.GRAY; }
     }
 
     private static String toCssHex(Color c) {
-        int r = (int) Math.round(c.getRed() * 255);
+        int r = (int) Math.round(c.getRed()   * 255);
         int g = (int) Math.round(c.getGreen() * 255);
-        int b = (int) Math.round(c.getBlue() * 255);
-        if (c.getOpacity() >= 1.0) {
+        int b = (int) Math.round(c.getBlue()  * 255);
+        if (c.getOpacity() >= 1.0)
             return String.format("#%02X%02X%02X", r, g, b);
-        }
         int a = (int) Math.round(c.getOpacity() * 255);
         return String.format("#%02X%02X%02X%02X", r, g, b, a);
     }
@@ -560,7 +465,8 @@ public class ColorSettingsManager {
 
     private static String cardStyle(boolean changed) {
         return "-fx-background-color:" + C_CARD + "; -fx-background-radius:8;"
-                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER) + "; -fx-border-radius:8; -fx-border-width:1;";
+                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER)
+                + "; -fx-border-radius:8; -fx-border-width:1;";
     }
 
     private static String inputStyle() {

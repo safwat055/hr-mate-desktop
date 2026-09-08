@@ -19,45 +19,22 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * كلاس عام لإدارة و تخصيص إعدادات الخطوط (نوع/حجم/بولد/ايطاليك) لكل واجهة على حدا.
- * <p>
- * طريقة الاستخدام:
- * 1) في initialize() سجّل الواجهة وطبّق إعداداتها المحفوظة سابقاً (لو موجودة):
- * FontSettingsManager.applySettings("TABLE_VIEW", rootPane);
- * <p>
- * 2) اربط زر "إعدادات الخط" بفتح نافذة التخصيص (كل الكومبونانت تحت بعض):
- * btnFontSettings.setOnAction(e -> new FontSettingsManager("TABLE_VIEW").openSettingsWindow());
- * <p>
- * التخزين بيتم عن طريق AppConfig تحت قسم اسمه "fonts_" + viewId.
- * عند الضغط على "حفظ وتطبيق الكل" بيتم الحفظ + تطبيق فوري على كل الشاشات
- * المفتوحة حالياً بنفس الـ viewId (من غير ريستارت) عن طريق خريطة تسجيل داخلية.
- */
 public class FontSettingsManager {
 
     private static final String CONFIG_SECTION_PREFIX = "fonts_";
 
-    // ---- ألوان الثيم الداكن (نفس روح واجهة الإعدادات) ----
-    private static final String C_BG = "#1a1d2e";
-    private static final String C_CARD = "#242740";
+    private static final String C_BG     = "#1a1d2e";
+    private static final String C_CARD   = "#242740";
     private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN = "#43c59e";
-    private static final String C_WARN = "#f5a623";
-    private static final String C_TEXT = "#e8eaf6";
-    private static final String C_MUTED = "#8b90b8";
+    private static final String C_GREEN  = "#43c59e";
+    private static final String C_WARN   = "#f5a623";
+    private static final String C_RED    = "#e05c5c";
+    private static final String C_TEXT   = "#e8eaf6";
+    private static final String C_MUTED  = "#8b90b8";
     private static final String C_BORDER = "#333659";
 
-    /**
-     * سجل بكل الشاشات (roots) اللي اتنادى عليها applySettings، عشان نقدر
-     * نطبق التغييرات فوراً عليها عند الحفظ من غير ما نحتاج نعيد فتح الشاشة.
-     * WeakReference عشان مانمنعش الـ Garbage Collector من تنظيف الشاشات المقفولة.
-     */
     private static final Map<String, List<WeakReference<Parent>>> REGISTERED_ROOTS = new ConcurrentHashMap<>();
 
-    /**
-     * أنواع الكومبونانت المدعومة للتخصيص - معظمها بيعرض نصوص.
-     * لو عايز تضيف نوع جديد بتزود عنصر هنا بس.
-     */
     public enum ComponentType {
         LABEL("Label / نص عادي", "🏷", Label.class),
         BUTTON("Button / زر", "🔘", Button.class),
@@ -81,32 +58,28 @@ public class FontSettingsManager {
             this.targetClass = targetClass;
         }
 
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public String getIcon() {
-            return icon;
-        }
-
-        public Class<? extends Node> getTargetClass() {
-            return targetClass;
-        }
+        public String getDisplayName() { return displayName; }
+        public String getIcon()        { return icon; }
+        public Class<? extends Node> getTargetClass() { return targetClass; }
     }
 
     private final String viewId;
 
-    /**
-     * @param viewId اسم القسم أو الواجهة اللي بتستدعي منها الكلاس (لازم يكون فريد لكل واجهة)
-     */
     public FontSettingsManager(String viewId) {
-        if (viewId == null || viewId.trim().isEmpty()) {
+        if (viewId == null || viewId.trim().isEmpty())
             throw new IllegalArgumentException("viewId لازم يكون له قيمة");
-        }
         this.viewId = viewId;
     }
 
-    // ==================== واجهة التخصيص (كل الكومبونانت تحت بعض) ====================
+    public void openSettingsWindow() {
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("إعدادات الخطوط - " + viewId);
+        stage.setScene(new Scene(buildPanel(), 620, 640));
+        stage.showAndWait();
+    }
+
+    // ==================== FontCard ====================
 
     private static class FontCard {
         final ComponentType type;
@@ -119,33 +92,14 @@ public class FontSettingsManager {
 
         FontCard(ComponentType type, VBox node, ComboBox<String> familyCombo,
                  Spinner<Integer> sizeSpinner, CheckBox boldCheck, CheckBox italicCheck, Label preview) {
-            this.type = type;
-            this.node = node;
-            this.familyCombo = familyCombo;
-            this.sizeSpinner = sizeSpinner;
-            this.boldCheck = boldCheck;
-            this.italicCheck = italicCheck;
-            this.preview = preview;
+            this.type = type; this.node = node; this.familyCombo = familyCombo;
+            this.sizeSpinner = sizeSpinner; this.boldCheck = boldCheck;
+            this.italicCheck = italicCheck; this.preview = preview;
         }
     }
 
-    /**
-     * بيفتح القسم في نافذة مستقلة (Stage) — بيُستخدم لو حبيت تنادي على "إعدادات
-     * الخطوط" لوحدها من غير ما تمر بشاشة "تخصيص الواجهة" الشاملة (خطوط/ألوان/زوم).
-     */
-    public void openSettingsWindow() {
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setTitle("إعدادات الخطوط - " + viewId);
-        stage.setScene(new Scene(buildPanel(), 620, 640));
-        stage.showAndWait();
-    }
+    // ==================== buildPanel ====================
 
-    /**
-     * بيبني نفس محتوى قسم "الخطوط" (الكروت + الهيدر + الفوتر) كـ Node واحد
-     * قابل للتركيب جوه أي حاوية — ده اللي بيستخدمه AppearanceSettingsController
-     * عشان يعرض قسم الخطوط جوه منطقة المحتوى بتاعت شاشة "تخصيص الواجهة".
-     */
     public Parent buildPanel() {
         List<FontCard> cards = new ArrayList<>();
         Set<ComponentType> dirty = new LinkedHashSet<>();
@@ -170,7 +124,7 @@ public class FontSettingsManager {
         header.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
                 + "; -fx-border-width:0 0 1 0;");
 
-        // ---------- Footer (يتعرف عليه الأول عشان نقدر نحدث حالته من جوه الكروت) ----------
+        // ---------- Footer ----------
         Label statusLabel = new Label("جاهز");
         statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
 
@@ -182,6 +136,10 @@ public class FontSettingsManager {
         discardBtn.setVisible(false);
         discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
                 + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
+
+        Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
+        resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
+                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
 
         Button saveAllBtn = new Button("💾 حفظ وتطبيق الكل");
         saveAllBtn.setDisable(true);
@@ -201,7 +159,7 @@ public class FontSettingsManager {
             }
         };
 
-        // ---------- Body: كارت لكل نوع كومبوننت ----------
+        // ---------- Body ----------
         VBox cardsContainer = new VBox(10);
         cardsContainer.setPadding(new Insets(14));
         cardsContainer.setStyle("-fx-background-color:" + C_BG + ";");
@@ -237,6 +195,26 @@ public class FontSettingsManager {
             statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
         });
 
+        // ✅ استعادة الافتراضي — confirm بدون Alert (يتجنب GTK nested loop bug)
+        resetAllBtn.setOnAction(e -> {
+            showConfirm(
+                    resetAllBtn,
+                    "تأكيد استعادة الافتراضي",
+                    "هتمسح كل إعدادات الخطوط لواجهة \"" + viewId + "\" ويرجع للثيم الافتراضي فوراً.",
+                    () -> {
+                        resetToDefaults(viewId);
+                        for (FontCard c : cards) {
+                            applySavedToCard(c, new JSONObject());
+                            c.node.setStyle(cardStyle(false));
+                        }
+                        dirty.clear();
+                        updateFooter.run();
+                        statusLabel.setText("✓ تم الرجوع للخطوط الافتراضية");
+                        statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+                    }
+            );
+        });
+
         saveAllBtn.setOnAction(e -> {
             for (FontCard c : cards) {
                 saveComponentSettings(c.type, c.familyCombo.getValue(), c.sizeSpinner.getValue(),
@@ -245,15 +223,12 @@ public class FontSettingsManager {
             }
             dirty.clear();
             updateFooter.run();
-
-            // التطبيق الفوري على كل الشاشات المفتوحة بنفس الـ viewId
             reapply(viewId);
-
             statusLabel.setText("✓ تم الحفظ والتطبيق الفوري");
             statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
         });
 
-        HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, saveAllBtn);
+        HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, resetAllBtn, saveAllBtn);
         footer.setAlignment(Pos.CENTER_LEFT);
         footer.setPadding(new Insets(10, 20, 10, 20));
         footer.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
@@ -264,9 +239,58 @@ public class FontSettingsManager {
         root.setCenter(scroll);
         root.setBottom(footer);
         root.setStyle("-fx-background-color:" + C_BG + ";");
-
         return root;
     }
+
+    // ==================== Confirm بدون Alert ====================
+
+    /**
+     * ✅ بديل الـ Alert — بيعمل popup خفيف من غير nested event loop
+     * عشان يتجنب الـ ArrayIndexOutOfBoundsException على GTK/Linux.
+     */
+    private static void showConfirm(Node anchor, String title, String message, Runnable onConfirm) {
+        Stage popup = new Stage();
+        popup.initModality(Modality.APPLICATION_MODAL);
+        popup.setTitle(title);
+        popup.setResizable(false);
+
+        Label msg = new Label(message);
+        msg.setWrapText(true);
+        msg.setMaxWidth(340);
+        msg.setStyle("-fx-text-fill:" + C_TEXT + "; -fx-font-size:13px;");
+
+        Button cancelBtn = new Button("إلغاء");
+        cancelBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
+                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:7 18 7 18; -fx-cursor:hand;");
+        cancelBtn.setOnAction(ev -> popup.close());
+
+        Button confirmBtn = new Button("تأكيد");
+        confirmBtn.setStyle("-fx-background-color:" + C_RED + "; -fx-text-fill:white;"
+                + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:7 18 7 18; -fx-cursor:hand;");
+        confirmBtn.setOnAction(ev -> {
+            popup.close();
+            onConfirm.run();
+        });
+
+        HBox buttons = new HBox(10, cancelBtn, confirmBtn);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+
+        VBox root = new VBox(16, msg, buttons);
+        root.setPadding(new Insets(24));
+        root.setStyle("-fx-background-color:" + C_CARD + ";");
+        root.setMinWidth(380);
+
+        // نحاول نربط بالنافذة الموجودة
+        if (anchor != null && anchor.getScene() != null
+                && anchor.getScene().getWindow() instanceof Stage owner) {
+            popup.initOwner(owner);
+        }
+
+        popup.setScene(new Scene(root));
+        popup.show();
+    }
+
+    // ==================== buildCard ====================
 
     private FontCard buildCard(ComponentType type, JSONObject saved,
                                Set<ComponentType> dirty, Runnable updateFooter) {
@@ -301,7 +325,7 @@ public class FontSettingsManager {
         sizeSpinner.setPrefWidth(80);
         sizeSpinner.setStyle(inputStyle());
 
-        CheckBox boldCheck = new CheckBox("Bold");
+        CheckBox boldCheck   = new CheckBox("Bold");
         boldCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
         CheckBox italicCheck = new CheckBox("Italic");
         italicCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
@@ -321,27 +345,15 @@ public class FontSettingsManager {
         Runnable refreshPreview = () -> {
             String family = familyCombo.getValue() != null ? familyCombo.getValue() : Font.getDefault().getFamily();
             int size = sizeSpinner.getValue();
-            FontWeight weight = boldCheck.isSelected() ? FontWeight.BOLD : FontWeight.NORMAL;
+            FontWeight  weight  = boldCheck.isSelected()   ? FontWeight.BOLD   : FontWeight.NORMAL;
             FontPosture posture = italicCheck.isSelected() ? FontPosture.ITALIC : FontPosture.REGULAR;
             preview.setFont(Font.font(family, weight, posture, size));
         };
 
-        familyCombo.setOnAction(e -> {
-            markDirty.run();
-            refreshPreview.run();
-        });
-        sizeSpinner.valueProperty().addListener((obs, o, n) -> {
-            markDirty.run();
-            refreshPreview.run();
-        });
-        boldCheck.setOnAction(e -> {
-            markDirty.run();
-            refreshPreview.run();
-        });
-        italicCheck.setOnAction(e -> {
-            markDirty.run();
-            refreshPreview.run();
-        });
+        familyCombo.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
+        sizeSpinner.valueProperty().addListener((obs, o, n) -> { markDirty.run(); refreshPreview.run(); });
+        boldCheck.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
+        italicCheck.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
 
         refreshPreview.run();
         return fc;
@@ -354,35 +366,14 @@ public class FontSettingsManager {
         c.italicCheck.setSelected(saved.optBoolean("italic", false));
     }
 
-    private static Region spacer() {
-        Region r = new Region();
-        HBox.setHgrow(r, Priority.ALWAYS);
-        return r;
-    }
-
-    private static String cardStyle(boolean changed) {
-        return "-fx-background-color:" + C_CARD + "; -fx-background-radius:8;"
-                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER) + "; -fx-border-radius:8; -fx-border-width:1;";
-    }
-
-    private static String inputStyle() {
-        return "-fx-background-color:" + C_BG + "; -fx-text-fill:" + C_TEXT + ";"
-                + "-fx-prompt-text-fill:" + C_MUTED + "; -fx-border-color:" + C_BORDER + ";"
-                + "-fx-border-radius:6; -fx-background-radius:6;";
-    }
-
-    // ==================== التخزين (عن طريق AppConfig) ====================
+    // ==================== تخزين ====================
 
     private JSONObject loadComponentSettings(ComponentType type) {
         JSONObject section = AppConfig.getSection(sectionKey());
-        if (section.has(type.name())) {
-            return section.getJSONObject(type.name());
-        }
-        return new JSONObject();
+        return section.has(type.name()) ? section.getJSONObject(type.name()) : new JSONObject();
     }
 
-    private void saveComponentSettings(ComponentType type, String family, int size,
-                                       boolean bold, boolean italic) {
+    private void saveComponentSettings(ComponentType type, String family, int size, boolean bold, boolean italic) {
         JSONObject value = new JSONObject();
         value.put("family", family);
         value.put("size", size);
@@ -391,32 +382,54 @@ public class FontSettingsManager {
         AppConfig.setValue(sectionKey(), type.name(), value);
     }
 
-    private String sectionKey() {
-        return CONFIG_SECTION_PREFIX + viewId;
-    }
+    private String sectionKey() { return CONFIG_SECTION_PREFIX + viewId; }
 
-    // ==================== التسجيل + التطبيق الفوري ====================
+    // ==================== تسجيل + تطبيق + استعادة ====================
 
-    /**
-     * بتطبق كل إعدادات الخط المحفوظة لواجهة معينة على شجرة الكومبونانت بالكامل،
-     * وبتسجل الـ root ده عشان لو المستخدم فتح نافذة الإعدادات وحفظ تغييرات جديدة،
-     * تتطبق على الشاشة دي فوراً من غير ما تحتاج تتقفل وتتفتح تاني.
-     *
-     * @param viewId نفس الاسم اللي هتتحفظ بيه الإعدادات
-     * @param root   الكومبوننت الجذر بتاع الواجهة (مثلاً rootPane)
-     */
     public static void applySettings(String viewId, Parent root) {
-        if (root == null || viewId == null) {
-            return;
-        }
+        if (root == null || viewId == null) return;
         ViewRegistry.register(viewId);
         registerRoot(viewId, root);
-
         JSONObject section = AppConfig.getSection(CONFIG_SECTION_PREFIX + viewId);
-        if (section.length() == 0) {
-            return; // مفيش إعدادات محفوظة لسه لهذه الواجهة
+        if (section.length() > 0) applyRecursive(root, section);
+    }
+
+    public static void resetToDefaults(String viewId) {
+        AppConfig.removeValue(CONFIG_SECTION_PREFIX + viewId, null);
+        List<WeakReference<Parent>> list = REGISTERED_ROOTS.get(viewId);
+        if (list == null) return;
+
+        javafx.application.Platform.runLater(() -> {
+            synchronized (list) {
+                Iterator<WeakReference<Parent>> it = list.iterator();
+                while (it.hasNext()) {
+                    Parent root = it.next().get();
+                    if (root == null) {
+                        it.remove();
+                        continue;
+                    }
+                    // ✅ تطبيق التغييرات بطريقة آمنة
+                    clearFontRecursive(root);
+                    // ✅ إجبار إعادة الحساب
+                    root.applyCss();
+                    root.layout();
+                }
+            }
+        });
+    }
+
+    public static void reapply(String viewId) {
+        List<WeakReference<Parent>> list = REGISTERED_ROOTS.get(viewId);
+        if (list == null) return;
+        JSONObject section = AppConfig.getSection(CONFIG_SECTION_PREFIX + viewId);
+        synchronized (list) {
+            Iterator<WeakReference<Parent>> it = list.iterator();
+            while (it.hasNext()) {
+                Parent root = it.next().get();
+                if (root == null) { it.remove(); continue; }
+                if (section.length() > 0) applyRecursive(root, section);
+            }
         }
-        applyRecursive(root, section);
     }
 
     private static void registerRoot(String viewId, Parent root) {
@@ -428,30 +441,7 @@ public class FontSettingsManager {
         }
     }
 
-    /**
-     * بتعيد تطبيق الإعدادات المحفوظة حالياً على كل الشاشات المسجّلة بنفس الـ viewId.
-     * بتتنادى تلقائياً بعد "حفظ وتطبيق الكل"، وينفع كمان تتنادى يدوياً لو حبيت.
-     */
-    public static void reapply(String viewId) {
-        List<WeakReference<Parent>> list = REGISTERED_ROOTS.get(viewId);
-        if (list == null) {
-            return;
-        }
-        JSONObject section = AppConfig.getSection(CONFIG_SECTION_PREFIX + viewId);
-        synchronized (list) {
-            Iterator<WeakReference<Parent>> it = list.iterator();
-            while (it.hasNext()) {
-                Parent root = it.next().get();
-                if (root == null) {
-                    it.remove();
-                    continue;
-                }
-                if (section.length() > 0) {
-                    applyRecursive(root, section);
-                }
-            }
-        }
-    }
+    // ==================== Recursive helpers ====================
 
     private static void applyRecursive(Node node, JSONObject section) {
         for (ComponentType type : ComponentType.values()) {
@@ -460,67 +450,49 @@ public class FontSettingsManager {
                 break;
             }
         }
+        if (node instanceof ScrollPane sp) { Node c = sp.getContent(); if (c != null) applyRecursive(c, section); }
+        else if (node instanceof TitledPane tp) { Node c = tp.getContent(); if (c != null) applyRecursive(c, section); }
+        else if (node instanceof TabPane tbp) { for (Tab t : tbp.getTabs()) if (t.getContent() != null) applyRecursive(t.getContent(), section); }
+        else if (node instanceof SplitPane spp) { for (Node item : spp.getItems()) applyRecursive(item, section); }
+        else if (node instanceof Accordion acc) { for (TitledPane pane : acc.getPanes()) { applyRecursive(pane, section); if (pane.getContent() != null) applyRecursive(pane.getContent(), section); } }
+        if (node instanceof Parent p) for (Node child : p.getChildrenUnmodifiable()) applyRecursive(child, section);
+    }
 
-        // بعض الكونتينرات (Controls) بتحتفظ بمحتواها كـ property مش كـ child حقيقي
-        // إلا بعد ما الـ Skin بتاعها يتبني (يعني بعد ما الـ Stage تتعرض) —
-        // فلو اعتمدنا بس على getChildrenUnmodifiable() هترجع فاضية ومفيش حاجة هتتطبق.
-        if (node instanceof ScrollPane) {
-            Node content = ((ScrollPane) node).getContent();
-            if (content != null) {
-                applyRecursive(content, section);
-            }
-        } else if (node instanceof TitledPane) {
-            Node content = ((TitledPane) node).getContent();
-            if (content != null) {
-                applyRecursive(content, section);
-            }
-        } else if (node instanceof TabPane) {
-            for (Tab tab : ((TabPane) node).getTabs()) {
-                if (tab.getContent() != null) {
-                    applyRecursive(tab.getContent(), section);
-                }
-            }
-        } else if (node instanceof SplitPane) {
-            for (Node item : ((SplitPane) node).getItems()) {
-                applyRecursive(item, section);
-            }
-        } else if (node instanceof Accordion) {
-            for (TitledPane pane : ((Accordion) node).getPanes()) {
-                applyRecursive(pane, section);
-                if (pane.getContent() != null) {
-                    applyRecursive(pane.getContent(), section);
-                }
-            }
+    private static void clearFontRecursive(Node node) {
+        if (node instanceof Labeled l) {
+            l.setFont(null);
+        } else if (node instanceof TextInputControl tic) {
+            tic.setStyle(removeFontCss(tic.getStyle()));
+        } else {
+            node.setStyle(removeFontCss(node.getStyle()));
         }
+        if (node instanceof ScrollPane sp) { Node c = sp.getContent(); if (c != null) clearFontRecursive(c); }
+        else if (node instanceof TitledPane tp) { Node c = tp.getContent(); if (c != null) clearFontRecursive(c); }
+        else if (node instanceof TabPane tbp) { for (Tab t : tbp.getTabs()) if (t.getContent() != null) clearFontRecursive(t.getContent()); }
+        else if (node instanceof SplitPane spp) { for (Node item : spp.getItems()) clearFontRecursive(item); }
+        else if (node instanceof Accordion acc) { for (TitledPane pane : acc.getPanes()) { clearFontRecursive(pane); if (pane.getContent() != null) clearFontRecursive(pane.getContent()); } }
+        if (node instanceof Parent p) for (Node child : p.getChildrenUnmodifiable()) clearFontRecursive(child);
+    }
 
-        if (node instanceof Parent) {
-            for (Node child : ((Parent) node).getChildrenUnmodifiable()) {
-                applyRecursive(child, section);
-            }
-        }
+    private static String removeFontCss(String style) {
+        if (style == null) return "";
+        return style.replaceAll("-fx-font[^;]*;", "").trim();
     }
 
     private static void applyFontToNode(Node node, JSONObject settings) {
         String family = settings.optString("family", null);
-        if (family == null || family.isEmpty()) {
-            return;
-        }
-        int size = settings.optInt("size", 14);
-        boolean bold = settings.optBoolean("bold", false);
+        if (family == null || family.isEmpty()) return;
+        int size       = settings.optInt("size", 14);
+        boolean bold   = settings.optBoolean("bold", false);
         boolean italic = settings.optBoolean("italic", false);
-
-        FontWeight weight = bold ? FontWeight.BOLD : FontWeight.NORMAL;
+        FontWeight  weight  = bold   ? FontWeight.BOLD    : FontWeight.NORMAL;
         FontPosture posture = italic ? FontPosture.ITALIC : FontPosture.REGULAR;
         Font font = Font.font(family, weight, posture, size);
-
-        if (node instanceof Labeled) {
-            // Label, Button, CheckBox, RadioButton... إلخ
-            ((Labeled) node).setFont(font);
-        } else if (node instanceof TextInputControl) {
-            // TextField, TextArea مفيهاش setFont مباشر فبنستخدم الـ style
-            ((TextInputControl) node).setStyle(buildFontCss(family, size, bold, italic));
+        if (node instanceof Labeled l) {
+            l.setFont(font);
+        } else if (node instanceof TextInputControl tic) {
+            tic.setStyle(buildFontCss(family, size, bold, italic));
         } else {
-            // TableView, ListView, ComboBox, TabPane, MenuBar... إلخ
             node.setStyle(buildFontCss(family, size, bold, italic));
         }
     }
@@ -529,5 +501,23 @@ public class FontSettingsManager {
         return String.format(
                 "-fx-font-family: '%s'; -fx-font-size: %dpx; -fx-font-weight: %s; -fx-font-style: %s;",
                 family, size, bold ? "bold" : "normal", italic ? "italic" : "normal");
+    }
+
+    // ==================== Helpers ====================
+
+    private static Region spacer() {
+        Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS); return r;
+    }
+
+    private static String cardStyle(boolean changed) {
+        return "-fx-background-color:" + C_CARD + "; -fx-background-radius:8;"
+                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER)
+                + "; -fx-border-radius:8; -fx-border-width:1;";
+    }
+
+    private static String inputStyle() {
+        return "-fx-background-color:" + C_BG + "; -fx-text-fill:" + C_TEXT + ";"
+                + "-fx-prompt-text-fill:" + C_MUTED + "; -fx-border-color:" + C_BORDER + ";"
+                + "-fx-border-radius:6; -fx-background-radius:6;";
     }
 }

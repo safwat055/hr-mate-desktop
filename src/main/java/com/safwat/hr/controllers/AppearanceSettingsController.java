@@ -49,14 +49,10 @@ public class AppearanceSettingsController implements Initializable {
         }
     }
 
-    @FXML
-    private ListView<Category> categoryList;
-    @FXML
-    private StackPane contentArea;
-    @FXML
-    private Label subtitleLabel;
-    @FXML
-    private ComboBox<String> viewCombo;
+    @FXML private ListView<Category> categoryList;
+    @FXML private StackPane contentArea;
+    @FXML private Label subtitleLabel;
+    @FXML private ComboBox<String> viewCombo;
 
     private String viewId;
     private Category currentCategory = Category.FONTS;
@@ -169,7 +165,7 @@ public class AppearanceSettingsController implements Initializable {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(viewId != null ? "تخصيص الواجهة - " + viewId : "تخصيص الواجهة");
             stage.setScene(new Scene(root));
-            stage.showAndWait();
+            stage.show();
         } catch (IOException e) {
             throw new RuntimeException("تعذر تحميل appearance_settings.fxml — تأكد من المسار: " + FXML_PATH, e);
         }

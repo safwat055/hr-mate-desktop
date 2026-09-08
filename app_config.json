@@ -67,36 +67,7 @@
       "italic": false
     }
   },
-  "ui": {
-    "table_chk_total": true,
-    "table_chk_nationalId": true,
-    "colorOverridesVersion": "1788808069485",
-    "theme": "custom-theme.css",
-    "fontSize": "10.0"
-  },
-  "meta": {"registeredViews": [
-    "اجر الاشتراك",
-    "تدرج راتب",
-    "تقارير صرف",
-    "سجلات",
-    "مدير استحقاقات",
-    "مدير التقارير",
-    "مفردات مرتب",
-    "واجهة الإدخال",
-    "server setting"
-  ]},
-  "connection": {
-    "alone": "false",
-    "pgAsService": "false",
-    "url2": "ws://",
-    "port": "8080",
-    "masterPC": "safwat055",
-    "user": "admin",
-    "url": "http://",
-    "backendAsService": "false"
-  },
-  "zoom": {"واجهة الإدخال": "0.5"},
-  "fonts_واجهة الإدخال": {
+  "fonts_تقارير صرف": {
     "COMBO_BOX": {
       "size": 13,
       "bold": false,
@@ -130,13 +101,13 @@
     "BUTTON": {
       "size": 13,
       "bold": false,
-      "family": "System",
+      "family": "Cairo ExtraBold",
       "italic": false
     },
     "TABLE_VIEW": {
-      "size": 11,
+      "size": 13,
       "bold": false,
-      "family": "System",
+      "family": "DejaVu Sans",
       "italic": false
     },
     "LABEL": {
@@ -163,5 +134,35 @@
       "family": "System",
       "italic": false
     }
-  }
+  },
+  "ui": {
+    "table_chk_total": true,
+    "table_chk_nationalId": true,
+    "colorOverridesVersion": "1788863028109",
+    "theme": "custom-theme.css",
+    "fontSize": "10.0"
+  },
+  "meta": {"registeredViews": [
+    "server setting",
+    "اجر الاشتراك",
+    "تدرج راتب",
+    "تقارير صرف",
+    "سجلات",
+    "مدير استحقاقات",
+    "مدير التقارير",
+    "مفردات مرتب",
+    "واجهة الإدخال",
+    "/com/safwat/hr/controller/report/PayrollReport.fxml"
+  ]},
+  "connection": {
+    "alone": "false",
+    "pgAsService": "false",
+    "url2": "ws://",
+    "port": "8080",
+    "masterPC": "safwat05",
+    "user": "admin",
+    "url": "http://",
+    "backendAsService": "false"
+  },
+  "zoom": {"اجر الاشتراك": "1.0"}
 }
