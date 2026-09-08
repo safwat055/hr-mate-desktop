@@ -1,57 +1,84 @@
 package com.safwat.hr.shared;
 
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-/**
- * ZoomManager — زوم حقيقي مثل المتصفح.
- *
- * المنطق:
- * - لو الـ root (أو أحد أبناؤه المباشرين) ScrollPane → نشتغل عليه مباشرة.
- * - لو مفيش ScrollPane → نحط الـ root جوه ScrollPane جديد ونستبدله في أبوه.
- * - الزوم بيشتغل على الـ width والـ height مع بعض (setScaleX + setScaleY).
- * - ScrollBar بتظهر تلقائياً لما المحتوى يكبر، وتختفي عند 100%.
- * - زر "🔄 100%" يمسح المحفوظ ويرجع الزوم للافتراضي فوراً.
- * - ✅ بديل Alert لتجنب GTK nested event loop crash.
- */
 public class ZoomManager {
 
-    private static final String SECTION      = "zoom";
-    private static final double MIN_ZOOM     = 0.5;
-    private static final double MAX_ZOOM     = 2.0;
+    private static final String SECTION = "zoom";
+    private static final double MIN_ZOOM = 0.5;
+    private static final double MAX_ZOOM = 2.0;
     private static final double DEFAULT_ZOOM = 1.0;
-    private static final double STEP         = 0.1;
+    private static final double STEP = 0.1;
 
-    private static final String C_BG     = "#1a1d2e";
-    private static final String C_CARD   = "#242740";
+    private static final String C_BG = "#1a1d2e";
+    private static final String C_CARD = "#242740";
     private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN  = "#43c59e";
-    private static final String C_WARN   = "#f5a623";
-    private static final String C_TEXT   = "#e8eaf6";
-    private static final String C_MUTED  = "#8b90b8";
+    private static final String C_GREEN = "#43c59e";
+    private static final String C_WARN = "#f5a623";
+    private static final String C_TEXT = "#e8eaf6";
+    private static final String C_MUTED = "#8b90b8";
     private static final String C_BORDER = "#333659";
 
-    /** viewId → قائمة ScrollPane المسجّلة (WeakRef عشان GC يشتغل بحرية) */
-    private static final Map<String, List<WeakReference<ScrollPane>>> REGISTERED = new HashMap<>();
+    private static final Map<String, List<WeakReference<ZoomTarget>>> REGISTERED = new HashMap<>();
 
-    private ZoomManager() {}
+    private ZoomManager() {
+    }
+
+    // ── ZoomTarget: بيحفظ كل المعلومات اللازمة للـ live update ──
+    private static class ZoomTarget {
+        final ScrollPane scrollPane;
+        final Node content;
+        double origW = -1;
+        double origH = -1;
+
+        ZoomTarget(ScrollPane scrollPane, Node content) {
+            this.scrollPane = scrollPane;
+            this.content = content;
+        }
+
+        /**
+         * بترجع true لما الأبعاد اتحسبت فعلاً
+         */
+        boolean hasOrigin() {
+            return origW > 0 && origH > 0;
+        }
+
+        /**
+         * بتحفظ الأبعاد الأصلية من layoutBounds الفعلية
+         */
+        void captureOrigin() {
+            if (content instanceof Region r) {
+                double pw = r.getPrefWidth();
+                double ph = r.getPrefHeight();
+                origW = (pw > 0 && pw != Region.USE_COMPUTED_SIZE)
+                        ? pw : content.getBoundsInLocal().getWidth();
+                origH = (ph > 0 && ph != Region.USE_COMPUTED_SIZE)
+                        ? ph : content.getBoundsInLocal().getHeight();
+            } else {
+                origW = content.getBoundsInLocal().getWidth();
+                origH = content.getBoundsInLocal().getHeight();
+            }
+        }
+    }
 
     // ==================== حفظ / تحميل ====================
 
     private static double loadZoom(String viewId) {
         String raw = AppConfig.getString(SECTION, viewId, String.valueOf(DEFAULT_ZOOM));
-        try { return clamp(Double.parseDouble(raw)); }
-        catch (NumberFormatException e) { return DEFAULT_ZOOM; }
+        try {
+            return clamp(Double.parseDouble(raw));
+        } catch (NumberFormatException e) {
+            return DEFAULT_ZOOM;
+        }
     }
 
     private static void saveZoom(String viewId, double factor) {
@@ -67,42 +94,58 @@ public class ZoomManager {
         return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, v));
     }
 
-    // ==================== تطبيق على الواجهة ====================
+    // ==================== نقطة الدخول ====================
 
     /**
-     * نقطة الدخول الرئيسية — بيتنادى من ViewManager/TabManager بعد تحميل كل واجهة.
-     *
-     * الخوارزمية:
-     * 1. نبحث عن ScrollPane موجود (الـ root نفسه، أو أول child مباشر).
-     * 2. لو مفيش → نلف الـ root في ScrollPane جديد ونستبدله في أبوه.
-     * 3. نسجّل الـ ScrollPane ونطبق الزوم المحفوظ.
+     * بيتنادى من ViewManager/TabManager بعد تحميل الواجهة.
+     * بيستنى الـ layout يخلص الأول (Platform.runLater مزدوج)
+     * عشان يقدر يقرأ الأبعاد الحقيقية للـ content.
      */
     public static void applyZoom(String viewId, Parent root) {
         if (root == null || viewId == null) return;
         ViewRegistry.register(viewId);
 
-        ScrollPane sp = findOrWrap(root);
-        register(viewId, sp);
-        applyFactor(sp, loadZoom(viewId));
+        double factor = loadZoom(viewId);
+
+        // لو الزوم = 100% مش محتاجين نعمل أي حاجة
+        if (Math.abs(factor - DEFAULT_ZOOM) < 0.005) return;
+
+        // نستنى pulse واحد + runLater عشان الـ layout يكمل
+        Platform.runLater(() -> Platform.runLater(() -> {
+            ScrollPane sp = findOrWrap(root);
+            Node content = sp.getContent();
+            if (content == null) return;
+
+            ZoomTarget target = new ZoomTarget(sp, content);
+            target.captureOrigin();
+
+            // لو الأبعاد لسه مش جاهزة → نستنى الـ layout يكمل
+            if (!target.hasOrigin()) {
+                content.layoutBoundsProperty().addListener((obs, o, n) -> {
+                    if (n.getWidth() > 0 && n.getHeight() > 0 && !target.hasOrigin()) {
+                        target.captureOrigin();
+                        registerTarget(viewId, target);
+                        applyFactor(target, factor);
+                    }
+                });
+                return;
+            }
+
+            registerTarget(viewId, target);
+            applyFactor(target, factor);
+        }));
     }
 
-    /**
-     * بيرجع ScrollPane جاهز:
-     * 1. الـ root نفسه ScrollPane → ارجعه.
-     * 2. أول child مباشر ScrollPane → استخدمه.
-     * 3. لو مفيش → ابني ScrollPane جديد واستبدل الـ root في أبوه.
-     */
-    private static ScrollPane findOrWrap(Parent root) {
+    // ==================== findOrWrap ====================
 
-        // الحالة 1
+    private static ScrollPane findOrWrap(Parent root) {
         if (root instanceof ScrollPane sp) return sp;
 
-        // الحالة 2 — أول child مباشر
         for (Node child : root.getChildrenUnmodifiable()) {
             if (child instanceof ScrollPane sp) return sp;
         }
 
-        // الحالة 3 — نلف في ScrollPane جديد
+        // مفيش ScrollPane → نلف الـ root
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(false);
         sp.setFitToHeight(false);
@@ -113,86 +156,89 @@ public class ZoomManager {
                         + "-fx-focus-color:transparent;"
                         + "-fx-faint-focus-color:transparent;");
 
-        Parent parent = root.getParent();
-        if (parent instanceof Pane pane) {
-            int idx = pane.getChildren().indexOf(root);
-            if (idx >= 0) {
-                pane.getChildren().set(idx, sp);
-                HBox.setHgrow(sp, HBox.getHgrow(root));
-                VBox.setVgrow(sp, VBox.getVgrow(root));
-                BorderPane.setAlignment(sp, BorderPane.getAlignment(root));
-                BorderPane.setMargin(sp, BorderPane.getMargin(root));
-            }
-        } else if (parent instanceof BorderPane bp) {
-            if      (bp.getTop()    == root) bp.setTop(sp);
-            else if (bp.getCenter() == root) bp.setCenter(sp);
-            else if (bp.getBottom() == root) bp.setBottom(sp);
-            else if (bp.getLeft()   == root) bp.setLeft(sp);
-            else if (bp.getRight()  == root) bp.setRight(sp);
-        }
-
+        replaceInParent(root.getParent(), root, sp);
         return sp;
     }
 
+    private static void replaceInParent(Parent parent, Node oldNode, Node newNode) {
+        if (parent == null) return;
+        if (parent instanceof Pane pane) {
+            int idx = pane.getChildren().indexOf(oldNode);
+            if (idx >= 0) {
+                HBox.setHgrow(newNode, HBox.getHgrow(oldNode));
+                VBox.setVgrow(newNode, VBox.getVgrow(oldNode));
+                BorderPane.setAlignment(newNode, BorderPane.getAlignment(oldNode));
+                BorderPane.setMargin(newNode, BorderPane.getMargin(oldNode));
+                pane.getChildren().set(idx, newNode);
+            }
+        } else if (parent instanceof BorderPane bp) {
+            if (bp.getTop() == oldNode) bp.setTop(newNode);
+            else if (bp.getCenter() == oldNode) bp.setCenter(newNode);
+            else if (bp.getBottom() == oldNode) bp.setBottom(newNode);
+            else if (bp.getLeft() == oldNode) bp.setLeft(newNode);
+            else if (bp.getRight() == oldNode) bp.setRight(newNode);
+        }
+    }
+
+    // ==================== تطبيق الزوم ====================
+
     /**
-     * بيطبق الـ factor على الـ ScrollPane:
-     * - Scale على الـ content (width + height) → نصوص وعناصر بتتكبر فعلياً
-     * - ScrollBar بتظهر AS_NEEDED لما الزوم > 100%
-     * - عند 100% → بنلغي الـ scrollbars تماماً
+     * الزوم الحقيقي:
+     * - بيغير prefWidth/prefHeight للـ content بالنسبة للأبعاد الأصلية
+     * - الـ ScrollPane يشوف المحتوى كبر ويعرض scrollbar تلقائياً
      */
-    private static void applyFactor(ScrollPane sp, double factor) {
-        Node content = sp.getContent();
-        if (content == null) return;
+    private static void applyFactor(ZoomTarget target, double factor) {
+        if (!target.hasOrigin()) return;
+        Node content = target.content;
 
-        // نخزّن الأبعاد الأصلية مرة واحدة
-        if (!content.getProperties().containsKey("_zoom_origW")) {
-            double w = content instanceof Region r ? r.getPrefWidth()  : -1;
-            double h = content instanceof Region r2 ? r2.getPrefHeight() : -1;
-            if (w <= 0) w = content.getBoundsInLocal().getWidth();
-            if (h <= 0) h = content.getBoundsInLocal().getHeight();
-            content.getProperties().put("_zoom_origW", w);
-            content.getProperties().put("_zoom_origH", h);
-        }
-
-        double origW = (double) content.getProperties().get("_zoom_origW");
-        double origH = (double) content.getProperties().get("_zoom_origH");
-
-        // تكبير الـ content نفسه (width + height مع بعض)
-        content.setScaleX(factor);
-        content.setScaleY(factor);
-
-        // تعديل prefSize عشان الـ ScrollPane يحسب الـ scrollbar صح
         if (content instanceof Region r) {
-            if (origW > 0) r.setPrefWidth(origW  * factor);
-            if (origH > 0) r.setPrefHeight(origH * factor);
+            if (Math.abs(factor - DEFAULT_ZOOM) < 0.005) {
+                // رجوع للأصل
+                r.setPrefWidth(target.origW);
+                r.setPrefHeight(target.origH);
+                r.setMinWidth(Region.USE_COMPUTED_SIZE);
+                r.setMinHeight(Region.USE_COMPUTED_SIZE);
+            } else {
+                r.setPrefWidth(target.origW * factor);
+                r.setPrefHeight(target.origH * factor);
+                r.setMinWidth(target.origW * factor);
+                r.setMinHeight(target.origH * factor);
+            }
         }
 
-        // ScrollBar — تظهر بس لما في حاجة تتسكرول
-        boolean needsScroll = Math.abs(factor - DEFAULT_ZOOM) > 0.01;
-        sp.setHbarPolicy(needsScroll ? ScrollPane.ScrollBarPolicy.AS_NEEDED : ScrollPane.ScrollBarPolicy.NEVER);
-        sp.setVbarPolicy(needsScroll ? ScrollPane.ScrollBarPolicy.AS_NEEDED : ScrollPane.ScrollBarPolicy.NEVER);
+        boolean needsScroll = Math.abs(factor - DEFAULT_ZOOM) > 0.005;
+        target.scrollPane.setHbarPolicy(
+                needsScroll ? ScrollPane.ScrollBarPolicy.AS_NEEDED : ScrollPane.ScrollBarPolicy.NEVER);
+        target.scrollPane.setVbarPolicy(
+                needsScroll ? ScrollPane.ScrollBarPolicy.AS_NEEDED : ScrollPane.ScrollBarPolicy.NEVER);
     }
 
     // ==================== Live update ====================
 
-    private static void register(String viewId, ScrollPane sp) {
-        List<WeakReference<ScrollPane>> list =
+    private static void registerTarget(String viewId, ZoomTarget target) {
+        List<WeakReference<ZoomTarget>> list =
                 REGISTERED.computeIfAbsent(viewId, k -> Collections.synchronizedList(new ArrayList<>()));
         synchronized (list) {
-            list.removeIf(ref -> ref.get() == null || ref.get() == sp);
-            list.add(new WeakReference<>(sp));
+            list.removeIf(ref -> {
+                ZoomTarget t = ref.get();
+                return t == null || t.scrollPane == target.scrollPane;
+            });
+            list.add(new WeakReference<>(target));
         }
     }
 
-    private static void applyLive(String viewId, double factor) {
-        List<WeakReference<ScrollPane>> list = REGISTERED.get(viewId);
+    static void applyLive(String viewId, double factor) {
+        List<WeakReference<ZoomTarget>> list = REGISTERED.get(viewId);
         if (list == null) return;
         synchronized (list) {
-            Iterator<WeakReference<ScrollPane>> it = list.iterator();
+            Iterator<WeakReference<ZoomTarget>> it = list.iterator();
             while (it.hasNext()) {
-                ScrollPane sp = it.next().get();
-                if (sp == null) { it.remove(); continue; }
-                applyFactor(sp, factor);
+                ZoomTarget t = it.next().get();
+                if (t == null) {
+                    it.remove();
+                    continue;
+                }
+                applyFactor(t, factor);
             }
         }
     }
@@ -200,10 +246,9 @@ public class ZoomManager {
     // ==================== Panel ====================
 
     public static Parent buildPanel(String viewId) {
-        double saved     = loadZoom(viewId);
+        double saved = loadZoom(viewId);
         double[] current = {saved};
 
-        // ---------- Header ----------
         Label headerIcon = new Label("🔍");
         headerIcon.setStyle("-fx-font-size:20px;");
         Label headerTitle = new Label("مستوى التكبير");
@@ -218,7 +263,6 @@ public class ZoomManager {
         header.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
                 + "; -fx-border-width:0 0 1 0;");
 
-        // ---------- Card ----------
         VBox card = new VBox(16);
         card.setPadding(new Insets(22));
         card.setStyle("-fx-background-color:" + C_CARD + "; -fx-background-radius:10;"
@@ -230,7 +274,6 @@ public class ZoomManager {
         percentLbl.setMaxWidth(Double.MAX_VALUE);
         percentLbl.setAlignment(Pos.CENTER);
 
-        // معاينة حية
         Label previewLbl = new Label("نموذج معاينة — هكذا يبدو الحجم على الشاشة");
         previewLbl.setStyle(previewStyle(saved));
         previewLbl.setMaxWidth(Double.MAX_VALUE);
@@ -243,8 +286,8 @@ public class ZoomManager {
         HBox.setHgrow(slider, Priority.ALWAYS);
 
         Button minusBtn = smallBtn("−");
-        Button plusBtn  = smallBtn("+");
-        HBox sliderRow  = new HBox(10, minusBtn, slider, plusBtn);
+        Button plusBtn = smallBtn("+");
+        HBox sliderRow = new HBox(10, minusBtn, slider, plusBtn);
         sliderRow.setAlignment(Pos.CENTER);
 
         Label hintLabel = new Label(
@@ -253,7 +296,6 @@ public class ZoomManager {
         hintLabel.setWrapText(true);
         hintLabel.setStyle("-fx-font-size:10.5px; -fx-text-fill:" + C_MUTED + ";");
 
-        // ---------- Footer ----------
         Label statusLabel = new Label("جاهز");
         statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
 
@@ -267,7 +309,6 @@ public class ZoomManager {
         saveBtn.setStyle("-fx-background-color:" + C_ACCENT + "; -fx-text-fill:white;"
                 + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:6 16 6 16;");
 
-        // ---------- منطق التغيير ----------
         Runnable onChanged = () -> {
             double v = clamp(current[0]);
             current[0] = v;
@@ -281,10 +322,17 @@ public class ZoomManager {
         };
 
         slider.valueProperty().addListener((obs, o, n) -> {
-            current[0] = n.doubleValue(); onChanged.run();
+            current[0] = n.doubleValue();
+            onChanged.run();
         });
-        minusBtn.setOnAction(e -> { current[0] -= STEP; onChanged.run(); });
-        plusBtn.setOnAction(e  -> { current[0] += STEP; onChanged.run(); });
+        minusBtn.setOnAction(e -> {
+            current[0] -= STEP;
+            onChanged.run();
+        });
+        plusBtn.setOnAction(e -> {
+            current[0] += STEP;
+            onChanged.run();
+        });
 
         resetBtn.setOnAction(e -> {
             resetToDefault(viewId);
@@ -306,7 +354,6 @@ public class ZoomManager {
 
         HBox footer = new HBox(10, statusLabel, spacer(), resetBtn, saveBtn);
         footer.setAlignment(Pos.CENTER_LEFT);
-
         card.getChildren().addAll(percentLbl, previewLbl, sliderRow, hintLabel, footer);
 
         VBox body = new VBox(card);
@@ -321,21 +368,18 @@ public class ZoomManager {
         return root;
     }
 
-    // ==================== Helpers ====================
-
-    private static String fmt(double factor) {
-        return Math.round(factor * 100) + "%";
+    private static String fmt(double f) {
+        return Math.round(f * 100) + "%";
     }
 
-    private static String previewStyle(double factor) {
-        int size = (int) Math.round(13 * factor);
-        return "-fx-font-size:" + size + "px; -fx-text-fill:" + C_TEXT
+    private static String previewStyle(double f) {
+        return "-fx-font-size:" + (int) Math.round(13 * f) + "px; -fx-text-fill:" + C_TEXT
                 + "; -fx-background-color:#1a1d2e; -fx-padding:10 14 10 14;"
                 + "-fx-background-radius:6; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6;";
     }
 
-    private static Button smallBtn(String text) {
-        Button b = new Button(text);
+    private static Button smallBtn(String t) {
+        Button b = new Button(t);
         b.setStyle("-fx-background-color:" + C_CARD + "; -fx-text-fill:" + C_TEXT
                 + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-background-radius:6;"
                 + "-fx-min-width:34; -fx-min-height:30; -fx-font-weight:bold; -fx-cursor:hand;");
@@ -343,6 +387,8 @@ public class ZoomManager {
     }
 
     private static Region spacer() {
-        Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS); return r;
+        Region r = new Region();
+        HBox.setHgrow(r, Priority.ALWAYS);
+        return r;
     }
 }

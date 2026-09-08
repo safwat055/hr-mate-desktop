@@ -23,14 +23,14 @@ public class FontSettingsManager {
 
     private static final String CONFIG_SECTION_PREFIX = "fonts_";
 
-    private static final String C_BG     = "#1a1d2e";
-    private static final String C_CARD   = "#242740";
+    private static final String C_BG = "#1a1d2e";
+    private static final String C_CARD = "#242740";
     private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN  = "#43c59e";
-    private static final String C_WARN   = "#f5a623";
-    private static final String C_RED    = "#e05c5c";
-    private static final String C_TEXT   = "#e8eaf6";
-    private static final String C_MUTED  = "#8b90b8";
+    private static final String C_GREEN = "#43c59e";
+    private static final String C_WARN = "#f5a623";
+    private static final String C_RED = "#e05c5c";
+    private static final String C_TEXT = "#e8eaf6";
+    private static final String C_MUTED = "#8b90b8";
     private static final String C_BORDER = "#333659";
 
     private static final Map<String, List<WeakReference<Parent>>> REGISTERED_ROOTS = new ConcurrentHashMap<>();
@@ -58,9 +58,17 @@ public class FontSettingsManager {
             this.targetClass = targetClass;
         }
 
-        public String getDisplayName() { return displayName; }
-        public String getIcon()        { return icon; }
-        public Class<? extends Node> getTargetClass() { return targetClass; }
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public Class<? extends Node> getTargetClass() {
+            return targetClass;
+        }
     }
 
     private final String viewId;
@@ -92,9 +100,13 @@ public class FontSettingsManager {
 
         FontCard(ComponentType type, VBox node, ComboBox<String> familyCombo,
                  Spinner<Integer> sizeSpinner, CheckBox boldCheck, CheckBox italicCheck, Label preview) {
-            this.type = type; this.node = node; this.familyCombo = familyCombo;
-            this.sizeSpinner = sizeSpinner; this.boldCheck = boldCheck;
-            this.italicCheck = italicCheck; this.preview = preview;
+            this.type = type;
+            this.node = node;
+            this.familyCombo = familyCombo;
+            this.sizeSpinner = sizeSpinner;
+            this.boldCheck = boldCheck;
+            this.italicCheck = italicCheck;
+            this.preview = preview;
         }
     }
 
@@ -325,7 +337,7 @@ public class FontSettingsManager {
         sizeSpinner.setPrefWidth(80);
         sizeSpinner.setStyle(inputStyle());
 
-        CheckBox boldCheck   = new CheckBox("Bold");
+        CheckBox boldCheck = new CheckBox("Bold");
         boldCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
         CheckBox italicCheck = new CheckBox("Italic");
         italicCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
@@ -345,15 +357,27 @@ public class FontSettingsManager {
         Runnable refreshPreview = () -> {
             String family = familyCombo.getValue() != null ? familyCombo.getValue() : Font.getDefault().getFamily();
             int size = sizeSpinner.getValue();
-            FontWeight  weight  = boldCheck.isSelected()   ? FontWeight.BOLD   : FontWeight.NORMAL;
+            FontWeight weight = boldCheck.isSelected() ? FontWeight.BOLD : FontWeight.NORMAL;
             FontPosture posture = italicCheck.isSelected() ? FontPosture.ITALIC : FontPosture.REGULAR;
             preview.setFont(Font.font(family, weight, posture, size));
         };
 
-        familyCombo.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
-        sizeSpinner.valueProperty().addListener((obs, o, n) -> { markDirty.run(); refreshPreview.run(); });
-        boldCheck.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
-        italicCheck.setOnAction(e -> { markDirty.run(); refreshPreview.run(); });
+        familyCombo.setOnAction(e -> {
+            markDirty.run();
+            refreshPreview.run();
+        });
+        sizeSpinner.valueProperty().addListener((obs, o, n) -> {
+            markDirty.run();
+            refreshPreview.run();
+        });
+        boldCheck.setOnAction(e -> {
+            markDirty.run();
+            refreshPreview.run();
+        });
+        italicCheck.setOnAction(e -> {
+            markDirty.run();
+            refreshPreview.run();
+        });
 
         refreshPreview.run();
         return fc;
@@ -382,7 +406,9 @@ public class FontSettingsManager {
         AppConfig.setValue(sectionKey(), type.name(), value);
     }
 
-    private String sectionKey() { return CONFIG_SECTION_PREFIX + viewId; }
+    private String sectionKey() {
+        return CONFIG_SECTION_PREFIX + viewId;
+    }
 
     // ==================== تسجيل + تطبيق + استعادة ====================
 
@@ -426,7 +452,10 @@ public class FontSettingsManager {
             Iterator<WeakReference<Parent>> it = list.iterator();
             while (it.hasNext()) {
                 Parent root = it.next().get();
-                if (root == null) { it.remove(); continue; }
+                if (root == null) {
+                    it.remove();
+                    continue;
+                }
                 if (section.length() > 0) applyRecursive(root, section);
             }
         }
@@ -450,11 +479,22 @@ public class FontSettingsManager {
                 break;
             }
         }
-        if (node instanceof ScrollPane sp) { Node c = sp.getContent(); if (c != null) applyRecursive(c, section); }
-        else if (node instanceof TitledPane tp) { Node c = tp.getContent(); if (c != null) applyRecursive(c, section); }
-        else if (node instanceof TabPane tbp) { for (Tab t : tbp.getTabs()) if (t.getContent() != null) applyRecursive(t.getContent(), section); }
-        else if (node instanceof SplitPane spp) { for (Node item : spp.getItems()) applyRecursive(item, section); }
-        else if (node instanceof Accordion acc) { for (TitledPane pane : acc.getPanes()) { applyRecursive(pane, section); if (pane.getContent() != null) applyRecursive(pane.getContent(), section); } }
+        if (node instanceof ScrollPane sp) {
+            Node c = sp.getContent();
+            if (c != null) applyRecursive(c, section);
+        } else if (node instanceof TitledPane tp) {
+            Node c = tp.getContent();
+            if (c != null) applyRecursive(c, section);
+        } else if (node instanceof TabPane tbp) {
+            for (Tab t : tbp.getTabs()) if (t.getContent() != null) applyRecursive(t.getContent(), section);
+        } else if (node instanceof SplitPane spp) {
+            for (Node item : spp.getItems()) applyRecursive(item, section);
+        } else if (node instanceof Accordion acc) {
+            for (TitledPane pane : acc.getPanes()) {
+                applyRecursive(pane, section);
+                if (pane.getContent() != null) applyRecursive(pane.getContent(), section);
+            }
+        }
         if (node instanceof Parent p) for (Node child : p.getChildrenUnmodifiable()) applyRecursive(child, section);
     }
 
@@ -466,11 +506,22 @@ public class FontSettingsManager {
         } else {
             node.setStyle(removeFontCss(node.getStyle()));
         }
-        if (node instanceof ScrollPane sp) { Node c = sp.getContent(); if (c != null) clearFontRecursive(c); }
-        else if (node instanceof TitledPane tp) { Node c = tp.getContent(); if (c != null) clearFontRecursive(c); }
-        else if (node instanceof TabPane tbp) { for (Tab t : tbp.getTabs()) if (t.getContent() != null) clearFontRecursive(t.getContent()); }
-        else if (node instanceof SplitPane spp) { for (Node item : spp.getItems()) clearFontRecursive(item); }
-        else if (node instanceof Accordion acc) { for (TitledPane pane : acc.getPanes()) { clearFontRecursive(pane); if (pane.getContent() != null) clearFontRecursive(pane.getContent()); } }
+        if (node instanceof ScrollPane sp) {
+            Node c = sp.getContent();
+            if (c != null) clearFontRecursive(c);
+        } else if (node instanceof TitledPane tp) {
+            Node c = tp.getContent();
+            if (c != null) clearFontRecursive(c);
+        } else if (node instanceof TabPane tbp) {
+            for (Tab t : tbp.getTabs()) if (t.getContent() != null) clearFontRecursive(t.getContent());
+        } else if (node instanceof SplitPane spp) {
+            for (Node item : spp.getItems()) clearFontRecursive(item);
+        } else if (node instanceof Accordion acc) {
+            for (TitledPane pane : acc.getPanes()) {
+                clearFontRecursive(pane);
+                if (pane.getContent() != null) clearFontRecursive(pane.getContent());
+            }
+        }
         if (node instanceof Parent p) for (Node child : p.getChildrenUnmodifiable()) clearFontRecursive(child);
     }
 
@@ -482,10 +533,10 @@ public class FontSettingsManager {
     private static void applyFontToNode(Node node, JSONObject settings) {
         String family = settings.optString("family", null);
         if (family == null || family.isEmpty()) return;
-        int size       = settings.optInt("size", 14);
-        boolean bold   = settings.optBoolean("bold", false);
+        int size = settings.optInt("size", 14);
+        boolean bold = settings.optBoolean("bold", false);
         boolean italic = settings.optBoolean("italic", false);
-        FontWeight  weight  = bold   ? FontWeight.BOLD    : FontWeight.NORMAL;
+        FontWeight weight = bold ? FontWeight.BOLD : FontWeight.NORMAL;
         FontPosture posture = italic ? FontPosture.ITALIC : FontPosture.REGULAR;
         Font font = Font.font(family, weight, posture, size);
         if (node instanceof Labeled l) {
@@ -493,6 +544,7 @@ public class FontSettingsManager {
         } else if (node instanceof TextInputControl tic) {
             tic.setStyle(buildFontCss(family, size, bold, italic));
         } else {
+
             node.setStyle(buildFontCss(family, size, bold, italic));
         }
     }
@@ -506,7 +558,9 @@ public class FontSettingsManager {
     // ==================== Helpers ====================
 
     private static Region spacer() {
-        Region r = new Region(); HBox.setHgrow(r, Priority.ALWAYS); return r;
+        Region r = new Region();
+        HBox.setHgrow(r, Priority.ALWAYS);
+        return r;
     }
 
     private static String cardStyle(boolean changed) {

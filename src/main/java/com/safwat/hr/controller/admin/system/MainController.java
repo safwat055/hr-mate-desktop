@@ -102,6 +102,8 @@ public class MainController implements Initializable {
     }
 
     private void saveAdminSetting() {
+
+        
         AppConfig.setValue("connection", "masterPC", txtAdminPC.getText().isEmpty() ? "localhost" : txtAdminPC.getText());
         AppConfig.setValue("connection", "port", txtAdminPort.getText().isEmpty() ? "8080" : txtAdminPort.getText());
         AppConfig.setValue("connection", "alone", String.valueOf(chk_alone.isSelected()));

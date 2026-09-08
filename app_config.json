@@ -77,7 +77,7 @@
     "LIST_VIEW": {
       "size": 13,
       "bold": false,
-      "family": "System",
+      "family": "Times New Roman",
       "italic": false
     },
     "TEXT_AREA": {
@@ -107,7 +107,7 @@
     "TABLE_VIEW": {
       "size": 13,
       "bold": false,
-      "family": "DejaVu Sans",
+      "family": "Cairo",
       "italic": false
     },
     "LABEL": {
@@ -138,9 +138,77 @@
   "ui": {
     "table_chk_total": true,
     "table_chk_nationalId": true,
-    "colorOverridesVersion": "1788863028109",
-    "theme": "custom-theme.css",
+    "colorOverridesVersion": "1788896798297",
+    "theme": "theme-gray.css",
     "fontSize": "10.0"
+  },
+  "fonts_/com/safwat/hr/controller/report/PayrollReport.fxml": {
+    "COMBO_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LIST_VIEW": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_AREA": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TAB_PANE": {
+      "size": 13,
+      "bold": true,
+      "family": "Arial Black",
+      "italic": false
+    },
+    "RADIO_BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TABLE_VIEW": {
+      "size": 13,
+      "bold": true,
+      "family": "Courier New",
+      "italic": false
+    },
+    "LABEL": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "CHECK_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_FIELD": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "MENU_BAR": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    }
   },
   "meta": {"registeredViews": [
     "server setting",
@@ -159,10 +227,78 @@
     "pgAsService": "false",
     "url2": "ws://",
     "port": "8080",
-    "masterPC": "safwat05",
+    "masterPC": "safwat055.local",
     "user": "admin",
     "url": "http://",
     "backendAsService": "false"
   },
-  "zoom": {"اجر الاشتراك": "1.0"}
+  "zoom": {},
+  "fonts_واجهة الإدخال": {
+    "COMBO_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LIST_VIEW": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_AREA": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TAB_PANE": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "RADIO_BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TABLE_VIEW": {
+      "size": 12,
+      "bold": false,
+      "family": "Cairo Light",
+      "italic": false
+    },
+    "LABEL": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "CHECK_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_FIELD": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "MENU_BAR": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    }
+  }
 }

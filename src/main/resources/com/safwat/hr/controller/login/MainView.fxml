@@ -225,7 +225,7 @@
                                 </left>
                                 <center>
                                     <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
-                                        <ImageView fitHeight="528.0" fitWidth="1152.0" pickOnBounds="true" preserveRatio="true">
+                                        <ImageView fitHeight="528.0" fitWidth="979.0" pickOnBounds="true" preserveRatio="true">
                                             <image>
                                                 <Image url="@dashboard2.png" />
                                             </image>
@@ -235,6 +235,9 @@
                                 <right>
                                     <VBox fx:id="mainRightBox" maxWidth="100.0" minWidth="100.0" prefWidth="100.0" BorderPane.alignment="TOP_CENTER" />
                                 </right>
+                        <bottom>
+                           <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefHeight="40.0" prefWidth="1000.0" text="Ahmed.safwat444@gmail.com +201021816864" BorderPane.alignment="CENTER" />
+                        </bottom>
                             </BorderPane>
                         </content>
                     </Tab>
@@ -264,7 +267,7 @@
         <padding>
             <Insets bottom="3" left="3" right="3" top="3" />
         </padding>
-        <Label maxWidth="Infinity" prefHeight="16" text="rightstatus" HBox.hgrow="ALWAYS">
+        <Label maxWidth="Infinity" prefHeight="16" text="safwat055" HBox.hgrow="ALWAYS">
             <font>
                 <Font size="11" />
             </font>
@@ -273,7 +276,7 @@
             </textFill>
         </Label>
         <Pane HBox.hgrow="ALWAYS" />
-        <Label fx:id="leftLable" prefHeight="16" prefWidth="82" text="leftStatus" HBox.hgrow="NEVER">
+        <Label fx:id="leftLable" prefHeight="16" prefWidth="82" text="user" HBox.hgrow="NEVER">
             <font>
                 <Font size="11" />
             </font>

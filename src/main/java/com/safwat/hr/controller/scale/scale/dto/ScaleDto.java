@@ -30,6 +30,7 @@ public class ScaleDto {
     private Integer startDegree;
     private LocalDate startDate;
     private LocalDate restartDate;
+    private LocalDate retiredDate;
     private LocalDate basic30Date;
     private LocalDate basic30From;
     private BigDecimal startTied;
@@ -49,6 +50,7 @@ public class ScaleDto {
     private List<UpgradeRecord> upgrades;
     private List<EncouragementRecord> encouragements;
     private List<PromotionIncentiveRecord> promotionIncentives;
+    private List<StopPeriodic> stopPeriodicList;
     private List<GroupChangeRecord> groupChanges;
 
     // ══════════════════════════════════════════

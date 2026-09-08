@@ -51,7 +51,7 @@ public class ScaleController implements Initializable {
     // ─────────────────────────────────────────────
 
     @FXML
-    private TextField txt_nationalId;
+    private TextField txt_nationalId, txt_shortTimeLine;
     @FXML
     private TextField txt_empName;
     @FXML
@@ -105,7 +105,7 @@ public class ScaleController implements Initializable {
     @FXML
     private TextField date_kader;
     @FXML
-    private TextField end_day;
+    private TextField txt_retirementDay;
 
     // الجداول
     @FXML
@@ -127,6 +127,9 @@ public class ScaleController implements Initializable {
     private TableView<ScaleTimelinePoint> table_result;
     @FXML
     private TableView<ExtraResultScale> table_extraDate;
+    @FXML
+    private TableView<StopPeriodic> table_stopPeriodic;
+
 
     // أزرار الإجراءات
     @FXML
@@ -180,6 +183,7 @@ public class ScaleController implements Initializable {
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
+        setTable_stopPeriodic();
         setExtartDataTable();
         utilsUi.setupDateFields();
         setTable_result();
@@ -317,6 +321,21 @@ public class ScaleController implements Initializable {
         setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
     }
 
+    public void setTable_stopPeriodic() {
+        List<ColumnConfig<StopPeriodic>> cols = new ArrayList<>();
+        cols.add(new ColumnConfig<>("عام البداية", 100,
+                r -> r.getStartYear() != null ? r.getStartYear().toString() : "",
+                (r, v) -> r.setStartYear(parseInt(v)),
+                true, false
+        ));
+        cols.add(new ColumnConfig<>("عام النهاية", 100,
+                r -> r.getEndYear() != null ? r.getEndYear().toString() : "",
+                (r, v) -> r.setEndYear(parseInt(v)),
+                true, false
+        ));
+        setupGenericTable(table_stopPeriodic, cols, 2, StopPeriodic::new);
+    }
+
     private void setupAdjustmentTable(TableView<AdjustmentRecord> table) {
         List<ColumnConfig<AdjustmentRecord>> cols = List.of(
                 new ColumnConfig<>("التاريخ", 100,
@@ -431,7 +450,7 @@ public class ScaleController implements Initializable {
                         txt_doctoraa, txt_tied, txt_regrade3, txt_regrade4,
                         txt_regrade5, txt_backRegrade, txt_group, txt_law,
                         txt_code, txt_startDegree, yearUp, yearNoUp, gpUp,
-                        gpNoUp, yearsBack, date_kader, end_day,
+                        gpNoUp, yearsBack, date_kader, txt_retirementDay,
                         txt_startCut, txt_endCut)
                 .forEach(TextField::clear);
 
@@ -445,6 +464,7 @@ public class ScaleController implements Initializable {
         table_bonusAdd.getItems().clear();
         table_bonusRival.getItems().clear();
         table_extraDate.getItems().clear();
+        table_stopPeriodic.getItems().clear();
         currentDto = null;
     }
 
@@ -510,7 +530,7 @@ public class ScaleController implements Initializable {
         setText(txt_doctoraa, fmt(extraInfo != null ? extraInfo.getDoctoraa() : null));
         setText(txt_backRegrade, fmt(extraInfo != null ? extraInfo.getReBackDate() : null));
         setText(date_kader, dto.getBasic30Date() != null ? fmt(dto.getBasic30Date()) : null);
-
+        setText(txt_retirementDay, dto.getRetiredDate() != null ? fmt(dto.getRetiredDate()) : null);
         // الجداول الأربعة
 
 
@@ -518,6 +538,7 @@ public class ScaleController implements Initializable {
 
         fillEncouragementTable(dto.getEncouragements());
         fillPromotionTable(dto.getPromotionIncentives());
+        fillStopPeriodicTable(dto.getStopPeriodicList());
         fillResultTable(dto.getTimeline());
         fillExtraDataTable(dto.getExtraResults());
         fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
@@ -583,6 +604,15 @@ public class ScaleController implements Initializable {
         }
     }
 
+    void fillStopPeriodicTable(List<StopPeriodic> stopPeriodicList) {
+        table_stopPeriodic.getItems().clear();
+        if (stopPeriodicList != null && !stopPeriodicList.isEmpty()) {
+            table_stopPeriodic.getItems().addAll(stopPeriodicList);
+        } else {
+            table_stopPeriodic.getItems().addAll(new StopPeriodic(), new StopPeriodic());
+        }
+    }
+
     void fillAdjustmentTable(TableView<AdjustmentRecord> table, List<AdjustmentRecord> adjustments) {
         table.getItems().clear();
 
@@ -614,6 +644,7 @@ public class ScaleController implements Initializable {
             dto.setStartDegree(parseInt(txt_startDegree.getText()));
             dto.setStartDate(parseDate(txt_startDate.getText()));
             dto.setRestartDate(parseDate(txt_backStart.getText()));
+            dto.setRetiredDate(parseDate(txt_retirementDay.getText()));
             dto.setCutStart(parseDate(txt_startCut.getText()));
             dto.setCutEnd(parseDate(txt_endCut.getText()));
             dto.setBasic30Date(parseDate(date_kader.getText()));
@@ -645,6 +676,7 @@ public class ScaleController implements Initializable {
             dto.setUpgrades(extractRows(table_upgrade, r -> r.getDate() != null));
             dto.setEncouragements(extractRows(table_encourge, r -> r.getDate() != null));
             dto.setPromotionIncentives(extractRows(table_promotion, r -> r.getDate() != null));
+            dto.setStopPeriodicList(extractRows(table_stopPeriodic, r -> r.getStartYear() != null && r.getEndYear() != null));
             dto.setMogardAdditions(extractRows(table_mogardAdd, r -> r.getDate() != null && r.getAmount() != null));
             dto.setMogardRemovals(extractRows(table_mogardRival, r -> r.getDate() != null && r.getAmount() != null));
             dto.setBonusAdditions(extractRows(table_bonusAdd, r -> r.getDate() != null && r.getAmount() != null));

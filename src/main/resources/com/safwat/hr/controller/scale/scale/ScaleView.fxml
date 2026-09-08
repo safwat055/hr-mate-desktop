@@ -145,7 +145,7 @@
                                 <TextField fx:id="txt_doctoraa" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
 
-                            <Separator />
+                            <Separator prefHeight="5.0" />
 
                             <!-- تسويات -->
                             <HBox alignment="CENTER_RIGHT" spacing="6">
@@ -164,6 +164,18 @@
                                 <Label prefWidth="110" styleClass="text-navy bold" text="أقدمية التسوية" />
                                 <TextField fx:id="txt_backRegrade" alignment="CENTER" prefHeight="28" prefWidth="120" />
                             </HBox>
+
+                            <Separator prefHeight="5.0" prefWidth="222.0" />
+   
+                            <!-- تواريخ مهمة -->
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="110.0" styleClass="bold" text="أساسي 30/6" />
+                                <TextField fx:id="date_kader" alignment="CENTER" prefHeight="28" prefWidth="120.0" promptText="تاريخ" />
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT" spacing="6">
+                                <Label prefWidth="110.0" styleClass="bold" text="إنهاء / تقاعد" />
+                                <TextField fx:id="txt_retirementDay" alignment="CENTER" prefHeight="28" prefWidth="120.0" promptText="تاريخ" />
+                            </HBox>
                         </VBox>
                     </VBox>
 
@@ -172,7 +184,7 @@
 
                         <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header.compact" text="بيانات اضافية" />
 
-                        <VBox prefHeight="302.0" prefWidth="177.0" spacing="2">
+                        <VBox prefHeight="375.0" prefWidth="201.0" spacing="2">
                             <padding>
                                 <Insets bottom="8" left="8" right="8" top="8" />
                             </padding>
@@ -201,28 +213,14 @@
 
                             <Separator />
 
-                            <!-- تواريخ مهمة -->
-                            <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label prefWidth="85" styleClass="bold" text="أساسي 30/6" />
-                                <TextField fx:id="date_kader" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="تاريخ" />
-                            </HBox>
-                            <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label prefWidth="85" styleClass="bold" text="إنهاء / تقاعد" />
-                                <TextField fx:id="end_day" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="تاريخ" />
-                            </HBox>
-
-                            <Separator />
-
                             <!-- انقطاع -->
-                            <Label styleClass="text-danger bold fs-12" text="فترة الانقطاع" />
-                            <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label prefWidth="85" styleClass="bold" text="من" />
-                                <TextField fx:id="txt_startCut" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="بداية" />
-                            </HBox>
-                            <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Label prefWidth="85" styleClass="bold" text="إلى" />
-                                <TextField fx:id="txt_endCut" alignment="CENTER" prefHeight="28" prefWidth="90" promptText="نهاية" />
-                            </HBox>
+                            <Label alignment="CENTER" prefHeight="18.0" prefWidth="230.0" styleClass="text-danger bold fs-12" text="تدرج مختصر" />
+                     <HBox alignment="CENTER_LEFT" spacing="6">
+                        <children>
+                           <Label prefWidth="110.0" styleClass="bold" text="بداية التدرج" />
+                           <TextField fx:id="txt_shortTimeLine" alignment="CENTER" prefHeight="28" prefWidth="120.0" promptText="تاريخ" />
+                        </children>
+                     </HBox>
                         </VBox>
                     </VBox>
 
@@ -284,7 +282,7 @@
                     </VBox>
                     <!-- تسويات المجرد والعلاوات (مضغوطة) -->
 
-                    <TitledPane animated="true" collapsible="true" expanded="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="417.0" prefWidth="240.0" styleClass="text-navy bold fs-13" text="تسويات المجرد والعلاوات" HBox.hgrow="ALWAYS">
+                    <TitledPane animated="true" collapsible="true" expanded="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="417.0" prefWidth="240.0" styleClass="text-navy bold fs-13" text="مدخلات اضافية" HBox.hgrow="ALWAYS">
                         <content>
                             <Accordion>
                                 <panes>
@@ -328,6 +326,32 @@
                                             </TableView>
                                         </content>
                                     </TitledPane>
+                           <TitledPane expanded="false" layoutX="10.0" layoutY="100.0" styleClass="text-success bold" text="وقف و اعادة الدورية">
+                              <content>
+                                 <TableView fx:id="table_stopPeriodic" editable="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="205.0" prefWidth="205.0">
+                                    <columns>
+                                       <TableColumn prefWidth="90" text="البداية" />
+                                       <TableColumn prefWidth="94.0" text="النهاية" />
+                                    </columns>
+                                 </TableView>
+                              </content>
+                           </TitledPane>
+                           <TitledPane expanded="false" layoutX="10.0" layoutY="130.0" styleClass="text-success bold" text="بداية و نهاية الانقطاع">
+                              <content>
+                                 <VBox prefHeight="200.0" prefWidth="100.0" spacing="8.0">
+                                    <children>
+                                              <HBox alignment="CENTER_LEFT" spacing="6">
+                                                  <Label alignment="CENTER" prefWidth="85" styleClass="bold" text="تاريخ البداية" />
+                                                  <TextField fx:id="txt_startCut" alignment="CENTER" prefHeight="28" prefWidth="123.0" promptText="بداية" />
+                                              </HBox>
+                                              <HBox alignment="CENTER_LEFT" spacing="6">
+                                                  <Label alignment="CENTER" prefWidth="85" styleClass="bold" text="تاريخ النهاية" />
+                                                  <TextField fx:id="txt_endCut" alignment="CENTER" prefHeight="28" prefWidth="126.0" promptText="نهاية" />
+                                              </HBox>
+                                    </children>
+                                 </VBox>
+                              </content>
+                           </TitledPane>
                                 </panes>
                             </Accordion>
                         </content>
