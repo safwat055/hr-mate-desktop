@@ -211,6 +211,7 @@
     }
   },
   "meta": {"registeredViews": [
+    "/com/safwat/hr/controller/report/PayrollReport.fxml",
     "server setting",
     "اجر الاشتراك",
     "تدرج راتب",
@@ -220,7 +221,7 @@
     "مدير التقارير",
     "مفردات مرتب",
     "واجهة الإدخال",
-    "/com/safwat/hr/controller/report/PayrollReport.fxml"
+    "نسخ احتياطي"
   ]},
   "connection": {
     "alone": "false",

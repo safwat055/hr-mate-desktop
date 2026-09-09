@@ -1,7 +1,10 @@
 package com.safwat.hr.network;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.safwat.hr.network.dto.*;
@@ -9,7 +12,6 @@ import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.PayrollRequest;
 import lombok.Getter;
 import lombok.Setter;
-import okhttp3.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -312,6 +314,23 @@ public class ApiClient {
                 return get(path, responseType);
             } catch (Exception e) {
                 return createErrorResponse(e);
+            }
+        });
+    }
+
+    public static <T> CompletableFuture<ApiResponse<T>> getAsync(
+            String path,
+            Map<String, String> queryParams,
+            TypeReference<T> responseType) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return getWithTypeRef(path, queryParams, responseType);
+            } catch (Exception e) {
+                ApiResponse<T> error = new ApiResponse<>();
+                error.setSuccess(false);
+                error.setMessage(e.getMessage());
+                error.setTimestamp(java.time.LocalDateTime.now().toString());
+                return error;
             }
         });
     }

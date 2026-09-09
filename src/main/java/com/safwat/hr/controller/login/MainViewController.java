@@ -234,6 +234,11 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
+    void openBackupView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackupView(), "نسخ احتياطي", true);
+    }
+
+    @FXML
     void applyThemeBlack() {
         ThemeEventBus.applyTheme(ThemeEventBus.BLACK);
     }

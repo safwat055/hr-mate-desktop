@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controllers.BackupController"
+            styleClass="backup-root"
+            stylesheets="@../css/backup.css">
+
+    <!-- ══════════════════════════════════════════════
+         Header
+    ══════════════════════════════════════════════ -->
+    <top>
+        <VBox styleClass="page-header">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="💾" styleClass="header-icon"/>
+                <VBox spacing="2">
+                    <Label text="النسخ الاحتياطي والاستعادة" styleClass="page-title"/>
+                    <Label text="إدارة نسخ قاعدة البيانات بأمان" styleClass="page-subtitle"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <!-- حالة الاتصال -->
+                <HBox styleClass="status-chip" alignment="CENTER" spacing="6" fx:id="statusChip">
+                    <Label fx:id="statusDot" text="●" styleClass="status-dot-ok"/>
+                    <Label fx:id="statusLabel" text="متصل" styleClass="status-text"/>
+                </HBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ══════════════════════════════════════════════
+         Main Content — بثلاث أعمدة
+    ══════════════════════════════════════════════ -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="main-scroll" hbarPolicy="NEVER">
+            <VBox spacing="20" styleClass="main-content">
+
+                <!-- ─── الصف الأول: نسخ + استعادة سريعة ─── -->
+                <HBox spacing="16" alignment="TOP_LEFT">
+
+                    <!-- ┌─ بطاقة النسخ الكامل ─┐ -->
+                    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="0">
+                        <HBox styleClass="card-header" alignment="CENTER_LEFT" spacing="10">
+                            <Label text="🗄" styleClass="card-icon"/>
+                            <Label text="نسخ احتياطي كامل" styleClass="card-title"/>
+                        </HBox>
+                        <VBox styleClass="card-body" spacing="14">
+                            <Label text="ينسخ قاعدة البيانات كاملة بصيغة Custom Format (مضغوطة)."
+                                   styleClass="card-description" wrapText="true"/>
+
+                            <!-- خيارات النسخ -->
+                            <VBox spacing="8">
+                                <Label text="صيغة الملف" styleClass="field-label"/>
+                                <HBox spacing="10">
+                                    <RadioButton fx:id="radioCustomFormat"
+                                                 text="Custom (.dump) — موصى به"
+                                                 styleClass="radio-opt"
+                                                 selected="true"/>
+                                    <RadioButton fx:id="radioPlainFormat"
+                                                 text="Plain SQL (.sql)"
+                                                 styleClass="radio-opt"/>
+                                </HBox>
+                            </VBox>
+
+                            <VBox spacing="6">
+                                <Label text="مستوى الضغط (0 = بلا ضغط، 9 = أقصى)" styleClass="field-label"/>
+                                <HBox spacing="10" alignment="CENTER_LEFT">
+                                    <Slider fx:id="compressionSlider"
+                                            min="0" max="9" value="6"
+                                            blockIncrement="1"
+                                            majorTickUnit="3"
+                                            minorTickCount="2"
+                                            showTickLabels="true"
+                                            showTickMarks="true"
+                                            snapToTicks="true"
+                                            HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="compressionValueLabel"
+                                           text="6"
+                                           styleClass="slider-value"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- زر النسخ -->
+                            <Button fx:id="btnBackup"
+                                    text="▶  بدء النسخ الاحتياطي"
+                                    styleClass="btn-primary"
+                                    onAction="#handleFullBackup"
+                                    maxWidth="Infinity"/>
+
+                            <!-- شريط التقدم -->
+                            <ProgressBar fx:id="backupProgress"
+                                         progress="-1"
+                                         maxWidth="Infinity"
+                                         styleClass="progress-bar-hidden"/>
+                            <Label fx:id="backupStatusLabel"
+                                   text=""
+                                   styleClass="status-msg"
+                                   wrapText="true"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- ┌─ بطاقة الاستعادة من ملف مرفوع ─┐ -->
+                    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="0">
+                        <HBox styleClass="card-header" alignment="CENTER_LEFT" spacing="10">
+                            <Label text="📤" styleClass="card-icon"/>
+                            <Label text="استعادة من ملف" styleClass="card-title"/>
+                        </HBox>
+                        <VBox styleClass="card-body" spacing="14">
+                            <Label text="ارفع ملف نسخة احتياطية (.dump أو .sql) لاستعادته."
+                                   styleClass="card-description" wrapText="true"/>
+
+                            <!-- اختيار الملف -->
+                            <VBox spacing="6">
+                                <Label text="ملف النسخة الاحتياطية" styleClass="field-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <TextField fx:id="uploadFilePath"
+                                               promptText="لم يتم اختيار ملف..."
+                                               editable="false"
+                                               styleClass="file-field"
+                                               HBox.hgrow="ALWAYS"/>
+                                    <Button text="اختر ملف"
+                                            styleClass="btn-secondary"
+                                            onAction="#handleChooseFile"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- وضع الاستعادة -->
+                            <VBox spacing="6">
+                                <Label text="وضع الاستعادة" styleClass="field-label"/>
+                                <VBox spacing="6" styleClass="mode-box">
+                                    <RadioButton fx:id="radioReplace"
+                                                 text="استبدال كامل"
+                                                 styleClass="radio-opt"
+                                                 selected="true"/>
+                                    <Label text="يمسح البيانات الحالية ثم يعيد كتابتها من النسخة. آمن ونظيف."
+                                           styleClass="radio-hint" wrapText="true"/>
+                                    <RadioButton fx:id="radioMerge"
+                                                 text="كتابة فوق الموجود (Merge)"
+                                                 styleClass="radio-opt"/>
+                                    <Label text="يضيف البيانات فوق الموجودة. قد يسبب تعارضاً في المفاتيح."
+                                           styleClass="radio-hint radio-hint-warn" wrapText="true"/>
+                                </VBox>
+                            </VBox>
+
+                            <Button fx:id="btnRestoreFile"
+                                    text="⬆  استعادة من الملف"
+                                    styleClass="btn-danger"
+                                    onAction="#handleRestoreFromFile"
+                                    maxWidth="Infinity"
+                                    disable="true"/>
+
+                            <ProgressBar fx:id="restoreFileProgress"
+                                         progress="-1"
+                                         maxWidth="Infinity"
+                                         styleClass="progress-bar-hidden"/>
+                            <Label fx:id="restoreFileStatusLabel"
+                                   text=""
+                                   styleClass="status-msg"
+                                   wrapText="true"/>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <!-- ─── الصف الثاني: النسخ المحلية ─── -->
+                <VBox styleClass="card" spacing="0">
+                    <HBox styleClass="card-header" alignment="CENTER_LEFT" spacing="10">
+                        <Label text="📁" styleClass="card-icon"/>
+                        <Label text="النسخ المحفوظة محلياً" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="↻  تحديث"
+                                styleClass="btn-ghost"
+                                onAction="#handleRefreshBackups"/>
+                    </HBox>
+                    <VBox styleClass="card-body" spacing="12">
+
+                        <!-- فلتر وضع الاستعادة للنسخ المحلية -->
+                        <HBox spacing="16" alignment="CENTER_LEFT">
+                            <Label text="وضع الاستعادة:" styleClass="field-label"/>
+                            <RadioButton fx:id="radioLocalReplace"
+                                         text="استبدال كامل"
+                                         styleClass="radio-opt"
+                                         selected="true"/>
+                            <RadioButton fx:id="radioLocalMerge"
+                                         text="Merge"
+                                         styleClass="radio-opt"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="backupsCountLabel"
+                                   text="0 نسخة"
+                                   styleClass="count-label"/>
+                        </HBox>
+
+                        <!-- جدول النسخ -->
+                        <TableView fx:id="backupsTable"
+                                   styleClass="backup-table"
+                                   minHeight="220"
+                                   prefHeight="280">
+                            <columns>
+                                <TableColumn fx:id="colFileName"
+                                             text="اسم الملف"
+                                             prefWidth="300"/>
+                                <TableColumn fx:id="colFormat"
+                                             text="الصيغة"
+                                             prefWidth="100"/>
+                                <TableColumn fx:id="colSize"
+                                             text="الحجم"
+                                             prefWidth="100"/>
+                                <TableColumn fx:id="colDate"
+                                             text="تاريخ الإنشاء"
+                                             prefWidth="180"/>
+                                <TableColumn fx:id="colActions"
+                                             text="إجراءات"
+                                             prefWidth="140"/>
+                            </columns>
+                            <placeholder>
+                                <VBox alignment="CENTER" spacing="8">
+                                    <Label text="📂" style="-fx-font-size: 32px;"/>
+                                    <Label text="لا توجد نسخ احتياطية بعد"
+                                           styleClass="empty-label"/>
+                                    <Label text="اضغط «تحديث» أو أنشئ نسخة جديدة"
+                                           styleClass="empty-hint"/>
+                                </VBox>
+                            </placeholder>
+                        </TableView>
+
+                        <!-- شريط العمليات على النسخة المحددة -->
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="btnRestoreSelected"
+                                    text="⬇  استعادة النسخة المحددة"
+                                    styleClass="btn-danger"
+                                    onAction="#handleRestoreSelected"
+                                    disable="true"/>
+                            <ProgressBar fx:id="restoreLocalProgress"
+                                         progress="-1"
+                                         maxWidth="200"
+                                         styleClass="progress-bar-hidden"/>
+                            <Label fx:id="restoreLocalStatusLabel"
+                                   text=""
+                                   styleClass="status-msg"
+                                   HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                    </VBox>
+                </VBox>
+
+                <!-- ─── الصف الثالث: النسخ التلقائي ─── -->
+                <VBox styleClass="card" spacing="0">
+                    <HBox styleClass="card-header" alignment="CENTER_LEFT" spacing="10">
+                        <Label text="⏱" styleClass="card-icon"/>
+                        <Label text="النسخ التلقائي" styleClass="card-title"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <ToggleButton fx:id="toggleAutoBackup"
+                                      text="غير مفعّل"
+                                      styleClass="toggle-btn"
+                                      onAction="#handleToggleAutoBackup"/>
+                    </HBox>
+                    <VBox styleClass="card-body" spacing="12">
+                        <Label text="يتم النسخ تلقائياً وفق الجدول المحدد. التغييرات تُطبَّق فور إعادة تشغيل الخادم."
+                               styleClass="card-description" wrapText="true"/>
+
+                        <GridPane hgap="16" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="140" prefWidth="160"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+
+                            <Label text="Cron expression:" styleClass="field-label" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <HBox spacing="8" GridPane.rowIndex="0" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                                <TextField fx:id="cronField"
+                                           text="0 0 2 * * ?"
+                                           styleClass="cron-field"
+                                           prefWidth="160"/>
+                                <Label fx:id="cronHintLabel"
+                                       text="كل يوم الساعة 2:00 صباحاً"
+                                       styleClass="cron-hint"/>
+                            </HBox>
+
+                            <Label text="أقصى عدد نسخ محفوظة:" styleClass="field-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <HBox spacing="8" GridPane.rowIndex="1" GridPane.columnIndex="1" alignment="CENTER_LEFT">
+                                <Spinner fx:id="maxFilesSpinner"
+                                         min="1" max="30" initialValue="7"
+                                         editable="true"
+                                         prefWidth="80"
+                                         styleClass="files-spinner"/>
+                                <Label text="نسخة (الأقدم يُحذف تلقائياً)" styleClass="field-hint"/>
+                            </HBox>
+                        </GridPane>
+
+                        <Button text="حفظ إعدادات النسخ التلقائي"
+                                styleClass="btn-secondary"
+                                onAction="#handleSaveAutoBackupSettings"
+                                prefWidth="220"/>
+
+                        <Label fx:id="autoBackupStatusLabel"
+                               text=""
+                               styleClass="status-msg"
+                               wrapText="true"/>
+                    </VBox>
+                </VBox>
+
+                <VBox minHeight="20"/>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>
