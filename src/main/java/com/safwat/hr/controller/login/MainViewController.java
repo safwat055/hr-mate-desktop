@@ -8,6 +8,7 @@ import com.safwat.hr.controllers.AppearanceSettingsController;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.shared.FXMLPaths;
+import com.safwat.hr.shared.file.TempFileCleaner;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.AlertUtil;
@@ -125,6 +126,7 @@ public class MainViewController implements Initializable {
         icons.getReportImage(btn_report);
 
         leftLable.setText(ApiClient.getUserName());
+        TempFileCleaner.cleanOnStartup();
     }
 
     private Stage getStageFromNode(Node node) {

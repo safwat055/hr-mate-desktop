@@ -7,32 +7,30 @@ import com.safwat.hr.backup.RestoreMode;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * كنترولر شاشة النسخ الاحتياطي.
- *
- * <p>يغطي:
- * <ul>
- *   <li>النسخ الكامل (Custom / Plain SQL، مستوى ضغط متغير)</li>
- *   <li>استعادة من ملف مرفوع (REPLACE / MERGE)</li>
- *   <li>استعراض النسخ المحلية واستعادة منها (REPLACE / MERGE)</li>
- *   <li>إعدادات النسخ التلقائي (cron + max files)</li>
- * </ul>
  */
 public class BackupController implements Initializable {
 
@@ -80,23 +78,15 @@ public class BackupController implements Initializable {
     @FXML
     private Label backupsCountLabel;
     @FXML
-    private TableView<BackupFileInfo> backupsTable;
+    private VBox backupsList;
     @FXML
-    private TableColumn<BackupFileInfo, String> colFileName;
-    @FXML
-    private TableColumn<BackupFileInfo, String> colFormat;
-    @FXML
-    private TableColumn<BackupFileInfo, String> colSize;
-    @FXML
-    private TableColumn<BackupFileInfo, String> colDate;
-    @FXML
-    private TableColumn<BackupFileInfo, Void> colActions;
+    private ScrollPane backupsScrollPane;
     @FXML
     private Button btnRestoreSelected;
     @FXML
     private ProgressBar restoreLocalProgress;
     @FXML
-    private Label restoreLocalStatusLabel;
+    private TextArea restoreLocalStatusArea;
 
     // ── النسخ التلقائي ──
     @FXML
@@ -111,8 +101,10 @@ public class BackupController implements Initializable {
     private Label autoBackupStatusLabel;
 
     // ── State ──
-    private final ObservableList<BackupFileInfo> backupsList = FXCollections.observableArrayList();
+    private final ObservableList<BackupFileInfo> backupsListData = FXCollections.observableArrayList();
     private File selectedUploadFile;
+    private BackupFileInfo selectedBackupItem;
+    private boolean isFirstLoad = true;  // لتحديد أول مرة يتم تحميل الشاشة
 
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm:ss");
@@ -127,12 +119,14 @@ public class BackupController implements Initializable {
         setupRestoreModeToggleGroup();
         setupLocalRestoreModeToggleGroup();
         setupCompressionSlider();
-        setupBackupsTable();
         setupSpinner();
         cronField.textProperty().addListener((obs, o, n) -> updateCronHint(n));
 
-        // جلب النسخ المحلية عند فتح الشاشة
-        handleRefreshBackups();
+        // عرض رسالة انتظار بدلاً من تحميل البيانات تلقائياً
+        showEmptyState("اضغط على ↻ تحديث لتحميل النسخ المحفوظة");
+
+        // ❌ لا نقوم بتحميل البيانات تلقائياً عند فتح الواجهة
+        // handleRefreshBackups();  // تم إلغاؤها
     }
 
     // ── Toggle Groups ──
@@ -141,7 +135,6 @@ public class BackupController implements Initializable {
         ToggleGroup group = new ToggleGroup();
         radioCustomFormat.setToggleGroup(group);
         radioPlainFormat.setToggleGroup(group);
-        // مستوى الضغط يظهر فقط مع Custom Format
         radioCustomFormat.selectedProperty().addListener((obs, o, sel) ->
                 compressionSlider.setDisable(!sel));
     }
@@ -159,8 +152,19 @@ public class BackupController implements Initializable {
     }
 
     private void setupCompressionSlider() {
-        compressionSlider.valueProperty().addListener((obs, o, n) ->
-                compressionValueLabel.setText(String.valueOf(n.intValue())));
+        compressionSlider.valueProperty().addListener((obs, o, n) -> {
+            int val = n.intValue();
+            if (val >= 7) {
+                compressionValueLabel.setStyle("-fx-text-fill: #2b7a4b;");
+                compressionValueLabel.setText(val + " → ضغط عالي - ملف صغير");
+            } else if (val <= 3) {
+                compressionValueLabel.setStyle("-fx-text-fill: #c0392b;");
+                compressionValueLabel.setText(val + " → ضغط منخفض - ملف كبير");
+            } else {
+                compressionValueLabel.setStyle("-fx-text-fill: #f39c12;");
+                compressionValueLabel.setText(val + " → ضغط متوسط");
+            }
+        });
     }
 
     private void setupSpinner() {
@@ -169,68 +173,136 @@ public class BackupController implements Initializable {
         maxFilesSpinner.setValueFactory(factory);
     }
 
-    // ── Table ──
+    // ════════════════════════════════════════════════════
+    //  بناء القائمة
+    // ════════════════════════════════════════════════════
 
-    private void setupBackupsTable() {
-        colFileName.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getFileName()));
+    /**
+     * عرض حالة انتظار (القائمة فارغة)
+     */
+    private void showEmptyState(String message) {
+        Platform.runLater(() -> {
+            backupsList.getChildren().clear();
+            Label emptyLabel = new Label("📭 " + message);
+            emptyLabel.getStyleClass().add("empty-label");
+            emptyLabel.setAlignment(Pos.CENTER);
+            emptyLabel.setMaxWidth(Double.MAX_VALUE);
+            emptyLabel.setPadding(new Insets(20, 0, 20, 0));
+            backupsList.getChildren().add(emptyLabel);
+            backupsCountLabel.setText("0 نسخة");
+            btnRestoreSelected.setDisable(true);
+        });
+    }
 
-        colFormat.setCellValueFactory(c ->
-                new SimpleStringProperty(
-                        c.getValue().getFormat() == BackupFormat.CUSTOM ? "Custom" : "Plain SQL"));
-        colFormat.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                    return;
+    /**
+     * يعيد بناء قائمة النسخ المحلية
+     */
+    private void rebuildBackupsList() {
+        Platform.runLater(() -> {
+            backupsList.getChildren().clear();
+
+            if (backupsListData.isEmpty()) {
+                Label emptyLabel = new Label("📭 لا توجد نسخ احتياطية محفوظة");
+                emptyLabel.getStyleClass().add("empty-label");
+                emptyLabel.setAlignment(Pos.CENTER);
+                emptyLabel.setMaxWidth(Double.MAX_VALUE);
+                emptyLabel.setPadding(new Insets(20, 0, 20, 0));
+                backupsList.getChildren().add(emptyLabel);
+                return;
+            }
+
+            for (BackupFileInfo item : backupsListData) {
+                Node itemNode = createBackupItemNode(item);
+                backupsList.getChildren().add(itemNode);
+            }
+        });
+    }
+
+    /**
+     * ينشئ عنصر (HBox) يمثل نسخة احتياطية واحدة.
+     */
+    private Node createBackupItemNode(BackupFileInfo item) {
+        HBox row = new HBox();
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setSpacing(10);
+        row.setPadding(new Insets(8, 12, 8, 12));
+        row.getStyleClass().add("backup-item");
+        row.setMaxWidth(Double.MAX_VALUE);
+
+        if (selectedBackupItem != null && selectedBackupItem.getFileName().equals(item.getFileName())) {
+            row.getStyleClass().add("backup-item-selected");
+        }
+
+        // ── اسم الملف ──
+        Label fileNameLabel = new Label(item.getFileName());
+        fileNameLabel.getStyleClass().add("backup-item-name");
+        fileNameLabel.setMinWidth(200);
+        HBox.setHgrow(fileNameLabel, Priority.ALWAYS);
+
+        // ── Tag ──
+        Label formatTag = new Label(
+                item.getFormat() == BackupFormat.CUSTOM ? "Custom" : "Plain SQL"
+        );
+        formatTag.getStyleClass().add(
+                item.getFormat() == BackupFormat.CUSTOM ? "table-tag-dump" : "table-tag-sql"
+        );
+
+        // ── الحجم ──
+        Label sizeLabel = new Label(item.getSizeFormatted());
+        sizeLabel.getStyleClass().add("backup-item-size");
+        sizeLabel.setMinWidth(80);
+
+        // ── التاريخ ──
+        LocalDateTime dt = item.getCreatedAtAsDateTime();
+        Label dateLabel = new Label(dt != null ? dt.format(DATE_FMT) : "—");
+        dateLabel.getStyleClass().add("backup-item-date");
+        dateLabel.setMinWidth(160);
+
+        // ── زر الاستعادة ──
+        Button restoreBtn = new Button("⬇ استعادة");
+        restoreBtn.getStyleClass().add("table-action-btn");
+        restoreBtn.setOnAction(e -> {
+            selectedBackupItem = item;
+            handleRestoreLocalItem(item);
+        });
+
+        row.getChildren().addAll(
+                fileNameLabel,
+                formatTag,
+                sizeLabel,
+                dateLabel,
+                restoreBtn
+        );
+
+        row.setOnMouseClicked(e -> {
+            selectedBackupItem = item;
+            updateBackupItemSelection();
+            btnRestoreSelected.setDisable(false);
+        });
+
+        return row;
+    }
+
+    private void updateBackupItemSelection() {
+        Platform.runLater(() -> {
+            for (Node child : backupsList.getChildren()) {
+                child.getStyleClass().remove("backup-item-selected");
+                if (child instanceof HBox row && selectedBackupItem != null) {
+                    if (!row.getChildren().isEmpty()) {
+                        Node firstChild = row.getChildren().get(0);
+                        if (firstChild instanceof Label nameLabel) {
+                            if (nameLabel.getText().equals(selectedBackupItem.getFileName())) {
+                                row.getStyleClass().add("backup-item-selected");
+                            }
+                        }
+                    }
                 }
-                Label tag = new Label(item);
-                tag.getStyleClass().add(
-                        item.equals("Custom") ? "table-tag-dump" : "table-tag-sql");
-                setGraphic(tag);
-                setText(null);
             }
         });
-
-        colSize.setCellValueFactory(c ->
-                new SimpleStringProperty(c.getValue().getSizeFormatted()));
-
-        colDate.setCellValueFactory(c ->
-                new SimpleStringProperty(
-                        c.getValue().getCreatedAt() != null
-                                ? c.getValue().getCreatedAt().format(DATE_FMT)
-                                : "—"));
-
-        // زر الاستعادة داخل كل صف
-        colActions.setCellFactory(col -> new TableCell<>() {
-            private final Button btn = new Button("⬇ استعادة");
-
-            {
-                btn.getStyleClass().add("table-action-btn");
-                btn.setOnAction(e -> {
-                    BackupFileInfo item = getTableView().getItems().get(getIndex());
-                    handleRestoreLocalItem(item);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : btn);
-            }
-        });
-
-        backupsTable.setItems(backupsList);
-
-        // تفعيل زر الاستعادة عند اختيار صف
-        backupsTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) ->
-                btnRestoreSelected.setDisable(n == null));
     }
 
     // ════════════════════════════════════════════════════
-    //  Handlers — النسخ الكامل
+    //  Handlers
     // ════════════════════════════════════════════════════
 
     @FXML
@@ -241,18 +313,18 @@ public class BackupController implements Initializable {
         setBackupBusy(true);
         showStatus(backupStatusLabel, "⏳ جاري إنشاء النسخة الاحتياطية...", "");
 
-        Map<String, String> params = Map.of(
-                "useCustomFormat", String.valueOf(useCustom),
-                "compressionLevel", String.valueOf(compression));
+        String endpoint = "/payroll/backupFull?useCustomFormat=" + useCustom
+                + "&compressionLevel=" + compression;
 
-        ApiClient.postAsync("/payroll/backupFull", null, Object.class)
+        ApiClient.postAsync(endpoint, null, Object.class)
                 .thenAccept(response -> Platform.runLater(() -> {
                     setBackupBusy(false);
                     if (response.isSuccess()) {
                         showStatus(backupStatusLabel,
                                 "✅ " + nullSafe(response.getMessage(), "تم إنشاء النسخة بنجاح"),
                                 "ok");
-                        handleRefreshBackups(); // تحديث القائمة تلقائياً
+                        // ✅ بعد إنشاء النسخة، نقوم بتحديث القائمة تلقائياً
+                        handleRefreshBackups();
                     } else {
                         showStatus(backupStatusLabel,
                                 "❌ " + nullSafe(response.getMessage(), "فشل إنشاء النسخة"),
@@ -268,10 +340,6 @@ public class BackupController implements Initializable {
                     return null;
                 });
     }
-
-    // ════════════════════════════════════════════════════
-    //  Handlers — استعادة من ملف مرفوع
-    // ════════════════════════════════════════════════════
 
     @FXML
     private void handleChooseFile() {
@@ -295,7 +363,6 @@ public class BackupController implements Initializable {
 
         RestoreMode mode = radioReplace.isSelected() ? RestoreMode.REPLACE : RestoreMode.MERGE;
 
-        // تأكيد للـ REPLACE لأنه عملية مدمرة
         if (mode == RestoreMode.REPLACE && !confirmReplace("الملف المحدد")) return;
 
         setRestoreFileBusy(true);
@@ -328,37 +395,100 @@ public class BackupController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════
-    //  Handlers — النسخ المحلية
+    //  Handlers — النسخ المحلية (تحديث يدوي فقط)
     // ════════════════════════════════════════════════════
 
+    /**
+     * زر التحديث - يتم استدعاؤه فقط عند الضغط على الزر
+     */
     @FXML
     private void handleRefreshBackups() {
-        ApiClient.getAsync("/payroll/backups",
-                        null,
-                        new TypeReference<ApiResponse<List<BackupFileInfo>>>() {
-                        })
-                .thenAccept(response -> Platform.runLater(() -> {
+        // إظهار حالة التحميل
+        showEmptyState("جاري تحميل النسخ الاحتياطية...");
+        backupsCountLabel.setText("⏳ جاري التحميل...");
 
-                    if (response != null && response.isSuccess() && response.getData() != null) {
-                        List<BackupFileInfo> data = (List<BackupFileInfo>) response.getData();
-                        backupsList.setAll(data);
-                        backupsCountLabel.setText(data.size() + " نسخة");
-                    } else {
-                        backupsList.clear();
-                        backupsCountLabel.setText("0 نسخة");
+        CompletableFuture
+                .<ApiResponse<List<BackupFileInfo>>>supplyAsync(() -> {
+                    try {
+                        return ApiClient.getWithTypeRef(
+                                "/payroll/backups",
+                                new TypeReference<List<BackupFileInfo>>() {
+                                });
+                    } catch (Exception e) {
+                        ApiResponse<List<BackupFileInfo>> err = new ApiResponse<>();
+                        err.setSuccess(false);
+                        err.setMessage(e.getMessage());
+                        return err;
                     }
-                }))
+                })
+                .thenAccept(response -> {
+                    if (response != null && response.isSuccess() && response.getData() != null) {
+                        List<BackupFileInfo> data = response.getData();
+                        // تحديث البيانات
+                        backupsListData.setAll(data);
+                        Platform.runLater(() -> {
+                            backupsCountLabel.setText(data.size() + " نسخة");
+                            selectedBackupItem = null;
+                            btnRestoreSelected.setDisable(true);
+                            rebuildBackupsList();
+                        });
+                    } else {
+                        Platform.runLater(() -> {
+                            backupsListData.clear();
+                            backupsCountLabel.setText("0 نسخة");
+                            selectedBackupItem = null;
+                            btnRestoreSelected.setDisable(true);
+                            rebuildBackupsList();
+                            if (response != null && response.getMessage() != null) {
+                                showStatusInArea(restoreLocalStatusArea,
+                                        "⚠ " + response.getMessage(), "warn");
+                            }
+                        });
+                    }
+                })
                 .exceptionally(ex -> {
-                    Platform.runLater(() -> backupsCountLabel.setText("⚠ فشل التحديث"));
+                    Platform.runLater(() -> {
+                        backupsListData.clear();
+                        backupsCountLabel.setText("⚠ فشل التحميل");
+                        selectedBackupItem = null;
+                        btnRestoreSelected.setDisable(true);
+                        rebuildBackupsList();
+                        showStatusInArea(restoreLocalStatusArea,
+                                "❌ فشل تحميل قائمة النسخ: " + ex.getMessage(), "error");
+                    });
                     return null;
                 });
     }
 
     @FXML
     private void handleRestoreSelected() {
-        BackupFileInfo selected = backupsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) return;
-        handleRestoreLocalItem(selected);
+        if (selectedBackupItem == null) {
+            BackupFileInfo item = getSelectedItemFromList();
+            if (item != null) {
+                selectedBackupItem = item;
+            } else {
+                showStatusInArea(restoreLocalStatusArea,
+                        "⚠ يرجى اختيار نسخة من القائمة أولاً", "warn");
+                return;
+            }
+        }
+        handleRestoreLocalItem(selectedBackupItem);
+    }
+
+    private BackupFileInfo getSelectedItemFromList() {
+        for (Node child : backupsList.getChildren()) {
+            if (child.getStyleClass().contains("backup-item-selected") && child instanceof HBox row) {
+                if (!row.getChildren().isEmpty() && row.getChildren().get(0) instanceof Label nameLabel) {
+                    String fileName = nameLabel.getText();
+                    for (BackupFileInfo item : backupsListData) {
+                        if (item.getFileName().equals(fileName)) {
+                            return item;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private void handleRestoreLocalItem(BackupFileInfo item) {
@@ -367,12 +497,11 @@ public class BackupController implements Initializable {
         if (mode == RestoreMode.REPLACE && !confirmReplace(item.getFileName())) return;
 
         setRestoreLocalBusy(true);
-        showStatus(restoreLocalStatusLabel,
+        showStatusInArea(restoreLocalStatusArea,
                 "⏳ جاري استعادة «" + item.getFileName() + "»...", "");
 
-        Map<String, String> params = Map.of(
-                "fileName", item.getFileName(),
-                "mode", mode.name());
+        restoreLocalStatusArea.setManaged(true);
+        restoreLocalStatusArea.setVisible(true);
 
         ApiClient.postAsync("/payroll/restore-local?" +
                                 "fileName=" + urlEncode(item.getFileName()) +
@@ -381,11 +510,11 @@ public class BackupController implements Initializable {
                 .thenAccept(response -> Platform.runLater(() -> {
                     setRestoreLocalBusy(false);
                     if (response.isSuccess()) {
-                        showStatus(restoreLocalStatusLabel,
+                        showStatusInArea(restoreLocalStatusArea,
                                 "✅ " + nullSafe(response.getMessage(), "تمت الاستعادة بنجاح"),
                                 "ok");
                     } else {
-                        showStatus(restoreLocalStatusLabel,
+                        showStatusInArea(restoreLocalStatusArea,
                                 "❌ " + nullSafe(response.getMessage(), "فشلت الاستعادة"),
                                 "error");
                     }
@@ -393,7 +522,7 @@ public class BackupController implements Initializable {
                 .exceptionally(ex -> {
                     Platform.runLater(() -> {
                         setRestoreLocalBusy(false);
-                        showStatus(restoreLocalStatusLabel,
+                        showStatusInArea(restoreLocalStatusArea,
                                 "❌ خطأ: " + ex.getMessage(), "error");
                     });
                     return null;
@@ -403,6 +532,17 @@ public class BackupController implements Initializable {
     // ════════════════════════════════════════════════════
     //  Handlers — النسخ التلقائي
     // ════════════════════════════════════════════════════
+
+    @FXML
+    private void handleCronPreset(javafx.event.ActionEvent event) {
+        if (event.getSource() instanceof Button btn) {
+            String preset = (String) btn.getUserData();
+            if (preset != null) {
+                cronField.setText(preset);
+                updateCronHint(preset);
+            }
+        }
+    }
 
     @FXML
     private void handleToggleAutoBackup() {
@@ -423,28 +563,19 @@ public class BackupController implements Initializable {
             return;
         }
 
-        // إرسال الإعدادات للـ backend
-        Map<String, Object> body = Map.of(
-                "enabled", enabled,
-                "cron", cron,
-                "maxFiles", maxFiles);
+        String message = buildPropertiesHint(enabled, cron, maxFiles);
+        showStatus(autoBackupStatusLabel, message, enabled ? "ok" : "warn");
+    }
 
-        ApiClient.postAsync("/payroll/backup-settings", body, Object.class)
-                .thenAccept(response -> Platform.runLater(() -> {
-                    if (response.isSuccess()) {
-                        showStatus(autoBackupStatusLabel,
-                                "✅ تم حفظ الإعدادات — ستُطبَّق عند إعادة تشغيل الخادم", "ok");
-                    } else {
-                        showStatus(autoBackupStatusLabel,
-                                "❌ " + nullSafe(response.getMessage(), "فشل الحفظ"), "error");
-                    }
-                }))
-                .exceptionally(ex -> {
-                    Platform.runLater(() ->
-                            showStatus(autoBackupStatusLabel,
-                                    "❌ خطأ في الاتصال: " + ex.getMessage(), "error"));
-                    return null;
-                });
+    private String buildPropertiesHint(boolean enabled, String cron, int maxFiles) {
+        if (!enabled) {
+            return "ℹ النسخ التلقائي معطّل — لتفعيله عيّن:\nBACKUP_AUTO_ENABLED=true";
+        }
+        return "✅ لتطبيق هذه الإعدادات عيّن متغيرات البيئة:\n" +
+                "BACKUP_AUTO_ENABLED=true\n" +
+                "BACKUP_AUTO_CRON=" + cron + "\n" +
+                "BACKUP_MAX_FILES=" + maxFiles + "\n" +
+                "ثم أعد تشغيل الخادم.";
     }
 
     // ════════════════════════════════════════════════════
@@ -464,18 +595,11 @@ public class BackupController implements Initializable {
     }
 
     private void setRestoreLocalBusy(boolean busy) {
-        btnRestoreSelected.setDisable(busy || backupsTable.getSelectionModel().getSelectedItem() == null);
+        btnRestoreSelected.setDisable(busy);
         restoreLocalProgress.getStyleClass().removeAll("progress-bar-hidden", "progress-bar-visible");
         restoreLocalProgress.getStyleClass().add(busy ? "progress-bar-visible" : "progress-bar-hidden");
     }
 
-    /**
-     * يعرض رسالة حالة ملونة على الـ Label المحدد.
-     *
-     * @param label   الـ Label المستهدف
-     * @param message النص
-     * @param type    "" | "ok" | "error" | "warn"
-     */
     private void showStatus(Label label, String message, String type) {
         label.setText(message);
         label.getStyleClass().removeAll("status-msg-ok", "status-msg-error", "status-msg-warn");
@@ -486,9 +610,18 @@ public class BackupController implements Initializable {
         }
     }
 
-    /**
-     * تأكيد للعمليات المدمرة (REPLACE).
-     */
+    private void showStatusInArea(TextArea area, String message, String type) {
+        area.setText(message);
+        area.getStyleClass().removeAll("status-msg-ok", "status-msg-error", "status-msg-warn");
+        switch (type) {
+            case "ok" -> area.getStyleClass().add("status-msg-ok");
+            case "error" -> area.getStyleClass().add("status-msg-error");
+            case "warn" -> area.getStyleClass().add("status-msg-warn");
+        }
+        area.setManaged(true);
+        area.setVisible(true);
+    }
+
     private boolean confirmReplace(String target) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("تأكيد الاستعادة");
@@ -507,19 +640,19 @@ public class BackupController implements Initializable {
                 .orElse(false);
     }
 
-    /**
-     * تفسير Cron expression بالعربي (بسيط).
-     */
     private void updateCronHint(String cron) {
         if (cron == null || cron.isBlank()) {
             cronHintLabel.setText("");
             return;
         }
-        // تفسيرات شائعة
         cronHintLabel.setText(switch (cron.trim()) {
             case "0 0 2 * * ?" -> "كل يوم الساعة 2:00 صباحاً";
             case "0 0 0 * * ?" -> "كل يوم منتصف الليل";
             case "0 0 12 * * ?" -> "كل يوم الظهر";
+            case "0 0 2 */2 * ?" -> "كل يومين الساعة 2:00 صباحاً";
+            case "0 0 2 */3 * ?" -> "كل 3 أيام الساعة 2:00 صباحاً";
+            case "0 0 2 */5 * ?" -> "كل 5 أيام الساعة 2:00 صباحاً";
+            case "0 0 2 */7 * ?" -> "كل 7 أيام الساعة 2:00 صباحاً";
             case "0 0 2 * * 0" -> "كل أحد الساعة 2:00 صباحاً";
             case "0 0 2 1 * ?" -> "أول كل شهر الساعة 2:00 صباحاً";
             case "0 0 */6 * * ?" -> "كل 6 ساعات";
@@ -535,6 +668,5 @@ public class BackupController implements Initializable {
     private String urlEncode(String value) {
         return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
     }
-
 
 }
