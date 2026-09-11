@@ -7,15 +7,17 @@ import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
 
+import java.util.List;
+
 public class ScaleReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "123";
+        return "SALARY_SCALE_REPORT_PDF";
     }
 
     @Override
     public String getDisplayName() {
-        return "a";
+        return "استخراج تدرج راتب";
     }
 
     @Override
@@ -31,13 +33,16 @@ public class ScaleReport implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredField(UiField.H_EMPLOYEE)
-                .visibleField(UiField.H_EMPLOYEE)
+                .requiredFields(List.of(UiField.H_EMPLOYEE, UiField.H_REPORT_TYPE))
+                .visibleFields(List.of(UiField.H_EMPLOYEE, UiField.H_REPORT_TYPE))
+
                 .build();
     }
 
     @Override
     public void onApply(PayrollReportController controller) {
+        controller.getCombo_reportType().getItems().clear();
+        controller.getCombo_reportType().getItems().addAll("موظف واحد", "الكل");
         controller.setSearchEmployeeActions();
     }
 
@@ -46,6 +51,7 @@ public class ScaleReport implements ReportStrategy {
         return PayrollRequest.builder()
 
                 .report(getCode())
+                .reportType(context.getReportType())
                 .reportName(context.getReportName())
                 .nationalId(context.getNationalId())
                 .build();
