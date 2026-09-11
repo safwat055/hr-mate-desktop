@@ -1,7 +1,10 @@
 package com.safwat.hr.controller.scale.scale;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.scale.scale.dto.*;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -12,14 +15,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import lombok.Getter;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
@@ -168,7 +170,7 @@ public class ScaleController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         utilsUi = new ScaleUtilsUi(this);
-        btn_search.setOnAction(_ -> doSearch());
+        btn_search.setOnAction(_ -> search());
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
@@ -179,7 +181,7 @@ public class ScaleController implements Initializable {
         if (btn_addEncouragement != null) btn_addEncouragement.setOnAction(_ -> addEmptyEncouragementRow());
         if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
 
-        txt_nationalId.setOnAction(_ -> doSearch());
+        txt_nationalId.setOnAction(_ -> search());
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
@@ -198,6 +200,66 @@ public class ScaleController implements Initializable {
     // ─────────────────────────────────────────────
     //  Action — بحث
     // ─────────────────────────────────────────────
+
+    private void search() {
+        String searchValue;
+        String searchType;
+
+        if (!txt_nationalId.getText().isEmpty()) {
+            searchValue = txt_nationalId.getText();
+            searchType = "nationalId";
+        } else if (!txt_code.getText().isEmpty()) {
+            searchValue = txt_code.getText();
+            searchType = "code";
+        } else if (!txt_empName.getText().isEmpty()) {
+            searchValue = txt_empName.getText();
+            searchType = "empName";
+        } else {
+            searchValue = txt_nationalId.getText();
+            searchType = "all";
+        }
+        if (searchValue == null || searchValue.isEmpty()) {
+            SAFNotification.error("يجب ادخال قيمة للبحث اولا");
+            return;
+        }
+        Map<String, String> searchValues = Map.of("searchValue", searchValue, "searchType", searchType);
+        setButtonsDisabled(true);
+        List<SearchScaleEmployee> data = null;
+        try {
+            data = ApiClient.post(API_BASE + "/search"
+                    , searchValues,
+                    new TypeReference<List<SearchScaleEmployee>>() {
+                    }).getData();
+        } catch (IOException | InterruptedException e) {
+            setButtonsDisabled(false);
+            throw new RuntimeException(e);
+        }
+
+        if (data.size() == 1) {
+            txt_nationalId.setText(data.getFirst().nationalId());
+            Platform.runLater(this::doSearch);
+        } else if (data.size() >= 1) {
+            Optional<SearchScaleEmployee> d = SearchDialog.builder(SearchScaleEmployee.class)
+                    .title("بحث عن موظف")
+
+                    .column("رقم قومي", SearchScaleEmployee::nationalId)
+                    .column("كود الموظف", SearchScaleEmployee::codeId)
+                    .column("الاسم", SearchScaleEmployee::empName)
+                    .column("قانون", SearchScaleEmployee::castToString)
+                    .column("المجموعة النوعية", SearchScaleEmployee::qualitativeGroup)
+                    .data(data).show();
+            d.ifPresent(searchScaleEmployee -> {
+                txt_nationalId.setText(searchScaleEmployee.nationalId());
+                Platform.runLater(this::doSearch);
+
+            });
+
+
+        } else {
+            SAFNotification.warning("لايوجد نتائج للبحث");
+        }
+        setButtonsDisabled(false);
+    }
 
     private void doSearch() {
         String id = txt_nationalId.getText().trim();

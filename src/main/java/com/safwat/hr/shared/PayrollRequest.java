@@ -27,6 +27,11 @@ public class PayrollRequest {
     private Long reportId;
     private String fileName;
     private String endPoint;
+
+    private int intValue;
+    private double doubleValue;
+    private String stringValue;
+    private Long longValue;
     @Builder.Default
     private String format = "PDF";
     @JsonInclude(JsonInclude.Include.NON_NULL)

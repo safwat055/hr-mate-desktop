@@ -102,7 +102,10 @@ public class ReportContext {
      * قيمة بحث حر — محجوزة للتقارير القادمة
      */
     private String searchValue;
-
+    private int intValue;
+    private double doubleValue;
+    private String stringValue;
+    private Long longValue;
 
     @Builder.Default
     private List<Path> files = java.util.Collections.emptyList();

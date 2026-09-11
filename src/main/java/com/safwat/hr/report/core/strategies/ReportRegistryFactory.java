@@ -79,6 +79,7 @@ public class ReportRegistryFactory {
         registry.register(new ReviewReport());
         registry.register(new UpdateReviewKey());
         registry.register(new UploadPayrollReport());
+        registry.register(new SupplementaryIncentiveReport());
 
         // ══════════════════════════════════════════
         //  Direct — lazy

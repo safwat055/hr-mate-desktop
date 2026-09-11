@@ -135,7 +135,7 @@ public class PayrollReportController implements Initializable {
 
     // --- حقول HBox متفرقة ---
     @FXML
-    private HBox H_ReportType, H_3, H_4, H_5, H_6;
+    private HBox H_ReportType, H_SupplementaryIncentive, H_4, H_5, H_6;
     @FXML
     private HBox H_Search, H_employee, H_endDate, H_management, H_payGroup, H_startDate, H_files;
 
@@ -162,6 +162,8 @@ public class PayrollReportController implements Initializable {
     private TextField txt_startDate, txt_endDate, txt_search, txt_searchEmp;
     @FXML
     private TextField txt_payGroup, txt_management;
+    @FXML
+    private TextField txt_Days, txt_DaysPercent;
 
     // --- الـ Container الرئيسي ---
     @FXML
@@ -612,7 +614,8 @@ public class PayrollReportController implements Initializable {
                     .payGroup(txt_payGroup.getText())
                     .nationalId(lbl_nationalId.getText())
                     .searchValue(txt_search.getText())
-
+                    .intValue(Integer.parseInt(txt_Days.getText().isBlank() ? String.valueOf(0) : txt_Days.getText()))
+                    .doubleValue(Double.parseDouble(txt_DaysPercent.getText().isBlank() ? String.valueOf(0.0) : txt_DaysPercent.getText()))
                     .format(combo_Format.getSelectionModel().getSelectedItem())
                     .files(new ArrayList<>(selectedFiles)) // نسخة defensive
                     .build();

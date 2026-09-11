@@ -40,7 +40,8 @@ public class PayrollUIManager {
                 UiField.H_PAY_GROUP, controller::getH_payGroup,
                 UiField.H_EMPLOYEE, controller::getH_employee,
                 UiField.H_SEARCH, controller::getH_Search,
-                UiField.H_FILES, controller::getH_files
+                UiField.H_FILES, controller::getH_files,
+                UiField.H_SupplementaryIncentive, controller::getH_SupplementaryIncentive
 
         );
 

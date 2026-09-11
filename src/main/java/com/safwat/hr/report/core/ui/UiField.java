@@ -65,7 +65,7 @@ public enum UiField {
     /**
      * حاوي متعدد الأغراض 3 — بحث حر
      */
-    H_3,
+    H_SupplementaryIncentive,
 
     /**
      * حاوي متعدد الأغراض 4
