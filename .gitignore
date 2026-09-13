@@ -49,3 +49,4 @@ bin/
 *.log
 logs/app.log
 /logs
+/app/config
