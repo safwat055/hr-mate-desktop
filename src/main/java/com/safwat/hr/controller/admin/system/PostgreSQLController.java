@@ -3,6 +3,7 @@ package com.safwat.hr.controller.admin.system;
 import com.safwat.hr.controller.login.Config;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.ui.util.AlertUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -425,7 +426,7 @@ public class PostgreSQLController implements Initializable {
                 formData.put("data", "{}");   // PayrollRequest فارغ كـ JSON string
                 formData.put("file", filePath);
 
-                ApiResponse<Object> response = ApiClient.uploadFile(
+                ApiResponse<Object> response = FileTransferClient.uploadFile(
                         "/payroll/restore",
                         formData,
                         Object.class

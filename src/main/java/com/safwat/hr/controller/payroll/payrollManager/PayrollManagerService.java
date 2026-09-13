@@ -1,12 +1,13 @@
 package com.safwat.hr.controller.payroll.payrollManager;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.network.ApiClient;
-import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollChangeCardApi;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollReviewApi;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollYearlyApi;
 import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportExternalSubmitter;
 import com.safwat.hr.shared.PayrollRequest;
@@ -324,7 +325,7 @@ public class PayrollManagerService {
 
         ReportContext ctx = ReportContext.builder()
 
-                .user(ApiClient.getUserName())
+                .user(SessionManager.getInstance().getUsername())
                 .build();
 
         ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_ALL", ctx,
@@ -342,7 +343,7 @@ public class PayrollManagerService {
     public void updateKeysReviewMonth(String strDate) {
 
         ReportContext ctx = ReportContext.builder()
-                .user(ApiClient.getUserName())
+                .user(SessionManager.getInstance().getUsername())
                 .startDate(strDate)
                 .build();
         ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_MONTH", ctx,

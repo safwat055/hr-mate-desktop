@@ -5,6 +5,7 @@ import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
 import com.safwat.hr.controller.scale.scale.dto.SearchScaleEmployee;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.ui.controls.SAFNotification;
@@ -121,7 +122,7 @@ public class ScaleApiService {
         }
 
         Path targetPath = tempDownloadsDir.resolve(fileName);
-        boolean success = ApiClient.downloadFileViaPost(
+        boolean success = FileTransferClient.downloadFileViaPost(
                 API_BASE + "/download",
                 dto,
                 targetPath

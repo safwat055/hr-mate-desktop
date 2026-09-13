@@ -1,11 +1,12 @@
 package com.safwat.hr.controller.payroll.payrollApi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.network.ApiClient;
-import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.controller.payroll.payrollApi.dto.PaymentsView;
 import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
 import com.safwat.hr.controller.payroll.payrollManager.PayrollManagerController;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.ApiEndpoints;
+import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;
 import lombok.SneakyThrows;
@@ -223,7 +224,7 @@ public class PayrollYearlyApi {
 
     public boolean downloadPaymentsPDF(PayrollRequest request, Path targetPath) {
         try {
-            return ApiClient.downloadFileViaPostWithBody(
+            return FileTransferClient.downloadFileViaPost(
                     ApiEndpoints.PayrollYearly.DOWNLOAD_PAYMENTS,
                     request,
                     targetPath

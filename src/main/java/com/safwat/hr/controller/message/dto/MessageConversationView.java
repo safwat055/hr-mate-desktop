@@ -2,20 +2,22 @@ package com.safwat.hr.controller.message.dto;
 
 import com.safwat.hr.controller.message.service.MessageClientService;
 import com.safwat.hr.controller.message.service.MessageThread;
-import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.Attachment;
 import com.safwat.hr.ui.controls.SAFNotification;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,36 +27,34 @@ import java.time.format.DateTimeFormatter;
  * =====================================================================
  * MessageConversationView
  * =====================================================================
- * عرض المحادثة بشكل متراكب (Gmail-style).
- * يعرض الرسالة الأساسية ثم الردود تحتها.
- * يدعم عرض المرفقات مع التحقق من وجودها قبل التحميل.
- * يميز بين الرسائل الواردة والصادرة بالألوان والمحاذاة.
+ * عرض المحادثة بأسلوب Gmail: الموضوع مرة واحدة فوق الترِد،
+ * وكل رسالة كتلة نص عادية (بدون فقاعات ملوّنة) قابلة للتحديد والنسخ،
+ * مفصولة عن اللي بعدها بخط رفيع.
  */
 public class MessageConversationView extends VBox {
+
+    private static final double CONTENT_WIDTH = 560;
 
     private final VBox messagesContainer;
     private final ScrollPane scrollPane;
     private final Label emptyLabel;
 
-    /**
-     * إنشاء منطقة عرض المحادثة.
-     */
     public MessageConversationView() {
         setSpacing(0);
         setFillWidth(true);
-        setStyle("-fx-background-color:#FAFAFA;");
+        setStyle("-fx-background-color:#FFFFFF;");
 
         emptyLabel = new Label("اختر رسالة لعرضها");
         emptyLabel.setStyle("-fx-font-size:14px;-fx-text-fill:#AAAAAA;");
 
-        messagesContainer = new VBox(16);
-        messagesContainer.setPadding(new Insets(20));
+        messagesContainer = new VBox(0);
+        messagesContainer.setPadding(new Insets(24, 24, 24, 24));
         messagesContainer.setFillWidth(true);
         messagesContainer.setAlignment(Pos.TOP_CENTER);
 
         scrollPane = new ScrollPane(messagesContainer);
         scrollPane.setFitToWidth(true);
-        scrollPane.setStyle("-fx-background-color:transparent;");
+        scrollPane.setStyle("-fx-background-color:transparent;-fx-background:transparent;");
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
         getChildren().addAll(emptyLabel, scrollPane);
@@ -62,35 +62,32 @@ public class MessageConversationView extends VBox {
     }
 
     /**
-     * عرض محادثة كاملة (الرسالة الأساسية + الردود).
-     *
-     * @param thread كائن المحادثة
+     * عرض محادثة كاملة (الموضوع + الرسالة الأساسية + الردود).
      */
     public void displayThread(MessageThread thread) {
         messagesContainer.getChildren().clear();
         emptyLabel.setVisible(false);
         emptyLabel.setManaged(false);
 
-        messagesContainer.getChildren().add(buildMessageBubble(thread.getRootMessage(), false));
+        // ── الموضوع: يظهر مرة واحدة فوق الترِد كله زي Gmail ──
+        String subject = thread.getSubject();
+        Label subjectHeader = new Label(subject != null && !subject.isBlank() ? subject : "(بدون موضوع)");
+        subjectHeader.setStyle("-fx-font-size:19px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
+        subjectHeader.setWrapText(true);
+        subjectHeader.setMaxWidth(CONTENT_WIDTH);
+        subjectHeader.setPadding(new Insets(0, 0, 16, 0));
+        messagesContainer.getChildren().add(subjectHeader);
 
-        if (!thread.getReplies().isEmpty()) {
-            Label sep = new Label("الردود");
-            sep.setStyle("-fx-font-size:11px;-fx-text-fill:#888888;-fx-padding:8 0 0 0;");
-            sep.setMaxWidth(520);
-            sep.setAlignment(Pos.CENTER_LEFT);
-            messagesContainer.getChildren().add(sep);
-        }
+        messagesContainer.getChildren().add(buildMessageBlock(thread.getRootMessage()));
 
         for (HRNotification reply : thread.getReplies()) {
-            messagesContainer.getChildren().add(buildMessageBubble(reply, true));
+            messagesContainer.getChildren().add(buildSeparator());
+            messagesContainer.getChildren().add(buildMessageBlock(reply));
         }
 
         scrollToBottom();
     }
 
-    /**
-     * إفراغ منطقة العرض وإظهار حالة الفراغ.
-     */
     public void clear() {
         messagesContainer.getChildren().clear();
         emptyLabel.setVisible(true);
@@ -98,92 +95,126 @@ public class MessageConversationView extends VBox {
     }
 
     /**
-     * بناء فقاعة رسالة (bubble) لعرضها في المحادثة.
-     *
-     * @param msg     كائن الرسالة
-     * @param isReply true إذا كانت رداً
-     * @return HBox يمثل الفقاعة
+     * خط فاصل رفيع بين رسالة والتانية (بدل الفقاعات المنفصلة).
      */
-    private HBox buildMessageBubble(HRNotification msg, boolean isReply) {
+    private Region buildSeparator() {
+        Region sep = new Region();
+        sep.setPrefHeight(1);
+        sep.setMaxWidth(CONTENT_WIDTH);
+        sep.setStyle("-fx-background-color:#EBEBEB;");
+        VBox.setMargin(sep, new Insets(14, 0, 14, 0));
+        return sep;
+    }
+
+    /**
+     * بناء كتلة رسالة واحدة: هيدر (صورة+اسم+وقت) + نص قابل للتحديد/النسخ + مرفقات.
+     * بدون فقاعة ملوّنة وبدون محاذاة يمين/شمال — كله بعرض ثابت زي Gmail.
+     */
+    private VBox buildMessageBlock(HRNotification msg) {
         boolean isFromMe = isFromCurrentUser(msg);
 
         Circle avatar = new Circle(16);
         avatar.setFill(Color.web(isFromMe ? "#185FA5" : "#0F6E56"));
         Label avatarLbl = new Label(msg.getAvatarInitials());
         avatarLbl.setStyle("-fx-font-size:11px;-fx-font-weight:700;-fx-text-fill:white;");
-        javafx.scene.layout.StackPane avatarBox = new javafx.scene.layout.StackPane(avatar, avatarLbl);
+        StackPane avatarBox = new StackPane(avatar, avatarLbl);
         avatarBox.setMinSize(32, 32);
         avatarBox.setMaxSize(32, 32);
 
         String displayName = msg.getSenderName() != null ? msg.getSenderName() : "مجهول";
-        Label nameLbl = new Label(displayName);
+        Label nameLbl = new Label(isFromMe ? "أنت" : displayName);
         nameLbl.setStyle("-fx-font-size:13px;-fx-font-weight:700;-fx-text-fill:#1A1A1A;");
 
         String senderUsername = msg.getSenderUsername();
         VBox nameBox = new VBox(1, nameLbl);
-        if (senderUsername != null && !senderUsername.isBlank() && !senderUsername.equals(displayName)) {
+        if (!isFromMe && senderUsername != null && !senderUsername.isBlank()) {
             Label usernameLbl = new Label("@" + senderUsername);
             usernameLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#888888;");
             nameBox.getChildren().add(usernameLbl);
         }
 
-        String timeText = formatMessageTime(msg.getTimestamp());
-        Label timeLbl = new Label(timeText);
-        timeLbl.setStyle("-fx-font-size:10px;-fx-text-fill:#AAAAAA;");
-
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox header = new HBox(8, avatarBox, nameBox, spacer, timeLbl);
+        Label timeLbl = new Label(formatMessageTime(msg.getTimestamp()));
+        timeLbl.setStyle("-fx-font-size:11px;-fx-text-fill:#AAAAAA;");
+
+        HBox header = new HBox(10, avatarBox, nameBox, spacer, timeLbl);
         header.setAlignment(Pos.CENTER_LEFT);
+        header.setMaxWidth(CONTENT_WIDTH);
 
         String bodyText = msg.getMessageBody() != null && !msg.getMessageBody().isBlank()
                 ? msg.getMessageBody()
                 : msg.getMessage();
-        Label bodyLbl = new Label(bodyText);
-        bodyLbl.setWrapText(true);
-        bodyLbl.setMaxWidth(480);
-        bodyLbl.setStyle("-fx-font-size:13px;-fx-text-fill:#333333;-fx-line-spacing:5px;");
 
-        VBox bubbleContent = new VBox(8, header, bodyLbl);
+        TextArea bodyArea = buildSelectableBody(bodyText != null ? bodyText : "");
+
+        VBox block = new VBox(10, header, bodyArea);
+        block.setMaxWidth(CONTENT_WIDTH);
+        block.setFillWidth(true);
 
         if (msg.hasAttachments()) {
             VBox attBox = new VBox(6);
+            attBox.setPadding(new Insets(4, 0, 0, 0));
             for (Attachment att : msg.getAttachments()) {
-                HBox attRow = buildAttachmentRow(att);
-                attBox.getChildren().add(attRow);
+                attBox.getChildren().add(buildAttachmentRow(att));
             }
-            bubbleContent.getChildren().add(attBox);
+            block.getChildren().add(attBox);
         }
 
-        bubbleContent.setPadding(new Insets(14, 16, 14, 16));
-        bubbleContent.setMaxWidth(540);
-
-        String bg = isFromMe ? "#E6F1FB" : "#FFFFFF";
-        String border = isFromMe ? "#185FA5" : "#E0E0E0";
-        bubbleContent.setStyle(
-                "-fx-background-color:" + bg + ";" +
-                        "-fx-background-radius:12px;" +
-                        "-fx-border-color:" + border + ";" +
-                        "-fx-border-width:0.5px;" +
-                        "-fx-border-radius:12px;" +
-                        "-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.06),8,0,0,2);"
-        );
-
-        HBox wrapper = new HBox(bubbleContent);
-        wrapper.setAlignment(isFromMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-        HBox.setHgrow(wrapper, Priority.ALWAYS);
-        wrapper.setMaxWidth(560);
-
-        return wrapper;
+        return block;
     }
 
     /**
-     * بناء صف مرفق مع أيقونة واسم وحجم وزر تحميل.
-     *
-     * @param att كائن المرفق
-     * @return HBox يمثل صف المرفق
+     * ✅ نص عادي قابل للتحديد والنسخ (Ctrl+C) بدون ما يبان شكله TextArea.
+     * الحل: TextArea غير قابلة للتعديل، بدون حدود ولا خلفية ولا scrollbar،
+     * وبيتحسب ارتفاعها تلقائيًا حسب طول النص عشان تبان زي فقرة نص عادية.
      */
+    private TextArea buildSelectableBody(String text) {
+        TextArea area = new TextArea(text);
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setMaxWidth(CONTENT_WIDTH);
+        area.setPrefWidth(CONTENT_WIDTH);
+        area.setStyle(
+                "-fx-background-color:transparent;" +
+                        "-fx-text-fill:#333333;" +
+                        "-fx-font-size:13px;" +
+                        "-fx-padding:0;" +
+                        "-fx-background-insets:0;" +
+                        "-fx-border-width:0;" +
+                        "-fx-highlight-fill:#B3D7F0;" + // لون التحديد
+                        "-fx-highlight-text-fill:#000000;"
+        );
+
+        // حساب الارتفاع المناسب للنص عشان الـ TextArea تبان مضبوطة على المحتوى
+        // بدون فراغ زيادة وبدون احتياج scrollbar داخلي.
+        Text measurer = new Text(text);
+        measurer.setFont(Font.font(13));
+        measurer.setWrappingWidth(CONTENT_WIDTH - 16);
+        double measuredHeight = measurer.getLayoutBounds().getHeight();
+        double finalHeight = Math.max(24, measuredHeight + 26); // padding أمان يمنع ظهور scrollbar
+        area.setPrefHeight(finalHeight);
+        area.setMinHeight(finalHeight);
+
+        // إخفاء الـ scrollbar الداخلي بعد ما الـ TextArea تتركب فعليًا في الـ Scene
+        Platform.runLater(() -> {
+            area.lookupAll(".scroll-bar").forEach(n -> {
+                n.setVisible(false);
+                n.setManaged(false);
+            });
+        });
+
+        // تمرير حركة الـ scroll wheel لسكرول المحادثة الخارجي بدل ما تتحبس هنا
+        area.addEventFilter(ScrollEvent.SCROLL, e -> {
+            double delta = e.getDeltaY();
+            scrollPane.setVvalue(scrollPane.getVvalue() - delta / 800.0);
+            e.consume();
+        });
+
+        return area;
+    }
+
     private HBox buildAttachmentRow(Attachment att) {
         Label icon = new Label(att.getIcon());
         icon.setStyle("-fx-font-size:10px;-fx-font-weight:700;-fx-text-fill:#185FA5;" +
@@ -210,49 +241,29 @@ public class MessageConversationView extends VBox {
         HBox row = new HBox(8, icon, name, size, spacer, dlBtn);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color:#F8F8F8;-fx-background-radius:6px;-fx-padding:6 10;-fx-cursor:hand;");
-        row.setMaxWidth(480);
+        row.setMaxWidth(CONTENT_WIDTH);
 
-        row.setOnMouseEntered(_ -> row.setStyle(row.getStyle().replace("#F8F8F8", "#E6F1FB")));
+        row.setOnMouseEntered(e -> row.setStyle(row.getStyle().replace("#F8F8F8", "#E6F1FB")));
         row.setOnMouseExited(e -> row.setStyle(row.getStyle().replace("#E6F1FB", "#F8F8F8")));
         row.setOnMouseClicked(e -> startDownloadWithCheck(att));
 
         return row;
     }
 
-    /**
-     * التحقق مما إذا كانت الرسالة من المستخدم الحالي.
-     *
-     * @param msg كائن الرسالة
-     * @return true إذا كانت من المستخدم الحالي
-     */
     private boolean isFromCurrentUser(HRNotification msg) {
-        String currentUser = ApiClient.getUserName();
+        String currentUser = SessionManager.getInstance().getUsername();
         return currentUser != null && currentUser.equals(msg.getSenderUsername());
     }
 
-    /**
-     * التمرير لأسفل منطقة المحادثة.
-     */
     public void scrollToBottom() {
-        javafx.application.Platform.runLater(() -> scrollPane.setVvalue(1.0));
+        Platform.runLater(() -> scrollPane.setVvalue(1.0));
     }
 
-    /**
-     * تنسيق وقت الرسالة للعرض.
-     * - اليوم: الساعة فقط
-     * - الأمس: "أمس" + الساعة
-     * - أقدم: التاريخ الكامل
-     *
-     * @param timestamp وقت الرسالة
-     * @return النص المنسق
-     */
     private String formatMessageTime(LocalDateTime timestamp) {
         if (timestamp == null) return "";
-
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
         LocalDate msgDate = timestamp.toLocalDate();
-
         DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
 
         if (msgDate.equals(today)) {
@@ -264,11 +275,6 @@ public class MessageConversationView extends VBox {
         }
     }
 
-    /**
-     * التحقق من وجود الملف على الخادم قبل عرض خيارات الحفظ.
-     *
-     * @param att كائن المرفق
-     */
     private void startDownloadWithCheck(Attachment att) {
         if (att.getDownloadToken() == null || att.getDownloadToken().isBlank()) {
             showError("لا يوجد رابط تحميل لهذا الملف");
@@ -276,27 +282,19 @@ public class MessageConversationView extends VBox {
         }
 
         MessageClientService.getInstance().checkAttachmentExists(att.getDownloadToken())
-                .thenAccept(exists -> {
-                    javafx.application.Platform.runLater(() -> {
-                        if (exists) {
-                            showDownloadDialog(att);
-                        } else {
-                            showError("الملف غير موجود على السيرفر أو تم حذفه");
-                        }
-                    });
-                })
+                .thenAccept(exists -> Platform.runLater(() -> {
+                    if (exists) {
+                        showDownloadDialog(att);
+                    } else {
+                        showError("الملف غير موجود على السيرفر أو تم حذفه");
+                    }
+                }))
                 .exceptionally(e -> {
-                    javafx.application.Platform.runLater(() ->
-                            showError("تعذر التحقق من وجود الملف: " + e.getMessage()));
+                    Platform.runLater(() -> showError("تعذر التحقق من وجود الملف: " + e.getMessage()));
                     return null;
                 });
     }
 
-    /**
-     * عرض حوار حفظ الملف.
-     *
-     * @param att كائن المرفق
-     */
     private void showDownloadDialog(Attachment att) {
         javafx.stage.FileChooser chooser = new javafx.stage.FileChooser();
         chooser.setTitle("حفظ المرفق");
@@ -310,26 +308,19 @@ public class MessageConversationView extends VBox {
         java.io.File targetFile = chooser.showSaveDialog(this.getScene().getWindow());
         if (targetFile == null) return;
 
-
-
         MessageClientService.getInstance().downloadAttachment(
                 att.getDownloadToken(),
                 targetFile.toPath(),
-                () -> {
-                    javafx.application.Platform.runLater(() -> {
-
-                        try {
-                            SAFNotification.withAction("Do you want open this FILE ?", targetFile);
-                        } catch (Exception ignored) {
-                        }
-                    });
-                },
-                err -> {
-                    javafx.application.Platform.runLater(() -> {
-                        System.err.println("[Conversation] Download failed: " + err);
-                        showError("فشل التحميل: " + err);
-                    });
-                }
+                () -> Platform.runLater(() -> {
+                    try {
+                        SAFNotification.withAction("Do you want open this FILE ?", targetFile);
+                    } catch (Exception ignored) {
+                    }
+                }),
+                err -> Platform.runLater(() -> {
+                    System.err.println("[Conversation] Download failed: " + err);
+                    showError("فشل التحميل: " + err);
+                })
         );
     }
 

@@ -1,11 +1,11 @@
-package com.safwat.hr.auth.service;
+package com.safwat.hr.network.auth.service;
 
-import com.safwat.hr.auth.dto.LoginRequest;
-import com.safwat.hr.auth.dto.LoginResponse;
-import com.safwat.hr.auth.session.SessionManager;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.auth.dto.LoginRequest;
+import com.safwat.hr.network.auth.dto.LoginResponse;
+import com.safwat.hr.network.auth.session.SessionManager;
 
 import java.io.IOException;
 

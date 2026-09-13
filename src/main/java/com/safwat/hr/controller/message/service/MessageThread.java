@@ -110,4 +110,10 @@ public class MessageThread {
             return timestamp.format(DateTimeFormatter.ofPattern("dd/MM"));
         }
     }
+
+    public boolean isSent() {
+        String me = com.safwat.hr.network.SessionManager.getInstance().getUsername();
+        String sender = rootMessage.getSenderUsername();
+        return me != null && me.equals(sender);
+    }
 }

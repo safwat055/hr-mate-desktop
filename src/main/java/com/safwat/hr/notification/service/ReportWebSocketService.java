@@ -1,15 +1,15 @@
 package com.safwat.hr.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.HttpCore;
 import com.safwat.hr.notification.event.HREventBus;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.ui.HRToast;
+import com.safwat.hr.shared.AppConfig;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
@@ -18,187 +18,224 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * خدمة WebSocket لاستقبال إشعارات التقارير.
+ * ══════════════════════════════════════════════════════════════════
+ * ReportWebSocketService — إشعارات التقارير عبر STOMP/WebSocket
+ * ══════════════════════════════════════════════════════════════════
+ * <p>
+ * هذا الكلاس متخصص في STOMP protocol ويختلف عن {@link com.safwat.hr.network.WebSocketClient}
+ * العام — لذلك يُدار بشكل مستقل ولا يرث منه.
  *
- * <p><b>إصلاحات:</b>
+ * <p><b>التغيير الرئيسي:</b> بقى يستخدم {@link HttpCore} بدل
+ * {@code ApiClient} مباشرة — لأن {@code HttpCore} هو المالك
+ * الحقيقي للـ {@code HttpClient} والـ token.
+ *
+ * <p><b>المميزات:</b>
  * <ol>
- *   <li><b>تجميع الـ frames:</b> الـ STOMP frame ممكن يجي على أجزاء متعددة
- *       ({@code last=false}). الكود القديم كان يعالج كل جزء لوحده ويضيع الـ frame.
- *       الآن نجمع الأجزاء في {@code frameBuffer} حتى {@code last=true}.</li>
- *   <li><b>إعادة الاتصال التلقائي:</b> لو الـ connection انقطع، يعيد الاتصال
- *       بعد 5 ثواني تلقائياً.</li>
- *   <li><b>STOMP CONNECT format:</b> فراغ بعد ":" في الـ headers للتوافق مع Spring.</li>
+ *   <li><b>Frame buffering:</b> يجمع أجزاء الـ STOMP frame حتى {@code last=true}
+ *       — بيحل مشكلة الـ frames الكبيرة اللي بتجي على أجزاء.</li>
+ *   <li><b>Auto-reconnect:</b> بعد 5 ثواني من أي انقطاع غير متعمد.</li>
+ *   <li><b>Intentional close:</b> {@link #disconnect()} يوقف الـ reconnect.</li>
  * </ol>
  */
 public class ReportWebSocketService {
 
-    private static final ObjectMapper mapper = ApiClient.mapper;
+    // ─────────────────────────────────────────────
+    //  Constants
+    // ─────────────────────────────────────────────
+
     private static final int RECONNECT_DELAY_SEC = 5;
+    private static final String STOMP_DESTINATION = "/user/queue/reports";
+    private static final String SUB_ID = "sub-reports";
+
+    // ─────────────────────────────────────────────
+    //  Dependencies — من HttpCore مباشرة
+    // ─────────────────────────────────────────────
+
+    /**
+     * ObjectMapper مشترك مع باقي الـ network layer
+     */
+    private static final ObjectMapper mapper = HttpCore.getInstance().mapper;
+
+    // ─────────────────────────────────────────────
+    //  State
+    // ─────────────────────────────────────────────
 
     private final Stage primaryStage;
     private final String token;
+    private final String wsUrl;
+
     /**
      * يجمع أجزاء الـ STOMP frame حتى last=true
      */
     private final StringBuilder frameBuffer = new StringBuilder();
+
     /**
      * يمنع تشغيل reconnect بعد disconnect متعمد
      */
     private final AtomicBoolean intentionalClose = new AtomicBoolean(false);
+
     private final ScheduledExecutorService reconnectScheduler =
             Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread t = new Thread(r, "ws-reconnect");
                 t.setDaemon(true);
                 return t;
             });
-    private WebSocket webSocket;
+
+    /**
+     * الاتصال الفعلي — null قبل connect() أو بعد disconnect()
+     */
+    private volatile WebSocket webSocket;
+
+    // ─────────────────────────────────────────────
+    //  Constructor
+    // ─────────────────────────────────────────────
 
     public ReportWebSocketService(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        this.token = ApiClient.getAuthToken();
+        // نأخذ token و URL من HttpCore مرة واحدة عند الإنشاء
+        HttpCore core = HttpCore.getInstance();
+        this.token = core.getAuthToken();
+        this.wsUrl = core.getBaseWsUrl();
     }
 
     // ─────────────────────────────────────────────
-    //  Connect
+    //  Public API
     // ─────────────────────────────────────────────
 
     /**
      * يُنشئ اتصال WebSocket ويُرسِل STOMP CONNECT عند الفتح.
+     * آمن للاستدعاء مرات متعددة — كل استدعاء يبدأ اتصالاً جديداً.
      */
     public void connect() {
+        if (!AppConfig.getBoolean("notifications", "reportsEnabled", true)) {
+            System.out.println("[ReportWS] إشعارات التقارير معطّلة — تجاهل الاتصال");
+            return;
+        }
         intentionalClose.set(false);
-        String wsUrl = ApiClient.BASE_URL2();
 
-        HttpClient client = ApiClient.httpClient;
-        WebSocket.Builder builder = client.newWebSocketBuilder();
+        // نأخذ HttpClient من HttpCore — نفس الـ instance المشترك
+        HttpCore.getInstance().httpClient
+                .newWebSocketBuilder()
+                .header("Authorization", "Bearer " + token)
+                .buildAsync(URI.create(wsUrl), new StompListener())
+                .exceptionally(e -> {
+                    System.err.println("[ReportWS] ❌ فشل الاتصال: " + e.getMessage());
+                    scheduleReconnect();
+                    return null;
+                });
+    }
 
-        // الـ JWT في HTTP Upgrade header — بيُستخدَم لو الـ Security بتشيك هنا
-        if (token != null && !token.isEmpty()) {
-            builder.header("Authorization", "Bearer " + token);
+    /**
+     * يُغلق الاتصال بشكل نظيف ويوقف الـ auto-reconnect.
+     */
+    public void disconnect() {
+        intentionalClose.set(true);
+        reconnectScheduler.shutdown();
+
+        if (webSocket != null) {
+            webSocket.sendText(StompFrames.disconnect(), true);
+            webSocket.sendClose(WebSocket.NORMAL_CLOSURE, "Client closing");
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  STOMP Listener (Inner Class)
+    // ─────────────────────────────────────────────
+
+    /**
+     * يُعالج أحداث WebSocket ويُفسّر STOMP frames.
+     * مفصول في inner class لتنظيف كود connect().
+     */
+    private class StompListener implements WebSocket.Listener {
+
+        @Override
+        public void onOpen(WebSocket ws) {
+            webSocket = ws;
+            frameBuffer.setLength(0);
+            // STOMP CONNECT — الـ JWT في Native Header عشان WebSocketAuthInterceptor يقرأه
+            ws.sendText(StompFrames.connect(token), true);
+            ws.request(1);
         }
 
-        builder.buildAsync(URI.create(wsUrl), new WebSocket.Listener() {
+        @Override
+        public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+            // ── تجميع أجزاء الـ frame ──
+            frameBuffer.append(data);
 
-            @Override
-            public void onOpen(WebSocket ws) {
-                webSocket = ws;
-                frameBuffer.setLength(0);
-                // STOMP CONNECT — الـ JWT في Native Header عشان WebSocketAuthInterceptor يقرأه
-                // فراغ بعد ":" مهم للتوافق مع Spring STOMP parser
-                String connectFrame =
-                        "CONNECT\n" +
-                                "accept-version:1.2\n" +
-                                "heart-beat:0,0\n" +
-                                "Authorization:Bearer " + token + "\n" +
-                                "\n\u0000";
-
-                ws.sendText(connectFrame, true);
-                ws.request(1);
-            }
-
-            @Override
-            public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
-                // ── تجميع الأجزاء ──
-                frameBuffer.append(data);
-
-                if (!last) {
-                    // الـ frame لسه ناقص — طلب الجزء التالي وانتظر
-                    ws.request(1);
-                    return null;
-                }
-
-                // الـ frame اكتمل — عالجه
-                String frame = frameBuffer.toString();
-                frameBuffer.setLength(0);
-
-                handleFrame(frame);
+            if (!last) {
+                // الـ frame لسه ناقص — طلب الجزء التالي
                 ws.request(1);
                 return null;
             }
 
-            @Override
-            public void onError(WebSocket ws, Throwable error) {
-                System.err.println("[ReportWS] ❌ Error: " + error.getMessage());
-                scheduleReconnect();
-            }
+            // الـ frame اكتمل
+            String frame = frameBuffer.toString();
+            frameBuffer.setLength(0);
 
-            @Override
-            public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-
-                if (!intentionalClose.get()) {
-                    scheduleReconnect();
-                }
-                return null;
-            }
-        }).exceptionally(e -> {
-
-            scheduleReconnect();
+            handleFrame(ws, frame);
+            ws.request(1);
             return null;
-        });
+        }
+
+        @Override
+        public void onError(WebSocket ws, Throwable error) {
+            System.err.println("[ReportWS] ❌ Error: " + error.getMessage());
+            scheduleReconnect();
+        }
+
+        @Override
+        public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
+            if (!intentionalClose.get()) scheduleReconnect();
+            return null;
+        }
     }
 
     // ─────────────────────────────────────────────
     //  Frame Handling
     // ─────────────────────────────────────────────
 
-    private void handleFrame(String frame) {
+    private void handleFrame(WebSocket ws, String frame) {
         if (frame.startsWith("CONNECTED")) {
-
-
-            // STOMP SUBSCRIBE
-            String subscribeFrame =
-                    "SUBSCRIBE\n" +
-                            "id:sub-reports\n" +
-                            "destination:/user/queue/reports\n" +
-                            "ack:auto\n" +
-                            "\n\u0000";
-
-            if (webSocket != null) {
-                webSocket.sendText(subscribeFrame, true);
-            }
+            // STOMP handshake ناجح — اشترك في الـ queue
+            ws.sendText(StompFrames.subscribe(SUB_ID, STOMP_DESTINATION), true);
 
         } else if (frame.startsWith("MESSAGE")) {
-
             String body = extractStompBody(frame);
-            if (body != null && !body.isBlank()) {
+            if (body != null && !body.isBlank())
                 handleReportNotification(body);
-            }
 
         } else if (frame.startsWith("ERROR")) {
-            System.err.println("[ReportWS] ⚠️ STOMP ERROR: " + frame);
+            System.err.println("[ReportWS] ⚠️ STOMP ERROR:\n" + frame);
 
-        } else if (frame.startsWith("HEARTBEAT") || frame.isBlank() || frame.equals("\n")) {
-            // Heartbeat — تجاهل
+        } else if (frame.isBlank() || frame.startsWith("HEARTBEAT")) {
+            // Heartbeat — تجاهل بصمت
+
         } else {
-
-            frame.substring(0, Math.min(50, frame.length()));
+            System.err.println("[ReportWS] ⚠️ Unknown frame: "
+                    + frame.substring(0, Math.min(60, frame.length())));
         }
     }
 
     /**
      * يستخرج الـ body من STOMP frame.
      *
-     * <p>STOMP frame structure:
+     * <p>بنية الـ STOMP frame:
      * <pre>
      * COMMAND\n
      * header1:value1\n
-     * header2:value2\n
-     * \n                ← سطر فارغ يفصل الـ headers عن الـ body
+     * \n               ← سطر فارغ يفصل headers عن body
      * {body}\u0000
      * </pre>
      */
     private String extractStompBody(String frame) {
-        // الـ body يبدأ بعد أول سطر فارغ (\n\n)
         int bodyStart = frame.indexOf("\n\n");
         if (bodyStart == -1) return null;
 
         String body = frame.substring(bodyStart + 2);
 
-        // حذف الـ null terminator من النهاية
+        // حذف الـ null terminator
         int nullIndex = body.indexOf('\u0000');
-        if (nullIndex >= 0) {
-            body = body.substring(0, nullIndex);
-        }
+        if (nullIndex >= 0) body = body.substring(0, nullIndex);
 
         return body.trim();
     }
@@ -209,40 +246,36 @@ public class ReportWebSocketService {
 
     private void handleReportNotification(String json) {
         try {
-            ReportNotificationPayload payload = mapper.readValue(json, ReportNotificationPayload.class);
+            ReportNotificationPayload payload =
+                    mapper.readValue(json, ReportNotificationPayload.class);
 
-
-            Platform.runLater(() -> {
-                var type = switch (payload.status != null ? payload.status : "") {
-                    case "COMPLETED" -> HRNotification.NotificationType.SYSTEM;
-                    case "FAILED" -> HRNotification.NotificationType.TASK;
-                    default -> HRNotification.NotificationType.SYSTEM;
-                };
-
-                var priority = "FAILED".equals(payload.status)
-                        ? HRNotification.Priority.HIGH
-                        : HRNotification.Priority.NORMAL;
-
-                HRNotification notification = HRNotification.builder()
-                        .title("تقرير: " + payload.reportName)
-                        .message(payload.message)
-                        .type(type)
-                        .category(HRNotification.NotificationCategory.SYSTEM)
-                        .priority(priority)
-                        // .action("عرض التقرير", "/reports/" + payload.reportId)
-                        .build();
-
-                HREventBus.getInstance().publish(notification);
-
-                if (primaryStage != null && primaryStage.isShowing()) {
-                    HRToast.show(primaryStage, notification);
-                }
-            });
+            Platform.runLater(() -> publishNotification(payload));
 
         } catch (Exception e) {
             System.err.println("[ReportWS] ⚠️ فشل قراءة الإشعار: " + e.getMessage());
             System.err.println("[ReportWS] Raw JSON: " + json);
         }
+    }
+
+    private void publishNotification(ReportNotificationPayload payload) {
+        boolean failed = "FAILED".equals(payload.status);
+
+        HRNotification notification = HRNotification.builder()
+                .title("تقرير: " + payload.reportName)
+                .message(payload.message)
+                .type(failed
+                        ? HRNotification.NotificationType.TASK
+                        : HRNotification.NotificationType.SYSTEM)
+                .category(HRNotification.NotificationCategory.SYSTEM)
+                .priority(failed
+                        ? HRNotification.Priority.HIGH
+                        : HRNotification.Priority.NORMAL)
+                .build();
+
+        HREventBus.getInstance().publish(notification);
+
+        if (primaryStage != null && primaryStage.isShowing())
+            HRToast.show(primaryStage, notification);
     }
 
     // ─────────────────────────────────────────────
@@ -251,24 +284,74 @@ public class ReportWebSocketService {
 
     private void scheduleReconnect() {
         if (intentionalClose.get()) return;
-
         reconnectScheduler.schedule(this::connect, RECONNECT_DELAY_SEC, TimeUnit.SECONDS);
     }
 
     // ─────────────────────────────────────────────
-    //  Disconnect
+    //  STOMP Frame Builder (Static Utility)
     // ─────────────────────────────────────────────
 
-    public void disconnect() {
-        intentionalClose.set(true);
-        reconnectScheduler.shutdown();
-        if (webSocket != null) {
-            webSocket.sendText("DISCONNECT\n\n\u0000", true);
-            webSocket.sendClose(1000, "Client closing");
+    /**
+     * يبني STOMP frames كـ strings — مفصولة عن الـ logic لسهولة الاختبار.
+     *
+     * <p><b>ملاحظة:</b> فراغ بعد ":" في الـ headers مهم
+     * للتوافق مع Spring STOMP parser.
+     */
+    private static final class StompFrames {
 
+        private StompFrames() {
+        }
+
+        static String connect(String token) {
+            return "CONNECT\n"
+                    + "accept-version:1.2\n"
+                    + "heart-beat:0,0\n"
+                    + "Authorization:Bearer " + token + "\n"
+                    + "\n\u0000";
+        }
+
+        static String subscribe(String id, String destination) {
+            return "SUBSCRIBE\n"
+                    + "id:" + id + "\n"
+                    + "destination:" + destination + "\n"
+                    + "ack:auto\n"
+                    + "\n\u0000";
+        }
+
+        static String disconnect() {
+            return "DISCONNECT\n\n\u0000";
         }
     }
 
+    /**
+     * إيقاف اتصال إشعارات التقارير — يُستدعى براحتك من أي مكان
+     * (مثلاً لما المستخدم يوقف الإعداد من شاشة الإعدادات وهو شغال بالفعل).
+     * بديل واضح الاسم عن disconnect() لنفس الغرض.
+     */
+    public void stop() {
+        disconnect();
+    }
+
+    /**
+     * تفعيل/تعطيل الخدمة حسب قيمة منطقية — يتجاهل الاتصال لو already في نفس الحالة.
+     * مفيد لو عندك toggle في شاشة الإعدادات وعايز تطبّقه فورًا بدون reLogin.
+     *
+     * @param enabled true = اتصل (لو مش متصل بالفعل), false = افصل
+     */
+    public void setEnabled(boolean enabled) {
+        if (enabled) {
+            connect();
+        } else {
+            stop();
+        }
+    }
+
+    /**
+     * @return true لو الاتصال شغال حاليًا
+     */
+    public boolean isConnected() {
+        return webSocket != null && !intentionalClose.get();
+    }
     // ─────────────────────────────────────────────
     //  DTO
     // ─────────────────────────────────────────────

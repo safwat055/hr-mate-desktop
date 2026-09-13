@@ -1,6 +1,5 @@
 package com.safwat.hr.controller.chat.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,7 +30,7 @@ public class ChatDTOs {
         private String lastMessage;
         private long unreadCount;
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
         private LocalDateTime lastMessageAt;
 
         private String timeAgo;
@@ -53,7 +52,7 @@ public class ChatDTOs {
         private List<ParticipantDTO> participants;
         private String createdBy;
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
         private LocalDateTime createdAt;
     }
 
@@ -62,6 +61,7 @@ public class ChatDTOs {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ParticipantDTO {
         private Long userId;
+        
         private String username;
         private String displayName;
         private String jobTitle;
@@ -88,7 +88,6 @@ public class ChatDTOs {
         private boolean deleted;
         private List<ChatAttachmentDTO> attachments;
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         private LocalDateTime createdAt;
 
         private String timeAgo;
@@ -97,7 +96,7 @@ public class ChatDTOs {
         private Set<Long> readBy;
         private boolean edited;
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
         private LocalDateTime editedAt;
 
         // ✅ جديد: الرد على رسالة (Reply/Quote)
@@ -256,7 +255,7 @@ public class ChatDTOs {
         private String preview;
         private long unreadCount;
 
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+
         private LocalDateTime createdAt;
     }
 

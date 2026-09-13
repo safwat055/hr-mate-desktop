@@ -226,8 +226,8 @@ public class HRNotification {
         TRAINING("تدريب", "#534AB7", "#EEEDFE"),
         TASK("مهام", "#A32D2D", "#FCEBEB"),
         SYSTEM("النظام", "#5F5E5A", "#F1EFE8"),
-        MESSAGE("رسالة", "#0F6E56", "#E6F5F1");
-
+        MESSAGE("رسالة", "#0F6E56", "#E6F5F1"),
+        CHAT("محادثات", "#185FA5", "#E6F1FB");   // ⭐ جديد
         public final String label, color, bgColor;
 
         NotificationType(String label, String color, String bgColor) {

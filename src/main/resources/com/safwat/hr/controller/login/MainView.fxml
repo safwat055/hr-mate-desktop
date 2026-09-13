@@ -50,6 +50,7 @@
             <Menu mnemonicParsing="false" text="ملف">
                 <items>
                <MenuItem mnemonicParsing="false" onAction="#openBackupView" text="نسخ احتياطي" />
+               <MenuItem mnemonicParsing="false" onAction="#openTemplateView" text="تحميل نماذج" />
                <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#reLogin" text="إعادة تسجيل الدخول" />
                     <SeparatorMenuItem mnemonicParsing="false" />

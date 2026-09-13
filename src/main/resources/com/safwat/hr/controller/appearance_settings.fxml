@@ -9,10 +9,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.safwat.hr.controllers.AppearanceSettingsController"
+            fx:controller="com.safwat.hr.controller.appearance.AppearanceSettingsController"
             prefWidth="900.0" prefHeight="640.0"
             nodeOrientation="RIGHT_TO_LEFT"
             style="-fx-background-color:#1a1d2e;">

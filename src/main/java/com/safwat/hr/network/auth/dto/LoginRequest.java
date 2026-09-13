@@ -1,4 +1,4 @@
-package com.safwat.hr.auth.dto;
+package com.safwat.hr.network.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

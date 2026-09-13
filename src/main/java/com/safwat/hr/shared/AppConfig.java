@@ -65,6 +65,10 @@ public class AppConfig {
         JSONObject ui = new JSONObject();
         ui.put("theme", ThemeEventBus.LIGHT);
         defaultConfig.put("ui", ui);
+
+        JSONObject notifications = new JSONObject();
+        notifications.put("reportsEnabled", true);
+        defaultConfig.put("notifications", notifications);
         return defaultConfig;
     }
 
@@ -159,7 +163,6 @@ public class AppConfig {
 
             // حفظ التغييرات في الملف
             saveConfigToFile();
-
 
 
         } catch (Exception e) {

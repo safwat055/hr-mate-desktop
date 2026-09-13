@@ -3,7 +3,7 @@ package com.safwat.hr.controller.chat.controller;
 import com.safwat.hr.controller.chat.dto.ChatDTOs;
 import com.safwat.hr.controller.chat.service.ChatService;
 import com.safwat.hr.controller.chat.ui.*;
-import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import javafx.application.Platform;
@@ -27,10 +27,11 @@ import java.util.ResourceBundle;
 
 public class ChatViewController implements Initializable {
 
-    // ✅ جديد: حد أقصى لحجم الملف على الفرونت (بنفس قيمة الباك إند) — نمنع
-    // محاولة الرفع من الأساس بدل ما ننتظر رد فشل من السيرفر
+    // حد أقصى لحجم الملف على الفرونت (بنفس قيمة الباك إند)
     private static final long MAX_ATTACHMENT_SIZE_BYTES = 50L * 1024 * 1024; // 50 MB
+
     private final List<File> pendingFiles = new java.util.ArrayList<>();
+
     @FXML
     private ListView<ChatDTOs.ConversationSummaryDTO> conversationList;
     @FXML
@@ -69,7 +70,7 @@ public class ChatViewController implements Initializable {
     private HBox typingIndicator;
     @FXML
     private Label typingLabel;
-    // ✅ جديد: شريط الرد على رسالة
+
     @FXML
     private HBox replyPreviewBar;
     @FXML
@@ -78,11 +79,12 @@ public class ChatViewController implements Initializable {
     private Label replyPreviewText;
     @FXML
     private Button btnCancelReply;
-    // ✅ جديد: شريط المرفقات المعلّقة قبل الإرسال
+
     @FXML
     private javafx.scene.control.ScrollPane pendingAttachmentsScroll;
     @FXML
     private HBox pendingAttachmentsBar;
+
     private ChatService chatService;
     private FilteredList<ChatDTOs.ConversationSummaryDTO> filteredConversations;
     private ChatDTOs.ConversationSummaryDTO currentConversation;
@@ -92,15 +94,18 @@ public class ChatViewController implements Initializable {
     private boolean userScrolledUp = false;
     private double lastVvalue = 1.0;
     private ChatDTOs.ChatMessageDTO editingMessage = null;
-    // ✅ جديد: حالة الرد + المرفقات المعلّقة
     private ChatDTOs.ChatMessageDTO replyTarget = null;
+
+    // ══════════════════════════════════════════════════════════════
+    //  Initialize
+    // ══════════════════════════════════════════════════════════════
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         chatService = ChatService.getInstance();
 
         chatService.init(
-                ApiClient.getUserName(),
+                SessionManager.getInstance().getUsername(),
                 err -> Platform.runLater(() ->
                         NotificationService.getInstance().send(
                                 HRNotification.builder()
@@ -124,22 +129,20 @@ public class ChatViewController implements Initializable {
                 ContextMenu menu = new ContextMenu();
 
                 MenuItem deleteForMe = new MenuItem("🗑️ حذف لدي");
-                deleteForMe.setOnAction(ev -> {
-                    chatService.deleteConversation(conv.getId(), false,
-                            () -> {
-                            },
-                            err -> showError("فشل الحذف", err)
-                    );
-                });
+                deleteForMe.setOnAction(ev ->
+                        chatService.deleteConversation(conv.getId(), false,
+                                () -> {
+                                },
+                                err -> showError("فشل الحذف", err))
+                );
 
                 MenuItem deleteForAll = new MenuItem("🗑️ حذف للجميع");
-                deleteForAll.setOnAction(ev -> {
-                    chatService.deleteConversation(conv.getId(), true,
-                            () -> {
-                            },
-                            err -> showError("فشل الحذف", err)
-                    );
-                });
+                deleteForAll.setOnAction(ev ->
+                        chatService.deleteConversation(conv.getId(), true,
+                                () -> {
+                                },
+                                err -> showError("فشل الحذف", err))
+                );
 
                 menu.getItems().addAll(deleteForMe, deleteForAll);
                 menu.show(cell, e.getScreenX(), e.getScreenY());
@@ -148,7 +151,7 @@ public class ChatViewController implements Initializable {
             return cell;
         });
 
-        messagesListener = (javafx.collections.ListChangeListener<ChatDTOs.ChatMessageDTO>) change -> {
+        messagesListener = change -> {
             while (change.next()) {
                 if (change.wasAdded()) {
                     for (ChatDTOs.ChatMessageDTO msg : change.getAddedSubList()) {
@@ -164,10 +167,7 @@ public class ChatViewController implements Initializable {
         setupInfiniteScroll();
         setupTypingIndicator();
 
-        // ✅ تم الإصلاح: استخدام updateMessageBubble بدل updateMessageStatus
         chatService.setOnMessageStatusChanged(this::updateMessageBubble);
-
-        // ✅ جديد: تحديث "متصل الآن / آخر ظهور" في الهيدر لحظياً
         chatService.setOnPresenceChanged(this::onPresenceChanged);
 
         messageInput.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
@@ -198,9 +198,33 @@ public class ChatViewController implements Initializable {
         showEmptyState();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  ⭐ API عام — يفتح محادثة محددة بالـ id
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * يفتح محادثة محددة بالـ id — للاستخدام من خارج الكنترولر
+     * (مثل routing إشعارات الشات في MainViewController).
+     *
+     * <p>السلوك:
+     * <ol>
+     *   <li>لو المحادثة موجودة في القائمة → يحددها ويفتحها</li>
+     *   <li>لو مش موجودة → يفتح placeholder ويحمّلها</li>
+     * </ol>
+     *
+     * @param conversationId معرّف المحادثة
+     */
+    public void openConversation(long conversationId) {
+        Platform.runLater(() -> openConversationById(conversationId));
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Infinite Scroll
+    // ══════════════════════════════════════════════════════════════
+
     private void setupInfiniteScroll() {
         messagesScroll.vvalueProperty().addListener((obs, old, newVal) -> {
-            double v = (Double) newVal;
+            double v = (double) newVal;
             userScrolledUp = v < 0.95;
             lastVvalue = v;
 
@@ -233,10 +257,14 @@ public class ChatViewController implements Initializable {
         });
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Typing
+    // ══════════════════════════════════════════════════════════════
+
     private void setupTypingIndicator() {
-        typingListener = (javafx.collections.ListChangeListener<String>) change -> {
+        typingListener = change -> {
             while (change.next()) {
-                Platform.runLater(() -> updateTypingIndicator());
+                Platform.runLater(this::updateTypingIndicator);
             }
         };
         chatService.getTypingUsers().addListener(typingListener);
@@ -262,9 +290,10 @@ public class ChatViewController implements Initializable {
         }
     }
 
-    /**
-     * ✅ تم الإصلاح: بتعالج edit + delete + status update
-     */
+    // ══════════════════════════════════════════════════════════════
+    //  Message Bubble Update
+    // ══════════════════════════════════════════════════════════════
+
     private void updateMessageBubble(ChatDTOs.ChatMessageDTO msg) {
         for (var node : messagesContainer.getChildren()) {
             if (node instanceof MessageBubble bubble) {
@@ -276,9 +305,14 @@ public class ChatViewController implements Initializable {
         }
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Conversation Selection
+    // ══════════════════════════════════════════════════════════════
+
     @FXML
     private void onConversationSelected() {
-        ChatDTOs.ConversationSummaryDTO selected = conversationList.getSelectionModel().getSelectedItem();
+        ChatDTOs.ConversationSummaryDTO selected =
+                conversationList.getSelectionModel().getSelectedItem();
         if (selected == null || selected.equals(currentConversation)) return;
 
         currentConversation = selected;
@@ -288,10 +322,13 @@ public class ChatViewController implements Initializable {
 
     private void showChatContent(ChatDTOs.ConversationSummaryDTO conv) {
         String initials = conv.getAvatarInitials();
-        headerAvatarInitials.setText(initials != null && !initials.isEmpty() ? initials : "?");
+        headerAvatarInitials.setText(
+                initials != null && !initials.isEmpty() ? initials : "?");
 
         String color = conv.getAvatarColor();
-        headerAvatar.setStyle("-fx-background-color: " + (color != null && !color.isEmpty() ? color : "#185FA5") + "; -fx-background-radius: 20;");
+        headerAvatar.setStyle("-fx-background-color: "
+                + (color != null && !color.isEmpty() ? color : "#185FA5")
+                + "; -fx-background-radius: 20;");
 
         String name = conv.getName();
         headerConvName.setText(name != null ? name : "");
@@ -317,16 +354,11 @@ public class ChatViewController implements Initializable {
 
         messagesContainer.getChildren().clear();
 
-        // ✅ جديد: نصفّي حالة الرد والمرفقات المعلّقة لما نغيّر المحادثة
         onCancelReply();
         clearPendingAttachments();
         if (editingMessage != null) cancelEditing();
     }
 
-    /**
-     * ✅ جديد: للمحادثات الخاصة بيعرض "متصل الآن" أو "آخر ظهور ..."،
-     * وللمجموعات/البث بيعرض الوصف زي ما كان.
-     */
     private String buildHeaderMetaText(ChatDTOs.ConversationSummaryDTO conv) {
         String type = conv.getType();
         if ("PRIVATE".equals(type)) {
@@ -337,9 +369,6 @@ public class ChatViewController implements Initializable {
         return "GROUP".equals(type) ? "مجموعة" : "بث عام";
     }
 
-    /**
-     * ✅ جديد: يحدّث نص الحالة في الهيدر لو المحادثة المفتوحة حالياً هي اللي اتغيرت حالتها
-     */
     private void onPresenceChanged(ChatDTOs.ConversationSummaryDTO conv) {
         if (currentConversation != null && conv.getId() != null
                 && conv.getId().equals(currentConversation.getId())) {
@@ -375,6 +404,10 @@ public class ChatViewController implements Initializable {
         headerConvMeta.setText("");
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Message Bubbles
+    // ══════════════════════════════════════════════════════════════
+
     private void addMessageBubble(ChatDTOs.ChatMessageDTO msg) {
         MessageBubble bubble = new MessageBubble(msg);
 
@@ -383,7 +416,6 @@ public class ChatViewController implements Initializable {
 
             ContextMenu menu = new ContextMenu();
 
-            // ✅ جديد: الرد متاح على أي رسالة (مني أو من حد تاني)
             MenuItem replyItem = new MenuItem("↩️ رد");
             replyItem.setOnAction(ev -> startReply(msg));
             menu.getItems().add(replyItem);
@@ -393,19 +425,17 @@ public class ChatViewController implements Initializable {
                 editItem.setOnAction(ev -> startEditingMessage(msg));
 
                 MenuItem deleteItem = new MenuItem("🗑️ حذف");
-                deleteItem.setOnAction(ev -> {
-                    chatService.deleteMessage(msg.getId(), err ->
-                            Platform.runLater(() ->
-                                    NotificationService.getInstance().send(
-                                            HRNotification.builder()
-                                                    .title("فشل الحذف")
-                                                    .message(err)
-                                                    .type(HRNotification.NotificationType.SYSTEM)
-                                                    .build()
-                                    )
-                            )
-                    );
-                });
+                deleteItem.setOnAction(ev -> chatService.deleteMessage(msg.getId(), err ->
+                        Platform.runLater(() ->
+                                NotificationService.getInstance().send(
+                                        HRNotification.builder()
+                                                .title("فشل الحذف")
+                                                .message(err)
+                                                .type(HRNotification.NotificationType.SYSTEM)
+                                                .build()
+                                )
+                        )
+                ));
 
                 menu.getItems().addAll(editItem, deleteItem);
             }
@@ -416,14 +446,12 @@ public class ChatViewController implements Initializable {
         messagesContainer.getChildren().add(bubble);
     }
 
-    /**
-     * ✅ جديد: يفعّل شريط الرد فوق خانة الكتابة بمعاينة الرسالة المختارة
-     */
     private void startReply(ChatDTOs.ChatMessageDTO msg) {
         replyTarget = msg;
 
         String senderName = msg.isMine() ? "أنت" :
-                (msg.getSenderDisplayName() != null ? msg.getSenderDisplayName() : msg.getSenderUsername());
+                (msg.getSenderDisplayName() != null
+                        ? msg.getSenderDisplayName() : msg.getSenderUsername());
         replyPreviewSender.setText(senderName);
 
         String preview = (msg.getContent() != null && !msg.getContent().isBlank())
@@ -516,6 +544,10 @@ public class ChatViewController implements Initializable {
         messagesLoading.setManaged(loading);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Send
+    // ══════════════════════════════════════════════════════════════
+
     @FXML
     private void onSendMessage() {
         if (chatService.getOpenConversationId() == null) return;
@@ -553,10 +585,10 @@ public class ChatViewController implements Initializable {
         }
     }
 
-    /**
-     * ✅ تم التحسين: بدل ما يبعت الملف فورًا، بيضيفه لقائمة "معلّقة" مع معاينة
-     * (زي واتساب بالظبط) — المستخدم يقدر يشيل أي ملف أو يضيف نص قبل الإرسال الفعلي.
-     */
+    // ══════════════════════════════════════════════════════════════
+    //  Attach
+    // ══════════════════════════════════════════════════════════════
+
     @FXML
     private void onAttachFile() {
         if (chatService.getOpenConversationId() == null) return;
@@ -569,7 +601,6 @@ public class ChatViewController implements Initializable {
                 new FileChooser.ExtensionFilter("مستندات", "*.pdf", "*.docx", "*.xlsx")
         );
 
-        // اختيار أكتر من ملف مرة واحدة زي واتساب
         List<File> selected = chooser.showOpenMultipleDialog(btnAttach.getScene().getWindow());
         if (selected == null || selected.isEmpty()) return;
 
@@ -589,9 +620,6 @@ public class ChatViewController implements Initializable {
         renderPendingAttachments();
     }
 
-    /**
-     * ✅ جديد: يعيد رسم شريط المرفقات المعلّقة (فقاعة لكل ملف مع زر حذف)
-     */
     private void renderPendingAttachments() {
         pendingAttachmentsBar.getChildren().clear();
 
@@ -611,7 +639,8 @@ public class ChatViewController implements Initializable {
 
         String lowerName = file.getName().toLowerCase();
         boolean isImage = lowerName.endsWith(".png") || lowerName.endsWith(".jpg")
-                || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif") || lowerName.endsWith(".webp");
+                || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif")
+                || lowerName.endsWith(".webp");
 
         Label icon = new Label(isImage ? "🖼️" : "📄");
         icon.getStyleClass().add("pending-attachment-icon");
@@ -631,13 +660,14 @@ public class ChatViewController implements Initializable {
         return chip;
     }
 
-    /**
-     * ✅ جديد: يفضي قائمة المرفقات المعلّقة ويخفي الشريط
-     */
     private void clearPendingAttachments() {
         pendingFiles.clear();
         renderPendingAttachments();
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Actions — Mark all read, New conversation
+    // ══════════════════════════════════════════════════════════════
 
     @FXML
     private void onMarkAllAsRead() {
@@ -706,6 +736,10 @@ public class ChatViewController implements Initializable {
         );
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Open Conversation by ID (internal)
+    // ══════════════════════════════════════════════════════════════
+
     private void openConversationById(long convId) {
         ChatDTOs.ConversationSummaryDTO existing = chatService.getConversations().stream()
                 .filter(c -> c.getId() != null && c.getId().equals(convId))
@@ -731,30 +765,35 @@ public class ChatViewController implements Initializable {
         showChatContent(placeholder);
         loadConversation(convId);
 
-        javafx.collections.ListChangeListener<ChatDTOs.ConversationSummaryDTO> listener = new javafx.collections.ListChangeListener<>() {
-            @Override
-            public void onChanged(Change<? extends ChatDTOs.ConversationSummaryDTO> change) {
-                chatService.getConversations().stream()
-                        .filter(c -> c.getId() != null && c.getId().equals(convId))
-                        .findFirst()
-                        .ifPresent(conv -> Platform.runLater(() -> {
-                            chatService.getConversations().removeListener(this);
-                            currentConversation = conv;
-                            headerConvName.setText(conv.getName());
-                            headerAvatarInitials.setText(conv.getAvatarInitials());
-                            String color = conv.getAvatarColor() != null
-                                    ? conv.getAvatarColor() : "#185FA5";
-                            headerAvatar.setStyle("-fx-background-color: " + color
-                                    + "; -fx-background-radius: 20;");
-                            conversationList.getSelectionModel().select(conv);
-                        }));
-            }
-        };
+        javafx.collections.ListChangeListener<ChatDTOs.ConversationSummaryDTO> listener =
+                new javafx.collections.ListChangeListener<>() {
+                    @Override
+                    public void onChanged(Change<? extends ChatDTOs.ConversationSummaryDTO> change) {
+                        chatService.getConversations().stream()
+                                .filter(c -> c.getId() != null && c.getId().equals(convId))
+                                .findFirst()
+                                .ifPresent(conv -> Platform.runLater(() -> {
+                                    chatService.getConversations().removeListener(this);
+                                    currentConversation = conv;
+                                    headerConvName.setText(conv.getName());
+                                    headerAvatarInitials.setText(conv.getAvatarInitials());
+                                    String color = conv.getAvatarColor() != null
+                                            ? conv.getAvatarColor() : "#185FA5";
+                                    headerAvatar.setStyle("-fx-background-color: " + color
+                                            + "; -fx-background-radius: 20;");
+                                    conversationList.getSelectionModel().select(conv);
+                                }));
+                    }
+                };
         javafx.collections.WeakListChangeListener<ChatDTOs.ConversationSummaryDTO> weakListener =
                 new javafx.collections.WeakListChangeListener<>(listener);
         chatService.getConversations().addListener(weakListener);
         chatService.refreshConversations();
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Search / Info
+    // ══════════════════════════════════════════════════════════════
 
     @FXML
     private void onSearchConversations() {
@@ -767,7 +806,12 @@ public class ChatViewController implements Initializable {
     @FXML
     private void onShowConvInfo() {
         if (currentConversation == null) return;
+        // TODO: افتح نافذة تفاصيل المحادثة
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Lifecycle
+    // ══════════════════════════════════════════════════════════════
 
     public void onClose() {
         if (messagesListener != null) {

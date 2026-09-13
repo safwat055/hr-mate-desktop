@@ -1,7 +1,7 @@
 package com.safwat.hr.report.core;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.ReportApiClient;
 import com.safwat.hr.network.dto.ReportSubmissionResult;
 import com.safwat.hr.shared.PayrollRequest;
 
@@ -17,7 +17,7 @@ public class ReportApiService {
         try {
             ApiResponse<ReportSubmissionResult> response;
 
-            response = ApiClient.submitReport(request, files);
+            response = ReportApiClient.submitReport(request, files);
 
             if (response == null) {
                 System.err.println("ReportApiService: response is null");

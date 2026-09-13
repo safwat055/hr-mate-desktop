@@ -1,7 +1,6 @@
-package com.safwat.hr.controllers;
+package com.safwat.hr.controller.backendSetting;
 
-import com.safwat.hr.network.SettingsApiClient;
-import com.safwat.hr.network.SettingsApiClient.PropertyEntry;
+import com.safwat.hr.controller.backendSetting.SettingsApiClient.PropertyEntry;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;

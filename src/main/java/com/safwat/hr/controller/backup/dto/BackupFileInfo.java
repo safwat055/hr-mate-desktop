@@ -1,4 +1,4 @@
-package com.safwat.hr.backup;
+package com.safwat.hr.controller.backup.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;

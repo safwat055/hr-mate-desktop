@@ -1,6 +1,9 @@
-package com.safwat.hr.network;
+package com.safwat.hr.controller.backendSetting;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.HttpCore;
 
 import java.io.IOException;
 import java.util.List;
@@ -8,10 +11,27 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * API Client خاص بشاشة إعدادات التطبيق.
- * يُغلّف كل endpoints الـ /api/settings ويستخدم ApiClient الموجود.
+ * ══════════════════════════════════════════════════════════════════
+ * SettingsApiClient — إعدادات التطبيق
+ * ══════════════════════════════════════════════════════════════════
+ * <p>
+ * يُغلّف كل endpoints الـ /api/settings.
+ * يُفوّض كل الطلبات لـ {@link ApiClient} — لا يحتوي على أي HTTP مباشر.
+ * <p>
+ * الاستخدام:
+ * <pre>
+ *   // Sync
+ *   var grouped = SettingsApiClient.getGrouped();
+ *
+ *   // Async (JavaFX thread)
+ *   SettingsApiClient.updateAsync("app.name", "HR System")
+ *       .thenAccept(res -> Platform.runLater(() -> refresh()));
+ * </pre>
  */
-public class SettingsApiClient {
+public final class SettingsApiClient {
+
+    private SettingsApiClient() {
+    }
 
     private static final String BASE = "/settings";
 
@@ -52,7 +72,7 @@ public class SettingsApiClient {
     }
 
     // ══════════════════════════════════════════════
-    //  Sync Methods
+    //  Sync — Read
     // ══════════════════════════════════════════════
 
     public static ApiResponse<List<PropertyEntry>> getAll()
@@ -81,6 +101,10 @@ public class SettingsApiClient {
                 });
     }
 
+    // ══════════════════════════════════════════════
+    //  Sync — Write
+    // ══════════════════════════════════════════════
+
     public static ApiResponse<PropertyEntry> update(String key, String newValue)
             throws IOException, InterruptedException {
         return ApiClient.put(BASE + "/" + key, new UpdateRequest(newValue), PropertyEntry.class);
@@ -105,6 +129,10 @@ public class SettingsApiClient {
         return ApiClient.delete(BASE + "/" + key, Void.class);
     }
 
+    // ══════════════════════════════════════════════
+    //  Sync — Backup / Restore
+    // ══════════════════════════════════════════════
+
     public static ApiResponse<String> backup()
             throws IOException, InterruptedException {
         return ApiClient.post(BASE + "/backup", null, String.class);
@@ -124,7 +152,7 @@ public class SettingsApiClient {
     }
 
     // ══════════════════════════════════════════════
-    //  Async Methods — كلها بنفس النمط
+    //  Async Wrappers
     // ══════════════════════════════════════════════
 
     public static CompletableFuture<ApiResponse<Map<String, List<PropertyEntry>>>> getGroupedAsync() {
@@ -135,8 +163,7 @@ public class SettingsApiClient {
         return async(() -> getFileInfo());
     }
 
-    public static CompletableFuture<ApiResponse<PropertyEntry>> updateAsync(
-            String key, String value) {
+    public static CompletableFuture<ApiResponse<PropertyEntry>> updateAsync(String key, String value) {
         return async(() -> update(key, value));
     }
 
@@ -167,7 +194,7 @@ public class SettingsApiClient {
     }
 
     // ══════════════════════════════════════════════
-    //  Helper — يلف أي call في CompletableFuture
+    //  Helper
     // ══════════════════════════════════════════════
 
     @FunctionalInterface
@@ -180,10 +207,7 @@ public class SettingsApiClient {
             try {
                 return supplier.get();
             } catch (Exception e) {
-                ApiResponse<T> err = new ApiResponse<>();
-                err.setSuccess(false);
-                err.setMessage(e.getMessage());
-                return err;
+                return HttpCore.getInstance().createErrorResponse(e);
             }
         });
     }

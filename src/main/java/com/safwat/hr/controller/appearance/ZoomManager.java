@@ -1,5 +1,7 @@
-package com.safwat.hr.shared;
+package com.safwat.hr.controller.appearance;
 
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.shared.ViewRegistry;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

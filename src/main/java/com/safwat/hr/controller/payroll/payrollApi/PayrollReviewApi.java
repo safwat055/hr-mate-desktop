@@ -6,6 +6,7 @@ import com.safwat.hr.controller.payroll.payrollApi.dto.ViewMainRecordForRangeDat
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewNonPrimaryRangeDate;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
+import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;
 import lombok.SneakyThrows;
@@ -180,7 +181,7 @@ public class PayrollReviewApi {
 
     public boolean downloadMainReviewReport(PayrollRequest request, Path filePath) {
         try {
-            return ApiClient.downloadFileViaPostWithBody(
+            return FileTransferClient.downloadFileViaPost(
                     ApiEndpoints.PayrollReview.downloadReview,
                     request,
                     filePath
@@ -193,7 +194,7 @@ public class PayrollReviewApi {
 
     public boolean downloadComparePDF(PayrollRequest request, Path targetPath) {
         try {
-            return ApiClient.downloadFileViaPostWithBody(
+            return FileTransferClient.downloadFileViaPost(
                     ApiEndpoints.PayrollReview.downloadCompare,
                     request,
                     targetPath
@@ -207,7 +208,7 @@ public class PayrollReviewApi {
 
     public boolean downloadCustomReviewPDF(PayrollRequest request, Path targetPath) {
         try {
-            return ApiClient.downloadFileViaPostWithBody(
+            return FileTransferClient.downloadFileViaPost(
                     ApiEndpoints.PayrollReview.downloadCustomReview,
                     request,
                     targetPath

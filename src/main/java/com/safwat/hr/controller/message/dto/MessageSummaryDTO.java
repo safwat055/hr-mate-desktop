@@ -11,6 +11,8 @@ public class MessageSummaryDTO {
     private Long id;
     private String senderUsername;
     private String senderDisplayName;
+    private String recipientDisplayName;
+    private String recipientUsername;
     private String subject;
     private String preview;
     private boolean read;

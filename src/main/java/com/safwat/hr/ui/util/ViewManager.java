@@ -1,10 +1,10 @@
 package com.safwat.hr.ui.util;
 
+import com.safwat.hr.controller.appearance.ColorSettingsManager;
+import com.safwat.hr.controller.appearance.FontSettingsManager;
+import com.safwat.hr.controller.appearance.ZoomManager;
 import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.shared.ColorSettingsManager;
-import com.safwat.hr.shared.FontSettingsManager;
 import com.safwat.hr.shared.ViewRegistry;
-import com.safwat.hr.shared.ZoomManager;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import javafx.fxml.FXMLLoader;
@@ -15,6 +15,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -24,10 +25,10 @@ import java.util.Optional;
 /**
  * مدير تحميل الواجهات المستقلة (نوافذ + StackPane).
  * كل method بتطبق تلقائياً بعد التحميل:
- *  - تسجيل الواجهة في ViewRegistry
- *  - الخطوط المحفوظة  (FontSettingsManager)
- *  - الزوم المحفوظ    (ZoomManager)
- *  - الثيم + الألوان  (ColorSettingsManager)
+ * - تسجيل الواجهة في ViewRegistry
+ * - الخطوط المحفوظة  (FontSettingsManager)
+ * - الزوم المحفوظ    (ZoomManager)
+ * - الثيم + الألوان  (ColorSettingsManager)
  * مفيش أي سطر محتاج يتكتب في الكنترولرات.
  */
 @Slf4j
@@ -100,7 +101,9 @@ public class ViewManager {
         }
     }
 
-    /** للتوافق مع الكود القديم */
+    /**
+     * للتوافق مع الكود القديم
+     */
     public static void openIndependentView(String fxmlFile) {
         openIndependentView(fxmlFile, fxmlFile);
     }
@@ -137,7 +140,9 @@ public class ViewManager {
         }
     }
 
-    /** للتوافق مع الكود القديم */
+    /**
+     * للتوافق مع الكود القديم
+     */
     public static void openNoIndependentView(String fxmlFile) {
         openNoIndependentView(fxmlFile, fxmlFile);
     }
@@ -207,7 +212,9 @@ public class ViewManager {
         }
     }
 
-    /** للتوافق مع الكود القديم */
+    /**
+     * للتوافق مع الكود القديم
+     */
     public static void LoadViewOnMainView(String fxmFile, StackPane mainStackPane) {
         LoadViewOnMainView(fxmFile, fxmFile, mainStackPane);
     }
@@ -230,5 +237,22 @@ public class ViewManager {
             log.error(e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * يقفل النافذة (Stage) اللي فيها الكومبونانت ده.
+     * <p>
+     * لو الكومبونانت مش جوه نافذة (لسه متضافش لـ Scene، أو اتشال منها)،
+     * الـ method بترجع بدون أي تأثير.
+     *
+     * @param node أي Node جوه النافذة (زرار، جدول، Panel، إلخ)
+     */
+    public static void closeWindow(Node node) {
+        if (node == null) return;
+        Scene scene = node.getScene();
+        if (scene == null) return;
+        Window window = scene.getWindow();
+        if (window == null) return;
+        window.hide();
     }
 }

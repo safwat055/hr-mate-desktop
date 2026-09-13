@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.safwat.hr.controllers.SettingsController"
+            fx:controller="com.safwat.hr.controller.backendSetting.SettingsController"
             prefWidth="1000" prefHeight="680"
             styleClass="settings-root">
 
     <!-- ═══════════════════ HEADER ═══════════════════ -->
     <top>
         <HBox styleClass="settings-header" alignment="CENTER_LEFT" spacing="12">
-            <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+            <padding>
+                <Insets top="14" right="20" bottom="14" left="20"/>
+            </padding>
 
             <!-- Icon + Title -->
             <Label text="⚙" styleClass="header-icon"/>
@@ -33,10 +33,10 @@
                        onKeyReleased="#onSearch"/>
 
             <!-- Toolbar buttons -->
-            <Button fx:id="btnRefresh"   text="↻  تحديث"          styleClass="btn-toolbar"          onAction="#onRefresh"/>
-            <Button fx:id="btnBackup"    text="💾  نسخة احتياطية"  styleClass="btn-toolbar,btn-purple" onAction="#onBackup"/>
-            <Button fx:id="btnAdd"       text="➕  إعداد جديد"     styleClass="btn-toolbar,btn-green"  onAction="#onAdd"/>
-            <Button fx:id="btnBackups"   text="🗂  سجل النسخ"      styleClass="btn-toolbar"           onAction="#onShowBackups"/>
+            <Button fx:id="btnRefresh" text="↻  تحديث" styleClass="btn-toolbar" onAction="#onRefresh"/>
+            <Button fx:id="btnBackup" text="💾  نسخة احتياطية" styleClass="btn-toolbar,btn-purple" onAction="#onBackup"/>
+            <Button fx:id="btnAdd" text="➕  إعداد جديد" styleClass="btn-toolbar,btn-green" onAction="#onAdd"/>
+            <Button fx:id="btnBackups" text="🗂  سجل النسخ" styleClass="btn-toolbar" onAction="#onShowBackups"/>
         </HBox>
     </top>
 
@@ -46,10 +46,14 @@
 
             <!-- ── Sidebar: category list ── -->
             <VBox styleClass="sidebar" minWidth="180" maxWidth="240">
-                <padding><Insets top="10" right="0" bottom="10" left="0"/></padding>
+                <padding>
+                    <Insets top="10" right="0" bottom="10" left="0"/>
+                </padding>
 
                 <Label text="التصنيفات" styleClass="sidebar-section-label">
-                    <VBox.margin><Insets bottom="6" left="14"/></VBox.margin>
+                    <VBox.margin>
+                        <Insets bottom="6" left="14"/>
+                    </VBox.margin>
                 </Label>
 
                 <ListView fx:id="categoryList"
@@ -63,7 +67,9 @@
 
                 <!-- category header bar -->
                 <HBox styleClass="category-bar" alignment="CENTER_LEFT" spacing="10">
-                    <padding><Insets top="10" right="16" bottom="10" left="16"/></padding>
+                    <padding>
+                        <Insets top="10" right="16" bottom="10" left="16"/>
+                    </padding>
                     <Label fx:id="currentCategoryLabel" text="اختر تصنيفًا" styleClass="category-bar-title"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Label fx:id="entryCountLabel" text="" styleClass="entry-count-badge"/>
@@ -75,7 +81,9 @@
                             styleClass="entries-scroll"
                             VBox.vgrow="ALWAYS">
                     <VBox fx:id="entriesContainer" styleClass="entries-container" spacing="6">
-                        <padding><Insets top="10" right="14" bottom="10" left="14"/></padding>
+                        <padding>
+                            <Insets top="10" right="14" bottom="10" left="14"/>
+                        </padding>
 
                         <!-- placeholder shown while loading -->
                         <VBox fx:id="loadingPlaceholder" alignment="CENTER" spacing="12"
@@ -94,7 +102,9 @@
     <!-- ═══════════════════ FOOTER ═══════════════════ -->
     <bottom>
         <HBox styleClass="settings-footer" alignment="CENTER_LEFT" spacing="10">
-            <padding><Insets top="10" right="20" bottom="10" left="20"/></padding>
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
 
             <!-- status -->
             <Label fx:id="statusLabel" text="جاهز" styleClass="status-label"/>

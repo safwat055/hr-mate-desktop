@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.SessionManager;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -170,7 +171,7 @@ public final class PayrollApiClient {
 
     public static long exportSheet(String format, String firstTitle, String secondTitle,
                                    List<String> headers, Map<Integer, Object[]> tableData) {
-        String currentUser = ApiClient.getUserName();
+        String currentUser = SessionManager.getInstance().getUsername();
         Map<String, Object> payload = Map.of(
                 "reportName", "صرفية " + firstTitle,
                 "format", format,

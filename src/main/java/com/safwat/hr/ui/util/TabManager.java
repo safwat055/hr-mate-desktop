@@ -1,15 +1,11 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.shared.ColorSettingsManager;
-import com.safwat.hr.shared.FontSettingsManager;
+import com.safwat.hr.controller.appearance.FontSettingsManager;
+import com.safwat.hr.controller.appearance.ZoomManager;
 import com.safwat.hr.shared.ViewRegistry;
-import com.safwat.hr.shared.ZoomManager;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.theme.ThemeEventBus;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +26,10 @@ public class TabManager {
      * - ألوان الثيم + overrides المحفوظة
      * مفيش أي سطر محتاج يتكتب في الكنترولر.
      *
-     * @param tabPane   حاوية التبويبات
-     * @param fxmlPath  مسار ملف الـ FXML
-     * @param tabTitle  عنوان التاب — بيُستخدم كـ viewId للخطوط والزوم والتسجيل
-     * @param closAble  هل التاب قابل للإغلاق
+     * @param tabPane  حاوية التبويبات
+     * @param fxmlPath مسار ملف الـ FXML
+     * @param tabTitle عنوان التاب — بيُستخدم كـ viewId للخطوط والزوم والتسجيل
+     * @param closAble هل التاب قابل للإغلاق
      */
     public static void loadFXMLInTab(TabPane tabPane, String fxmlPath, String tabTitle, boolean closAble) {
 

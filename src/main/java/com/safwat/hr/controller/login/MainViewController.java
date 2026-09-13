@@ -3,10 +3,11 @@ package com.safwat.hr.controller.login;
 import com.safwat.hr.controller.admin.system.AppLogBus;
 import com.safwat.hr.controller.admin.user.AdminUsersController;
 import com.safwat.hr.controller.admin.user.ChangePasswordController;
+import com.safwat.hr.controller.appearance.AppearanceSettingsController;
 import com.safwat.hr.controller.message.controller.MessageInboxController;
-import com.safwat.hr.controllers.AppearanceSettingsController;
-import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.ui.HRNotificationBell;
+import com.safwat.hr.notification.ui.HRNotificationPanel;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.shared.file.TempFileCleaner;
 import com.safwat.hr.ui.icons.Icons;
@@ -27,6 +28,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -37,7 +39,8 @@ import java.util.ResourceBundle;
 public class MainViewController implements Initializable {
 
     @FXML
-    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_mail, btn_chat, btn_report, btn_payManager, btn_records, btn_tableView;
+    private Button btn_payments, btn_changeCard, btn_PayrollVocab, btn_mail, btn_chat,
+            btn_report, btn_payManager, btn_records, btn_tableView;
     @FXML
     private Button btn_scaleView;
     @FXML
@@ -60,10 +63,19 @@ public class MainViewController implements Initializable {
     @FXML
     private Label bellIcon, badge;
 
-    // ✅ جديد — نحتفظ بـ reference للـ Inbox Controller
+    // ══════════════════════════════════════════════════════════════
+    //  Refs — نحتفظ بها عشان نقدر نمرر النتوفيكشن للتاب
+    // ══════════════════════════════════════════════════════════════
+
     private MessageInboxController inboxController;
     private Tab messagesTab;
+
+    private com.safwat.hr.controller.chat.controller.ChatViewController chatController;
+    private Tab chatTab;
+
     private Icons icons;
+
+    private static final String CHAT_FXML = "/com/safwat/hr/controller/chat/ChatView.fxml";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -78,7 +90,7 @@ public class MainViewController implements Initializable {
 
             // ✅ ربط زرار X بـ AppLifecycle.shutdown()
             stage.setOnCloseRequest((WindowEvent event) -> {
-                event.consume(); // منع الإغلاق الفوري
+                event.consume();
                 boolean confirm = AlertUtil.showConfirmation("إغلاق البرنامج",
                         "هل أنت متأكد من إغلاق البرنامج؟");
                 if (confirm) {
@@ -88,23 +100,43 @@ public class MainViewController implements Initializable {
 
             HRNotificationBell bell = new HRNotificationBell(stage, bellIcon, badge);
 
-            // ✅ جديد — ربط الـ Bell بالـ Inbox
+            // ✅ ربط الـ Bell بـ Panel + routing للإشعارات
             bell.setOnMouseClicked(e -> {
+                HRNotificationPanel panel = new HRNotificationPanel(stage);
 
-                com.safwat.hr.notification.ui.HRNotificationPanel panel =
-                        new com.safwat.hr.notification.ui.HRNotificationPanel(stage);
-
+                // ═══════════════════════════════════════════════════
+                //  رسائل النظام (MESSAGE) → نافذة Messages
+                // ═══════════════════════════════════════════════════
                 panel.setOnOpenMessage(notification -> {
-                    // 1. افتح تاب الرسائل
                     openMessagesTab();
-                    // 2. مرر الرسالة
                     if (inboxController != null) {
                         inboxController.openMessage(notification);
                     }
                 });
 
-                // Show popup (مش هنستخدم الـ Bell's default panel)
-                javafx.stage.Popup popup = new javafx.stage.Popup();
+                // ═══════════════════════════════════════════════════
+                //  محادثات (CHAT) → نافذة الشات على المحادثة المحددة
+                // ═══════════════════════════════════════════════════
+                panel.setOnOpenChat(notification -> {
+                    Long conversationId = extractId(notification.getActionTarget(), "chat/");
+                    openChatTab();
+                    if (chatController != null && conversationId != null) {
+                        chatController.openConversation(conversationId);
+                    }
+                });
+
+                // ═══════════════════════════════════════════════════
+                //  fallback لأي نوع تاني (يفتح actionTarget كملف)
+                // ═══════════════════════════════════════════════════
+                panel.setOnOpenNotification(notification -> {
+                    String target = notification.getActionTarget();
+                    if (target != null && !target.isBlank()) {
+                        com.safwat.hr.notification.util.FileOpener.openAsync(target);
+                    }
+                });
+
+                // ── عرض الـ Popup ──
+                Popup popup = new Popup();
                 popup.setAutoHide(true);
                 popup.getContent().add(panel);
 
@@ -112,7 +144,7 @@ public class MainViewController implements Initializable {
                 double y = bell.localToScreen(bell.getBoundsInLocal()).getMaxY() + 8;
                 popup.show(stage, x, y);
 
-                // ✅ تسجيل Scene الـ Popup في ThemeEventBus لتطبيق الثيم عليها فورًا
+                // ✅ تسجيل Scene الـ Popup في ThemeEventBus
                 if (popup.getScene() != null) {
                     ThemeEventBus.register(popup.getScene());
                 }
@@ -120,12 +152,13 @@ public class MainViewController implements Initializable {
 
             toolbar.getChildren().add(bell);
         });
+
         icons.getBellImage(bellIcon);
         icons.getChatImage(btn_chat);
         icons.getMailImage(btn_mail);
         icons.getReportImage(btn_report);
 
-        leftLable.setText(ApiClient.getUserName());
+        leftLable.setText(SessionManager.getInstance().getDisplayName());
         TempFileCleaner.cleanOnStartup();
     }
 
@@ -134,8 +167,6 @@ public class MainViewController implements Initializable {
     }
 
     void setMainViewIcon() {
-        // SAFButton.flat(false, btn_payments, btn_changeCard, btn_PayrollVocab, btn_payManager,
-        //   btn_scaleView, btn_records, btn_tableView);
     }
 
     void setButtonsAction() {
@@ -144,19 +175,26 @@ public class MainViewController implements Initializable {
         btn_PayrollVocab.setOnAction(_ -> openPayVocab());
         btn_report.setOnAction(_ -> openPayrollReport());
         btn_payManager.setOnAction(_ -> openPayManager());
-        // ✅ جديد — فتح التاب مع الـ Controller
+
+        // ✅ فتح تاب الرسائل مع الـ Controller
         btn_mail.setOnAction(_ -> openMessagesTab());
+
+        // ✅ فتح تاب الشات مع الـ Controller
+        btn_chat.setOnAction(_ -> openChatTab());
 
         btn_scaleView.setOnAction(_ -> openScaleView());
         btn_records.setOnAction(_ -> openRecordsView());
         btn_tableView.setOnAction(_ -> openTableView());
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Tabs with Controller Refs
+    // ══════════════════════════════════════════════════════════════
+
     /**
-     * ✅ جديد — فتح/إنشاء تاب الرسائل مع Controller
+     * فتح/إنشاء تاب الرسائل مع Controller. لو موجود → نفعّله.
      */
     private void openMessagesTab() {
-        // لو التاب موجود → فعله
         if (messagesTab != null) {
             tab.getSelectionModel().select(messagesTab);
             return;
@@ -171,7 +209,7 @@ public class MainViewController implements Initializable {
             messagesTab = new Tab("📧 البريد", inboxRoot);
             messagesTab.setClosable(true);
 
-            // ✅ لما يتقفل → نمسح الـ reference
+            // لما يتقفل → نمسح الـ reference
             messagesTab.setOnClosed(e -> {
                 inboxController = null;
                 messagesTab = null;
@@ -184,6 +222,61 @@ public class MainViewController implements Initializable {
             ex.printStackTrace();
         }
     }
+
+    /**
+     * فتح/إنشاء تاب الشات مع Controller. لو موجود → نفعّله.
+     */
+    private void openChatTab() {
+        if (chatTab != null) {
+            tab.getSelectionModel().select(chatTab);
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(CHAT_FXML));
+            Parent chatRoot = loader.load();
+            chatController = loader.getController();
+
+            chatTab = new Tab("💬 محادثات", chatRoot);
+            chatTab.setClosable(true);
+
+            // لما يتقفل → نمسح الـ reference
+            chatTab.setOnClosed(e -> {
+                chatController = null;
+                chatTab = null;
+            });
+
+            tab.getTabs().add(chatTab);
+            tab.getSelectionModel().select(chatTab);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Helper — extract ID from actionTarget
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * يستخرج الـ id من actionTarget (مثل "chat/45" → 45).
+     *
+     * @param target النص
+     * @param prefix "chat/" أو "messages/"
+     * @return الـ id أو null
+     */
+    private Long extractId(String target, String prefix) {
+        if (target == null || !target.startsWith(prefix)) return null;
+        try {
+            return Long.parseLong(target.substring(prefix.length()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Tab Loaders العادية
+    // ══════════════════════════════════════════════════════════════
 
     void openPaymentsView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPaymentsView(), "تقارير صرف", true);
@@ -200,18 +293,20 @@ public class MainViewController implements Initializable {
     @FXML
     private void openPayrollReport() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
-        // ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
     }
 
+    /**
+     * @deprecated استخدم {@link #openChatTab()} بدل دي.
+     * موجودة للتوافق مع FXML القديم.
+     */
+    @Deprecated
     @FXML
     void openChatView() {
-
-        TabManager.loadFXMLInTab(tab, "/com/safwat/hr/controller/chat/ChatView.fxml", "محادثات", true);
+        openChatTab();
     }
 
     @FXML
     void openPayManager() {
-
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollManager(), "مدير استحقاقات", true);
     }
 
@@ -239,6 +334,10 @@ public class MainViewController implements Initializable {
     void openBackupView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackupView(), "نسخ احتياطي", true);
     }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Themes
+    // ══════════════════════════════════════════════════════════════
 
     @FXML
     void applyThemeBlack() {
@@ -315,10 +414,10 @@ public class MainViewController implements Initializable {
         ThemeEventBus.applyTheme(ThemeEventBus.CUSTOM);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Session
+    // ══════════════════════════════════════════════════════════════
 
-    /**
-     * تسجيل الخروج: مسح الجلسة + إيقاف الخدمات المباشرة + إغلاق البرنامج.
-     */
     @FXML
     private void logout() {
         boolean confirm = AlertUtil.showConfirmation("تسجيل الخروج",
@@ -329,10 +428,6 @@ public class MainViewController implements Initializable {
         AppLifecycle.shutdown();
     }
 
-    /**
-     * إعادة تسجيل الدخول: مسح الجلسة + الرجوع لشاشة Login من غير إغلاق البرنامج.
-     * الخدمات (Backend / PostgreSQL) تفضل شغّالة.
-     */
     @FXML
     private void reLogin() {
         boolean confirm = AlertUtil.showConfirmation("إعادة تسجيل الدخول",
@@ -345,9 +440,15 @@ public class MainViewController implements Initializable {
         navigateToLogin();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    //  Dialogs / Windows
+    // ══════════════════════════════════════════════════════════════
+
     @FXML
     void openBasicSetting() {
-        ViewManager.openIndependentView("/com/safwat/hr/controller/admin/system/main.fxml");
+        ViewManager.openIndependentView(
+                "/com/safwat/hr/controller/admin/system/main.fxml",
+                "اعدادات التشغيل");
     }
 
     @FXML
@@ -365,13 +466,20 @@ public class MainViewController implements Initializable {
         AppearanceSettingsController.openGeneral();
     }
 
-    /**
-     * الانتقال لشاشة تسجيل الدخول في نفس الـ Stage (بدون إغلاق البرنامج).
-     */
+    @FXML
+    void openTemplateView() {
+        ViewManager.openIndependentView(
+                "/com/safwat/hr/controller/template/Template.fxml",
+                "نماذج التحميل");
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Navigate to Login
+    // ══════════════════════════════════════════════════════════════
+
     @FXML
     private void navigateToLogin() {
         try {
-            // ✅ المسار الصحيح
             String fxmlPath = "/com/safwat/hr/controller/login/Login.fxml";
             URL resource = getClass().getResource(fxmlPath);
 
@@ -383,7 +491,6 @@ public class MainViewController implements Initializable {
             Parent loginView = loader.load();
 
             Stage stage = (Stage) btn_report.getScene().getWindow();
-            // ✅ إزالة الـ CloseRequest القديم قبل تبديل الشاشة
             stage.setOnCloseRequest(null);
             stage.setScene(new Scene(loginView));
             stage.setTitle("HR MATE - تسجيل الدخول");

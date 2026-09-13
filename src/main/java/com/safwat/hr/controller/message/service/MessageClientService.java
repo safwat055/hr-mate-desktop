@@ -1,18 +1,19 @@
 package com.safwat.hr.controller.message.service;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.safwat.hr.controller.message.dto.InboxStatsDTO;
 import com.safwat.hr.controller.message.dto.MessageSummaryDTO;
 import com.safwat.hr.controller.message.dto.UserInfo;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.FileTransferClient;
+import com.safwat.hr.network.SessionManager;
+import com.safwat.hr.network.util.FlexibleLocalDateTimeDeserializer;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.model.HRNotification.NotificationCategory;
 import com.safwat.hr.notification.model.HRNotification.NotificationType;
@@ -30,7 +31,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,16 +58,21 @@ import java.util.stream.Collectors;
 public class MessageClientService {
 
     private static final MessageClientService INSTANCE = new MessageClientService();
-    private static final DateTimeFormatter SERVER_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final NotificationService notifService = NotificationService.getInstance();
-    private final ObjectMapper mapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule()
-                    .addDeserializer(LocalDateTime.class,
-                            new LocalDateTimeDeserializer(SERVER_DATE_FORMAT))
-            )
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private final ObjectMapper mapper = createMapper();
+
+    private static ObjectMapper createMapper() {
+        JavaTimeModule timeModule = new JavaTimeModule();
+        // ⭐ سجّل الـ deserializer المرن
+        timeModule.addDeserializer(LocalDateTime.class, new FlexibleLocalDateTimeDeserializer());
+
+        return new ObjectMapper()
+                .registerModule(timeModule)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
+
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final AtomicBoolean connecting = new AtomicBoolean(false);
     private WebSocketStompClient stompClient;
@@ -111,15 +116,19 @@ public class MessageClientService {
      */
     public void connect() {
         if (connected.get() || connecting.getAndSet(true)) {
-
+            System.out.println("[MessageWS] Already connected or connecting — skip");
             return;
         }
 
         String token = ApiClient.getAuthToken();
-        String username = ApiClient.getUserName();
+        String username = SessionManager.getInstance().getUsername();
+
+        System.out.println("[MessageWS] Connecting — username=" + username
+                + ", token=" + (token != null ? "present" : "NULL"));
 
         if (token == null || token.isEmpty()) {
-
+            System.err.println("[MessageWS] ❌ No token available — scheduling reconnect");
+            connecting.set(false);
             scheduleReconnect();
             return;
         }
@@ -137,69 +146,101 @@ public class MessageClientService {
         converter.setObjectMapper(mapper);
         stompClient.setMessageConverter(converter);
 
-        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
+        // ═════════════════════════════════════════════════════════════
+        //  ⭐ الإصلاح الأساسي: التوكن لازم يتبعت في مكانين
+        // ═════════════════════════════════════════════════════════════
+
+        // ① HTTP handshake headers — للـ initial WebSocket upgrade
+        WebSocketHttpHeaders httpHeaders = new WebSocketHttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+
+        // ② STOMP CONNECT headers — اللي WebSocketAuthInterceptor بيقرأ منها
+        StompHeaders connectHeaders = new StompHeaders();
+        connectHeaders.add("Authorization", "Bearer " + token);
 
         String wsUrl = getWebSocketUrl();
+        System.out.println("[MessageWS] URL: " + wsUrl);
 
+        // ⭐ overload 4-arg: (url, httpHeaders, stompConnectHeaders, handler)
+        stompClient.connectAsync(wsUrl, httpHeaders, connectHeaders,
+                new StompSessionHandlerAdapter() {
 
-        stompClient.connectAsync(wsUrl, headers, new StompSessionHandlerAdapter() {
+                    @Override
+                    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                        stompSession = session;
+                        connected.set(true);
+                        connecting.set(false);
 
-            @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-                stompSession = session;
-                connected.set(true);
-                connecting.set(false);
+                        System.out.println("[MessageWS] ✅ Connected — sessionId="
+                                + session.getSessionId());
 
+                        subscribeToMessages();
+                        loadUnreadMessagesAndNotify();
+                        refreshAllMessages();
+                    }
 
-                subscribeToMessages();
-                loadUnreadMessagesAndNotify();
-                refreshAllMessages();
-            }
+                    @Override
+                    public void handleException(StompSession s,
+                                                StompCommand command,
+                                                StompHeaders headers,
+                                                byte[] payload,
+                                                Throwable exception) {
+                        System.err.println("[MessageWS] STOMP Exception on " + command
+                                + ": " + exception.getMessage());
+                    }
 
-            @Override
-            public void handleException(StompSession s,
-                                        StompCommand command,
-                                        StompHeaders headers,
-                                        byte[] payload,
-                                        Throwable exception) {
-                System.err.println("[MessageClientService] STOMP Exception: " + exception.getMessage());
-            }
-
-            @Override
-            public void handleTransportError(StompSession s, Throwable exception) {
-                connected.set(false);
-                connecting.set(false);
-                System.err.println("[MessageClientService] Transport error: " + exception.getMessage());
-                scheduleReconnect();
-            }
-        });
+                    @Override
+                    public void handleTransportError(StompSession s, Throwable exception) {
+                        connected.set(false);
+                        connecting.set(false);
+                        System.err.println("[MessageWS] ❌ Transport error: "
+                                + exception.getMessage());
+                        scheduleReconnect();
+                    }
+                });
     }
 
     /**
      * الاشتراك في قناة /user/queue/messages لاستقبال الرسائل الجديدة.
      */
     private void subscribeToMessages() {
-        if (!isReady()) return;
+        if (stompSession == null) {
+            System.err.println("[MessageWS] ❌ Cannot subscribe — session is null");
+            return;
+        }
 
         String destination = "/user/queue/messages";
+        System.out.println("[MessageWS] ➡️ Subscribing to " + destination);
 
-        messageSubscription = stompSession.subscribe(destination, new StompFrameHandler() {
-            @Override
-            public Type getPayloadType(StompHeaders headers) {
-                return MessageNotificationDTO.class;
-            }
-
-            @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                if (payload instanceof MessageNotificationDTO dto) {
-
-                    handleIncomingMessage(dto);
+        try {
+            messageSubscription = stompSession.subscribe(destination, new StompFrameHandler() {
+                @Override
+                public Type getPayloadType(StompHeaders headers) {
+                    System.out.println("[MessageWS] getPayloadType called");
+                    return MessageNotificationDTO.class;
                 }
-            }
-        });
 
+                @Override
+                public void handleFrame(StompHeaders headers, Object payload) {
+                    System.out.println("[MessageWS] 📩 Frame received — destination="
+                            + headers.getDestination()
+                            + ", payloadType=" + (payload != null
+                            ? payload.getClass().getSimpleName() : "null"));
 
+                    if (payload instanceof MessageNotificationDTO dto) {
+                        handleIncomingMessage(dto);
+                    } else {
+                        System.err.println("[MessageWS] ⚠️ Unexpected payload type: "
+                                + (payload != null ? payload.getClass() : "null"));
+                    }
+                }
+            });
+            System.out.println("[MessageWS] ✅ Subscribed — id="
+                    + messageSubscription.getSubscriptionId());
+        } catch (Exception e) {
+            System.err.println("[MessageWS] ❌ Subscribe failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -209,10 +250,13 @@ public class MessageClientService {
      * @param dto بيانات الرسالة الواردة
      */
     private void handleIncomingMessage(MessageNotificationDTO dto) {
-        String currentUser = ApiClient.getUserName();
+        String currentUser = SessionManager.getInstance().getUsername();
+
+        System.out.println("[MessageWS] Incoming message — recipient="
+                + dto.recipientUsername + ", currentUser=" + currentUser);
 
         if (currentUser == null || !currentUser.equals(dto.recipientUsername)) {
-
+            System.out.println("[MessageWS] ⚠️ Recipient mismatch — skipping");
             return;
         }
 
@@ -224,7 +268,7 @@ public class MessageClientService {
                 });
 
         if (exists) {
-
+            System.out.println("[MessageWS] Notification already exists — skipping");
             return;
         }
 
@@ -256,7 +300,8 @@ public class MessageClientService {
 
             notifService.send(builder.build());
             notifService.updateUnreadCount();
-
+            System.out.println("[MessageWS] ✅ Notification added for message "
+                    + dto.messageId);
         });
     }
 
@@ -264,6 +309,8 @@ public class MessageClientService {
      * قطع الاتصال بخادم WebSocket وتحرير الموارد.
      */
     public void disconnect() {
+        System.out.println("[MessageWS] Disconnecting...");
+
         if (messageSubscription != null) {
             try {
                 messageSubscription.unsubscribe();
@@ -292,7 +339,6 @@ public class MessageClientService {
 
         connected.set(false);
         connecting.set(false);
-
     }
 
     /**
@@ -310,7 +356,7 @@ public class MessageClientService {
      * @return عنوان WebSocket كامل
      */
     private String getWebSocketUrl() {
-        String baseUrl = ApiClient.BASE_URL2;
+        String baseUrl = ApiClient.getBaseWsUrl();
         baseUrl = baseUrl.replaceAll("/+$", "");
         return baseUrl;
     }
@@ -341,7 +387,6 @@ public class MessageClientService {
                 Platform.runLater(() -> {
                     int unread = stats.getUnreadCount() > 0 ? (int) stats.getUnreadCount() : 0;
                     notifService.updateUnreadCount(unread);
-
                 });
             }
         });
@@ -357,7 +402,8 @@ public class MessageClientService {
     public void refreshAllMessages() {
         CompletableFuture.supplyAsync(() -> {
             try {
-                var response = ApiClient.get(buildApiUrl("/messages/inbox?page=0&size=100"), MessageSummaryDTO[].class);
+                var response = ApiClient.get(buildApiUrl("/messages/inbox?page=0&size=100"),
+                        MessageSummaryDTO[].class);
                 if (response.isSuccess() && response.getData() != null)
                     return Arrays.asList(response.getData());
                 return List.<MessageSummaryDTO>of();
@@ -380,7 +426,6 @@ public class MessageClientService {
                 }
 
                 notifService.updateUnreadCount();
-
             });
         });
     }
@@ -410,7 +455,7 @@ public class MessageClientService {
      * @param msg بيانات الملخص من الخادم
      * @return كائن HRNotification
      */
-    private HRNotification toNotification(MessageSummaryDTO msg) {
+    public HRNotification toNotification(MessageSummaryDTO msg) {
         HRNotification.Builder builder = HRNotification.builder()
                 .category(NotificationCategory.MESSAGE)
                 .type(NotificationType.MESSAGE)
@@ -456,7 +501,6 @@ public class MessageClientService {
                     return response.getData();
                 return null;
             } catch (Exception e) {
-
                 return null;
             }
         });
@@ -472,7 +516,8 @@ public class MessageClientService {
             try {
                 TypeReference<ApiResponse<List<MessageSummaryDTO>>> typeRef = new TypeReference<>() {
                 };
-                var response = ApiClient.getWithTypeRef(buildApiUrl("/messages/inbox?page=0&size=100"), typeRef);
+                var response = ApiClient.getWithTypeRef(
+                        buildApiUrl("/messages/inbox?page=0&size=100"), typeRef);
 
                 if (response.isSuccess() && response.getData() != null) {
                     List<MessageSummaryDTO> all = response.getData().getData();
@@ -480,7 +525,6 @@ public class MessageClientService {
                 }
                 return List.of();
             } catch (Exception e) {
-
                 return List.of();
             }
         });
@@ -493,7 +537,7 @@ public class MessageClientService {
      * @return URL كامل
      */
     private String buildFullUrl(String path) {
-        String base = ApiClient.BASE_URL;
+        String base = ApiClient.getBaseUrl();
         if (base == null) base = "";
 
         base = base.replaceAll("/+$", "");
@@ -524,7 +568,6 @@ public class MessageClientService {
             try {
                 String url = buildFullUrl("/messages/" + messageId);
 
-
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
                 c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
@@ -538,7 +581,6 @@ public class MessageClientService {
                 r.close();
 
                 String rawJson = sb.toString();
-
 
                 @SuppressWarnings("unchecked")
                 Map<String, Object> root = mapper.readValue(rawJson, Map.class);
@@ -574,7 +616,6 @@ public class MessageClientService {
             try {
                 String url = buildFullUrl("/messages/" + messageId + "/thread");
 
-
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
                 c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
@@ -583,7 +624,6 @@ public class MessageClientService {
                 c.setReadTimeout(10000);
 
                 int status = c.getResponseCode();
-
 
                 if (status != 200) {
                     throw new RuntimeException("HTTP " + status);
@@ -610,7 +650,6 @@ public class MessageClientService {
                 return null;
 
             } catch (Exception e) {
-
                 return null;
             }
         });
@@ -620,63 +659,9 @@ public class MessageClientService {
     //  Send / Reply
     // =====================================================================
 
-    /**
-     * إرسال رسالة جديدة لعدة مستلمين.
-     *
-     * @param recipientUsernames أسماء المستخدمين المستلمين
-     * @param subject            موضوع الرسالة
-     * @param body               محتوى الرسالة
-     * @param attachments        قائمة ملفات مرفقة (يمكن أن تكون null)
-     * @param onSuccess          callback عند النجاح
-     * @param onError            callback عند الفشل مع نص الخطأ
-     */
-    public void sendMessageToMultiple(List<String> recipientUsernames,
-                                      String subject,
-                                      String body,
-                                      List<Path> attachments,
-                                      Runnable onSuccess,
-                                      Consumer<String> onError) {
-
-        new Thread(() -> {
-            try {
-                Map<String, Object> formData = new java.util.HashMap<>();
-                Map<String, Object> data = new java.util.HashMap<>();
-                data.put("recipientUsernames", recipientUsernames);
-                data.put("subject", subject != null ? subject : "");
-                data.put("body", body != null ? body : "");
-                formData.put("data", data);
-
-                if (attachments != null && !attachments.isEmpty()) {
-                    for (Path file : attachments)
-                        formData.put("files", file);
-                }
-
-                var response = ApiClient.uploadFile(buildApiUrl("/messages"), formData, Object.class);
-                handleResponse(response.isSuccess(), response.getMessage(), onSuccess, onError);
-
-            } catch (Exception e) {
-                Platform.runLater(() -> onError.accept(e.getMessage()));
-            }
-        }, "send-multi-message").start();
-    }
-
-    /**
-     * الرد على رسالة موجودة.
-     *
-     * @param parentId    معرف الرسالة الأصلية
-     * @param subject     موضوع الرد
-     * @param body        محتوى الرد
-     * @param attachments قائمة ملفات مرفقة (يمكن أن تكون null)
-     * @param onSuccess   callback عند النجاح
-     * @param onError     callback عند الفشل
-     */
-    public void replyToMessage(Long parentId,
-                               String subject,
-                               String body,
-                               List<Path> attachments,
-                               Runnable onSuccess,
+    public void replyToMessage(Long parentId, String subject, String body, List<Path> attachments,
+                               java.util.function.Consumer<Map<String, Object>> onSuccess,
                                Consumer<String> onError) {
-
         new Thread(() -> {
             try {
                 Map<String, Object> formData = new java.util.HashMap<>();
@@ -686,18 +671,70 @@ public class MessageClientService {
                 data.put("body", body != null ? body : "");
                 formData.put("data", data);
 
-                if (attachments != null && !attachments.isEmpty()) {
-                    for (Path file : attachments)
-                        formData.put("files", file);
+                if (attachments != null && !attachments.isEmpty())
+                    for (Path file : attachments) formData.put("files", file);
+
+                var response = FileTransferClient.uploadFile(
+                        buildApiUrl("/messages/reply"), formData, Map.class);
+                if (response.isSuccess()) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> data2 = (Map<String, Object>) response.getData();
+                    Platform.runLater(() -> onSuccess.accept(data2));
+                } else {
+                    Platform.runLater(() -> onError.accept(response.getMessage()));
                 }
-
-                var response = ApiClient.uploadFile(buildApiUrl("/messages/reply"), formData, Object.class);
-                handleResponse(response.isSuccess(), response.getMessage(), onSuccess, onError);
-
             } catch (Exception e) {
                 Platform.runLater(() -> onError.accept(e.getMessage()));
             }
         }, "reply-message").start();
+    }
+
+    public void sendMessageToMultiple(List<String> recipientUsernames, String subject, String body,
+                                      List<Path> attachments,
+                                      java.util.function.Consumer<List<Map<String, Object>>> onSuccess,
+                                      Consumer<String> onError) {
+        new Thread(() -> {
+            try {
+                Map<String, Object> formData = new java.util.HashMap<>();
+                Map<String, Object> data = new java.util.HashMap<>();
+                data.put("recipientUsernames", recipientUsernames);
+                data.put("subject", subject != null ? subject : "");
+                data.put("body", body != null ? body : "");
+                formData.put("data", data);
+
+                if (attachments != null && !attachments.isEmpty())
+                    for (Path file : attachments) formData.put("files", file);
+
+                var response = FileTransferClient.uploadFile(
+                        buildApiUrl("/messages"), formData, List.class);
+                if (response.isSuccess()) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> data2 = (List<Map<String, Object>>) response.getData();
+                    Platform.runLater(() -> onSuccess.accept(data2));
+                } else {
+                    Platform.runLater(() -> onError.accept(response.getMessage()));
+                }
+            } catch (Exception e) {
+                Platform.runLater(() -> onError.accept(e.getMessage()));
+            }
+        }, "send-multi-message").start();
+    }
+
+    public CompletableFuture<List<MessageSummaryDTO>> getSentMessages() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                TypeReference<ApiResponse<List<MessageSummaryDTO>>> typeRef = new TypeReference<>() {
+                };
+                var response = ApiClient.getWithTypeRef(
+                        buildApiUrl("/messages/sent?page=0&size=100"), typeRef);
+                if (response.isSuccess() && response.getData() != null)
+                    return response.getData().getData();
+                return List.<MessageSummaryDTO>of();
+            } catch (Exception e) {
+                System.err.println("[MessageClientService] فشل جلب المرسلة: " + e.getMessage());
+                return List.<MessageSummaryDTO>of();
+            }
+        });
     }
 
     // =====================================================================
@@ -713,9 +750,10 @@ public class MessageClientService {
     public CompletableFuture<Void> markMessageAsRead(Long messageId) {
         return CompletableFuture.runAsync(() -> {
             try {
-                ApiClient.put(buildApiUrl("/messages/" + messageId + "/read"), null, Void.class);
+                ApiClient.put(buildApiUrl("/messages/" + messageId + "/read"),
+                        null, Void.class);
             } catch (Exception e) {
-
+                // silent
             }
         });
     }
@@ -741,7 +779,6 @@ public class MessageClientService {
             try {
                 String url = buildFullUrl("/messages/attachments/" + token);
 
-
                 java.net.URL u = new java.net.URL(url);
                 java.net.HttpURLConnection c = (java.net.HttpURLConnection) u.openConnection();
                 c.setRequestProperty("Authorization", "Bearer " + ApiClient.getAuthToken());
@@ -750,7 +787,6 @@ public class MessageClientService {
                 c.setReadTimeout(30000);
 
                 int status = c.getResponseCode();
-
 
                 if (status != 200) {
                     String errMsg = "HTTP " + status;
@@ -770,9 +806,9 @@ public class MessageClientService {
 
                 Files.createDirectories(targetPath.getParent());
                 try (java.io.InputStream in = c.getInputStream()) {
-                    Files.copy(in, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(in, targetPath,
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 }
-
 
                 Platform.runLater(onSuccess);
 
@@ -806,11 +842,9 @@ public class MessageClientService {
                 c.setReadTimeout(5000);
 
                 int status = c.getResponseCode();
-
                 return status == 200;
 
             } catch (Exception e) {
-
                 return false;
             }
         });
@@ -862,8 +896,10 @@ public class MessageClientService {
                         if (o instanceof Map) {
                             @SuppressWarnings("unchecked")
                             Map<String, Object> userMap = (Map<String, Object>) o;
-                            String username = userMap.get("username") != null ? userMap.get("username").toString() : "";
-                            String displayName = userMap.get("displayName") != null ? userMap.get("displayName").toString() : "";
+                            String username = userMap.get("username") != null
+                                    ? userMap.get("username").toString() : "";
+                            String displayName = userMap.get("displayName") != null
+                                    ? userMap.get("displayName").toString() : "";
                             users.add(new UserInfo(username, displayName));
                         }
                     }
@@ -896,11 +932,10 @@ public class MessageClientService {
      */
     private String buildAvatar(String displayName) {
         if (displayName == null || displayName.isBlank()) return "؟";
-        String[] parts = displayName.trim().split("\s+");
+        String[] parts = displayName.trim().split("\\s+");
         if (parts.length == 1) return String.valueOf(parts[0].charAt(0));
         return "" + parts[0].charAt(0) + parts[1].charAt(0);
     }
-
 
     // =====================================================================
     //  DTOs
@@ -919,7 +954,7 @@ public class MessageClientService {
         public String preview;
         public int attachmentsCount;
         public List<String> attachmentTokens;
-        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")  // ✅ حدد التنسيق
+
         public LocalDateTime createdAt;
     }
 }

@@ -27,7 +27,14 @@
         <!-- Search -->
         <TextField fx:id="searchField" promptText="🔍 البحث في الرسائل..."
                    style="-fx-font-size:13px;-fx-background-radius:8px;-fx-padding:8 12;"/>
-
+        <HBox spacing="6" alignment="CENTER_LEFT">
+            <Button text="الكل" onAction="#onFilterAll"
+                    style="-fx-background-color:#E6F1FB;-fx-text-fill:#185FA5;-fx-font-size:12px;-fx-background-radius:14px;-fx-padding:4 14;"/>
+            <Button text="وارد" onAction="#onFilterInbox"
+                    style="-fx-background-color:#F0F0F0;-fx-text-fill:#555;-fx-font-size:12px;-fx-background-radius:14px;-fx-padding:4 14;"/>
+            <Button text="صادر" onAction="#onFilterSent"
+                    style="-fx-background-color:#F0F0F0;-fx-text-fill:#555;-fx-font-size:12px;-fx-background-radius:14px;-fx-padding:4 14;"/>
+        </HBox>
         <!-- Thread List -->
         <ListView fx:id="threadList" VBox.vgrow="ALWAYS"
                   style="-fx-background-color:transparent;-fx-border-color:transparent;"/>

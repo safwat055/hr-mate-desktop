@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.message.service;
 
 import com.safwat.hr.controller.message.dto.MessageSummaryDTO;
+import com.safwat.hr.network.ApiClient;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -68,6 +69,6 @@ public class MessageStompClient {
             }
         };
 
-        stompClient.connect("ws://localhost:8080/ws", handler);
+        stompClient.connect(ApiClient.getBaseWsUrl(), handler);
     }
 }

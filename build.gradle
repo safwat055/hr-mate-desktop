@@ -30,7 +30,7 @@ application {
 }
 
 javafx {
-    version = '25.0.3'
+    version = '21.0.7'
     modules = ['javafx.controls', 'javafx.fxml', 'javafx.web', 'javafx.graphics', 'javafx.swing', 'javafx.media']
 }
 tasks.withType(JavaCompile) {
@@ -94,12 +94,12 @@ tasks.register('jpackageApp', Exec) {
         def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
 
         // ---- المسارات الأساسية ----
-        def buildDir      = layout.buildDirectory.get().asFile
+        def buildDir = layout.buildDirectory.get().asFile
         def jpackageInput = new File(buildDir, 'jpackage-input')
         def shadowJarFile = shadowJar.archiveFile.get().asFile
 
         // ---- مسار الأيقونة حسب نظام التشغيل ----
-        def iconExt  = isWindows ? 'ico' : 'png'
+        def iconExt = isWindows ? 'ico' : 'png'
         def iconDest = new File(buildDir, "logo.${iconExt}")
 
         // ---- تنظيف وإعداد مجلد الإدخال ----
@@ -127,28 +127,28 @@ tasks.register('jpackageApp', Exec) {
         def jpackageExe = "${System.getProperty('java.home')}/bin/jpackage"
 
         commandLine([
-            jpackageExe,
-            '--type'        , 'app-image',
-            '--name'        , 'hr-mate',
-            '--app-version' , version.toString(),
-            '--input'       , jpackageInput.absolutePath,
-            '--main-jar'    , shadowJarFile.name,
-            '--main-class'  , 'com.safwat.hr.Launcher',
-            '--dest'        , new File(buildDir, 'jpackage-output').absolutePath,
-            '--icon'        , iconDest.absolutePath,
+                jpackageExe,
+                '--type', 'app-image',
+                '--name', 'hr-mate',
+                '--app-version', version.toString(),
+                '--input', jpackageInput.absolutePath,
+                '--main-jar', shadowJarFile.name,
+                '--main-class', 'com.safwat.hr.Launcher',
+                '--dest', new File(buildDir, 'jpackage-output').absolutePath,
+                '--icon', iconDest.absolutePath,
         ])
     }
 
     doLast {
         // ---- نسخ subresource بعد ما jpackage يخلص للمسار الصح ----
-        def isWindows     = org.gradle.internal.os.OperatingSystem.current().isWindows()
-        def buildDir      = layout.buildDirectory.get().asFile
-        def appImageRoot  = new File(buildDir, 'jpackage-output/hr-mate')
+        def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+        def buildDir = layout.buildDirectory.get().asFile
+        def appImageRoot = new File(buildDir, 'jpackage-output/hr-mate')
 
         // Linux: bin/app/   |   Windows: app/
         def targetAppDir = isWindows
-            ? new File(appImageRoot, 'app')
-            : new File(appImageRoot, 'bin/app')
+                ? new File(appImageRoot, 'app')
+                : new File(appImageRoot, 'bin/app')
 
         targetAppDir.mkdirs()
 

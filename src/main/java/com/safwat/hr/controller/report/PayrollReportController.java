@@ -2,8 +2,9 @@ package com.safwat.hr.controller.report;
 
 import com.safwat.hr.controller.payroll.payrollApi.PayrollYearlyApi;
 import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.ReportApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.network.dto.AvailableReportInfo;
 import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.report.core.DataSourceResolver;
@@ -217,7 +218,7 @@ public class PayrollReportController implements Initializable {
 
     void loadAvailableReports() {
         try {
-            availableReports = ApiClient.getAvailableReports()
+            availableReports = ReportApiClient.getAvailableReports()
                     .getData().stream()
                     .map(AvailableReportInfo::getArabicName)
                     .distinct()
@@ -605,7 +606,7 @@ public class PayrollReportController implements Initializable {
 
         try {
             ReportContext context = ReportContext.builder()
-                    .user(ApiClient.getUserName())
+                    .user(SessionManager.getInstance().getUsername())
                     .reportName(txt_reportSearch.getText())
                     .reportType(combo_reportType.getSelectionModel().getSelectedItem())
                     .startDate(txt_startDate.getText())
@@ -671,7 +672,7 @@ public class PayrollReportController implements Initializable {
 
     private void copyLastReport() {
         try {
-            ApiResponse<ReportPayloadResponse> data = ApiClient.getReportPayload();
+            ApiResponse<ReportPayloadResponse> data = ReportApiClient.getLastReportPayload();
             loadFromPayload(data.getData());
         } catch (IOException e) {
             throw new RuntimeException(e);

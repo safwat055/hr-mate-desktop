@@ -5,6 +5,7 @@ import com.safwat.hr.controller.payroll.payrollApi.dto.ChangeCardView;
 import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
+import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;
 
@@ -129,7 +130,7 @@ public class PayrollChangeCardApi {
 
         try {
 
-            return ApiClient.downloadFileViaPostWithBody(
+            return FileTransferClient.downloadFileViaPost(
                     ApiEndpoints.PayrollChange.DOWNLOAD_CARD,
                     request,
                     targetPath

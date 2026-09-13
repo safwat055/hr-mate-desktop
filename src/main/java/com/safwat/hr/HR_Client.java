@@ -1,8 +1,8 @@
 package com.safwat.hr;
 
+import com.safwat.hr.controller.appearance.ColorSettingsManager;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.shared.ColorSettingsManager;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.FontLoader;   // ← إضافة
 import javafx.application.Application;

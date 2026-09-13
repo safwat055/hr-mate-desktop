@@ -31,6 +31,7 @@ import java.util.Deque;
  * الاستخدام:
  * HRToast.show(primaryStage, notification);
  */
+
 public class HRToast {
 
     private static final int TOAST_WIDTH = 370;
@@ -303,6 +304,7 @@ public class HRToast {
             case TASK -> "TSK";
             case SYSTEM -> "SYS";
             case MESSAGE -> "MSG";
+            case CHAT -> "MSG";
         };
     }
 }

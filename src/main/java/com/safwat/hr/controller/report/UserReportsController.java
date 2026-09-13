@@ -1,7 +1,7 @@
 package com.safwat.hr.controller.report;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.ReportApiClient;
 import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.network.dto.ReportStatusResponse;
 import com.safwat.hr.notification.model.HRNotification;
@@ -178,7 +178,7 @@ public class UserReportsController implements Initializable {
     void loadReports() {
         lblStatus.setText("جاري التحميل...");
         try {
-            var response = ApiClient.getMyReports();
+            var response = ReportApiClient.getMyReports();
             if (response.isSuccess() && response.getData() != null) {
                 reportsTable.getItems().setAll(response.getData());
                 lblStatus.setText("عدد التقارير: " + response.getData().size());
@@ -301,7 +301,7 @@ public class UserReportsController implements Initializable {
             Path target = file.toPath();
             boolean downloaded = false;
             try {
-                downloaded = ApiClient.downloadReportFile(report.getReportId(), target);
+                downloaded = ReportApiClient.downloadReportFile(report.getReportId(), target);
             } catch (Exception e) {
                 Platform.runLater(() -> SAFNotification.error("خطأ في التحميل: " + e.getMessage()));
                 return;
@@ -366,7 +366,7 @@ public class UserReportsController implements Initializable {
     private void handleCopy(ReportStatusResponse report) {
         try {
             ApiResponse<ReportPayloadResponse> response =
-                    ApiClient.getReportPayload(report.getReportId());
+                    ReportApiClient.getReportPayload(report.getReportId());
 
             if (!response.isSuccess() || response.getData() == null) {
                 SAFNotification.warning("تعذر جلب بيانات التقرير الأصلي");

@@ -1,7 +1,7 @@
-package com.safwat.hr.auth.session;
+package com.safwat.hr.network.auth.session;
 
-import com.safwat.hr.auth.dto.LoginResponse;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.auth.dto.LoginResponse;
 import lombok.Getter;
 
 public final class SessionManager {

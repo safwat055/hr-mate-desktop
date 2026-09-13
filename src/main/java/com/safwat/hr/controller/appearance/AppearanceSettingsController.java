@@ -1,9 +1,6 @@
-package com.safwat.hr.controllers;
+package com.safwat.hr.controller.appearance;
 
-import com.safwat.hr.shared.ColorSettingsManager;
-import com.safwat.hr.shared.FontSettingsManager;
 import com.safwat.hr.shared.ViewRegistry;
-import com.safwat.hr.shared.ZoomManager;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

@@ -1,4 +1,4 @@
-package com.safwat.hr.auth.dto;
+package com.safwat.hr.network.auth.dto;
 
 
 import lombok.AllArgsConstructor;
@@ -13,5 +13,8 @@ public class LoginResponse {
     private String token;
     private String type;
     private String username;
+
+    private String displayName;   // ✅ جديد
+    private String jobTitle;      // ✅ جديد
 
 }

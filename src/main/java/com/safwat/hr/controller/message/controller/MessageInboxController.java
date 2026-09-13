@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.message.controller;
 
 import com.safwat.hr.controller.message.dto.MessageConversationView;
+import com.safwat.hr.controller.message.dto.MessageSummaryDTO;
 import com.safwat.hr.controller.message.dto.UserInfo;
 import com.safwat.hr.controller.message.service.MessageClientService;
 import com.safwat.hr.controller.message.service.MessageComposer;
@@ -59,6 +60,10 @@ public class MessageInboxController implements Initializable {
     private MessageComposer composer;
     private MessageThread selectedThread;
 
+    private enum FolderFilter {ALL, INBOX, SENT}
+
+    private FolderFilter currentFolder = FolderFilter.ALL;
+
     /**
      * تهيئة الواجهة عند تحميل الـ FXML.
      * تُنشئ القوائم، وتُعد منطقة المحادثة، وتُفعّل البحث، وتُحمّل المحادثات.
@@ -107,15 +112,42 @@ public class MessageInboxController implements Initializable {
      * إعداد مستمع البحث لتصفية المحادثات حسب الموضوع أو المرسل أو المعاينة.
      */
     private void setupSearch() {
-        searchField.textProperty().addListener((obs, old, query) -> {
-            filteredThreads.setPredicate(t -> {
-                if (query == null || query.isBlank()) return true;
-                String q = query.toLowerCase();
-                String subject = t.getSubject() != null ? t.getSubject().toLowerCase() : "";
-                String sender = t.getSenderName() != null ? t.getSenderName().toLowerCase() : "";
-                String preview = t.getPreview() != null ? t.getPreview().toLowerCase() : "";
-                return subject.contains(q) || sender.contains(q) || preview.contains(q);
-            });
+        searchField.textProperty().addListener((obs, old, q) -> applyFilter());
+    }
+
+    @FXML
+    private void onFilterAll() {
+        currentFolder = FolderFilter.ALL;
+        applyFilter();
+    }
+
+    @FXML
+    private void onFilterInbox() {
+        currentFolder = FolderFilter.INBOX;
+        applyFilter();
+    }
+
+    @FXML
+    private void onFilterSent() {
+        currentFolder = FolderFilter.SENT;
+        applyFilter();
+    }
+
+    private void applyFilter() {
+        String query = searchField.getText();
+        filteredThreads.setPredicate(t -> {
+            boolean folderMatch = switch (currentFolder) {
+                case ALL -> true;
+                case INBOX -> !t.isSent();
+                case SENT -> t.isSent();
+            };
+            if (!folderMatch) return false;
+            if (query == null || query.isBlank()) return true;
+            String q = query.toLowerCase();
+            String subject = t.getSubject() != null ? t.getSubject().toLowerCase() : "";
+            String sender = t.getSenderName() != null ? t.getSenderName().toLowerCase() : "";
+            String preview = t.getPreview() != null ? t.getPreview().toLowerCase() : "";
+            return subject.contains(q) || sender.contains(q) || preview.contains(q);
         });
     }
 
@@ -131,17 +163,15 @@ public class MessageInboxController implements Initializable {
             List<Path> attachments = composer.getAttachments();
 
             msgService.replyToMessage(
-                    parentId,
-                    subject,
-                    content,
+                    parentId, subject, content,
                     attachments.isEmpty() ? null : attachments,
-                    () -> Platform.runLater(() -> {
+                    data -> Platform.runLater(() -> {
                         composer.clearAttachments();
-                        refreshThread(parentId);
+                        HRNotification reply = mapToNotification(data);
+                        selectedThread.getReplies().add(reply);
+                        conversationView.displayThread(selectedThread);
                     }),
-                    err -> Platform.runLater(() -> {
-                        System.err.println("[Inbox] Reply failed: " + err);
-                    })
+                    err -> System.err.println("[Inbox] Reply failed: " + err)
             );
         });
 
@@ -156,19 +186,19 @@ public class MessageInboxController implements Initializable {
             }
 
             msgService.sendMessageToMultiple(
-                    recipients,
-                    subject,
-                    content,
+                    recipients, subject, content,
                     attachments.isEmpty() ? null : attachments,
-                    () -> Platform.runLater(() -> {
+                    dataList -> Platform.runLater(() -> {
                         composer.clearAll();
-                        if (selectedThread != null) {
-                            composer.setReplyMode(selectedThread.getSubject());
+                        if (dataList != null && !dataList.isEmpty()) {
+                            // ✅ نضيف المحادثة الجديدة فورًا في تبويب "صادر"
+                            HRNotification sentMsg = mapToNotification(dataList.get(0));
+                            MessageThread newThread = new MessageThread(sentMsg);
+                            threads.add(0, newThread);
+                            threadList.getSelectionModel().select(newThread);
                         }
                     }),
-                    err -> Platform.runLater(() -> {
-                        System.err.println("[Inbox] Send failed: " + err);
-                    })
+                    err -> System.err.println("[Inbox] Send failed: " + err)
             );
         });
 
@@ -242,10 +272,18 @@ public class MessageInboxController implements Initializable {
     private void loadThreads() {
         threads.clear();
         for (HRNotification n : notifService.getAll()) {
-            if (n.isMessage()) {
-                threads.add(new MessageThread(n));
-            }
+            if (n.isMessage()) threads.add(new MessageThread(n));
         }
+        loadSentMessages();
+    }
+
+    private void loadSentMessages() {
+        msgService.getSentMessages().thenAccept(sentList -> Platform.runLater(() -> {
+            for (MessageSummaryDTO m : sentList) {
+                boolean exists = threads.stream().anyMatch(t -> t.getId() != null && t.getId().equals(m.getId()));
+                if (!exists) threads.add(new MessageThread(msgService.toNotification(m)));
+            }
+        }));
     }
 
     /**

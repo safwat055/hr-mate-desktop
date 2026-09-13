@@ -1,16 +1,17 @@
 package com.safwat.hr.controller.login;
 
-import com.safwat.hr.auth.dto.LoginRequest;
-import com.safwat.hr.auth.dto.LoginResponse;
-import com.safwat.hr.auth.service.AuthService;
 import com.safwat.hr.controller.admin.system.AppLogBus;
 import com.safwat.hr.controller.admin.system.BackendService;
 import com.safwat.hr.controller.admin.system.MainController;
 import com.safwat.hr.controller.admin.system.PostgreSQLService;
+import com.safwat.hr.controller.appearance.ColorSettingsManager;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.SessionManager;
+import com.safwat.hr.network.auth.dto.LoginRequest;
+import com.safwat.hr.network.auth.dto.LoginResponse;
+import com.safwat.hr.network.auth.service.AuthService;
 import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.shared.ColorSettingsManager;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import io.github.palexdev.materialfx.controls.MFXButton;
@@ -68,7 +69,7 @@ public class LoginController implements Initializable {
         String lastUser = AppConfig.getString("connection", "user", "");
         if (!lastUser.isEmpty()) {
             txt_userName.setText(lastUser);
-            txt_password.setText(lastUser);
+            // txt_password.setText(lastUser);
             txt_password.requestFocus();
         }
 
@@ -85,7 +86,7 @@ public class LoginController implements Initializable {
 
         Platform.runLater(this::setupKeyboardShortcut);
 
-        btn_login.fire();
+        //btn_login.fire();
     }
 
     // ── اختصارات لوحة المفاتيح ──
@@ -258,7 +259,9 @@ public class LoginController implements Initializable {
             // ✅ نجاح — حفظ التوكن ثم فتح النافذة الرئيسية
             AppConfig.setValue("connection", "user", username);
             ApiClient.setAuthToken(response.getData().getToken());
-            ApiClient.setUserName(response.getData().getUsername());
+            SessionManager.getInstance().setUsername(response.getData().getUsername());
+            SessionManager.getInstance().setDisplayName(response.getData().getDisplayName());
+
             AppLogBus.getInstance().log("[Login] ✅ تسجيل دخول ناجح: " + username);
 
             Platform.runLater(() -> {
@@ -282,7 +285,7 @@ public class LoginController implements Initializable {
      * يعيد true لما يرجع 200.
      */
     private boolean waitForHealth() {
-        String healthUrl = ApiClient.url + ApiClient.masterPC + ":" + ApiClient.port + "/actuator/health";
+        String healthUrl = ApiClient.getBaseUrl() + "/actuator/health";
         HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
@@ -372,6 +375,7 @@ public class LoginController implements Initializable {
             ThemeEventBus.applyTheme(scene, ThemeEventBus.getCurrentTheme());
             ColorSettingsManager.attachTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
             stage.show();
+            AppLifecycle.startNotificationServices(stage);
 
         } catch (Exception e) {
             e.printStackTrace();

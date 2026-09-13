@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.safwat.hr.controller.chat.dto.ChatDTOs;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.util.FlexibleLocalDateTimeDeserializer;
 import javafx.application.Platform;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
@@ -15,6 +16,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,11 +44,8 @@ public class ChatStompClient {
     private final AtomicBoolean shouldReconnect = new AtomicBoolean(true);
     private final Map<Long, StompSession.Subscription> typingSubscriptions = new ConcurrentHashMap<>();
 
-    // ✅ تم الإصلاح: ObjectMapper منفصل للـ WebSocket بيدعم ISO format
-    private final ObjectMapper stompMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    // ⭐ ObjectMapper مع FlexibleLocalDateTimeDeserializer
+    private final ObjectMapper stompMapper = createStompMapper();
 
     private WebSocketStompClient stompClient;
     private StompSession session;
@@ -72,6 +71,20 @@ public class ChatStompClient {
         return instance;
     }
 
+    /**
+     * ⭐ builder موحّد — سجّل الـ Flexible deserializer عشان يقبل
+     * كل صيغ LocalDateTime اللي ممكن السيرفر يبعتها.
+     */
+    private static ObjectMapper createStompMapper() {
+        JavaTimeModule timeModule = new JavaTimeModule();
+        timeModule.addDeserializer(LocalDateTime.class, new FlexibleLocalDateTimeDeserializer());
+
+        return new ObjectMapper()
+                .registerModule(timeModule)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
     // ═════════════════════════════════════════════════════════════════
     //  Connect / Disconnect
     // ═════════════════════════════════════════════════════════════════
@@ -82,7 +95,7 @@ public class ChatStompClient {
                         Consumer<String> onError) {
 
         if (connected.get() || connecting.getAndSet(true)) {
-
+            System.out.println("[ChatWS] Already connected or connecting — skip");
             return;
         }
 
@@ -114,53 +127,65 @@ public class ChatStompClient {
         stompClient = new WebSocketStompClient(wsClient);
         stompClient.setTaskScheduler(scheduler);
 
-        // ✅ تم الإصلاح: استخدام stompMapper (ISO format) بدل ApiClient.mapper
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setObjectMapper(stompMapper);
         stompClient.setMessageConverter(converter);
 
-        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String token = ApiClient.getAuthToken();
+        System.out.println("[ChatWS] Connecting — username=" + currentUsername
+                + ", token=" + (token != null ? "present" : "NULL"));
+
+        // ⭐ التوكن في مكانين (HTTP + STOMP CONNECT)
+        WebSocketHttpHeaders httpHeaders = new WebSocketHttpHeaders();
         if (token != null && !token.isEmpty()) {
-            headers.add("Authorization", "Bearer " + token);
+            httpHeaders.add("Authorization", "Bearer " + token);
         }
 
-        String wsUrl = ApiClient.BASE_URL2;
+        StompHeaders connectHeaders = new StompHeaders();
+        if (token != null && !token.isEmpty()) {
+            connectHeaders.add("Authorization", "Bearer " + token);
+        }
 
+        String wsUrl = ApiClient.getBaseWsUrl();
+        System.out.println("[ChatWS] URL: " + wsUrl);
 
-        stompClient.connectAsync(wsUrl, headers, new StompSessionHandlerAdapter() {
+        stompClient.connectAsync(wsUrl, httpHeaders, connectHeaders,
+                new StompSessionHandlerAdapter() {
 
-            @Override
-            public void afterConnected(StompSession s, StompHeaders connectedHeaders) {
-                session = s;
-                connected.set(true);
-                connecting.set(false);
-                reconnectAttempts.set(0);
+                    @Override
+                    public void afterConnected(StompSession s, StompHeaders connectedHeaders) {
+                        session = s;
+                        connected.set(true);
+                        connecting.set(false);
+                        reconnectAttempts.set(0);
 
-                subscribeToUserNotifications();
-                subscribeToPresence();
-                resubscribeConversations();
-            }
+                        System.out.println("[ChatWS] ✅ Connected — sessionId=" + s.getSessionId());
 
-            @Override
-            public void handleException(StompSession s,
-                                        StompCommand command,
-                                        StompHeaders headers,
-                                        byte[] payload,
-                                        Throwable exception) {
+                        subscribeToUserNotifications();
+                        subscribeToPresence();
+                        resubscribeConversations();
+                    }
 
-                notifyError("STOMP exception: " + exception.getMessage());
-            }
+                    @Override
+                    public void handleException(StompSession s,
+                                                StompCommand command,
+                                                StompHeaders headers,
+                                                byte[] payload,
+                                                Throwable exception) {
+                        System.err.println("[ChatWS] STOMP exception on " + command
+                                + ": " + exception.getMessage());
+                        notifyError("STOMP exception: " + exception.getMessage());
+                    }
 
-            @Override
-            public void handleTransportError(StompSession s, Throwable exception) {
-                connected.set(false);
-                connecting.set(false);
-                System.err.println("[ChatStompClient] ❌ Transport error: " + exception.getMessage());
-                notifyError("Connection lost: " + exception.getMessage());
-                scheduleReconnect();
-            }
-        });
+                    @Override
+                    public void handleTransportError(StompSession s, Throwable exception) {
+                        connected.set(false);
+                        connecting.set(false);
+                        System.err.println("[ChatWS] ❌ Transport error: " + exception.getMessage());
+                        notifyError("Connection lost: " + exception.getMessage());
+                        scheduleReconnect();
+                    }
+                });
     }
 
     private void scheduleReconnect() {
@@ -246,7 +271,6 @@ public class ChatStompClient {
         connected.set(false);
         connecting.set(false);
         reconnectAttempts.set(0);
-
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -256,7 +280,8 @@ public class ChatStompClient {
     private void subscribeToUserNotifications() {
         if (!isReady()) return;
 
-        String destination = "/user/" + currentUsername + "/queue/chat";
+        String destination = "/user/queue/chat";
+        System.out.println("[ChatWS] ➡️ Subscribing to " + destination);
 
         notificationSub = session.subscribe(destination, new StompFrameHandler() {
             @Override
@@ -266,23 +291,20 @@ public class ChatStompClient {
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
+                System.out.println("[ChatWS] 📩 Notification received: " + payload);
                 if (payload instanceof ChatDTOs.WsNotificationDTO dto) {
-
                     Platform.runLater(() -> {
                         if (onNotification != null) onNotification.accept(dto);
                     });
                 }
             }
         });
-
-
     }
 
-    /**
-     * ✅ جديد: اشتراك عام (مش مرتبط بمحادثة معينة) في حالة اتصال المستخدمين
-     */
     private void subscribeToPresence() {
         if (!isReady()) return;
+
+        System.out.println("[ChatWS] ➡️ Subscribing to /topic/presence");
 
         presenceSub = session.subscribe("/topic/presence", new StompFrameHandler() {
             @Override
@@ -299,20 +321,19 @@ public class ChatStompClient {
                 }
             }
         });
-
-
     }
 
     public void subscribeToConversation(long conversationId,
                                         Consumer<ChatDTOs.WsMessageDTO> onMessage) {
         if (!isReady()) {
-            System.err.println("[ChatStompClient] ⚠️ Not connected, can't subscribe to conv " + conversationId);
+            System.err.println("[ChatWS] ⚠️ Not connected, can't subscribe to conv " + conversationId);
             return;
         }
 
         unsubscribeFromConversation(conversationId);
 
         String destination = "/topic/conversation/" + conversationId;
+        System.out.println("[ChatWS] ➡️ Subscribing to " + destination);
 
         StompSession.Subscription sub = session.subscribe(destination, new StompFrameHandler() {
             @Override
@@ -323,14 +344,12 @@ public class ChatStompClient {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 if (payload instanceof ChatDTOs.WsMessageDTO dto) {
-
                     Platform.runLater(() -> onMessage.accept(dto));
                 }
             }
         });
 
         convSubscriptions.put(conversationId, sub);
-
     }
 
     public void subscribeToTyping(long conversationId, Consumer<ChatDTOs.WsMessageDTO> onTypingEvent) {
@@ -361,7 +380,6 @@ public class ChatStompClient {
         });
 
         typingSubscriptions.put(conversationId, sub);
-
     }
 
     public void unsubscribeFromConversation(long conversationId) {
@@ -369,9 +387,7 @@ public class ChatStompClient {
         if (sub != null) {
             try {
                 sub.unsubscribe();
-
-            } catch (Exception e) {
-
+            } catch (Exception ignored) {
             }
         }
 

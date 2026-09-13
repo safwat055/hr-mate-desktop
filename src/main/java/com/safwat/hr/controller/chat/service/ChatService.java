@@ -1,7 +1,7 @@
 package com.safwat.hr.controller.chat.service;
 
 import com.safwat.hr.controller.chat.dto.ChatDTOs;
-import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.notification.model.HRNotification;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -187,14 +187,16 @@ public class ChatService {
             return;
         }
 
-        ChatApiService.sendTextMessage(openConversationId, trimmed, replyToId)
-                .thenAccept(res -> {
-                    if (!res.isSuccess()) {
-                        Platform.runLater(() -> {
-                            if (onError != null) onError.accept(res.getMessage());
-                        });
+        long convId = openConversationId;
+
+        ChatApiService.sendTextMessage(convId, trimmed, replyToId)
+                .thenAccept(res -> Platform.runLater(() -> {
+                    if (res.isSuccess() && res.getData() != null) {
+                        appendSentMessage(convId, res.getData());
+                    } else if (onError != null) {
+                        onError.accept(res.getMessage());
                     }
-                });
+                }));
     }
 
     public void sendMessageWithFiles(String content, java.util.List<java.nio.file.Path> files,
@@ -202,14 +204,37 @@ public class ChatService {
         if (openConversationId == null) return;
         if ((content == null || content.isBlank()) && (files == null || files.isEmpty())) return;
 
-        ChatApiService.sendMessageWithFiles(openConversationId, content, files, replyToId)
-                .thenAccept(res -> {
-                    Platform.runLater(() -> {
-                        if (!res.isSuccess()) {
-                            if (onError != null) onError.accept(res.getMessage());
-                        }
-                    });
-                });
+        long convId = openConversationId;
+
+        ChatApiService.sendMessageWithFiles(convId, content, files, replyToId)
+                .thenAccept(res -> Platform.runLater(() -> {
+                    if (res.isSuccess() && res.getData() != null) {
+                        appendSentMessage(convId, res.getData());
+                    } else if (onError != null) {
+                        onError.accept(res.getMessage());
+                    }
+                }));
+    }
+
+    /**
+     * ✅ جديد — إضافة الرسالة المُرسلة فورًا من رد السيرفر مباشرة، من غير انتظار WebSocket.
+     * لو نفس الرسالة رجعت تاني عن طريق الـ topic broadcast (المرسل مشترك في نفس القناة)
+     * بيتم تجاهلها بمقارنة الـ id — تفادي التكرار.
+     */
+    private void appendSentMessage(long conversationId, ChatDTOs.ChatMessageDTO msg) {
+        if (msg.getId() != null) {
+            boolean exists = messages.stream().anyMatch(m -> msg.getId().equals(m.getId()));
+            if (exists) return;
+        }
+
+        msg.setMine(true);
+
+        if (openConversationId != null && openConversationId == conversationId) {
+            messages.add(msg);
+            if (onNewMessageInOpenConv != null) onNewMessageInOpenConv.run();
+        }
+
+        refreshConversations();
     }
 
     public void sendTyping(boolean typing) {
@@ -349,14 +374,18 @@ public class ChatService {
         if (wsMsg.getMessage() != null && wsMsg.getConversationId() == conversationId) {
             ChatDTOs.ChatMessageDTO msg = wsMsg.getMessage();
 
+            // ✅ تجاهل لو موجودة أصلاً (اتضافت optimistically وقت الإرسال)
+            if (msg.getId() != null) {
+                boolean exists = messages.stream().anyMatch(m -> msg.getId().equals(m.getId()));
+                if (exists) return;
+            }
+
             String me = getCurrentUsername();
             msg.setMine(me != null && me.equals(msg.getSenderUsername()));
 
             messages.add(msg);
             refreshConversations();
 
-            // ✅ جديد: المحادثة مفتوحة قدام المستخدم فعلياً، يبقى نعلّمها كمقروءة
-            // فوراً (بدل ما ننتظر لحد ما يفتح المحادثة تاني) — زي واتساب بالظبط
             if (!msg.isMine()) {
                 ChatApiService.markAsRead(conversationId);
             }
@@ -498,11 +527,17 @@ public class ChatService {
     private void handleIncomingNotification(ChatDTOs.WsNotificationDTO notification) {
         refreshConversations();
 
-        HRNotification.builder()
+        HRNotification n = HRNotification.builder()
+                .category(HRNotification.NotificationCategory.MESSAGE)
+                .type(HRNotification.NotificationType.CHAT)
+                .priority(HRNotification.Priority.NORMAL)
                 .title("رسالة جديدة من " + notification.getSenderDisplayName())
                 .message(notification.getPreview())
-                .type(HRNotification.NotificationType.SYSTEM)
+                .sender(notification.getSenderDisplayName())
+                .action("فتح المحادثة", "chat/" + notification.getConversationId())
                 .build();
+
+        com.safwat.hr.notification.service.NotificationService.getInstance().send(n);
     }
 
     /**
@@ -543,7 +578,7 @@ public class ChatService {
     }
 
     public String getCurrentUsername() {
-        return currentUsername != null ? currentUsername : ApiClient.getUserName();
+        return currentUsername != null ? currentUsername : SessionManager.getInstance().getUsername();
     }
 
     public void setOnNewMessageInOpenConv(Runnable callback) {

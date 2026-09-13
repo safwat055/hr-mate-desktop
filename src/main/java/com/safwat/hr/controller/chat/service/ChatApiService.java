@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.chat.dto.ChatDTOs;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
+import com.safwat.hr.network.FileTransferClient;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -173,7 +174,7 @@ public class ChatApiService {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return ApiClient.uploadFile(
+                return FileTransferClient.uploadFile(
                         BASE + "/conversations/" + conversationId + "/messages",
                         formData,
                         ChatDTOs.ChatMessageDTO.class
@@ -209,7 +210,7 @@ public class ChatApiService {
 
         return CompletableFuture.supplyAsync(() -> {
             try {
-                return ApiClient.uploadFile(
+                return FileTransferClient.uploadFile(
                         BASE + "/conversations/" + conversationId + "/messages",
                         formData,
                         ChatDTOs.ChatMessageDTO.class
@@ -319,7 +320,7 @@ public class ChatApiService {
     // ═════════════════════════════════════════════════════════════════
 
     public static CompletableFuture<Boolean> downloadAttachment(String downloadToken, Path targetPath) {
-        return ApiClient.downloadFileAsync(
+        return FileTransferClient.downloadFileAsync(
                 BASE + "/attachments/" + downloadToken,
                 null,
                 targetPath
