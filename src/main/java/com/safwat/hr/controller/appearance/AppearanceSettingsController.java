@@ -1,26 +1,26 @@
 package com.safwat.hr.controller.appearance;
 
 import com.safwat.hr.shared.ViewRegistry;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
+import com.safwat.hr.ui.util.ViewManager;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class AppearanceSettingsController implements Initializable {
+
+    private static final String CSS_PATH =
+            "/com/safwat/hr/css/settings.css";
 
     private enum Category {
         FONTS("🔤  خطوط", true),
@@ -68,6 +68,12 @@ public class AppearanceSettingsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // ✅ ضمان إن combo-light موجود على viewCombo
+        if (!viewCombo.getStyleClass().contains("combo-light")) {
+            viewCombo.getStyleClass().add("combo-light");
+        }
+        viewCombo.setStyle(""); // نظّف أي style inline قديم
+
         categoryList.setItems(FXCollections.observableArrayList(Category.values()));
         categoryList.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -99,6 +105,8 @@ public class AppearanceSettingsController implements Initializable {
             if (syncingCombo || n == null || n.equals(viewId)) return;
             setViewId(n);
         });
+
+        SettingsThemeLoader.apply(subtitleLabel);
     }
 
     private void showCategory(Category category) {
@@ -124,30 +132,27 @@ public class AppearanceSettingsController implements Initializable {
 
     /**
      * ✅ show() بدل showAndWait() — يتجنب GTK nested event loop crash
-     * اللي بيسبب ArrayIndexOutOfBoundsException في PrismTextLayout.
+     * ✅ يحمّل settings.css على الـ Scene عشان combo-light/color-picker-light يشتغلوا
      */
     public static void open(String viewId) {
-        final String FXML_PATH = "/com/safwat/hr/controller/appearance_settings.fxml";
-        try {
-            FXMLLoader loader = new FXMLLoader(
-                    AppearanceSettingsController.class.getResource(FXML_PATH));
-            Parent root = loader.load();
+        final String fxmlPath = "/com/safwat/hr/controller/appearance_settings.fxml";
+        final String title = "تخصيص الواجهة";
 
-            AppearanceSettingsController controller = loader.getController();
+        ViewManager.openIndependentView(
+                fxmlPath,
+                title,
+                null,                          // مفيش owner
+                null,                          // مفيش modality (زي الكود الأصلي)
+                true,                          // resizable
+                (ctrl, stage) -> {
+                    AppearanceSettingsController controller =
+                            (AppearanceSettingsController) ctrl;
 
-            Stage stage = new Stage();
-            // ✅ بدون initModality — بيتجنب nested event loop على GTK
-            stage.setTitle(viewId != null ? "تخصيص الواجهة - " + viewId : "تخصيص الواجهة");
-            stage.setScene(new Scene(root));
-            stage.show(); // ← show() مش showAndWait()
-
-            // setViewId بعد show() عشان الـ Scene تكون جاهزة
-            controller.setViewId(viewId);
-
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "تعذر تحميل appearance_settings.fxml — تأكد من المسار: " + FXML_PATH, e);
-        }
+                    // ✅ نأجّل setViewId لبعد show() — بنستخدم Platform.runLater
+                    javafx.application.Platform.runLater(
+                            () -> controller.setViewId(title));
+                }
+        );
     }
 
     public static void openGeneral() {

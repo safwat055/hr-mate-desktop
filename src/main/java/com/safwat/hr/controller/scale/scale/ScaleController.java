@@ -333,7 +333,7 @@ public class ScaleController implements Initializable {
                 new TableSetupHelper.ColumnConfig<>("الدرجة", 90,
                         UpgradeRecord::getDegree,
                         UpgradeRecord::setDegree,
-                        false, false, ColumnAlign.LEFT, true),
+                        false, false, ColumnAlign.CENTER, true),
                 new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
                         UpgradeRecord::getDecisionNumber,
                         UpgradeRecord::setDecisionNumber,

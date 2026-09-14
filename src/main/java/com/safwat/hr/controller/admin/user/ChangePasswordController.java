@@ -5,10 +5,11 @@ import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.network.dto.AdminUserDtos.ChangePasswordRequest;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
+import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -20,11 +21,19 @@ import java.util.ResourceBundle;
 
 /**
  * تغيير كلمة المرور الشخصية — POST /api/auth/change-password
+ * <p>
  * اليوزر بيتاخد من الـ JWT تلقائيًا (مفيش حاجة بتتبعت من الواجهة).
  * أي يوزر مسجّل دخول يقدر يستخدمها.
- * كل العناصر JavaFX عادية.
+ * <p>
+ * كل التنسيقات من settings.css — لا يوجد inline styles.
  */
 public class ChangePasswordController implements Initializable {
+
+    private static final String CSS_PATH = "/com/safwat/hr/css/settings.css";
+    private static final String FXML_PATH =
+            "/com/safwat/hr/controller/admin/user/ChangePasswordDialog.fxml";
+
+    // ══════════════ FXML ══════════════
 
     @FXML
     private Label lblUser;
@@ -37,17 +46,23 @@ public class ChangePasswordController implements Initializable {
 
     private Stage stage;
 
+    // ══════════════ Init ══════════════
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         SessionManager session = SessionManager.getInstance();
         String display = session.getDisplayName() != null && !session.getDisplayName().isBlank()
-                ? session.getDisplayName() : session.getUsername();
+                ? session.getDisplayName()
+                : session.getUsername();
         lblUser.setText("المستخدم: " + display);
+        SettingsThemeLoader.apply(btnCancel);
     }
 
     void setStage(Stage stage) {
         this.stage = stage;
     }
+
+    // ══════════════ Main Action ══════════════
 
     @FXML
     private void changePassword() {
@@ -86,9 +101,10 @@ public class ChangePasswordController implements Initializable {
                         com.safwat.hr.ui.util.AlertUtil.showConfirmation("تم",
                                 "تم تغيير كلمة المرور بنجاح");
                     } else {
-                        // الباك ايند بيرجّع رسائل عربية واضحة (400/401) بعد التعديل
+                        // الباك ايند بيرجّع رسائل عربية واضحة (400/401)
                         showError(resp.getMessage() != null
-                                ? resp.getMessage() : "فشل تغيير كلمة المرور");
+                                ? resp.getMessage()
+                                : "فشل تغيير كلمة المرور");
                     }
                 });
             } catch (Exception e) {
@@ -105,7 +121,7 @@ public class ChangePasswordController implements Initializable {
         if (stage != null) stage.close();
     }
 
-    // ── helpers ──
+    // ══════════════ Helpers ══════════════
 
     private void setBusy(boolean busy) {
         btnSave.setDisable(busy);
@@ -130,26 +146,19 @@ public class ChangePasswordController implements Initializable {
         return s == null ? "" : s.trim();
     }
 
+    // ══════════════ Static Open ══════════════
+
     /**
-     * فتح النافذة كـ Dialog modal
+     * فتح النافذة كـ Dialog modal.
      */
     public static void open(Stage owner) {
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                    ChangePasswordController.class.getResource("/com/safwat/hr/controller/admin/user/ChangePasswordDialog.fxml"));
-            javafx.scene.Parent root = loader.load();
-            ChangePasswordController controller = loader.getController();
-
-            Stage stage = new Stage();
-            stage.initModality(Modality.WINDOW_MODAL);
-            if (owner != null) stage.initOwner(owner);
-            stage.setTitle("🔑 تغيير كلمة المرور");
-            stage.setScene(new Scene(root));
-            stage.setResizable(false);
-            controller.setStage(stage);
-            stage.show();
-        } catch (Exception e) {
-            AppLogBus.getInstance().log("[Auth] ❌ فشل فتح نافذة تغيير كلمة المرور: " + e.getMessage());
-        }
+        ViewManager.openIndependentView(
+                FXML_PATH,
+                "🔑 تغيير كلمة المرور",
+                owner,
+                Modality.WINDOW_MODAL,
+                false, // resizable
+                (ctrl, stage) -> ((ChangePasswordController) ctrl).setStage(stage)
+        );
     }
 }

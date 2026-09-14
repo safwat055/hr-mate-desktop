@@ -3,6 +3,7 @@ package com.safwat.hr.controller.backup;
 import com.safwat.hr.controller.backup.dto.BackupFileInfo;
 import com.safwat.hr.controller.backup.dto.BackupFormat;
 import com.safwat.hr.controller.backup.dto.RestoreMode;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,16 +34,26 @@ import java.util.function.Consumer;
  * {@code IndexOutOfBoundsException} في {@code Parent.updateCachedBounds}
  * أثناء layout pulse.
  *
- * <h3>ملاحظة معمارية مهمة (٢) — سبب الكراش الفعلي اللي كان لسه موجود:</h3>
- * <p>{@link ListCell} بيعيد استخدام نفس الـ cell objects أثناء الـ scroll
- * وأي إعادة حساب layout (مش بس لما يتغيّر العنصر). لو {@code updateItem}
- * بتبني {@code HBox}/{@code Label} <b>جداد</b> في كل نداء، بتحصل عملية
- * إضافة/إزالة عنيفة على شجرة الـ scene graph في نفس اللحظة اللي JavaFX
- * بيحسب فيها bounds الشجرة دي، وده اللي بيسبب
- * {@code IndexOutOfBoundsException: Index -1} جوه
- * {@code Parent.updateCachedBounds}. الحل: الـ graphic (HBox + كل الـ
- * Labels/Button) بيتبني <b>مرة واحدة بس</b> في constructor الـ cell،
- * و{@code updateItem} بيكتفي بتحديث الـ text/style فقط.
+ * <h3>ملاحظة معمارية مهمة (٢):</h3>
+ * <p>{@link ListCell} بيعيد استخدام نفس الـ cell objects أثناء الـ scroll.
+ * لو {@code updateItem} بتبني {@code HBox}/{@code Label} جداد في كل نداء،
+ * بتحصل عملية إضافة/إزالة عنيفة على شجرة الـ scene graph. الحل: الـ graphic
+ * بيتبني <b>مرة واحدة بس</b> في constructor الـ cell، و{@code updateItem}
+ * بيكتفي بتحديث الـ text/style فقط.
+ *
+ * <h3>ملاحظة مهمة (٣) — التنسيقات:</h3>
+ * <p>كل التنسيقات (ألوان + أحجام + fonts) بتتحدد من ملف {@code settings.css}
+ * عبر الـ styleClass المخصصة:
+ * <ul>
+ *   <li>{@code .backup-item} — الحاوية الرئيسية</li>
+ *   <li>{@code .backup-item-name} — اسم الملف</li>
+ *   <li>{@code .backup-item-size} — الحجم</li>
+ *   <li>{@code .backup-item-date} — التاريخ</li>
+ *   <li>{@code .table-tag-dump} / {@code .table-tag-sql} — تاجات الصيغة</li>
+ *   <li>{@code .table-action-btn} — زر الاستعادة</li>
+ *   <li>{@code .empty-placeholder} — رسالة القائمة الفاضية</li>
+ *   <li>{@code .status-msg-ok/error/warn/empty} — حالات الرسائل</li>
+ * </ul>
  */
 public class BackupController implements Initializable {
 
@@ -153,6 +164,8 @@ public class BackupController implements Initializable {
         setupBackupsListView();
         initStatusLabels();
         cronField.textProperty().addListener((obs, o, n) -> updateCronHint(n));
+
+        SettingsThemeLoader.apply(autoBackupStatusLabel);
     }
 
     private void initStatusLabels() {
@@ -185,15 +198,17 @@ public class BackupController implements Initializable {
     private void setupCompressionSlider() {
         compressionSlider.valueProperty().addListener((obs, o, n) -> {
             int val = n.intValue();
+            compressionValueLabel.getStyleClass().removeAll(
+                    "slider-value-ok", "slider-value-warn", "slider-value-error");
             if (val >= 7) {
-                compressionValueLabel.setStyle("-fx-text-fill: #2b7a4b;");
                 compressionValueLabel.setText(val + " → ضغط عالي - ملف صغير");
+                compressionValueLabel.getStyleClass().add("slider-value-ok");
             } else if (val <= 3) {
-                compressionValueLabel.setStyle("-fx-text-fill: #c0392b;");
                 compressionValueLabel.setText(val + " → ضغط منخفض - ملف كبير");
+                compressionValueLabel.getStyleClass().add("slider-value-error");
             } else {
-                compressionValueLabel.setStyle("-fx-text-fill: #f39c12;");
                 compressionValueLabel.setText(val + " → ضغط متوسط");
+                compressionValueLabel.getStyleClass().add("slider-value-warn");
             }
         });
     }
@@ -211,12 +226,13 @@ public class BackupController implements Initializable {
     private void setupBackupsListView() {
         backupsListView.setItems(backupsListData);
 
-        // ⭐ الإصلاح: cellFactory بيرجع cell بتبني الـ graphic مرة واحدة
+        // ⭐ cellFactory بيرجع cell بتبني الـ graphic مرة واحدة
         // وتعيد استخدامه، مش تبنيه من جديد في كل updateItem.
         backupsListView.setCellFactory(lv -> new BackupItemCell());
 
+        // ✅ placeholder بلون فاتح (من settings.css)
         Label emptyLabel = new Label("📭 لا توجد نسخ احتياطية محفوظة");
-        emptyLabel.setStyle("-fx-text-fill: #999; -fx-font-size: 13px;");
+        emptyLabel.getStyleClass().add("empty-placeholder");
         backupsListView.setPlaceholder(emptyLabel);
 
         backupsListView.getSelectionModel().selectedItemProperty()
@@ -229,11 +245,11 @@ public class BackupController implements Initializable {
     /**
      * Cell مخصص لعرض نسخة واحدة.
      * <p>
-     * ⭐ مهم جدًا: كل الـ Nodes (HBox + Labels + Button) بتتبنى مرة واحدة بس
-     * جوه الـ constructor. {@code updateItem} بيعمل تحديث للمحتوى (text /
-     * style classes / onAction) فقط، من غير ما يضيف أو يشيل عناصر من شجرة
-     * الـ scene graph. ده اللي بيمنع الـ churn اللي كان بيسبب
-     * {@code IndexOutOfBoundsException} في {@code Parent.updateCachedBounds}.
+     * ⭐ مهم جدًا: كل الـ Nodes بتتبنى مرة واحدة بس جوه الـ constructor.
+     * {@code updateItem} بيعمل تحديث للمحتوى فقط، من غير ما يضيف/يشيل
+     * عناصر من شجرة الـ scene graph.
+     * <p>
+     * كل التنسيقات بتتحدد من settings.css عبر الـ styleClass.
      */
     private class BackupItemCell extends ListCell<BackupFileInfo> {
 
@@ -595,10 +611,7 @@ public class BackupController implements Initializable {
                                        Throwable ex) {
         Platform.runLater(() -> {
             busySetter.accept(false);
-            label.setText("❌ خطأ في الاتصال: " + ex.getMessage());
-            label.getStyleClass().removeAll(
-                    "status-msg-ok", "status-msg-error", "status-msg-warn");
-            label.getStyleClass().add("status-msg-error");
+            showStatus(label, "❌ خطأ في الاتصال: " + ex.getMessage(), "error");
         });
         return null;
     }
@@ -635,31 +648,34 @@ public class BackupController implements Initializable {
     private void showStatus(Label label, String message, String type) {
         label.setText(message);
         label.getStyleClass().removeAll(
-                "status-msg-ok", "status-msg-error", "status-msg-warn");
+                "status-msg-ok", "status-msg-error", "status-msg-warn", "status-msg-empty");
         switch (type) {
             case "ok" -> label.getStyleClass().add("status-msg-ok");
             case "error" -> label.getStyleClass().add("status-msg-error");
             case "warn" -> label.getStyleClass().add("status-msg-warn");
+            default -> { /* اتركه بدون class إضافي */ }
         }
     }
 
     private void showStatusInArea(Label area, String message, String type) {
         area.setText(message);
-        area.setStyle("");
+        area.setStyle(""); // امسح أي inline style قديم
         area.getStyleClass().removeAll(
-                "status-msg-ok", "status-msg-error", "status-msg-warn");
+                "status-msg-ok", "status-msg-error", "status-msg-warn", "status-msg-empty");
         switch (type) {
             case "ok" -> area.getStyleClass().add("status-msg-ok");
             case "error" -> area.getStyleClass().add("status-msg-error");
             case "warn" -> area.getStyleClass().add("status-msg-warn");
+            default -> area.getStyleClass().add("status-msg-empty");
         }
     }
 
     private void clearStatusInArea(Label area) {
         area.setText(EMPTY_PLACEHOLDER);
-        area.setStyle("-fx-text-fill: #999999;");
+        area.setStyle("");
         area.getStyleClass().removeAll(
                 "status-msg-ok", "status-msg-error", "status-msg-warn");
+        area.getStyleClass().add("status-msg-empty");
     }
 
     private boolean confirmReplace(String target) {

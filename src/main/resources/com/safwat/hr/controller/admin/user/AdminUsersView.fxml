@@ -12,18 +12,36 @@
 
     <!-- شريط الأدوات -->
     <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Label text="إدارة المستخدمين" styleClass="fs-18, bold, text-navy"/>
+        <Label text="إدارة المستخدمين" styleClass="page-title"/>
         <HBox HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="txtSearch" promptText="بحث بالاسم أو اسم المستخدم..." prefWidth="260.0"/>
-        <Button fx:id="btnRefresh" text="🔄 تحديث" styleClass="btn, btn-secondary" onAction="#refresh"/>
-        <Button fx:id="btnNewPermission" text="＋ صلاحية" styleClass="btn, btn-secondary" onAction="#createPermission"/>
-        <Button fx:id="btnNewUser" text="＋ مستخدم جديد" styleClass="btn, btn-primary" onAction="#createUser"/>
+
+        <TextField fx:id="txtSearch"
+                   promptText="بحث بالاسم أو اسم المستخدم..."
+                   prefWidth="260.0"
+                   styleClass="search-pill"/>
+
+        <Button fx:id="btnRefresh"
+                text="🔄 تحديث"
+                styleClass="btn-toolbar-light"
+                onAction="#refresh"/>
+
+        <Button fx:id="btnNewPermission"
+                text="＋ صلاحية"
+                styleClass="btn-toolbar-light"
+                onAction="#createPermission"/>
+
+        <Button fx:id="btnNewUser"
+                text="＋ مستخدم جديد"
+                styleClass="btn-toolbar-primary"
+                onAction="#createUser"/>
     </HBox>
 
-    <Label fx:id="lblInfo" text="" styleClass="text-muted" visible="false" managed="false"/>
+    <Label fx:id="lblInfo" text=""
+           styleClass="info-muted"
+           visible="false" managed="false"/>
 
     <!-- جدول المستخدمين -->
-    <TableView fx:id="table" VBox.vgrow="ALWAYS" styleClass="card">
+    <TableView fx:id="table" VBox.vgrow="ALWAYS" styleClass="table-dark">
         <columns>
             <TableColumn fx:id="colUsername" text="اسم المستخدم" prefWidth="140.0"/>
             <TableColumn fx:id="colDisplayName" text="الاسم" prefWidth="200.0"/>
@@ -36,4 +54,5 @@
             <TableView fx:constant="CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN"/>
         </columnResizePolicy>
     </TableView>
+
 </VBox>

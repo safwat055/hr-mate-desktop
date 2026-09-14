@@ -3,7 +3,8 @@
 <!-- ============================================================
      شاشة "تخصيص الواجهة" — Appearance Settings
      ✅ RTL كامل
-     ✅ لون ListView = نفس لون الخلفية (مش أبيض)
+     ✅ لون ListView = نفس لون الخلفية
+     ✅ ComboBox بخط فاتح (class="combo-light")
      ============================================================ -->
 
 <?import javafx.geometry.Insets?>
@@ -14,12 +15,12 @@
             fx:controller="com.safwat.hr.controller.appearance.AppearanceSettingsController"
             prefWidth="900.0" prefHeight="640.0"
             nodeOrientation="RIGHT_TO_LEFT"
-            style="-fx-background-color:#1a1d2e;">
+            styleClass="settings-root">
 
     <!-- ═══════════════════ HEADER ═══════════════════ -->
     <top>
         <HBox alignment="CENTER_RIGHT" spacing="12"
-              style="-fx-background-color:#242740; -fx-border-color:#333659; -fx-border-width:0 0 1 0;">
+              styleClass="settings-header">
             <padding>
                 <Insets top="14" right="20" bottom="14" left="20"/>
             </padding>
@@ -27,9 +28,9 @@
             <Label text="🎛" style="-fx-font-size:20px;"/>
             <VBox spacing="2">
                 <Label text="تخصيص الواجهة"
-                       style="-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:#e8eaf6;"/>
+                       styleClass="header-title"/>
                 <Label fx:id="subtitleLabel" text=""
-                       style="-fx-font-size:11px; -fx-text-fill:#8b90b8;"/>
+                       styleClass="header-subtitle"/>
             </VBox>
 
             <Region HBox.hgrow="ALWAYS"/>
@@ -38,46 +39,33 @@
                    style="-fx-font-size:11px; -fx-text-fill:#8b90b8;"/>
             <ComboBox fx:id="viewCombo" prefWidth="220"
                       promptText="اختر واجهة..."
-                      style="-fx-background-color:#1a1d2e; -fx-text-fill:#e8eaf6;
-                             -fx-border-color:#333659; -fx-border-radius:6; -fx-background-radius:6;"/>
+                      styleClass="combo-light"/>
         </HBox>
     </top>
 
     <!-- ═══════════════════ BODY ═══════════════════ -->
     <center>
-        <SplitPane dividerPositions="0.22" style="-fx-background-color:#1a1d2e;">
+        <SplitPane dividerPositions="0.22" styleClass="main-split">
 
             <!-- ── Sidebar: التصنيفات ── -->
             <VBox minWidth="170" maxWidth="230"
-                  style="-fx-background-color:#242740;">
+                  styleClass="sidebar">
                 <padding>
                     <Insets top="10" bottom="10"/>
                 </padding>
 
                 <Label text="التخصيصات"
-                       style="-fx-font-size:11px; -fx-text-fill:#8b90b8;">
+                       styleClass="sidebar-section-label">
                     <VBox.margin>
                         <Insets bottom="6" right="14"/>
                     </VBox.margin>
                 </Label>
 
-                <!--
-                    ✅ إصلاح اللون الأبيض تحت الكاتيجوريز:
-                    - -fx-background-color على ListView + على .list-view, .virtual-flow, .clipped-container, .sheet
-                    - -fx-control-inner-background يلغي لون Modena الافتراضي
-                    - -fx-focus-color و -fx-faint-focus-color عشان يختفي الـ focus glow الأزرق
-                -->
                 <ListView fx:id="categoryList" VBox.vgrow="ALWAYS"
-                          style="-fx-background-color:#242740;
-                                 -fx-control-inner-background:#242740;
-                                 -fx-background-insets:0;
-                                 -fx-padding:0;
-                                 -fx-focus-color:transparent;
-                                 -fx-faint-focus-color:transparent;
-                                 -fx-border-width:0;"/>
+                          styleClass="category-list"/>
             </VBox>
 
-            <!-- ── منطقة المحتوى: بتتغير حسب التصنيف المختار ── -->
+            <!-- ── منطقة المحتوى ── -->
             <StackPane fx:id="contentArea"
                        style="-fx-background-color:#1a1d2e;"/>
 

@@ -13,6 +13,7 @@ import com.safwat.hr.network.auth.dto.LoginResponse;
 import com.safwat.hr.network.auth.service.AuthService;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
@@ -65,6 +66,7 @@ public class LoginController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        SettingsThemeLoader.apply(btn_cancel);
         // ✅ تحميل آخر مستخدم
         String lastUser = AppConfig.getString("connection", "user", "");
         if (!lastUser.isEmpty()) {

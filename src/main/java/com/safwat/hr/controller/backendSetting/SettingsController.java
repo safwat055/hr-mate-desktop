@@ -1,6 +1,8 @@
 package com.safwat.hr.controller.backendSetting;
 
+import com.safwat.hr.controller.backendSetting.AppConfigApiClient.JsonEntry;
 import com.safwat.hr.controller.backendSetting.SettingsApiClient.PropertyEntry;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -9,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -18,12 +21,45 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * ══════════════════════════════════════════════════════════════════
+ * SettingsController — شاشة إعدادات التطبيق
+ * ══════════════════════════════════════════════════════════════════
+ * <p>
+ * تحتوي على تابين:
+ * 1) Application Properties  → /api/settings
+ * 2) App Config (JSON)       → /api/app-config
+ */
 public class SettingsController implements Initializable {
 
+    // ══════════════════════════════════════════════
+    //  FXML Fields — Header
+    // ══════════════════════════════════════════════
+    @FXML
+    private Label headerSubtitle;
     @FXML
     private TextField searchField;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private Button btnBackup;
+    @FXML
+    private Button btnAdd;
+    @FXML
+    private Button btnBackups;
+
+    // ══════════════════════════════════════════════
+    //  FXML Fields — Tabs
+    // ══════════════════════════════════════════════
+    @FXML
+    private TabPane mainTabPane;
+
+    // ── Properties tab ──
+    @FXML
+    private SplitPane propsSplitPane;
     @FXML
     private ListView<String> categoryList;
     @FXML
@@ -36,6 +72,26 @@ public class SettingsController implements Initializable {
     private VBox entriesContainer;
     @FXML
     private VBox loadingPlaceholder;
+
+    // ── JSON tab ──
+    @FXML
+    private SplitPane jsonSplitPane;
+    @FXML
+    private ListView<String> jsonCategoryList;
+    @FXML
+    private Label jsonCategoryLabel;
+    @FXML
+    private Label jsonEntryCountLabel;
+    @FXML
+    private ScrollPane jsonEntriesScroll;
+    @FXML
+    private VBox jsonEntriesContainer;
+    @FXML
+    private VBox jsonLoadingPlaceholder;
+
+    // ══════════════════════════════════════════════
+    //  FXML Fields — Footer
+    // ══════════════════════════════════════════════
     @FXML
     private Label statusLabel;
     @FXML
@@ -46,21 +102,24 @@ public class SettingsController implements Initializable {
     private Button btnDiscard;
     @FXML
     private Button btnSaveAll;
-    @FXML
-    private Button btnRefresh;
-    @FXML
-    private Button btnBackup;
-    @FXML
-    private Button btnAdd;
-    @FXML
-    private Button btnBackups;
-    @FXML
-    private Label filePathLabel;   // اختياري — يعرض مسار الملف
 
+    // ══════════════════════════════════════════════
+    //  State — Properties
+    // ══════════════════════════════════════════════
     private Map<String, List<PropertyEntry>> groupedData = new LinkedHashMap<>();
     private String currentCategory = null;
     private final Map<String, String> pendingChanges = new LinkedHashMap<>();
 
+    // ══════════════════════════════════════════════
+    //  State — JSON
+    // ══════════════════════════════════════════════
+    private Map<String, List<JsonEntry>> jsonGroupedData = new LinkedHashMap<>();
+    private String currentJsonCategory = null;
+    private final Map<String, String> jsonPendingChanges = new LinkedHashMap<>();
+
+    // ══════════════════════════════════════════════
+    //  Constants — Colors
+    // ══════════════════════════════════════════════
     private static final String C_BG = "#1a1d2e";
     private static final String C_CARD = "#242740";
     private static final String C_ACCENT = "#4f8ef7";
@@ -73,46 +132,68 @@ public class SettingsController implements Initializable {
     private static final String C_ENV = "#1a3a6e";
     private static final String C_NESTED = "#2d1f4a";
 
+    // ══════════════════════════════════════════════
+    //  Init
+    // ══════════════════════════════════════════════
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        setupCategoryList();
+        setupCategoryList(categoryList);
+        setupCategoryList(jsonCategoryList);
+        SettingsThemeLoader.apply(btnAdd);
+        categoryList.getSelectionModel().selectedItemProperty()
+                .addListener((obs, o, n) -> {
+                    if (n != null) showCategory(n);
+                });
+
+        jsonCategoryList.getSelectionModel().selectedItemProperty()
+                .addListener((obs, o, n) -> {
+                    if (n != null) showJsonCategory(n);
+                });
+
+        mainTabPane.getSelectionModel().selectedIndexProperty()
+                .addListener((obs, o, n) -> onTabChanged(n.intValue()));
+
         loadData();
-        loadFileInfo();
+        loadJsonData();
+        updateTabLabels(0);
     }
 
-    // ══════════════════════════════════════════════
-    //  Setup
-    // ══════════════════════════════════════════════
-
-    private void setupCategoryList() {
-        categoryList.setCellFactory(lv -> new ListCell<>() {
+    private void setupCategoryList(ListView<String> list) {
+        list.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-
                     setStyle("");
                     return;
                 }
                 setText(categoryIcon(item) + "  " + item);
-                setStyle("-fx-font-size:12px; -fx-padding:8 12 8 12;"
-                        + "-fx-text-fill:" + C_TEXT + "; -fx-background-color:transparent;");
+                String base = "-fx-font-size:12px; -fx-padding:8 12 8 12;"
+                        + "-fx-text-fill:" + C_TEXT + "; -fx-background-color:transparent;";
                 if (isSelected())
-                    setStyle(getStyle() + "-fx-background-color:" + C_ACCENT + "22;"
-                            + "-fx-font-weight:bold;");
+                    setStyle(base + "-fx-background-color:" + C_ACCENT + "22; -fx-font-weight:bold;");
+                else setStyle(base);
             }
         });
-        categoryList.getSelectionModel().selectedItemProperty()
-                .addListener((obs, o, n) -> {
-                    if (n != null) showCategory(n);
-                });
     }
 
-    // ══════════════════════════════════════════════
-    //  Data Loading
-    // ══════════════════════════════════════════════
+    private void onTabChanged(int index) {
+        updateTabLabels(index);
+        pendingChanges.clear();
+        jsonPendingChanges.clear();
+        updateFooter();
+        if (index == 0) headerSubtitle.setText("إدارة ملف application.properties");
+        else headerSubtitle.setText("إدارة ملف app_config.json");
+    }
 
+    private void updateTabLabels(int idx) {
+        // ممكن نضيف تخصيصات لاحقاً حسب التاب
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  PROPERTIES TAB — Data Loading
+    // ══════════════════════════════════════════════════════════════
     private void loadData() {
         showLoading(true);
         setStatus("جاري تحميل الإعدادات...", C_MUTED);
@@ -135,21 +216,6 @@ public class SettingsController implements Initializable {
         );
     }
 
-    private void loadFileInfo() {
-        SettingsApiClient.getFileInfoAsync().thenAccept(r -> Platform.runLater(() -> {
-            if (r.isSuccess() && r.getData() != null && filePathLabel != null) {
-                Object path = r.getData().get("currentPath");
-                filePathLabel.setText(path != null ? path.toString() : "");
-                filePathLabel.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_MUTED
-                        + "; -fx-font-family:monospace;");
-            }
-        }));
-    }
-
-    // ══════════════════════════════════════════════
-    //  Category Display
-    // ══════════════════════════════════════════════
-
     private void showCategory(String category) {
         currentCategory = category;
         currentCategoryLabel.setText(categoryIcon(category) + "  " + category);
@@ -158,7 +224,7 @@ public class SettingsController implements Initializable {
         entryCountLabel.setText(entries.size() + " إعداد");
 
         String query = searchField.getText();
-        List<PropertyEntry> filtered = query == null || query.isBlank()
+        List<PropertyEntry> filtered = (query == null || query.isBlank())
                 ? entries
                 : entries.stream().filter(e -> matchesSearch(e, query.toLowerCase()))
                 .collect(Collectors.toList());
@@ -179,17 +245,14 @@ public class SettingsController implements Initializable {
             entriesContainer.getChildren().add(buildEntryCard(entry));
     }
 
-    // ══════════════════════════════════════════════
-    //  Entry Card
-    // ══════════════════════════════════════════════
-
+    // ══════════════════════════════════════════════════════════════
+    //  PROPERTIES TAB — Card Builder
+    // ══════════════════════════════════════════════════════════════
     private Node buildEntryCard(PropertyEntry entry) {
         VBox card = new VBox(6);
         card.setPadding(new Insets(10, 14, 10, 14));
         card.setStyle(cardStyle(false));
-        card.setId("card-" + safeId(entry.key()));
 
-        // ─── Key + badges ───
         HBox topRow = new HBox(8);
         topRow.setAlignment(Pos.CENTER_LEFT);
 
@@ -211,22 +274,16 @@ public class SettingsController implements Initializable {
 
         card.getChildren().add(topRow);
 
-        // ─── Comment ───
         if (entry.comment() != null && !entry.comment().isBlank()) {
             Label commentLbl = new Label("# " + entry.comment());
             commentLbl.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_MUTED + ";");
             card.getChildren().add(commentLbl);
         }
 
-        // ─── ENV info + input ───
         if (entry.envBound()) {
-            // الـ ENV الفعلي اللي شغال دلوقتي
             String activeEnvVal = System.getenv(entry.envVarName());
-
             VBox envInfo = new VBox(3);
-
             if (activeEnvVal != null) {
-                // متغير البيئة موجود وشغال — الـ default مش بيتأثر
                 Label activeLabel = new Label(
                         "🟢 متغير البيئة نشط: " + entry.envVarName() + " = " + activeEnvVal);
                 activeLabel.setStyle("-fx-font-size:10px; -fx-text-fill:#43c59e;");
@@ -234,29 +291,18 @@ public class SettingsController implements Initializable {
                 infoLabel.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_MUTED + ";");
                 envInfo.getChildren().addAll(activeLabel, infoLabel);
             } else {
-                // متغير البيئة غير موجود — الـ fallback هو اللي بيشتغل
-                Label warnLbl = new Label(
-                        "⚙ Fallback نشط — تعديل القيمة يغيّر الـ Default في الملف");
+                Label warnLbl = new Label("⚙ Fallback نشط — تعديل القيمة يغيّر الـ Default في الملف");
                 warnLbl.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_WARN + ";");
-                Label varName = new Label(
-                        "متغير البيئة: " + entry.envVarName() + " (غير مضبوط)");
+                Label varName = new Label("متغير البيئة: " + entry.envVarName() + " (غير مضبوط)");
                 varName.setStyle("-fx-font-size:10px; -fx-text-fill:" + C_MUTED + ";");
                 envInfo.getChildren().addAll(warnLbl, varName);
             }
-
             card.getChildren().add(envInfo);
         }
 
-        // ─── Value input ───
         HBox valueRow = new HBox(8);
         valueRow.setAlignment(Pos.CENTER_LEFT);
 
-        /*
-         * ✅ المنطق الصح:
-         *  - envBound → يعرض الـ defaultValue (اللي المستخدم يعدله)
-         *               الـ Backend يعيد بناء ${ENV:newDefault} تلقائياً
-         *  - مش envBound → يعرض الـ rawValue مباشرةً
-         */
         String editableValue = entry.envBound()
                 ? (entry.defaultValue() != null ? entry.defaultValue() : "")
                 : (entry.rawValue() != null ? entry.rawValue() : "");
@@ -282,7 +328,6 @@ public class SettingsController implements Initializable {
             tf.textProperty().addListener((obs, o, n) -> trackChange(entry.key(), n, card));
             inputCtrl = tf;
         }
-
         valueRow.getChildren().add(inputCtrl);
 
         if (entry.editable()) {
@@ -299,7 +344,6 @@ public class SettingsController implements Initializable {
         }
         card.getChildren().add(valueRow);
 
-        // ─── Raw value hint ───
         if (entry.rawValue() != null && entry.envBound()) {
             Label rawLbl = new Label("في الملف: " + entry.rawValue());
             rawLbl.setStyle("-fx-font-size:10px; -fx-font-family:monospace;"
@@ -310,13 +354,144 @@ public class SettingsController implements Initializable {
         return card;
     }
 
-    // ══════════════════════════════════════════════
-    //  FXML Actions
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    //  JSON TAB — Data Loading
+    // ══════════════════════════════════════════════════════════════
+    private void loadJsonData() {
+        showJsonLoading(true);
+        SettingsApiClient.getFileInfoAsync();
 
+        AppConfigApiClient.getGroupedAsync().thenAccept(response ->
+                Platform.runLater(() -> {
+                    showJsonLoading(false);
+                    if (response.isSuccess() && response.getData() != null) {
+                        jsonGroupedData = new LinkedHashMap<>(response.getData());
+                        jsonCategoryList.setItems(
+                                FXCollections.observableArrayList(jsonGroupedData.keySet()));
+                        int total = jsonGroupedData.values().stream().mapToInt(List::size).sum();
+                        setStatus("تم تحميل " + total + " مفتاح JSON ✓", C_GREEN);
+                        if (!jsonGroupedData.isEmpty())
+                            jsonCategoryList.getSelectionModel().select(
+                                    jsonGroupedData.keySet().iterator().next());
+                    } else {
+                        setStatus("❌ فشل تحميل JSON: " + response.getMessage(), C_DANGER);
+                    }
+                })
+        );
+    }
+
+    private void showJsonCategory(String category) {
+        currentJsonCategory = category;
+        jsonCategoryLabel.setText(categoryIcon(category) + "  " + category);
+
+        List<JsonEntry> entries = jsonGroupedData.getOrDefault(category, List.of());
+        jsonEntryCountLabel.setText(entries.size() + " مفتاح");
+
+        String query = searchField.getText();
+        List<JsonEntry> filtered = (query == null || query.isBlank())
+                ? entries
+                : entries.stream().filter(e -> matchesJsonSearch(e, query.toLowerCase()))
+                .collect(Collectors.toList());
+
+        renderJsonEntries(filtered);
+    }
+
+    private void renderJsonEntries(List<JsonEntry> entries) {
+        jsonEntriesContainer.getChildren().clear();
+        if (entries.isEmpty()) {
+            Label empty = new Label("لا توجد إعدادات في هذا القسم");
+            empty.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:13px;");
+            VBox.setMargin(empty, new Insets(40, 0, 0, 0));
+            jsonEntriesContainer.getChildren().add(empty);
+            return;
+        }
+        for (JsonEntry entry : entries)
+            jsonEntriesContainer.getChildren().add(buildJsonCard(entry));
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  JSON TAB — Card Builder
+    // ══════════════════════════════════════════════════════════════
+    private Node buildJsonCard(JsonEntry entry) {
+        VBox card = new VBox(6);
+        card.setPadding(new Insets(10, 14, 10, 14));
+        card.setStyle(cardStyle(false));
+
+        HBox topRow = new HBox(8);
+        topRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label keyLbl = new Label(entry.key());
+        keyLbl.setStyle("-fx-font-family:monospace; -fx-font-size:12px;"
+                + "-fx-font-weight:bold; -fx-text-fill:" + C_ACCENT + ";"
+                + "-fx-background-color:#1a2540; -fx-background-radius:4;"
+                + "-fx-padding:2 7 2 7;");
+        topRow.getChildren().add(keyLbl);
+
+        topRow.getChildren().add(badge(entry.type(),
+                typeColor(entry.type()), typeBg(entry.type())));
+
+        if (!entry.editable())
+            topRow.getChildren().add(badge("🔒 محمي", C_MUTED, "#1e2030"));
+
+        card.getChildren().add(topRow);
+
+        Label pathLbl = new Label(entry.path());
+        pathLbl.setStyle("-fx-font-size:10px; -fx-font-family:monospace;"
+                + "-fx-text-fill:" + C_MUTED + ";");
+        card.getChildren().add(pathLbl);
+
+        if (!entry.editable()) return card;
+
+        HBox valueRow = new HBox(8);
+        valueRow.setAlignment(Pos.CENTER_LEFT);
+
+        Control inputCtrl;
+        if ("BOOLEAN".equals(entry.type())) {
+            ComboBox<String> cb = new ComboBox<>(
+                    FXCollections.observableArrayList("true", "false"));
+            cb.setValue(entry.value() != null ? entry.value() : "false");
+            cb.getStyleClass().add("combo-light");      // ✅ CSS class
+            cb.setPrefWidth(140);
+            cb.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(cb, Priority.ALWAYS);
+            cb.valueProperty().addListener((obs, o, n) ->
+                    trackJsonChange(entry.path(), n, card));
+            inputCtrl = cb;
+        } else {
+            TextField tf = new TextField(entry.value() != null ? entry.value() : "");
+            tf.setStyle(inputStyle());
+            HBox.setHgrow(tf, Priority.ALWAYS);
+            tf.textProperty().addListener((obs, o, n) ->
+                    trackJsonChange(entry.path(), n, card));
+            inputCtrl = tf;
+        }
+        valueRow.getChildren().add(inputCtrl);
+
+        Button saveBtn = iconBtn("💾", C_GREEN, "حفظ هذا المفتاح");
+        saveBtn.setOnAction(e -> {
+            String val = inputCtrl instanceof ComboBox
+                    ? String.valueOf(((ComboBox<?>) inputCtrl).getValue())
+                    : ((TextField) inputCtrl).getText();
+            saveJsonSingle(entry.path(), val, card);
+        });
+
+        Button delBtn = iconBtn("🗑", C_DANGER, "حذف هذا المفتاح");
+        delBtn.setOnAction(e -> confirmJsonDelete(entry.path()));
+
+        valueRow.getChildren().addAll(saveBtn, delBtn);
+        card.getChildren().add(valueRow);
+
+        return card;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  FXML Actions — Toolbar
+    // ══════════════════════════════════════════════════════════════
     @FXML
     private void onSearch() {
-        if (currentCategory != null) showCategory(currentCategory);
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0 && currentCategory != null) showCategory(currentCategory);
+        if (idx == 1 && currentJsonCategory != null) showJsonCategory(currentJsonCategory);
     }
 
     @FXML
@@ -326,43 +501,83 @@ public class SettingsController implements Initializable {
     }
 
     @FXML
+    private void onJsonCategorySelected() {
+        String sel = jsonCategoryList.getSelectionModel().getSelectedItem();
+        if (sel != null) showJsonCategory(sel);
+    }
+
+    @FXML
     private void onRefresh() {
-        pendingChanges.clear();
-        updateFooter();
-        loadData();
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0) {
+            pendingChanges.clear();
+            updateFooter();
+            loadData();
+        } else {
+            jsonPendingChanges.clear();
+            updateFooter();
+            loadJsonData();
+        }
     }
 
     @FXML
     private void onAdd() {
-        showAddDialog();
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0) showAddDialog();
+        else showJsonAddDialog();
     }
 
     @FXML
     private void onShowBackups() {
-        showBackupsDialog();
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0) showBackupsDialog();
+        else showJsonBackupsDialog();
     }
 
     @FXML
     private void onBackup() {
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
         setStatus("جاري عمل نسخة احتياطية...", C_MUTED);
         showProgress(true);
-        SettingsApiClient.backupAsync().thenAccept(r -> Platform.runLater(() -> {
-            showProgress(false);
-            setStatus(r.isSuccess() ? "✓ تم عمل نسخة احتياطية" : "❌ " + r.getMessage(),
-                    r.isSuccess() ? C_GREEN : C_DANGER);
-        }));
+
+        if (idx == 0) {
+            SettingsApiClient.backupAsync().thenAccept(r -> Platform.runLater(() -> {
+                showProgress(false);
+                setStatus(r.isSuccess() ? "✓ تم عمل نسخة احتياطية" : "❌ " + r.getMessage(),
+                        r.isSuccess() ? C_GREEN : C_DANGER);
+            }));
+        } else {
+            AppConfigApiClient.backupAsync().thenAccept(r -> Platform.runLater(() -> {
+                showProgress(false);
+                setStatus(r.isSuccess() ? "✓ تم عمل نسخة احتياطية (JSON)" : "❌ " + r.getMessage(),
+                        r.isSuccess() ? C_GREEN : C_DANGER);
+            }));
+        }
     }
 
     @FXML
     private void onDiscard() {
-        pendingChanges.clear();
-        updateFooter();
-        if (currentCategory != null) showCategory(currentCategory);
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0) {
+            pendingChanges.clear();
+            updateFooter();
+            if (currentCategory != null) showCategory(currentCategory);
+        } else {
+            jsonPendingChanges.clear();
+            updateFooter();
+            if (currentJsonCategory != null) showJsonCategory(currentJsonCategory);
+        }
         setStatus("تم تجاهل التغييرات", C_WARN);
     }
 
     @FXML
     private void onSaveAll() {
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        if (idx == 0) saveAllProperties();
+        else saveAllJson();
+    }
+
+    private void saveAllProperties() {
         if (pendingChanges.isEmpty()) return;
         showProgress(true);
         btnSaveAll.setDisable(true);
@@ -383,10 +598,41 @@ public class SettingsController implements Initializable {
                 }));
     }
 
-    // ══════════════════════════════════════════════
-    //  Single Save / Delete
-    // ══════════════════════════════════════════════
+    private void saveAllJson() {
+        if (jsonPendingChanges.isEmpty()) return;
+        showProgress(true);
+        btnSaveAll.setDisable(true);
+        setStatus("جاري حفظ " + jsonPendingChanges.size() + " مفتاح...", C_MUTED);
 
+        List<Map.Entry<String, String>> entries = List.copyOf(jsonPendingChanges.entrySet());
+        saveJsonSequentially(entries, 0, new AtomicInteger(0));
+    }
+
+    private void saveJsonSequentially(List<Map.Entry<String, String>> entries,
+                                      int index,
+                                      AtomicInteger okCount) {
+        if (index >= entries.size()) {
+            Platform.runLater(() -> {
+                showProgress(false);
+                jsonPendingChanges.clear();
+                updateFooter();
+                loadJsonData();
+                setStatus("✓ تم حفظ " + okCount.get() + " مفتاح", C_GREEN);
+            });
+            return;
+        }
+
+        Map.Entry<String, String> e = entries.get(index);
+        AppConfigApiClient.updateAsync(e.getKey(), e.getValue())
+                .thenAccept(r -> {
+                    if (r.isSuccess()) okCount.incrementAndGet();
+                    saveJsonSequentially(entries, index + 1, okCount);
+                });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Single Save / Delete — Properties
+    // ══════════════════════════════════════════════════════════════
     private void saveSingle(String key, String value, VBox card) {
         showProgress(true);
         setStatus("جاري حفظ: " + key + "...", C_MUTED);
@@ -428,17 +674,60 @@ public class SettingsController implements Initializable {
         });
     }
 
-    // ══════════════════════════════════════════════
-    //  Dialogs
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    //  Single Save / Delete — JSON
+    // ══════════════════════════════════════════════════════════════
+    private void saveJsonSingle(String path, String value, VBox card) {
+        showProgress(true);
+        setStatus("جاري حفظ: " + path + "...", C_MUTED);
+        AppConfigApiClient.updateAsync(path, value).thenAccept(r ->
+                Platform.runLater(() -> {
+                    showProgress(false);
+                    if (r.isSuccess()) {
+                        jsonPendingChanges.remove(path);
+                        updateFooter();
+                        flashCard(card, true);
+                        setStatus("✓ تم حفظ: " + path, C_GREEN);
+                    } else {
+                        flashCard(card, false);
+                        setStatus("❌ " + r.getMessage(), C_DANGER);
+                    }
+                })
+        );
+    }
 
+    private void confirmJsonDelete(String path) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("حذف مفتاح");
+        alert.setHeaderText("حذف: " + path);
+        alert.setContentText("سيتم عمل نسخة احتياطية تلقائياً. هل أنت متأكد؟");
+        styleAlert(alert);
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                showProgress(true);
+                AppConfigApiClient.deleteAsync(path).thenAccept(r ->
+                        Platform.runLater(() -> {
+                            showProgress(false);
+                            if (r.isSuccess()) {
+                                loadJsonData();
+                                setStatus("✓ تم حذف: " + path, C_GREEN);
+                            } else setStatus("❌ " + r.getMessage(), C_DANGER);
+                        })
+                );
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Dialogs — Properties
+    // ══════════════════════════════════════════════════════════════
     private void showAddDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("إضافة إعداد جديد");
         dialog.setHeaderText("أدخل بيانات الإعداد الجديد");
         styleAlert(dialog);
 
-        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        GridPane grid = new GridPane();
         grid.setHgap(12);
         grid.setVgap(10);
         grid.setPadding(new Insets(20));
@@ -447,9 +736,11 @@ public class SettingsController implements Initializable {
         TextField keyField = styledField("مثال: app.my.new.setting");
         TextField valueField = styledField("مثال: ${MY_ENV:defaultValue}");
         TextField commentField = styledField("وصف اختياري");
+
         ComboBox<String> catBox = new ComboBox<>(
                 FXCollections.observableArrayList(groupedData.keySet()));
-        catBox.setStyle(inputStyle() + "-fx-pref-width:260;");
+        catBox.getStyleClass().add("combo-light");     // ✅ CSS class
+        catBox.setPrefWidth(280);
         if (!groupedData.isEmpty()) catBox.setValue(groupedData.keySet().iterator().next());
 
         Label hintLbl = new Label(
@@ -500,7 +791,7 @@ public class SettingsController implements Initializable {
 
             List<String> backups = r.getData() != null ? r.getData() : List.of();
             Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle("النسخ الاحتياطية");
+            dialog.setTitle("النسخ الاحتياطية — Properties");
             dialog.setHeaderText("اختر نسخة لاستعادتها");
             styleAlert(dialog);
 
@@ -558,18 +849,156 @@ public class SettingsController implements Initializable {
         });
     }
 
-    // ══════════════════════════════════════════════
-    //  State Helpers
-    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════════
+    //  Dialogs — JSON
+    // ══════════════════════════════════════════════════════════════
+    private void showJsonAddDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("إضافة مفتاح JSON جديد");
+        dialog.setHeaderText("أدخل بيانات المفتاح");
+        styleAlert(dialog);
 
+        GridPane grid = new GridPane();
+        grid.setHgap(12);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        grid.setStyle("-fx-background-color:" + C_CARD + ";");
+
+        TextField pathField = styledField("setting.myNewKey");
+        TextField valueField = styledField("القيمة");
+
+        ComboBox<String> typeBox = new ComboBox<>(
+                FXCollections.observableArrayList("STRING", "INT", "DOUBLE", "BOOLEAN"));
+        typeBox.setValue("STRING");
+        typeBox.getStyleClass().add("combo-light");    // ✅ CSS class
+        typeBox.setPrefWidth(280);
+
+        Label hintLbl = new Label(
+                "المسار: section.subSection.key — الأقسام المتداخلة تُنشأ تلقائياً");
+        hintLbl.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_WARN + ";");
+
+        addGridRow(grid, "المسار *", pathField, 0);
+        addGridRow(grid, "النوع *", typeBox, 1);
+        addGridRow(grid, "القيمة *", valueField, 2);
+        grid.add(hintLbl, 0, 3, 2, 1);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Button okBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okBtn.setText("إضافة");
+        okBtn.setStyle("-fx-background-color:" + C_GREEN + "; -fx-text-fill:white;"
+                + "-fx-font-weight:bold; -fx-background-radius:8;");
+        okBtn.disableProperty().bind(pathField.textProperty().isEmpty()
+                .or(valueField.textProperty().isEmpty()));
+
+        dialog.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                showProgress(true);
+                AppConfigApiClient.addAsync(
+                        pathField.getText().trim(),
+                        valueField.getText().trim(),
+                        typeBox.getValue()
+                ).thenAccept(r -> Platform.runLater(() -> {
+                    showProgress(false);
+                    if (r.isSuccess()) {
+                        loadJsonData();
+                        setStatus("✓ تمت إضافة: " + pathField.getText().trim(), C_GREEN);
+                    } else setStatus("❌ " + r.getMessage(), C_DANGER);
+                }));
+            }
+        });
+    }
+
+    private void showJsonBackupsDialog() {
+
+        showProgress(true);
+        AppConfigApiClient.listBackupsAsync().thenAccept(r -> Platform.runLater(() -> {
+            showProgress(false);
+            if (!r.isSuccess()) {
+                setStatus("❌ " + r.getMessage(), C_DANGER);
+                return;
+            }
+
+            List<String> backups = r.getData() != null ? r.getData() : List.of();
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("النسخ الاحتياطية — App Config");
+            dialog.setHeaderText("اختر نسخة لاستعادتها");
+            styleAlert(dialog);
+
+            ListView<String> list = new ListView<>(FXCollections.observableArrayList(backups));
+            list.setPrefHeight(280);
+            list.setPrefWidth(420);
+            list.setStyle("-fx-background-color:" + C_BG + "; -fx-border-color:" + C_BORDER + ";");
+
+            Button restoreBtn = new Button("↩  استعادة المحدد");
+            restoreBtn.setStyle("-fx-background-color:" + C_WARN
+                    + "; -fx-text-fill:white; -fx-font-weight:bold;"
+                    + "-fx-background-radius:8; -fx-padding:6 14 6 14;");
+            restoreBtn.disableProperty().bind(
+                    list.getSelectionModel().selectedItemProperty().isNull());
+
+            VBox content = new VBox(10,
+                    new Label("النسخ المتاحة (" + backups.size() + "):"), list, restoreBtn);
+            content.setPadding(new Insets(10));
+            content.setStyle("-fx-background-color:" + C_CARD + ";");
+            content.getChildren().get(0).setStyle("-fx-text-fill:" + C_TEXT + "; -fx-font-weight:bold;");
+
+            restoreBtn.setOnAction(e -> {
+                String sel = list.getSelectionModel().getSelectedItem();
+                if (sel != null) {
+                    dialog.close();
+                    confirmJsonRestore(sel);
+                }
+            });
+
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            dialog.showAndWait();
+        }));
+    }
+
+    private void confirmJsonRestore(String backupFileName) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("استعادة نسخة احتياطية (JSON)");
+        alert.setHeaderText("استعادة: " + backupFileName);
+        alert.setContentText("ستُستبدل الإعدادات الحالية بالكامل. هل أنت متأكد؟");
+        styleAlert(alert);
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                showProgress(true);
+                AppConfigApiClient.restoreAsync(backupFileName).thenAccept(r ->
+                        Platform.runLater(() -> {
+                            showProgress(false);
+                            if (r.isSuccess()) {
+                                loadJsonData();
+                                setStatus("✓ تمت الاستعادة من: " + backupFileName, C_GREEN);
+                            } else setStatus("❌ " + r.getMessage(), C_DANGER);
+                        })
+                );
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  State Helpers
+    // ══════════════════════════════════════════════════════════════
     private void trackChange(String key, String newValue, VBox card) {
         pendingChanges.put(key, newValue);
         card.setStyle(cardStyle(true));
         updateFooter();
     }
 
+    private void trackJsonChange(String path, String newValue, VBox card) {
+        jsonPendingChanges.put(path, newValue);
+        card.setStyle(cardStyle(true));
+        updateFooter();
+    }
+
     private void updateFooter() {
-        int n = pendingChanges.size();
+        int idx = mainTabPane.getSelectionModel().getSelectedIndex();
+        int n = (idx == 0) ? pendingChanges.size() : jsonPendingChanges.size();
+
         btnSaveAll.setDisable(n == 0);
         btnSaveAll.setText(n > 0 ? "💾  حفظ الكل (" + n + ")" : "💾  حفظ الكل");
         btnDiscard.setVisible(n > 0);
@@ -581,6 +1010,12 @@ public class SettingsController implements Initializable {
     private void showLoading(boolean show) {
         loadingPlaceholder.setVisible(show);
         loadingPlaceholder.setManaged(show);
+        showProgress(show);
+    }
+
+    private void showJsonLoading(boolean show) {
+        jsonLoadingPlaceholder.setVisible(show);
+        jsonLoadingPlaceholder.setManaged(show);
         showProgress(show);
     }
 
@@ -615,10 +1050,16 @@ public class SettingsController implements Initializable {
                 || (e.defaultValue() != null && e.defaultValue().toLowerCase().contains(query));
     }
 
-    // ══════════════════════════════════════════════
-    //  UI Helpers
-    // ══════════════════════════════════════════════
+    private boolean matchesJsonSearch(JsonEntry e, String query) {
+        return (e.key() != null && e.key().toLowerCase().contains(query))
+                || (e.path() != null && e.path().toLowerCase().contains(query))
+                || (e.value() != null && e.value().toLowerCase().contains(query))
+                || (e.type() != null && e.type().toLowerCase().contains(query));
+    }
 
+    // ══════════════════════════════════════════════════════════════
+    //  UI Helpers
+    // ══════════════════════════════════════════════════════════════
     private Label badge(String text, String textColor, String bg) {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size:10px; -fx-font-weight:bold;"
@@ -631,14 +1072,13 @@ public class SettingsController implements Initializable {
     private Button iconBtn(String icon, String color, String tip) {
         Button btn = new Button(icon);
         btn.setTooltip(new Tooltip(tip));
-        btn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + color
-                + "; -fx-font-size:14; -fx-cursor:hand; -fx-padding:4 8 4 8; -fx-background-radius:6;");
-        btn.setOnMouseEntered(e -> btn.setStyle(
-                "-fx-background-color:" + color + "22; -fx-text-fill:" + color
-                        + "; -fx-font-size:14; -fx-cursor:hand; -fx-padding:4 8 4 8; -fx-background-radius:6;"));
-        btn.setOnMouseExited(e -> btn.setStyle(
-                "-fx-background-color:transparent; -fx-text-fill:" + color
-                        + "; -fx-font-size:14; -fx-cursor:hand; -fx-padding:4 8 4 8; -fx-background-radius:6;"));
+        String normal = "-fx-background-color:transparent; -fx-text-fill:" + color
+                + "; -fx-font-size:14; -fx-cursor:hand; -fx-padding:4 8 4 8; -fx-background-radius:6;";
+        String hover = "-fx-background-color:" + color + "22; -fx-text-fill:" + color
+                + "; -fx-font-size:14; -fx-cursor:hand; -fx-padding:4 8 4 8; -fx-background-radius:6;";
+        btn.setStyle(normal);
+        btn.setOnMouseEntered(e -> btn.setStyle(hover));
+        btn.setOnMouseExited(e -> btn.setStyle(normal));
         return btn;
     }
 
@@ -650,7 +1090,7 @@ public class SettingsController implements Initializable {
         return tf;
     }
 
-    private void addGridRow(javafx.scene.layout.GridPane grid, String labelText, Node field, int row) {
+    private void addGridRow(GridPane grid, String labelText, Node field, int row) {
         Label lbl = new Label(labelText);
         lbl.setStyle("-fx-text-fill:" + C_TEXT + "; -fx-font-weight:bold;"
                 + "-fx-font-size:12px; -fx-min-width:70;");
@@ -684,7 +1124,32 @@ public class SettingsController implements Initializable {
         if (cat.contains("تخزين") || cat.contains("Storage")) return "📁";
         if (cat.contains("Log") || cat.contains("سجل")) return "📋";
         if (cat.contains("Actuator")) return "📊";
+        if (cat.contains("setting")) return "🧩";
         return "⚙️";
+    }
+
+    private String typeColor(String type) {
+        return switch (type) {
+            case "BOOLEAN" -> "#43c59e";
+            case "INT" -> "#f5a623";
+            case "DOUBLE" -> "#9b59b6";
+            case "STRING" -> "#7eb3ff";
+            case "ARRAY" -> "#e05c5c";
+            case "OBJECT" -> "#8b90b8";
+            default -> C_TEXT;
+        };
+    }
+
+    private String typeBg(String type) {
+        return switch (type) {
+            case "BOOLEAN" -> "#0d2e22";
+            case "INT" -> "#2a2000";
+            case "DOUBLE" -> "#2d1f4a";
+            case "STRING" -> "#1a2540";
+            case "ARRAY" -> "#2a1414";
+            case "OBJECT" -> "#1e2030";
+            default -> C_CARD;
+        };
     }
 
     private String safeId(String key) {

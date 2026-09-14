@@ -138,7 +138,7 @@
   "ui": {
     "table_chk_total": true,
     "table_chk_nationalId": true,
-    "colorOverridesVersion": "1788896798297",
+    "colorOverridesVersion": "1789352219756",
     "theme": "theme-gray.css",
     "fontSize": "10.0"
   },
@@ -212,20 +212,95 @@
   },
   "meta": {"registeredViews": [
     "/com/safwat/hr/controller/report/PayrollReport.fxml",
+    "Backend",
+    "PostgreSQL",
     "server setting",
     "اجر الاشتراك",
     "اعدادات التشغيل",
+    "تخصيص الواجهة",
+    "تخصيص الواجهة - /com/safwat/hr/controller/report/PayrollReport.fxml",
     "تدرج راتب",
     "تقارير صرف",
     "سجلات",
+    "محادثات",
     "مدير استحقاقات",
     "مدير التقارير",
     "مفردات مرتب",
     "نسخ احتياطي",
     "نماذج التحميل",
     "واجهة الإدخال",
-    "محادثات"
+    "👥 إدارة المستخدمين",
+    "📊 السجلات",
+    "🔑 تغيير كلمة المرور"
   ]},
+  "fonts_تدرج راتب": {
+    "COMBO_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "LIST_VIEW": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_AREA": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TAB_PANE": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "RADIO_BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "BUTTON": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TABLE_VIEW": {
+      "size": 12,
+      "bold": false,
+      "family": "Arial",
+      "italic": false
+    },
+    "LABEL": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "CHECK_BOX": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "TEXT_FIELD": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    },
+    "MENU_BAR": {
+      "size": 13,
+      "bold": false,
+      "family": "System",
+      "italic": false
+    }
+  },
   "connection": {
     "alone": "false",
     "pgAsService": "false",

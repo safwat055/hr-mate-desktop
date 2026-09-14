@@ -327,12 +327,12 @@ public class MainViewController implements Initializable {
 
     @FXML
     void openServerSetting() {
-        TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackendSetting(), "server setting", true);
+        ViewManager.openNoIndependentView(new FXMLPaths().getBackendSetting(), "server setting");
     }
 
     @FXML
     void openBackupView() {
-        TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackupView(), "نسخ احتياطي", true);
+        ViewManager.openNoIndependentView(new FXMLPaths().getBackupView(), "نسخ احتياطي");
     }
 
     // ══════════════════════════════════════════════════════════════

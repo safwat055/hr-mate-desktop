@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Dialog تعديل فترات البدل اليدوية
+    ────────────────────────────────────────────────────────────
+    بيتفتح لما المستخدم يضغط "تعديل" على أي بدل في الجدول.
+    بيعرض:
+      - اسم البدل + مصدره الحالي
+      - جدول الفترات اليدوية (from / to / value)
+      - إضافة / تعديل / حذف فترة
+      - زر "إرجاع لأوتوماتيك" لو كان يدوي
+-->
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox
+        nodeOrientation="RIGHT_TO_LEFT"
+        spacing="10"
+        prefWidth="600"
+        styleClass="card"
+        xmlns="http://javafx.com/javafx/17"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.safwat.hr.controller.allowance.AllowanceOverrideDialogController">
+
+    <padding>
+        <Insets bottom="15" left="15" right="15" top="15"/>
+    </padding>
+
+    <!-- عنوان -->
+    <Label fx:id="lbl_dialog_title"
+           alignment="CENTER"
+           maxWidth="Infinity"
+           styleClass="panel-header"
+           text="تعديل فترات البدل"/>
+
+    <!-- معلومات البدل -->
+    <HBox alignment="CENTER_RIGHT" spacing="12" styleClass="card">
+        <padding>
+            <Insets bottom="8" left="12" right="12" top="8"/>
+        </padding>
+
+        <Label styleClass="bold" text="البدل:"/>
+        <Label fx:id="lbl_allowance_name" styleClass="bold text-navy fs-14"/>
+
+        <Separator orientation="VERTICAL"/>
+
+        <Label styleClass="bold" text="المصدر الحالي:"/>
+        <Label fx:id="lbl_current_source" styleClass="bold"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <!-- زر إرجاع لأوتوماتيك — بيظهر بس لو المصدر MANUAL -->
+        <Button fx:id="btn_revert_auto"
+                prefHeight="30" prefWidth="140"
+                styleClass="btn-secondary"
+                text="↩ إرجاع لأوتوماتيك"
+                visible="false"/>
+    </HBox>
+
+    <!-- جدول الفترات -->
+    <VBox styleClass="card" spacing="0" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_RIGHT" spacing="8">
+            <padding>
+                <Insets bottom="6" left="8" right="8" top="6"/>
+            </padding>
+            <Label alignment="CENTER" maxWidth="Infinity"
+                   styleClass="panel-header compact"
+                   text="الفترات الزمنية"
+                   HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btn_add_entry"
+                    prefHeight="28" prefWidth="90"
+                    styleClass="btn-success"
+                    text="+ فترة جديدة"/>
+        </HBox>
+
+        <TableView fx:id="table_entries"
+                   nodeOrientation="RIGHT_TO_LEFT"
+                   prefHeight="220"
+                   editable="false"
+                   styleClass="bold">
+            <columns>
+                <TableColumn fx:id="col_entry_from"
+                             text="من تاريخ"
+                             prefWidth="160"/>
+                <TableColumn fx:id="col_entry_to"
+                             text="إلى تاريخ"
+                             prefWidth="160"/>
+                <TableColumn fx:id="col_entry_value"
+                             text="القيمة (ج)"
+                             prefWidth="120"/>
+                <TableColumn fx:id="col_entry_actions"
+                             text="إجراءات"
+                             prefWidth="130"/>
+            </columns>
+            <padding>
+                <Insets bottom="4" left="4" right="4" top="2"/>
+            </padding>
+        </TableView>
+    </VBox>
+
+    <!-- فورم إضافة / تعديل فترة -->
+    <VBox fx:id="pane_entry_form" styleClass="card" spacing="8" visible="false" managed="false">
+        <padding>
+            <Insets bottom="10" left="12" right="12" top="10"/>
+        </padding>
+
+        <Label fx:id="lbl_form_title"
+               styleClass="bold text-navy"
+               text="إضافة فترة جديدة"/>
+
+        <HBox spacing="12" alignment="CENTER_RIGHT">
+
+            <!-- من تاريخ -->
+            <VBox spacing="4">
+                <Label styleClass="bold fs-12" text="من تاريخ *"/>
+                <DatePicker fx:id="date_entry_from"
+                            prefHeight="32" prefWidth="150"
+                            promptText="yyyy-MM-dd"/>
+            </VBox>
+
+            <!-- إلى تاريخ -->
+            <VBox spacing="4">
+                <Label styleClass="bold fs-12" text="إلى تاريخ (فارغ = مفتوح)"/>
+                <DatePicker fx:id="date_entry_to"
+                            prefHeight="32" prefWidth="150"
+                            promptText="yyyy-MM-dd"/>
+            </VBox>
+
+            <!-- القيمة -->
+            <VBox spacing="4">
+                <Label styleClass="bold fs-12" text="القيمة (ج) *"/>
+                <TextField fx:id="txt_entry_value"
+                           alignment="CENTER"
+                           prefHeight="32" prefWidth="120"
+                           promptText="0.00"/>
+            </VBox>
+
+        </HBox>
+
+        <!-- رسالة خطأ الفورم -->
+        <Label fx:id="lbl_form_error"
+               styleClass="text-danger fs-12"
+               visible="false"/>
+
+        <!-- أزرار الفورم -->
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="btn_save_entry"
+                    prefHeight="32" prefWidth="90"
+                    styleClass="btn-success"
+                    text="✔ حفظ"/>
+            <Button fx:id="btn_cancel_entry"
+                    prefHeight="32" prefWidth="80"
+                    styleClass="btn-secondary"
+                    text="إلغاء"/>
+        </HBox>
+    </VBox>
+
+    <!-- أزرار الـ Dialog الرئيسية -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btn_save_all"
+                prefHeight="34" prefWidth="110"
+                styleClass="btn-primary"
+                text="💾 حفظ الكل"/>
+        <Button fx:id="btn_close"
+                prefHeight="34" prefWidth="80"
+                styleClass="btn-secondary"
+                text="إغلاق"/>
+    </HBox>
+
+</VBox>

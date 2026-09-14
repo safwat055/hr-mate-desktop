@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FontSettingsManager {
 
     private static final String CONFIG_SECTION_PREFIX = "fonts_";
+    private static final String CSS_PATH =
+            "/com/safwat/hr/css/settings.css";
 
     private static final String C_BG = "#1a1d2e";
     private static final String C_CARD = "#242740";
@@ -85,7 +87,21 @@ public class FontSettingsManager {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("إعدادات الخطوط - " + viewId);
-        stage.setScene(new Scene(buildPanel(), 620, 640));
+
+        Scene scene = new Scene(buildPanel(), 620, 640);
+
+        // ✅ حمّل الـ CSS عشان combo-light / spinner-light يشتغلوا
+        try {
+            String css = Objects.requireNonNull(
+                    FontSettingsManager.class.getResource(CSS_PATH),
+                    "ملف CSS مش موجود: " + CSS_PATH
+            ).toExternalForm();
+            scene.getStylesheets().add(css);
+        } catch (Exception e) {
+            System.err.println("⚠ تعذر تحميل " + CSS_PATH + ": " + e.getMessage());
+        }
+
+        stage.setScene(scene);
         stage.showAndWait();
     }
 
@@ -209,7 +225,6 @@ public class FontSettingsManager {
             statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
         });
 
-        // ✅ استعادة الافتراضي — confirm بدون Alert (يتجنب GTK nested loop bug)
         resetAllBtn.setOnAction(e -> {
             showConfirm(
                     resetAllBtn,
@@ -258,10 +273,6 @@ public class FontSettingsManager {
 
     // ==================== Confirm بدون Alert ====================
 
-    /**
-     * ✅ بديل الـ Alert — بيعمل popup خفيف من غير nested event loop
-     * عشان يتجنب الـ ArrayIndexOutOfBoundsException على GTK/Linux.
-     */
     private static void showConfirm(Node anchor, String title, String message, Runnable onConfirm) {
         Stage popup = new Stage();
         popup.initModality(Modality.APPLICATION_MODAL);
@@ -294,7 +305,6 @@ public class FontSettingsManager {
         root.setStyle("-fx-background-color:" + C_CARD + ";");
         root.setMinWidth(380);
 
-        // نحاول نربط بالنافذة الموجودة
         if (anchor != null && anchor.getScene() != null
                 && anchor.getScene().getWindow() instanceof Stage owner) {
             popup.initOwner(owner);
@@ -328,16 +338,21 @@ public class FontSettingsManager {
 
         Label familyLbl = new Label("الخط:");
         familyLbl.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:11px;");
-        ComboBox<String> familyCombo = new ComboBox<>(FXCollections.observableArrayList(Font.getFamilies()));
-        familyCombo.setStyle(inputStyle());
+
+        // ✅ ComboBox بخط فاتح
+        ComboBox<String> familyCombo = new ComboBox<>(
+                FXCollections.observableArrayList(Font.getFamilies()));
+        familyCombo.getStyleClass().add("combo-light");
         familyCombo.setPrefWidth(190);
 
         Label sizeLbl = new Label("الحجم:");
         sizeLbl.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:11px;");
+
+        // ✅ Spinner بخط فاتح
         Spinner<Integer> sizeSpinner = new Spinner<>(6, 72, 14);
         sizeSpinner.setEditable(true);
         sizeSpinner.setPrefWidth(80);
-        sizeSpinner.setStyle(inputStyle());
+        sizeSpinner.getStyleClass().add("spinner-light");
 
         CheckBox boldCheck = new CheckBox("Bold");
         boldCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
@@ -436,9 +451,7 @@ public class FontSettingsManager {
                         it.remove();
                         continue;
                     }
-                    // ✅ تطبيق التغييرات بطريقة آمنة
                     clearFontRecursive(root);
-                    // ✅ إجبار إعادة الحساب
                     root.applyCss();
                     root.layout();
                 }
@@ -546,7 +559,6 @@ public class FontSettingsManager {
         } else if (node instanceof TextInputControl tic) {
             tic.setStyle(buildFontCss(family, size, bold, italic));
         } else {
-
             node.setStyle(buildFontCss(family, size, bold, italic));
         }
     }

@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * مدير تحميل الواجهات المستقلة (نوافذ + StackPane).
@@ -72,10 +73,24 @@ public class ViewManager {
     // ════════════════════════════════════════════════
 
     /**
-     * @param fxmlFile مسار الـ FXML
-     * @param viewId   اسم الواجهة (يظهر في كومبو الإعدادات + يُستخدم للخطوط والزوم والألوان)
+     * نسخة موسّعة من openIndependentView — بتسمح بـ owner + modality + resizable
+     * + callback لتهيئة الـ controller بعد التحميل (زي تمرير الـ Stage).
+     *
+     * @param fxmlFile     مسار الـ FXML
+     * @param viewId       اسم الواجهة (يظهر في كومبو الإعدادات + يُستخدم للخطوط والزوم والألوان)
+     * @param owner        النافذة الأب (اختياري — يمكن null)
+     * @param modality     نوع الـ modality (اختياري — يمكن null)
+     * @param resizable    هل النافذة قابلة للتحجيم
+     * @param initCallback يُستدعى بعد تحميل الـ controller وقبل show() —
+     *                     بيرجّع (controller, stage) للتهيئة
      */
-    public static void openIndependentView(String fxmlFile, String viewId) {
+    public static void openIndependentView(
+            String fxmlFile,
+            String viewId,
+            Stage owner,
+            Modality modality,
+            boolean resizable,
+            BiConsumer<Object, Stage> initCallback) {
         try {
             FXMLLoader loader = new FXMLLoader(
                     Objects.requireNonNull(ViewManager.class.getResource(fxmlFile)));
@@ -83,15 +98,22 @@ public class ViewManager {
 
             Scene scene = new Scene(view);
 
-            // ✅ تطبيق كل الإعدادات تلقائياً
+            // ✅ تطبيق كل الإعدادات تلقائياً (خطوط، ألوان، زوم)
             applyViewSettings(viewId, view, scene);
 
             Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setResizable(false);
+            if (owner != null) stage.initOwner(owner);
+            if (modality != null) stage.initModality(modality);
+            stage.setResizable(resizable);
             stage.setTitle(viewId);
             stage.getIcons().add(new Image(iconUrl()));
             stage.setScene(scene);
+
+            // ✅ نداء الـ callback قبل show عشان الكنترولر يقدر يحفظ الـ Stage
+            if (initCallback != null) {
+                initCallback.accept(loader.getController(), stage);
+            }
+
             stage.show();
 
         } catch (IOException ex) {
@@ -99,6 +121,14 @@ public class ViewManager {
             SAFNotification.error(ex.getMessage());
             log.error(ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * نفس النسخة السابقة بس بدون owner / modality / resizable
+     * (توافق مع الاستخدامات القديمة).
+     */
+    public static void openIndependentView(String fxmlFile, String viewId) {
+        openIndependentView(fxmlFile, viewId, null, null, false, null);
     }
 
     /**

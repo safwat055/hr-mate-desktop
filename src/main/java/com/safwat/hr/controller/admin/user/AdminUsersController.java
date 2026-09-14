@@ -6,18 +6,22 @@ import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.SessionManager;
 import com.safwat.hr.network.dto.AdminUserDtos.*;
-import com.safwat.hr.ui.theme.ThemeEventBus;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import com.safwat.hr.ui.util.AlertUtil;
+import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -31,9 +35,11 @@ import java.util.stream.Collectors;
  * واجهة إدارة المستخدمين (للأدمن فقط — endpoints تحت /api/admin محمية بـ @PreAuthorize("ADMIN")).
  * <p>
  * المزايا: عرض/بحث، إنشاء مستخدم، تعديل صلاحيات، إعادة تعيين كلمة مرور، تفعيل/تعطيل، إنشاء صلاحية جديدة.
- * كل العناصر JavaFX عادية (Button / TextField / PasswordField / CheckBox).
+ * كل التنسيقات من settings.css — لا يوجد inline styles.
  */
 public class AdminUsersController implements Initializable {
+
+    // ══════════════ FXML ══════════════
 
     @FXML
     private TextField txtSearch;
@@ -50,6 +56,8 @@ public class AdminUsersController implements Initializable {
     @FXML
     private TableColumn<UserResponse, UserResponse> colActions;
 
+    // ══════════════ State ══════════════
+
     private final ObservableList<UserResponse> masterData = FXCollections.observableArrayList();
     private FilteredList<UserResponse> filteredData;
     private List<PermissionDto> allPermissions = new ArrayList<>();
@@ -59,34 +67,40 @@ public class AdminUsersController implements Initializable {
      */
     private static final String PROTECTED_ADMIN = "admin";
 
+    private static final String CSS_PATH = "/com/safwat/hr/css/settings.css";
+
+    // ══════════════ Init ══════════════
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         filteredData = new FilteredList<>(masterData, u -> true);
         table.setItems(filteredData);
 
-        colUsername.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                nullSafe(c.getValue().getUsername())));
-        colDisplayName.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                nullSafe(c.getValue().getDisplayName())));
-        colJobTitle.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                nullSafe(c.getValue().getJobTitle())));
-        colPermissions.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
-                formatPermissions(c.getValue())));
-        colActive.setCellValueFactory(c -> new javafx.beans.property.SimpleBooleanProperty(c.getValue().isActive()));
+        colUsername.setCellValueFactory(c ->
+                new SimpleStringProperty(nullSafe(c.getValue().getUsername())));
+        colDisplayName.setCellValueFactory(c ->
+                new SimpleStringProperty(nullSafe(c.getValue().getDisplayName())));
+        colJobTitle.setCellValueFactory(c ->
+                new SimpleStringProperty(nullSafe(c.getValue().getJobTitle())));
+        colPermissions.setCellValueFactory(c ->
+                new SimpleStringProperty(formatPermissions(c.getValue())));
+        colActive.setCellValueFactory(c ->
+                new SimpleBooleanProperty(c.getValue().isActive()));
         colActive.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Boolean active, boolean empty) {
                 super.updateItem(active, empty);
                 if (empty || active == null) {
                     setText(null);
-                    getStyleClass().removeAll("text-success", "text-danger");
+                    getStyleClass().removeAll("cell-active", "cell-inactive");
                 } else {
                     setText(active ? "✅ نشط" : "❌ معطّل");
-                    getStyleClass().setAll(active ? "text-success" : "text-danger");
+                    getStyleClass().removeAll("cell-active", "cell-inactive");
+                    getStyleClass().add(active ? "cell-active" : "cell-inactive");
                 }
             }
         });
-        colActions.setCellValueFactory(c -> new javafx.beans.property.SimpleObjectProperty<>(c.getValue()));
+        colActions.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue()));
         colActions.setCellFactory(col -> new ActionsCell());
 
         txtSearch.textProperty().addListener((obs, o, q) ->
@@ -99,6 +113,8 @@ public class AdminUsersController implements Initializable {
                 }));
 
         refresh();
+        SettingsThemeLoader.apply(btnRefresh);
+
     }
 
     // ══════════════ تحميل البيانات ══════════════
@@ -118,19 +134,25 @@ public class AdminUsersController implements Initializable {
                 Platform.runLater(() -> {
                     if (permsResp.isSuccess() && permsResp.getData() != null) {
                         allPermissions = new ArrayList<>(permsResp.getData());
-                        allPermissions.sort(Comparator.comparing(p -> nullSafe(p.getLabel())));
+                        // ✅ ترتيب أبجدي حسب الاسم الإنجليزي
+                        allPermissions.sort(Comparator.comparing(
+                                p -> nullSafe(p.getName()).toLowerCase()));
                     }
                     if (usersResp.isSuccess() && usersResp.getData() != null) {
                         masterData.setAll(usersResp.getData());
                         hideInfo();
-                        AppLogBus.getInstance().log("[AdminUsers] ✅ تم تحميل " + masterData.size() + " مستخدم");
+                        AppLogBus.getInstance().log(
+                                "[AdminUsers] ✅ تم تحميل " + masterData.size() + " مستخدم");
                     } else {
                         showInfo("❌ فشل التحميل: " +
-                                (usersResp.getMessage() != null ? usersResp.getMessage() : "خطأ غير معروف"));
+                                (usersResp.getMessage() != null
+                                        ? usersResp.getMessage()
+                                        : "خطأ غير معروف"));
                     }
                 });
             } catch (Exception e) {
-                Platform.runLater(() -> showInfo("❌ خطأ في الاتصال: " + e.getMessage()));
+                Platform.runLater(() ->
+                        showInfo("❌ خطأ في الاتصال: " + e.getMessage()));
             }
         }).start();
     }
@@ -139,45 +161,35 @@ public class AdminUsersController implements Initializable {
 
     @FXML
     private void createUser() {
-        TextField txtUsername = new TextField();
-        txtUsername.setPromptText("اسم المستخدم *");
-        txtUsername.setPrefWidth(360);
-        PasswordField txtPassword = new PasswordField();
-        txtPassword.setPromptText("كلمة المرور (6 أحرف على الأقل) *");
-        txtPassword.setPrefWidth(360);
-        TextField txtDisplay = new TextField();
-        txtDisplay.setPromptText("الاسم المعروض");
-        txtDisplay.setPrefWidth(360);
-        TextField txtJob = new TextField();
-        txtJob.setPromptText("المسمى الوظيفي");
-        txtJob.setPrefWidth(360);
+        TextField txtUsername = styledField("اسم المستخدم *");
+        PasswordField txtPassword = styledPassword("كلمة المرور (6 أحرف على الأقل) *");
+        TextField txtDisplay = styledField("الاسم المعروض");
+        TextField txtJob = styledField("المسمى الوظيفي");
 
-        FlowPane permPane = buildPermissionCheckboxes(new HashSet<>());
+        VBox permList = buildPermissionCheckboxes(new HashSet<>());
+        ScrollPane permScroll = wrapPermissionsScroll(permList);
 
         VBox content = new VBox(10,
-                new Label("مستخدم جديد"),
+                styledHeader("👤 مستخدم جديد"),
                 txtUsername, txtPassword, txtDisplay, txtJob,
-                new Label("الصلاحيات *"), permPane);
+                styledSubHeader("الصلاحيات *"),
+                permScroll);
         content.setPadding(new Insets(16));
+        content.getStyleClass().add("dialog-content");
 
-        Optional<ButtonType> result = new Alert(Alert.AlertType.CONFIRMATION) {{
-            setTitle("إنشاء مستخدم");
-            setHeaderText(null);
-            getDialogPane().setContent(content);
-        }}
-                .showAndWait();
-
+        Optional<ButtonType> result = buildDialog("إنشاء مستخدم", content).showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) return;
 
         String username = txtUsername.getText() == null ? "" : txtUsername.getText().trim();
         String password = txtPassword.getText() == null ? "" : txtPassword.getText();
 
         if (username.isEmpty() || password.length() < 6) {
-            AlertUtil.showError("بيانات ناقصة", "اسم المستخدم مطلوب وكلمة المرور 6 أحرف على الأقل");
+            AlertUtil.showError("بيانات ناقصة",
+                    "اسم المستخدم مطلوب وكلمة المرور 6 أحرف على الأقل");
             return;
         }
 
-        Set<Long> permIds = selectedPermissionIds(permPane);
+        Set<Long> permIds = selectedPermissionIds(permList);
         if (permIds.isEmpty()) {
             AlertUtil.showError("بيانات ناقصة", "لازم تختار صلاحية واحدة على الأقل");
             return;
@@ -190,29 +202,31 @@ public class AdminUsersController implements Initializable {
         req.setJobTitle(txtJob.getText());
         req.setPermissionIds(permIds);
 
-        runOp("إنشاء المستخدم", () -> ApiClient.post("/admin/users", req, UserResponse.class));
+        runOp("إنشاء المستخدم",
+                () -> ApiClient.post("/admin/users", req, UserResponse.class));
     }
 
     // ══════════════ تعديل صلاحيات ══════════════
 
     private void editPermissions(UserResponse user) {
         Set<Long> current = user.getPermissions() == null ? Set.of() :
-                user.getPermissions().stream().map(PermissionDto::getId).collect(Collectors.toSet());
-        FlowPane permPane = buildPermissionCheckboxes(current);
+                user.getPermissions().stream()
+                        .map(PermissionDto::getId)
+                        .collect(Collectors.toSet());
 
-        VBox content = new VBox(10, new Label("صلاحيات: " + user.getUsername()), permPane);
+        VBox permList = buildPermissionCheckboxes(current);
+        ScrollPane permScroll = wrapPermissionsScroll(permList);
+
+        VBox content = new VBox(10,
+                styledHeader("🔑 صلاحيات: " + user.getUsername()),
+                permScroll);
         content.setPadding(new Insets(16));
+        content.getStyleClass().add("dialog-content");
 
-        Optional<ButtonType> result = new Alert(Alert.AlertType.CONFIRMATION) {{
-            setTitle("تعديل الصلاحيات");
-            setHeaderText(null);
-            getDialogPane().setContent(content);
-        }}
-                .showAndWait();
-
+        Optional<ButtonType> result = buildDialog("تعديل الصلاحيات", content).showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) return;
 
-        Set<Long> permIds = selectedPermissionIds(permPane);
+        Set<Long> permIds = selectedPermissionIds(permList);
         if (permIds.isEmpty()) {
             AlertUtil.showError("بيانات ناقصة", "لازم تختار صلاحية واحدة على الأقل");
             return;
@@ -226,28 +240,22 @@ public class AdminUsersController implements Initializable {
     // ══════════════ إعادة تعيين كلمة المرور ══════════════
 
     private void resetPassword(UserResponse user) {
-        PasswordField txtNew = new PasswordField();
-        txtNew.setPromptText("كلمة المرور الجديدة (6+)");
-        txtNew.setPrefWidth(320);
-        PasswordField txtConfirm = new PasswordField();
-        txtConfirm.setPromptText("تأكيدها");
-        txtConfirm.setPrefWidth(320);
+        PasswordField txtNew = styledPassword("كلمة المرور الجديدة (6+)");
+        PasswordField txtConfirm = styledPassword("تأكيدها");
 
-        VBox content = new VBox(10, new Label("إعادة تعيين كلمة مرور: " + user.getUsername()), txtNew, txtConfirm);
+        VBox content = new VBox(10,
+                styledHeader("🔐 إعادة تعيين كلمة مرور: " + user.getUsername()),
+                txtNew, txtConfirm);
         content.setPadding(new Insets(16));
+        content.getStyleClass().add("dialog-content");
 
-        Optional<ButtonType> result = new Alert(Alert.AlertType.CONFIRMATION) {{
-            setTitle("إعادة تعيين كلمة المرور");
-            setHeaderText(null);
-            getDialogPane().setContent(content);
-        }}
-                .showAndWait();
-
+        Optional<ButtonType> result = buildDialog("إعادة تعيين كلمة المرور", content).showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) return;
 
         String pw = txtNew.getText() == null ? "" : txtNew.getText();
         if (pw.length() < 6 || !pw.equals(txtConfirm.getText())) {
-            AlertUtil.showError("بيانات غير صالحة", "كلمة المرور 6 أحرف على الأقل والتأكيد لازم يطابقها");
+            AlertUtil.showError("بيانات غير صالحة",
+                    "كلمة المرور 6 أحرف على الأقل والتأكيد لازم يطابقها");
             return;
         }
 
@@ -264,7 +272,8 @@ public class AdminUsersController implements Initializable {
         if (!AlertUtil.showConfirmation(action + " مستخدم",
                 "هل أنت متأكد من " + action + " المستخدم " + user.getUsername() + "؟")) return;
 
-        runOp(action, () -> ApiClient.put("/admin/users/" + user.getId() + "/" + (activating ? "enable" : "disable"),
+        runOp(action, () -> ApiClient.put(
+                "/admin/users/" + user.getId() + "/" + (activating ? "enable" : "disable"),
                 null, UserResponse.class));
     }
 
@@ -272,23 +281,16 @@ public class AdminUsersController implements Initializable {
 
     @FXML
     private void createPermission() {
-        TextField txtName = new TextField();
-        txtName.setPromptText("اسم الصلاحية إنجليزي CAPS بـ underscores *");
-        txtName.setPrefWidth(360);
-        TextField txtLabel = new TextField();
-        txtLabel.setPromptText("المقابل العربي (مثال: تعديل السلم الوظيفي)");
-        txtLabel.setPrefWidth(360);
+        TextField txtName = styledField("اسم الصلاحية إنجليزي CAPS بـ underscores *");
+        TextField txtLabel = styledField("المقابل العربي (مثال: تعديل السلم الوظيفي)");
 
-        VBox content = new VBox(10, new Label("صلاحية جديدة"), txtName, txtLabel);
+        VBox content = new VBox(10,
+                styledHeader("➕ صلاحية جديدة"),
+                txtName, txtLabel);
         content.setPadding(new Insets(16));
+        content.getStyleClass().add("dialog-content");
 
-        Optional<ButtonType> result = new Alert(Alert.AlertType.CONFIRMATION) {{
-            setTitle("إنشاء صلاحية");
-            setHeaderText(null);
-            getDialogPane().setContent(content);
-        }}
-                .showAndWait();
-
+        Optional<ButtonType> result = buildDialog("إنشاء صلاحية", content).showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) return;
 
         String name = txtName.getText() == null ? "" : txtName.getText().trim();
@@ -305,11 +307,126 @@ public class AdminUsersController implements Initializable {
                 () -> ApiClient.post("/admin/permissions", body, PermissionDto.class));
     }
 
-    // ══════════════ Helpers ══════════════
+    // ══════════════ UI Builders ══════════════
 
     /**
-     * ينفّذ operation في Thread منفصل ويعمل refresh عند النجاح
+     * ✅ قائمة عمودية للصلاحيات — مرتّبة أبجديًا وكل صلاحية تحت التانية.
      */
+    private VBox buildPermissionCheckboxes(Set<Long> selectedIds) {
+        VBox list = new VBox(4);
+        list.getStyleClass().add("perm-list");
+
+        if (allPermissions.isEmpty()) {
+            Label empty = new Label("لا توجد صلاحيات متاحة");
+            empty.getStyleClass().add("perm-empty");
+            list.getChildren().add(empty);
+            return list;
+        }
+
+        for (PermissionDto p : allPermissions) {
+            CheckBox cb = new CheckBox(formatPermissionLabel(p));
+            cb.setUserData(p.getId());
+            cb.setSelected(selectedIds.contains(p.getId()));
+            cb.getStyleClass().add("checkbox-dark");
+            cb.setMaxWidth(Double.MAX_VALUE);   // ياخد عرض السطر كامل
+            list.getChildren().add(cb);
+        }
+        return list;
+    }
+
+    /**
+     * صيغة العرض:  ENGLISH_NAME  —  المقابل العربي
+     */
+    private String formatPermissionLabel(PermissionDto p) {
+        String name = nullSafe(p.getName());
+        String label = nullSafe(p.getLabel());
+        if (label.isBlank()) return name;
+        return name + "  —  " + label;
+    }
+
+    /**
+     * يغلّف قائمة الصلاحيات في ScrollPane بارتفاع ثابت.
+     */
+    private ScrollPane wrapPermissionsScroll(VBox list) {
+        ScrollPane sp = new ScrollPane(list);
+        sp.setFitToWidth(true);
+        sp.setPrefHeight(240);
+        sp.setPrefWidth(420);
+        sp.getStyleClass().add("perm-scroll");
+        return sp;
+    }
+
+    private Set<Long> selectedPermissionIds(VBox list) {
+        return list.getChildren().stream()
+                .filter(n -> n instanceof CheckBox cb && cb.isSelected())
+                .map(n -> (Long) n.getUserData())
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * ملخص الصلاحيات المعروض في الجدول — مختصر وواضح.
+     */
+    private String formatPermissions(UserResponse u) {
+        if (u.getPermissions() == null || u.getPermissions().isEmpty()) return "—";
+        int count = u.getPermissions().size();
+        if (count == 1) {
+            PermissionDto p = u.getPermissions().iterator().next();
+            return nullSafe(p.getLabel()).isEmpty()
+                    ? nullSafe(p.getName())
+                    : nullSafe(p.getLabel());
+        }
+        return count + " صلاحيات";
+    }
+
+    // ══════════════ Dialog Helpers ══════════════
+
+    /**
+     * ينشئ Alert منسّق بالكامل من settings.css.
+     */
+    private Alert buildDialog(String title, Node content) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.getDialogPane().setContent(content);
+        alert.getDialogPane().getStyleClass().add("dialog-dark");
+
+        URL css = getClass().getResource(CSS_PATH);
+        if (css != null) {
+            alert.getDialogPane().getStylesheets().add(css.toExternalForm());
+        }
+        return alert;
+    }
+
+    private Label styledHeader(String text) {
+        Label lbl = new Label(text);
+        lbl.getStyleClass().add("dialog-title");
+        return lbl;
+    }
+
+    private Label styledSubHeader(String text) {
+        Label lbl = new Label(text);
+        lbl.getStyleClass().add("dialog-subtitle");
+        return lbl;
+    }
+
+    private TextField styledField(String prompt) {
+        TextField tf = new TextField();
+        tf.setPromptText(prompt);
+        tf.getStyleClass().add("field-dark");
+        tf.setPrefWidth(420);
+        return tf;
+    }
+
+    private PasswordField styledPassword(String prompt) {
+        PasswordField pf = new PasswordField();
+        pf.setPromptText(prompt);
+        pf.getStyleClass().add("field-dark");
+        pf.setPrefWidth(420);
+        return pf;
+    }
+
+    // ══════════════ Operations ══════════════
+
     private void runOp(String opName, Op operation) {
         showInfo("⏳ " + opName + "...");
         new Thread(() -> {
@@ -320,7 +437,10 @@ public class AdminUsersController implements Initializable {
                         AppLogBus.getInstance().log("[AdminUsers] ✅ " + opName);
                         refresh();
                     } else {
-                        showInfo("❌ فشل: " + (resp.getMessage() != null ? resp.getMessage() : "خطأ غير معروف"));
+                        showInfo("❌ فشل: " +
+                                (resp.getMessage() != null
+                                        ? resp.getMessage()
+                                        : "خطأ غير معروف"));
                         AlertUtil.showError(opName + " فشل", resp.getMessage());
                     }
                 });
@@ -333,34 +453,7 @@ public class AdminUsersController implements Initializable {
         }).start();
     }
 
-    private FlowPane buildPermissionCheckboxes(Set<Long> selectedIds) {
-        FlowPane pane = new FlowPane();
-        pane.setHgap(12);
-        pane.setVgap(8);
-        pane.setPrefWrapLength(420);
-        for (PermissionDto p : allPermissions) {
-            CheckBox cb = new CheckBox(nullSafe(p.getLabel()) + " (" + nullSafe(p.getName()) + ")");
-            cb.setUserData(p.getId());
-            cb.setSelected(selectedIds.contains(p.getId()));
-            pane.getChildren().add(cb);
-        }
-        return pane;
-    }
-
-    private Set<Long> selectedPermissionIds(FlowPane pane) {
-        return pane.getChildren().stream()
-                .filter(n -> n instanceof CheckBox cb && cb.isSelected())
-                .map(n -> (Long) n.getUserData())
-                .collect(Collectors.toSet());
-    }
-
-    private String formatPermissions(UserResponse u) {
-        if (u.getPermissions() == null || u.getPermissions().isEmpty()) return "—";
-        return u.getPermissions().stream()
-                .map(p -> nullSafe(p.getLabel()).isEmpty() ? nullSafe(p.getName()) : nullSafe(p.getLabel()))
-                .sorted()
-                .collect(Collectors.joining("، "));
-    }
+    // ══════════════ Info helpers ══════════════
 
     private void showInfo(String msg) {
         lblInfo.setText(msg);
@@ -382,29 +475,22 @@ public class AdminUsersController implements Initializable {
         ApiResponse<?> execute() throws Exception;
     }
 
+    // ══════════════ Actions Cell ══════════════
+
     /**
-     * خلايا عمود الإجراءات
+     * خلايا عمود الإجراءات — كل التنسيقات من settings.css.
      */
     private final class ActionsCell extends TableCell<UserResponse, UserResponse> {
-        private final Button btnPerms = new Button("صلاحيات");
 
-        {
-            btnPerms.getStyleClass().addAll("btn", "btn-secondary", "btn-sm");
-        }
-
-        private final Button btnReset = new Button("كلمة مرور");
-
-        {
-            btnReset.getStyleClass().addAll("btn", "btn-secondary", "btn-sm");
-        }
-
+        private final Button btnPerms = new Button("🔑 صلاحيات");
+        private final Button btnReset = new Button("🔐 كلمة مرور");
         private final Button btnToggle = new Button();
 
-        {
-            btnToggle.getStyleClass().add("btn-sm");
-        }
-
         ActionsCell() {
+            btnPerms.getStyleClass().add("btn-cell-perm");
+            btnReset.getStyleClass().add("btn-cell-edit");
+            btnToggle.getStyleClass().add("btn-cell-warn"); // Default — يتغيّر حسب الحالة
+
             btnPerms.setOnAction(e -> {
                 UserResponse u = getItem();
                 if (u != null) editPermissions(u);
@@ -430,44 +516,38 @@ public class AdminUsersController implements Initializable {
             btnPerms.setDisable(protectedAdmin);
             btnReset.setDisable(protectedAdmin);
             btnToggle.setDisable(protectedAdmin);
-            btnToggle.setText(user.isActive() ? "تعطيل" : "تفعيل");
-            btnToggle.getStyleClass().removeAll("btn-danger", "btn-success");
-            btnToggle.getStyleClass().add(user.isActive() ? "btn-danger" : "btn-success");
+
+            btnToggle.setText(user.isActive() ? "⏸ تعطيل" : "▶ تفعيل");
+            btnToggle.getStyleClass().removeAll("btn-cell-warn", "btn-cell-danger");
+            btnToggle.getStyleClass().add(
+                    user.isActive() ? "btn-cell-danger" : "btn-cell-warn");
 
             HBox box = new HBox(6, btnPerms, btnReset, btnToggle);
-            box.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            box.setAlignment(Pos.CENTER_RIGHT);
             setGraphic(box);
         }
     }
 
+    // ══════════════ Static Helpers ══════════════
+
     /**
-     * ✅ فحص سريع قبل فتح الشاشة — من القائمة الرئيسية
+     * ✅ فحص سريع قبل فتح الشاشة — من القائمة الرئيسية.
      */
     public static boolean canOpen() {
         return SessionManager.getInstance().isAdmin();
     }
 
     /**
-     * فتح الشاشة في Stage مستقل
+     * فتح الشاشة في Stage مستقل.
      */
     public static void open(Stage owner) {
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                    AdminUsersController.class.getResource("/com/safwat/hr/controller/admin/user/AdminUsersView.fxml"));
-            javafx.scene.Parent root = loader.load();
-
-            Stage stage = new Stage();
-            stage.initModality(Modality.WINDOW_MODAL);
-            if (owner != null) stage.initOwner(owner);
-            stage.setTitle("👥 إدارة المستخدمين");
-            stage.setScene(new Scene(root, 1100, 650));
-            stage.setMinWidth(900);
-            stage.setMinHeight(550);
-            ThemeEventBus.register(stage.getScene());
-            stage.show();
-        } catch (Exception e) {
-            AppLogBus.getInstance().log("[AdminUsers] ❌ فشل فتح الشاشة: " + e.getMessage());
-            AlertUtil.showError("خطأ", "فشل فتح شاشة إدارة المستخدمين: " + e.getMessage());
-        }
+        ViewManager.openIndependentView(
+                "/com/safwat/hr/controller/admin/user/AdminUsersView.fxml",
+                "👥 إدارة المستخدمين",
+                owner,
+                Modality.WINDOW_MODAL,
+                true,   // resizable
+                null    // مفيش callback
+        );
     }
 }

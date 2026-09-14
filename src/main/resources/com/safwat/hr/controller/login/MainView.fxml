@@ -50,35 +50,12 @@
             <Menu mnemonicParsing="false" text="ملف">
                 <items>
                <MenuItem mnemonicParsing="false" onAction="#openBackupView" text="نسخ احتياطي" />
+               <SeparatorMenuItem mnemonicParsing="false" />
                <MenuItem mnemonicParsing="false" onAction="#openTemplateView" text="تحميل نماذج" />
                <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#reLogin" text="إعادة تسجيل الدخول" />
                     <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#logout" text="تسجيل الخروج" />
-                </items>
-            </Menu>
-            <Menu mnemonicParsing="false" text="عرض">
-                <items>
-                    <Menu mnemonicParsing="false" text="تقارير">
-                        <items>
-                            <MenuItem mnemonicParsing="false" text="تقارير تسويات" />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" onAction="#openPayrollReport" text="تقارير بيرول" />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" text="تقارير اجازات" />
-                            <SeparatorMenuItem mnemonicParsing="false" />
-                            <MenuItem mnemonicParsing="false" text="تقارير اجور" />
-                        </items>
-                    </Menu>
-                    <SeparatorMenuItem mnemonicParsing="false" />
-                    <Menu mnemonicParsing="false" text="واجهات">
-                        <items>
-                            <MenuItem mnemonicParsing="false" text="تقارير تسويات" />
-                            <MenuItem mnemonicParsing="false" text="تقارير بيرول" />
-                            <MenuItem mnemonicParsing="false" text="تقارير اجازات" />
-                            <MenuItem mnemonicParsing="false" text="تقارير اجور" />
-                        </items>
-                    </Menu>
                 </items>
             </Menu>
             <Menu mnemonicParsing="false" text="اعدادات">
@@ -87,7 +64,7 @@
                <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#openServerSetting" text="اعدادات السيرفر" />
                     <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem mnemonicParsing="false" onAction="#openBasicSetting" text="اعدادات المستخدم" />
+                    <MenuItem mnemonicParsing="false" onAction="#openBasicSetting" text="اعدادات التشغيل" />
                     <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" onAction="#openAdminUserView" text="ادارة المستخدمين" />
                     <SeparatorMenuItem mnemonicParsing="false" />

@@ -4,6 +4,7 @@ import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import com.safwat.hr.ui.util.ViewManager;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -38,6 +39,7 @@ public class TemplateController implements Initializable {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        SettingsThemeLoader.apply(btn_all);
         setActions();
         setTextFields();
         TextFieldSetupHelper.setupIntegerFields(txt_rowsCount);

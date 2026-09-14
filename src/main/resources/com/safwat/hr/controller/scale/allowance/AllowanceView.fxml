@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    شاشة البدلات — AllowanceView.fxml
+    ────────────────────────────────────────────────────────────
+    تاب 1: بيانات الموظف (عرض فقط — مجلوبة من محرك الراتب)
+    تاب 2: جدول البدلات (إضافة / تعديل / حذف / reset)
+-->
+
+<ScrollPane
+    fitToHeight="true"
+    fitToWidth="true"
+    nodeOrientation="RIGHT_TO_LEFT"
+    styleClass="app-bg"
+    xmlns="http://javafx.com/javafx/17"
+    xmlns:fx="http://javafx.com/fxml/1"
+    fx:controller="com.safwat.hr.hrScale.allowance.controller.AllowanceController">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </padding>
+
+            <!-- ══════════════════════════════════════════════════
+                 1. شريط البحث
+            ══════════════════════════════════════════════════ -->
+            <HBox alignment="CENTER_RIGHT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="8" left="12" right="12" top="8"/>
+                </padding>
+
+                <Button fx:id="btn_search"
+                        prefHeight="32" prefWidth="90"
+                        styleClass="btn-primary"
+                        text="🔍 بحث"/>
+
+                <Label prefWidth="75" styleClass="bold" text="الرقم القومي"/>
+                <TextField fx:id="txt_nationalId"
+                           alignment="CENTER"
+                           prefHeight="32" prefWidth="160"
+                           promptText="أدخل الرقم القومي"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <!-- مؤشر تحميل -->
+                <ProgressIndicator fx:id="progress_indicator"
+                                   prefHeight="24" prefWidth="24"
+                                   visible="false"/>
+
+                <!-- رسالة خطأ -->
+                <Label fx:id="lbl_error"
+                       styleClass="text-danger bold"
+                       visible="false"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- زر إدارة قواعد البدلات — متاح دايماً، مش محتاج بحث عن موظف -->
+                <Button fx:id="btn_manageDefinitions"
+                        prefHeight="32" prefWidth="130"
+                        styleClass="btn-purple"
+                        text="⚙ قواعد البدلات"/>
+
+                <!-- زر Reset — يظهر بعد تحميل الموظف -->
+                <Button fx:id="btn_reset"
+                        prefHeight="32" prefWidth="110"
+                        styleClass="btn-danger"
+                        text="🔄 إعادة الضبط"
+                        visible="false"/>
+            </HBox>
+
+            <!-- ══════════════════════════════════════════════════
+                 2. TabPane الرئيسي
+            ══════════════════════════════════════════════════ -->
+            <TabPane fx:id="main_tabs"
+                     VBox.vgrow="ALWAYS"
+                     tabClosingPolicy="UNAVAILABLE">
+
+                <!-- ─── تاب 1: بيانات الموظف ─────────────────── -->
+                <Tab text="بيانات الموظف">
+                    <content>
+                        <ScrollPane fitToWidth="true" styleClass="app-bg">
+                            <content>
+                                <VBox spacing="10" nodeOrientation="RIGHT_TO_LEFT">
+                                    <padding>
+                                        <Insets bottom="10" left="10" right="10" top="10"/>
+                                    </padding>
+
+                                    <!-- بيانات أساسية -->
+                                    <VBox styleClass="card" spacing="0">
+                                        <Label alignment="CENTER" maxWidth="Infinity"
+                                               styleClass="panel-header compact"
+                                               text="البيانات الأساسية"/>
+                                        <HBox spacing="20" nodeOrientation="RIGHT_TO_LEFT">
+                                            <padding>
+                                                <Insets bottom="10" left="12" right="12" top="10"/>
+                                            </padding>
+
+                                            <!-- عمود 1 -->
+                                            <VBox spacing="8" minWidth="250">
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="اسم الموظف"/>
+                                                    <TextField fx:id="txt_empName"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"
+                                                               styleClass="text-field"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="الرقم القومي"/>
+                                                    <TextField fx:id="txt_empNationalId"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="كود الوظيفة"/>
+                                                    <TextField fx:id="txt_empLawCode"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                            </VBox>
+
+                                            <Separator orientation="VERTICAL"/>
+
+                                            <!-- عمود 2 -->
+                                            <VBox spacing="8" minWidth="250">
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="القانون"/>
+                                                    <TextField fx:id="txt_empLaw"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="تاريخ التعيين"/>
+                                                    <TextField fx:id="txt_empStartDate"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="الدرجة الحالية"/>
+                                                    <TextField fx:id="txt_empDegree"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                            </VBox>
+
+                                            <Separator orientation="VERTICAL"/>
+
+                                            <!-- عمود 3 -->
+                                            <VBox spacing="8" minWidth="250">
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="الأساسي 30/6"/>
+                                                    <TextField fx:id="txt_empBasic30"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="من تاريخ"/>
+                                                    <TextField fx:id="txt_empBasic30From"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                                <HBox alignment="CENTER_RIGHT" spacing="8">
+                                                    <Label prefWidth="100" styleClass="bold" text="المجموعة"/>
+                                                    <TextField fx:id="txt_empGroup"
+                                                               prefHeight="28" prefWidth="160"
+                                                               editable="false"/>
+                                                </HBox>
+                                            </VBox>
+                                        </HBox>
+                                    </VBox>
+
+                                    <!-- ملاحظة -->
+                                    <Label styleClass="text-muted fs-12"
+                                           text="* البيانات محسوبة من محرك الراتب — للتعديل روح لشاشة السلم الوظيفي"/>
+
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+
+                <!-- ─── تاب 2: البدلات ────────────────────────── -->
+                <Tab text="البدلات">
+                    <content>
+                        <VBox spacing="8" nodeOrientation="RIGHT_TO_LEFT">
+                            <padding>
+                                <Insets bottom="10" left="10" right="10" top="10"/>
+                            </padding>
+
+                            <!-- شريط أدوات البدلات -->
+                            <HBox alignment="CENTER_RIGHT" spacing="8" styleClass="card">
+                                <padding>
+                                    <Insets bottom="8" left="12" right="12" top="8"/>
+                                </padding>
+
+                                <!-- تاريخ الاحتساب -->
+                                <Label styleClass="bold" text="تاريخ الاحتساب"/>
+                                <DatePicker fx:id="date_calculation"
+                                            prefHeight="32" prefWidth="150"
+                                            promptText="اختر تاريخ"/>
+
+                                <Button fx:id="btn_recalculate"
+                                        prefHeight="32" prefWidth="100"
+                                        styleClass="btn-purple"
+                                        text="⚙ احتساب"/>
+
+                                <Separator orientation="VERTICAL"/>
+
+                                <!-- إضافة بدل جديد -->
+                                <Label styleClass="bold" text="إضافة بدل"/>
+                                <ComboBox fx:id="combo_newAllowance"
+                                          prefHeight="32" prefWidth="180"
+                                          promptText="اختر بدل..."/>
+                                <Button fx:id="btn_addAllowance"
+                                        prefHeight="32" prefWidth="80"
+                                        styleClass="btn-success"
+                                        text="+ إضافة"/>
+
+                                <Region HBox.hgrow="ALWAYS"/>
+
+                                <!-- إجمالي -->
+                                <Label styleClass="bold text-navy fs-14" text="الإجمالي:"/>
+                                <Label fx:id="lbl_total"
+                                       styleClass="bold fs-14 text-success"
+                                       text="0.00 ج"/>
+                            </HBox>
+
+                            <!-- جدول البدلات الرئيسي -->
+                            <TableView fx:id="table_allowances"
+                                       nodeOrientation="RIGHT_TO_LEFT"
+                                       VBox.vgrow="ALWAYS"
+                                       prefHeight="400"
+                                       styleClass="bold">
+                                <columns>
+                                    <TableColumn fx:id="col_nameAr"
+                                                 text="اسم البدل"
+                                                 prefWidth="200"/>
+                                    <TableColumn fx:id="col_value"
+                                                 text="القيمة (ج)"
+                                                 prefWidth="120"/>
+                                    <TableColumn fx:id="col_effectiveFrom"
+                                                 text="من تاريخ"
+                                                 prefWidth="120"/>
+                                    <TableColumn fx:id="col_source"
+                                                 text="المصدر"
+                                                 prefWidth="100"/>
+                                    <TableColumn fx:id="col_actions"
+                                                 text="إجراءات"
+                                                 prefWidth="160"/>
+                                </columns>
+                                <padding>
+                                    <Insets bottom="4" left="4" right="4" top="2"/>
+                                </padding>
+                            </TableView>
+
+                        </VBox>
+                    </content>
+                </Tab>
+
+            </TabPane>
+
+            <!-- ══════════════════════════════════════════════════
+                 3. Dialogs (البدلات / قواعد البدلات)
+                    (مخفيين — بيظهروا كـ Popup)
+            ══════════════════════════════════════════════════ -->
+
+        </VBox>
+    </content>
+</ScrollPane>

@@ -74,8 +74,6 @@ public class ColorSettingsManager {
     private ColorSettingsManager() {
     }
 
-    // ==================== نموذج بيانات المتغير اللوني ====================
-
     private static class ColorVar {
         final String key;
         final String arabicLabel;
@@ -89,8 +87,6 @@ public class ColorSettingsManager {
             this.currentValue = currentValue;
         }
     }
-
-    // ==================== قراءة الملفات ====================
 
     private static String readResourceQuietly(String resourcePath) {
         try (InputStream is = ColorSettingsManager.class.getResourceAsStream(resourcePath)) {
@@ -120,8 +116,6 @@ public class ColorSettingsManager {
         }
     }
 
-    // ==================== استخراج المتغيرات ====================
-
     private static Map<String, String> parseColorVars(String css) {
         Map<String, String> result = new LinkedHashMap<>();
         if (css == null || css.isEmpty()) return result;
@@ -150,8 +144,6 @@ public class ColorSettingsManager {
         }
         return result;
     }
-
-    // ==================== الحفظ وإعادة التطبيق ====================
 
     private static void saveColorVars(List<ColorVar> vars) {
         StringBuilder sb = new StringBuilder();
@@ -222,14 +214,10 @@ public class ColorSettingsManager {
         }
     }
 
-    /**
-     * ✅ استعادة كل ألوان الثيم للقيم الافتراضية — يمسح ملف overrides ويطبق فوراً على الكل.
-     */
     public static void resetAllToDefaults() {
         try {
             Path file = Paths.get(OVERRIDES_FILE);
             Files.createDirectories(file.getParent());
-            // نكتب ملف فارغ (مش نحذف) عشان الـ stylesheet URL يفضل صالح
             Files.writeString(file, "/* تم إعادة الضبط للإعدادات الافتراضية */\n.root {\n}\n");
         } catch (IOException ignored) {
         }
@@ -237,12 +225,6 @@ public class ColorSettingsManager {
         reapplyToRegisteredScenes();
     }
 
-    // ==================== واجهة التخصيص ====================
-
-    /**
-     * بيبني panel الألوان جاهز للتركيب جوه AppearanceSettingsController.
-     * ✅ يضم زر "🔄 استعادة الافتراضي" بيرجع الكل للثيم الأصلي فوراً.
-     */
     public static Parent buildPanel() {
         List<ColorVar> vars = loadColorVars();
         Map<ColorVar, ColorPicker> pickers = new LinkedHashMap<>();
@@ -286,7 +268,6 @@ public class ColorSettingsManager {
         discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
                 + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
 
-        // ✅ زر استعادة الافتراضي العام
         Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
         resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
                 + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
@@ -361,7 +342,6 @@ public class ColorSettingsManager {
             confirm.showAndWait().ifPresent(btn -> {
                 if (btn == ButtonType.OK) {
                     resetAllToDefaults();
-                    // تحديث الـ pickers بقيم الثيم الأصلية
                     for (ColorVar v : vars) {
                         v.currentValue = v.themeDefault;
                         pickers.get(v).setValue(safeWebColor(v.themeDefault));
@@ -422,8 +402,9 @@ public class ColorSettingsManager {
         keyLbl.setStyle("-fx-font-size:10px; -fx-font-family:monospace; -fx-text-fill:" + C_MUTED + ";");
         labelsBox.getChildren().addAll(name, keyLbl);
 
+        // ✅ ColorPicker بخط فاتح
         ColorPicker picker = new ColorPicker(safeWebColor(v.currentValue));
-        picker.setStyle(inputStyle());
+        picker.getStyleClass().add("color-picker-light");
         pickers.put(v, picker);
 
         Button resetBtn = new Button("↺");

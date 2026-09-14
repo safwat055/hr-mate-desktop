@@ -48,19 +48,19 @@
                 <TextField fx:id="txt_nationalId" alignment="CENTER" prefHeight="32" prefWidth="150" promptText="الرقم القومي" />
 
                 <Separator orientation="VERTICAL" />
-                <Label minWidth="-Infinity" prefWidth="65" styleClass="bold" text="رقم موظف" />
+                <Label minWidth="-Infinity" prefHeight="18.0" prefWidth="86.0" styleClass="bold" text="رقم موظف" />
 
                 <TextField fx:id="txt_empCode" alignment="CENTER" prefHeight="32" prefWidth="120" promptText="رقم الموظف" />
 
                 <Separator orientation="VERTICAL" />
                 <Label prefHeight="23.0" prefWidth="40" styleClass="bold" text="الاسم" />
 
-                <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="32" prefWidth="200" promptText="اسم الموظف" />
+                <TextField fx:id="txt_empName" alignment="CENTER" prefHeight="28.0" prefWidth="232.0" promptText="اسم الموظف" />
 
                 <Separator orientation="VERTICAL" />
                 <Label prefWidth="45" styleClass="bold" text="الإدارة" />
 
-                <TextField fx:id="txt_Management" alignment="CENTER" prefHeight="32" prefWidth="200" promptText="اسم الإدارة" />
+                <TextField fx:id="txt_Management" alignment="CENTER" prefHeight="28.0" prefWidth="612.0" promptText="اسم الإدارة" />
             </HBox>
 
             <!-- ══════════════════════════════════════════════════════
@@ -93,9 +93,9 @@
                 <TextField fx:id="txt_law" alignment="CENTER" prefHeight="32" prefWidth="70" promptText="القانون" />
 
                 <Separator orientation="VERTICAL" />
-                <Label prefWidth="100" styleClass="bold" text="المجموعة النوعية" />
+                <Label prefHeight="18.0" prefWidth="114.0" styleClass="bold" text="المجموعة النوعية" />
 
-                <TextField fx:id="txt_group" alignment="CENTER" prefHeight="32" prefWidth="167.0" promptText="المجموعة النوعية" HBox.hgrow="ALWAYS" />
+                <TextField fx:id="txt_group" alignment="CENTER" prefHeight="28.0" prefWidth="196.0" promptText="المجموعة النوعية" HBox.hgrow="ALWAYS" />
             </HBox>
             <HBox prefHeight="422.0" prefWidth="1628.0" spacing="5.0">
                 <children>

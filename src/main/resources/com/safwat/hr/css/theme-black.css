@@ -1,7 +1,7 @@
 /* theme-black.css — ثيم أسود نقي (AMOLED Black) */
 @import "common.css";
 @import "chat-styles.css";
-@import "settings.css";
+
 
 .root {
     /* خلفية سودا خالصة */
