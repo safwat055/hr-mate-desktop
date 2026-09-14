@@ -1,7 +1,7 @@
-/* theme-dark-1.css */
+/* theme-dark-2.css */
 @import "common.css";
 @import "chat-styles.css";
-
+@import "settings.css";
 
 .root {
     -app-bg: #1A1A1A;
@@ -10,15 +10,16 @@
     -card-border: #3E3E3E;
     -card-shadow: rgba(0, 0, 0, 0.6);
 
+    /* ✅ تحسين التباين: نصوص أفتح */
     -text-primary: #E8E8E8;
-    -text-secondary: #B0B0B0;
-    -text-muted: #808080;
+    -text-secondary: #C8C8C8; /* كان #B0B0B0 */
+    -text-muted: #A0A0A0; /* كان #808080 */
     -on-brand: #FFFFFF;
 
-    -brand-navy: #1F2A44; /* قد لا يستخدم في هذا الثيم */
+    -brand-navy: #1F2A44;
     -header-alt-bg: #333333;
 
-    -color-primary: #4A90E2; /* أزرق فاتح للتباين */
+    -color-primary: #4A90E2;
     -color-danger: #E05A4F;
     -color-success: #2EAA7A;
     -color-purple: #8B7AE6;

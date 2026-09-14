@@ -2,7 +2,7 @@ package com.safwat.hr.controller.payroll.payments;
 
 import com.safwat.hr.controller.payroll.payments.service.PaymentsResult;
 import com.safwat.hr.controller.payroll.payments.service.PayrollPaymentsService;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
@@ -308,17 +308,20 @@ public class PaymentsController implements Initializable {
         SmartSearchHelper.bind(
                 txt_searchValue, btn_search,
                 () -> paymentsService.searchEmployee(txt_searchValue.getText()),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                     getEmployeeData();
                 },
-                SmartSearchHelper.FieldBind.of(txt_nationalID, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txt_empName, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txt_empCode, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txt_nationalID, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txt_empName, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txt_empCode, EmployeeSearchResult::getPay_id)
         );
     }
 

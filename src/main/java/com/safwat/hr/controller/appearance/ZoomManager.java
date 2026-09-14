@@ -22,20 +22,12 @@ public class ZoomManager {
     private static final double STEP = 0.1;
 
     private static final String C_BG = "#1a1d2e";
-    private static final String C_CARD = "#242740";
-    private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN = "#43c59e";
-    private static final String C_WARN = "#f5a623";
-    private static final String C_TEXT = "#e8eaf6";
-    private static final String C_MUTED = "#8b90b8";
-    private static final String C_BORDER = "#333659";
 
     private static final Map<String, List<WeakReference<ZoomTarget>>> REGISTERED = new HashMap<>();
 
     private ZoomManager() {
     }
 
-    // ── ZoomTarget: بيحفظ كل المعلومات اللازمة للـ live update ──
     private static class ZoomTarget {
         final ScrollPane scrollPane;
         final Node content;
@@ -47,16 +39,10 @@ public class ZoomManager {
             this.content = content;
         }
 
-        /**
-         * بترجع true لما الأبعاد اتحسبت فعلاً
-         */
         boolean hasOrigin() {
             return origW > 0 && origH > 0;
         }
 
-        /**
-         * بتحفظ الأبعاد الأصلية من layoutBounds الفعلية
-         */
         void captureOrigin() {
             if (content instanceof Region r) {
                 double pw = r.getPrefWidth();
@@ -72,8 +58,7 @@ public class ZoomManager {
         }
     }
 
-    // ==================== حفظ / تحميل ====================
-
+    // ════════════════════════ Save / Load ════════════════════════
     private static double loadZoom(String viewId) {
         String raw = AppConfig.getString(SECTION, viewId, String.valueOf(DEFAULT_ZOOM));
         try {
@@ -96,23 +81,14 @@ public class ZoomManager {
         return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, v));
     }
 
-    // ==================== نقطة الدخول ====================
-
-    /**
-     * بيتنادى من ViewManager/TabManager بعد تحميل الواجهة.
-     * بيستنى الـ layout يخلص الأول (Platform.runLater مزدوج)
-     * عشان يقدر يقرأ الأبعاد الحقيقية للـ content.
-     */
+    // ════════════════════════ Entry Point ════════════════════════
     public static void applyZoom(String viewId, Parent root) {
         if (root == null || viewId == null) return;
         ViewRegistry.register(viewId);
 
         double factor = loadZoom(viewId);
-
-        // لو الزوم = 100% مش محتاجين نعمل أي حاجة
         if (Math.abs(factor - DEFAULT_ZOOM) < 0.005) return;
 
-        // نستنى pulse واحد + runLater عشان الـ layout يكمل
         Platform.runLater(() -> Platform.runLater(() -> {
             ScrollPane sp = findOrWrap(root);
             Node content = sp.getContent();
@@ -121,7 +97,6 @@ public class ZoomManager {
             ZoomTarget target = new ZoomTarget(sp, content);
             target.captureOrigin();
 
-            // لو الأبعاد لسه مش جاهزة → نستنى الـ layout يكمل
             if (!target.hasOrigin()) {
                 content.layoutBoundsProperty().addListener((obs, o, n) -> {
                     if (n.getWidth() > 0 && n.getHeight() > 0 && !target.hasOrigin()) {
@@ -138,25 +113,18 @@ public class ZoomManager {
         }));
     }
 
-    // ==================== findOrWrap ====================
-
     private static ScrollPane findOrWrap(Parent root) {
         if (root instanceof ScrollPane sp) return sp;
-
         for (Node child : root.getChildrenUnmodifiable()) {
             if (child instanceof ScrollPane sp) return sp;
         }
 
-        // مفيش ScrollPane → نلف الـ root
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(false);
         sp.setFitToHeight(false);
         sp.setPannable(true);
-        sp.setStyle(
-                "-fx-background:" + C_BG + ";"
-                        + "-fx-background-color:" + C_BG + ";"
-                        + "-fx-focus-color:transparent;"
-                        + "-fx-faint-focus-color:transparent;");
+        sp.setStyle("-fx-background:" + C_BG + "; -fx-background-color:" + C_BG + ";"
+                + "-fx-focus-color:transparent; -fx-faint-focus-color:transparent;");
 
         replaceInParent(root.getParent(), root, sp);
         return sp;
@@ -182,20 +150,12 @@ public class ZoomManager {
         }
     }
 
-    // ==================== تطبيق الزوم ====================
-
-    /**
-     * الزوم الحقيقي:
-     * - بيغير prefWidth/prefHeight للـ content بالنسبة للأبعاد الأصلية
-     * - الـ ScrollPane يشوف المحتوى كبر ويعرض scrollbar تلقائياً
-     */
     private static void applyFactor(ZoomTarget target, double factor) {
         if (!target.hasOrigin()) return;
         Node content = target.content;
 
         if (content instanceof Region r) {
             if (Math.abs(factor - DEFAULT_ZOOM) < 0.005) {
-                // رجوع للأصل
                 r.setPrefWidth(target.origW);
                 r.setPrefHeight(target.origH);
                 r.setMinWidth(Region.USE_COMPUTED_SIZE);
@@ -214,8 +174,6 @@ public class ZoomManager {
         target.scrollPane.setVbarPolicy(
                 needsScroll ? ScrollPane.ScrollBarPolicy.AS_NEEDED : ScrollPane.ScrollBarPolicy.NEVER);
     }
-
-    // ==================== Live update ====================
 
     private static void registerTarget(String viewId, ZoomTarget target) {
         List<WeakReference<ZoomTarget>> list =
@@ -245,34 +203,34 @@ public class ZoomManager {
         }
     }
 
-    // ==================== Panel ====================
-
+    // ════════════════════════ Panel ════════════════════════
     public static Parent buildPanel(String viewId) {
         double saved = loadZoom(viewId);
         double[] current = {saved};
 
         Label headerIcon = new Label("🔍");
-        headerIcon.setStyle("-fx-font-size:20px;");
+        headerIcon.getStyleClass().add("stg-header-icon");
+
         Label headerTitle = new Label("مستوى التكبير");
-        headerTitle.setStyle("-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
+        headerTitle.getStyleClass().add("stg-header-title");
+
         Label headerSubtitle = new Label("تخصيص حجم واجهة: " + viewId);
-        headerSubtitle.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_MUTED + ";");
+        headerSubtitle.getStyleClass().add("stg-header-subtitle");
+
         VBox titleBox = new VBox(2, headerTitle, headerSubtitle);
 
         HBox header = new HBox(12, headerIcon, titleBox);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(14, 20, 14, 20));
-        header.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
-                + "; -fx-border-width:0 0 1 0;");
+        header.getStyleClass().add("stg-page-header");
 
         VBox card = new VBox(16);
         card.setPadding(new Insets(22));
-        card.setStyle("-fx-background-color:" + C_CARD + "; -fx-background-radius:10;"
-                + "-fx-border-color:" + C_BORDER + "; -fx-border-radius:10; -fx-border-width:1;");
+        card.getStyleClass().add("stg-card");
         card.setMaxWidth(440);
 
         Label percentLbl = new Label(fmt(saved));
-        percentLbl.setStyle("-fx-font-size:28px; -fx-font-weight:bold; -fx-text-fill:" + C_ACCENT + ";");
+        percentLbl.setStyle("-fx-font-size:28px; -fx-font-weight:bold; -fx-text-fill:#4f8ef7;");
         percentLbl.setMaxWidth(Double.MAX_VALUE);
         percentLbl.setAlignment(Pos.CENTER);
 
@@ -296,20 +254,18 @@ public class ZoomManager {
                 "الزوم بيكبّر المحتوى فعلياً — scrollbar بتظهر تلقائياً عند الحاجة. "
                         + "اضغط \"حفظ\" عشان يتذكر الإعداد.");
         hintLabel.setWrapText(true);
-        hintLabel.setStyle("-fx-font-size:10.5px; -fx-text-fill:" + C_MUTED + ";");
+        hintLabel.getStyleClass().add("stg-field-hint");
 
         Label statusLabel = new Label("جاهز");
-        statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+        statusLabel.getStyleClass().add("stg-status-msg");
 
         Button resetBtn = new Button("🔄 100%");
-        resetBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
-                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 12 6 12; -fx-cursor:hand;");
+        resetBtn.getStyleClass().add("stg-btn-secondary");
         Tooltip.install(resetBtn, new Tooltip("يرجع الزوم لـ 100% ويمسح الإعداد المحفوظ"));
 
         Button saveBtn = new Button("💾 حفظ");
         saveBtn.setDisable(true);
-        saveBtn.setStyle("-fx-background-color:" + C_ACCENT + "; -fx-text-fill:white;"
-                + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:6 16 6 16;");
+        saveBtn.getStyleClass().add("stg-btn-primary");
 
         Runnable onChanged = () -> {
             double v = clamp(current[0]);
@@ -320,7 +276,9 @@ public class ZoomManager {
             applyLive(viewId, v);
             saveBtn.setDisable(false);
             statusLabel.setText("تغيير غير محفوظ — الزوم اتطبق على الشاشة المفتوحة");
-            statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:11px;");
+            statusLabel.getStyleClass().removeAll(
+                    "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-warn");
         };
 
         slider.valueProperty().addListener((obs, o, n) -> {
@@ -344,14 +302,18 @@ public class ZoomManager {
             previewLbl.setStyle(previewStyle(DEFAULT_ZOOM));
             saveBtn.setDisable(true);
             statusLabel.setText("✓ تم الرجوع لـ 100% ومسح الإعداد المحفوظ");
-            statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll(
+                    "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-ok");
         });
 
         saveBtn.setOnAction(e -> {
             saveZoom(viewId, current[0]);
             saveBtn.setDisable(true);
             statusLabel.setText("✓ تم الحفظ");
-            statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll(
+                    "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-ok");
         });
 
         HBox footer = new HBox(10, statusLabel, spacer(), resetBtn, saveBtn);
@@ -361,12 +323,12 @@ public class ZoomManager {
         VBox body = new VBox(card);
         body.setAlignment(Pos.TOP_CENTER);
         body.setPadding(new Insets(30));
-        body.setStyle("-fx-background-color:" + C_BG + ";");
+        body.getStyleClass().add("stg-entries-area");
 
         BorderPane root = new BorderPane();
         root.setTop(header);
         root.setCenter(body);
-        root.setStyle("-fx-background-color:" + C_BG + ";");
+        root.getStyleClass().add("stg-root");
         return root;
     }
 
@@ -375,16 +337,16 @@ public class ZoomManager {
     }
 
     private static String previewStyle(double f) {
-        return "-fx-font-size:" + (int) Math.round(13 * f) + "px; -fx-text-fill:" + C_TEXT
-                + "; -fx-background-color:#1a1d2e; -fx-padding:10 14 10 14;"
-                + "-fx-background-radius:6; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6;";
+        return "-fx-font-size:" + (int) Math.round(13 * f) + "px; -fx-text-fill:#e8eaf6;"
+                + "-fx-background-color:#1a1d2e; -fx-padding:10 14 10 14;"
+                + "-fx-background-radius:6; -fx-border-color:#333659; -fx-border-radius:6;";
     }
 
     private static Button smallBtn(String t) {
         Button b = new Button(t);
-        b.setStyle("-fx-background-color:" + C_CARD + "; -fx-text-fill:" + C_TEXT
-                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-background-radius:6;"
-                + "-fx-min-width:34; -fx-min-height:30; -fx-font-weight:bold; -fx-cursor:hand;");
+        b.getStyleClass().add("stg-btn-secondary");
+        b.setMinWidth(34);
+        b.setMinHeight(30);
         return b;
     }
 

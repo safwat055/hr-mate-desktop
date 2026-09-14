@@ -1,7 +1,7 @@
 /* theme-black.css — ثيم أسود نقي (AMOLED Black) */
 @import "common.css";
 @import "chat-styles.css";
-
+@import "settings.css";
 
 .root {
     /* خلفية سودا خالصة */
@@ -12,17 +12,17 @@
     -card-border: #2A2A2A;
     -card-shadow: rgba(0, 0, 0, 0.8);
 
-    /* النصوص بيضاء / رمادية فاتحة */
+    /* ✅ تحسين التباين: نصوص أفتح */
     -text-primary: #F0F0F0;
-    -text-secondary: #B0B0B0;
-    -text-muted: #707070;
+    -text-secondary: #D0D0D0; /* كان #B0B0B0 */
+    -text-muted: #909090; /* كان #707070 */
     -on-brand: #FFFFFF;
 
     /* الألوان الأساسية (حيادية مع لمسة زرقاء فاتحة للزرار) */
     -brand-navy: #1A1A1A;
     -header-alt-bg: #222222;
 
-    -color-primary: #3D8CFF; /* أزرق نيون خفيف للتباين */
+    -color-primary: #3D8CFF;
     -color-danger: #E85A4F;
     -color-success: #3AAE8A;
     -color-purple: #9B7AE6;

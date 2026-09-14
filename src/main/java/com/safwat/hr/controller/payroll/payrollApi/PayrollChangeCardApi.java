@@ -2,7 +2,7 @@ package com.safwat.hr.controller.payroll.payrollApi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ChangeCardView;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.network.FileTransferClient;
@@ -43,12 +43,12 @@ public class PayrollChangeCardApi {
     }
 
 
-    public List<SearchEmp> searchInEmployees(PayrollRequest request) {
+    public List<EmployeeSearchResult> searchInEmployees(PayrollRequest request) {
         try {
             return ApiClient.post(
                     ApiEndpoints.PayrollChange.SEARCH,
                     request,
-                    new TypeReference<List<SearchEmp>>() {
+                    new TypeReference<List<EmployeeSearchResult>>() {
                     }
             ).getData();
         } catch (IOException | InterruptedException e) {

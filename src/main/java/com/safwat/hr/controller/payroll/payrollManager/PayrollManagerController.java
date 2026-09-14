@@ -1,6 +1,6 @@
 package com.safwat.hr.controller.payroll.payrollManager;
 
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.shared.util.DateUtils;
@@ -225,32 +225,37 @@ public class PayrollManagerController implements Initializable {
         SmartSearchHelper.bind(
                 txtEmpIdAnnual,
                 () -> managerService.getEmployeeInYearly(),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txtEmpIdAnnual, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txtEmpIdAnnual, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual, EmployeeSearchResult::getPay_id)
         );
 
         // ── Multi-field: Employee (Payment deletion) ──
         SmartSearchHelper.bind(
                 txtEmpIdPaymentAnnual,
                 () -> managerService.getEmployeeInYearly(),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentAnnual, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual2, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual2, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentAnnual, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameAnnual2, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual2, EmployeeSearchResult::getPay_id)
         );
 
         // ── Month binds ──
@@ -310,16 +315,19 @@ public class PayrollManagerController implements Initializable {
         SmartSearchHelper.bind(
                 txtEmpIdReview,
                 () -> managerService.getEmployeeInReview(txtEmpIdReview.getText()),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txtEmpIdReview, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txtEmpNameReview, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txtEmpCodeReview, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txtEmpIdReview, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameReview, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeReview, EmployeeSearchResult::getPay_id)
         );
         SmartSearchHelper.bind(txtMonthForEmpReview,
                 () -> managerService.getEmployeeMonthsReview(txtEmpIdReview.getText()),
@@ -330,16 +338,19 @@ public class PayrollManagerController implements Initializable {
         SmartSearchHelper.bind(
                 txtEmpIdPaymentReview,
                 () -> managerService.getEmployeeInReview(txtEmpIdPaymentReview.getText()),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentReview, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txtEmpNamePaymentReview, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txtEmpCodePaymentReview, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txtEmpIdPaymentReview, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNamePaymentReview, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodePaymentReview, EmployeeSearchResult::getPay_id)
         );
         SmartSearchHelper.bind(txtMonthForPaymentReview,
                 () -> managerService.getEmployeeMonthsReview(txtEmpIdPaymentReview.getText()),
@@ -382,16 +393,19 @@ public class PayrollManagerController implements Initializable {
         SmartSearchHelper.bind(
                 txtEmpIdSub,
                 () -> managerService.getEmployeeInSub(txtEmpIdSub.getText()),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txtEmpIdSub, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txtEmpNameSub, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txtEmpCodeSub, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txtEmpIdSub, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txtEmpNameSub, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txtEmpCodeSub, EmployeeSearchResult::getPay_id)
         );
         SmartSearchHelper.bind(txtMonthForEmpSub,
                 () -> managerService.getEmployeeMonthsSub(txtEmpIdSub.getText()),

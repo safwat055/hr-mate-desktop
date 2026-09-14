@@ -1,48 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-
-<VBox prefHeight="295.0" prefWidth="470.0" spacing="14.0" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.template.TemplateController">
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox prefHeight="295.0" prefWidth="470.0" spacing="14.0"
+      styleClass="stg-app-bg"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.template.TemplateController">
 
     <padding>
-        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
     </padding>
 
-    <!-- ═══════════════════════════════════════════════
-         كارت التحميل
-    ═══════════════════════════════════════════════ -->
-    <VBox spacing="0" styleClass="card">
+    <!-- ═══ كارت التحميل ═══ -->
+    <VBox spacing="0" styleClass="stg-card">
 
-        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-            <Label styleClass="card-icon" text="📥" />
-            <Label styleClass="card-title" text="تحميل قالب البيانات" />
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+            <Label styleClass="stg-card-icon" text="📥"/>
+            <Label styleClass="stg-card-title" text="تحميل قالب البيانات"/>
         </HBox>
 
-        <VBox spacing="14" styleClass="card-body">
+        <VBox spacing="14" styleClass="stg-card-body">
 
             <!-- ─── الشيت ─── -->
             <VBox spacing="6">
-                <Label styleClass="field-label" text="اختر شيت التحميل" />
+                <Label styleClass="stg-field-label" text="اختر شيت التحميل"/>
                 <HBox alignment="CENTER_LEFT" spacing="8">
-                    <Button fx:id="btn_all" minWidth="40" prefHeight="34" styleClass="btn-cron-preset" text=":" />
-                    <TextField fx:id="txt_type" alignment="CENTER" prefHeight="34" promptText="اسم الشيت..." styleClass="field-dark" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="btn_all" minWidth="40" prefHeight="34"
+                            styleClass="stg-btn-cron-preset" text=":"/>
+                    <TextField fx:id="txt_type" alignment="CENTER" prefHeight="34"
+                               promptText="اسم الشيت..." styleClass="stg-field-dark"
+                               HBox.hgrow="ALWAYS"/>
                 </HBox>
             </VBox>
 
             <!-- ─── عدد الصفوف ─── -->
             <VBox spacing="6">
-                <Label styleClass="field-label" text="عدد الصفوف" />
-                <TextField fx:id="txt_rowsCount" alignment="CENTER" prefHeight="34" prefWidth="140" promptText="مثال: 100" styleClass="field-dark" />
+                <Label styleClass="stg-field-label" text="عدد الصفوف"/>
+                <TextField fx:id="txt_rowsCount" alignment="CENTER"
+                           prefHeight="34" prefWidth="140"
+                           promptText="مثال: 100" styleClass="stg-field-dark"/>
             </VBox>
 
             <!-- ─── زر التحميل ─── -->
             <HBox alignment="CENTER_RIGHT" spacing="10">
-                <Button fx:id="btn_download" prefHeight="36" prefWidth="160" styleClass="btn-primary" text="⬇  تحميل" />
+                <Button fx:id="btn_download" prefHeight="36" prefWidth="160"
+                        styleClass="stg-btn-primary" text="⬇  تحميل"/>
             </HBox>
 
         </VBox>

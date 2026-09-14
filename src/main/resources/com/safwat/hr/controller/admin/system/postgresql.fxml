@@ -1,156 +1,170 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true"
+            prefHeight="802.0" prefWidth="745.0"
+            xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.admin.system.PostgreSQLController"
+            styleClass="stg-main-scroll">
+    <content>
+        <VBox spacing="14.0" styleClass="stg-app-bg">
+            <padding>
+                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+            </padding>
 
+            <!-- ═══ Header ═══ -->
+            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-page-header">
+                <Label styleClass="stg-header-icon" text="📦"/>
+                <VBox spacing="2">
+                    <Label styleClass="stg-page-title" text="إدارة PostgreSQL"/>
+                    <Label styleClass="stg-page-subtitle" text="التحكم في قاعدة البيانات والخدمة"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lblPgStatus" styleClass="stg-status-badge" text="⏹ غير معروف"/>
+            </HBox>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="802.0" prefWidth="745.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.admin.system.PostgreSQLController">
-   <content>
-      <VBox spacing="14.0" styleClass="app-bg">
-          <padding>
-              <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
-          </padding>
-      
-          <!-- ═══ Header ═══ -->
-          <HBox alignment="CENTER_LEFT" spacing="12" styleClass="page-header">
-              <Label styleClass="header-icon" text="📦" />
-              <VBox spacing="2">
-                  <Label styleClass="page-title" text="إدارة PostgreSQL" />
-                  <Label styleClass="page-subtitle" text="التحكم في قاعدة البيانات والخدمة" />
-              </VBox>
-              <Region HBox.hgrow="ALWAYS" />
-              <Label fx:id="lblPgStatus" styleClass="status-badge" text="⏹ غير معروف" />
-          </HBox>
-      
-          <!-- ═══ Card: معلومات PostgreSQL ═══ -->
-          <VBox spacing="0" styleClass="card">
-              <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                  <Label styleClass="card-icon" text="📋" />
-                  <Label styleClass="card-title" text="معلومات PostgreSQL" />
-              </HBox>
-              <VBox spacing="0" styleClass="card-body">
-                  <GridPane hgap="15" vgap="10">
-                      <columnConstraints>
-                          <ColumnConstraints minWidth="110" prefWidth="110" />
-                          <ColumnConstraints hgrow="ALWAYS" />
-                      </columnConstraints>
-      
-                      <Label styleClass="field-label" text="المسار:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                      <Label fx:id="lblPgPath" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-      
-                      <Label styleClass="field-label" text="البيانات:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                      <Label fx:id="lblPgData" styleClass="field-value" text="-" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-      
-                      <Label styleClass="field-label" text="الحالة:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                      <Label fx:id="lblPgRunningStatus" styleClass="field-value" text="❌ غير مشغول" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-      
-                      <Label styleClass="field-label" text="المنفذ:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                      <Label fx:id="lblPgPort" styleClass="field-value" text="5432" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-      
-                      <Label styleClass="field-label" text="المستخدم:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                      <Label fx:id="lblPgUser" styleClass="field-value" text="admin" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-      
-                      <Label styleClass="field-label" text="قاعدة البيانات:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                      <Label fx:id="lblPgDatabase" styleClass="field-value" text="hr_db" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  <rowConstraints>
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                     <RowConstraints />
-                  </rowConstraints>
-                  </GridPane>
-              </VBox>
-          </VBox>
-      
-          <!-- ═══ Card: العمليات ═══ -->
-          <VBox spacing="0" styleClass="card">
-              <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                  <Label styleClass="card-icon" text="🛠" />
-                  <Label styleClass="card-title" text="العمليات" />
-              </HBox>
-              <VBox spacing="12" styleClass="card-body">
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="110" styleClass="field-label" text="تهيئة:" />
-                      <Button fx:id="btnInit" styleClass="btn-primary" text="🔧 تهيئة قاعدة البيانات" />
-                      <Label fx:id="lblInitStatus" styleClass="status-msg" text="" />
-                  </HBox>
-      
-                  <Separator styleClass="separator-dark" />
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="110" styleClass="field-label" text="التشغيل:" />
-                      <Button fx:id="btnStart" styleClass="btn-primary" text="▶ تشغيل" />
-                      <Button fx:id="btnStop" styleClass="btn-danger" text="⏹ إيقاف" />
-                      <Button fx:id="btnRestart" styleClass="btn-secondary" text="🔄 إعادة تشغيل" />
-                      <CheckBox fx:id="chkServiceMode" styleClass="checkbox-dark" text="خدمة (Windows)" />
-                  </HBox>
-      
-                  <Separator styleClass="separator-dark" />
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="110" styleClass="field-label" text="الخدمة:" />
-                      <Button fx:id="btnInstallService" styleClass="btn-primary" text="📦 تثبيت" />
-                      <Button fx:id="btnDeleteService" styleClass="btn-danger" text="❌ حذف" />
-                  </HBox>
-      
-                  <Separator styleClass="separator-dark" />
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="110" styleClass="field-label" text="قاعدة البيانات:" />
-                      <Button fx:id="btnCreateDb" styleClass="btn-secondary" text="➕ إنشاء" />
-                      <Button fx:id="btnDropDb" styleClass="btn-danger" text="🗑 حذف" />
-                      <Button fx:id="btnListDb" styleClass="btn-ghost" text="📋 عرض" />
-                  </HBox>
-              </VBox>
-          </VBox>
-      
-          <!-- ═══ Card: النسخ الاحتياطي ═══ -->
-          <VBox spacing="0" styleClass="card">
-              <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                  <Label styleClass="card-icon" text="💾" />
-                  <Label styleClass="card-title" text="النسخ الاحتياطي" />
-              </HBox>
-              <VBox spacing="12" styleClass="card-body">
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="120" styleClass="field-label" text="نسخ احتياطي:" />
-                      <Button fx:id="btnBackupNow" onAction="#handleBackupNow" styleClass="btn-primary" text="💾 نسخة احتياطية الآن" />
-                      <Label fx:id="lblBackupStatus" styleClass="status-msg" text="" />
-                  </HBox>
-      
-                  <Separator styleClass="separator-dark" />
-      
-                  <HBox alignment="CENTER_LEFT" spacing="10">
-                      <Label minWidth="120" styleClass="field-label" text="استعادة:" />
-                      <Button fx:id="btnRestoreFile" onAction="#handleRestoreFromFile" styleClass="btn-secondary" text="📂 استعادة من ملف..." />
-                      <Label styleClass="radio-hint-warn" text="⚠️ تحذير: تمسح البيانات الحالية" />
-                  </HBox>
-              </VBox>
-          </VBox>
-      
-          <!-- ═══ Card: سجل العمليات ═══ -->
-          <VBox spacing="0" styleClass="card">
-              <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                  <Label styleClass="card-icon" text="📋" />
-                  <Label styleClass="card-title" text="سجل العمليات" />
-              </HBox>
-              <TextArea fx:id="txtPgLogs" editable="false" prefHeight="180" styleClass="textarea-dark,textarea-in-card" wrapText="true" />
-          </VBox>
-      
-      </VBox>
-   </content>
+            <!-- ═══ Card: معلومات PostgreSQL ═══ -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="📋"/>
+                    <Label styleClass="stg-card-title" text="معلومات PostgreSQL"/>
+                </HBox>
+                <VBox spacing="0" styleClass="stg-card-body">
+                    <GridPane hgap="15" vgap="10">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="110" prefWidth="110"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                        </rowConstraints>
+
+                        <Label styleClass="stg-field-label" text="المسار:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <Label fx:id="lblPgPath" styleClass="stg-field-value" text="-"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                        <Label styleClass="stg-field-label" text="البيانات:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <Label fx:id="lblPgData" styleClass="stg-field-value" text="-"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label styleClass="stg-field-label" text="الحالة:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <Label fx:id="lblPgRunningStatus" styleClass="stg-field-value"
+                               text="❌ غير مشغول"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                        <Label styleClass="stg-field-label" text="المنفذ:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <Label fx:id="lblPgPort" styleClass="stg-field-value" text="5432"
+                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                        <Label styleClass="stg-field-label" text="المستخدم:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <Label fx:id="lblPgUser" styleClass="stg-field-value" text="admin"
+                               GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                        <Label styleClass="stg-field-label" text="قاعدة البيانات:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                        <Label fx:id="lblPgDatabase" styleClass="stg-field-value" text="hr_db"
+                               GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                    </GridPane>
+                </VBox>
+            </VBox>
+
+            <!-- ═══ Card: العمليات ═══ -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="🛠"/>
+                    <Label styleClass="stg-card-title" text="العمليات"/>
+                </HBox>
+                <VBox spacing="12" styleClass="stg-card-body">
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="110" styleClass="stg-field-label" text="تهيئة:"/>
+                        <Button fx:id="btnInit" styleClass="stg-btn-primary"
+                                text="🔧 تهيئة قاعدة البيانات"/>
+                        <Label fx:id="lblInitStatus" styleClass="stg-status-msg" text=""/>
+                    </HBox>
+
+                    <Separator styleClass="stg-separator-dark"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="110" styleClass="stg-field-label" text="التشغيل:"/>
+                        <Button fx:id="btnStart" styleClass="stg-btn-primary" text="▶ تشغيل"/>
+                        <Button fx:id="btnStop" styleClass="stg-btn-danger" text="⏹ إيقاف"/>
+                        <Button fx:id="btnRestart" styleClass="stg-btn-secondary" text="🔄 إعادة تشغيل"/>
+                        <CheckBox fx:id="chkServiceMode" styleClass="stg-checkbox-dark"
+                                  text="خدمة (Windows)"/>
+                    </HBox>
+
+                    <Separator styleClass="stg-separator-dark"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="110" styleClass="stg-field-label" text="الخدمة:"/>
+                        <Button fx:id="btnInstallService" styleClass="stg-btn-primary" text="📦 تثبيت"/>
+                        <Button fx:id="btnDeleteService" styleClass="stg-btn-danger" text="❌ حذف"/>
+                    </HBox>
+
+                    <Separator styleClass="stg-separator-dark"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="110" styleClass="stg-field-label" text="قاعدة البيانات:"/>
+                        <Button fx:id="btnCreateDb" styleClass="stg-btn-secondary" text="➕ إنشاء"/>
+                        <Button fx:id="btnDropDb" styleClass="stg-btn-danger" text="🗑 حذف"/>
+                        <Button fx:id="btnListDb" styleClass="stg-btn-ghost" text="📋 عرض"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- ═══ Card: النسخ الاحتياطي ═══ -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="💾"/>
+                    <Label styleClass="stg-card-title" text="النسخ الاحتياطي"/>
+                </HBox>
+                <VBox spacing="12" styleClass="stg-card-body">
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="120" styleClass="stg-field-label" text="نسخ احتياطي:"/>
+                        <Button fx:id="btnBackupNow" onAction="#handleBackupNow"
+                                styleClass="stg-btn-primary"
+                                text="💾 نسخة احتياطية الآن"/>
+                        <Label fx:id="lblBackupStatus" styleClass="stg-status-msg" text=""/>
+                    </HBox>
+
+                    <Separator styleClass="stg-separator-dark"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="120" styleClass="stg-field-label" text="استعادة:"/>
+                        <Button fx:id="btnRestoreFile" onAction="#handleRestoreFromFile"
+                                styleClass="stg-btn-secondary"
+                                text="📂 استعادة من ملف..."/>
+                        <Label styleClass="stg-radio-hint-warn" text="⚠️ تحذير: تمسح البيانات الحالية"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- ═══ Card: سجل العمليات ═══ -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="📋"/>
+                    <Label styleClass="stg-card-title" text="سجل العمليات"/>
+                </HBox>
+                <TextArea fx:id="txtPgLogs" editable="false" prefHeight="180"
+                          styleClass="stg-textarea-dark,stg-textarea-in-card"
+                          wrapText="true"/>
+            </VBox>
+
+        </VBox>
+    </content>
 </ScrollPane>

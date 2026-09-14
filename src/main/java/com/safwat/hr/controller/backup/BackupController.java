@@ -24,52 +24,17 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 
-/**
- * كنترولر شاشة النسخ الاحتياطي.
- *
- * <h3>ملاحظة معمارية مهمة (١):</h3>
- * <p>القوائم اللي فيها items ديناميكية بتستخدم {@link ListView} مع
- * {@code setCellFactory} — <b>مش</b> {@code VBox} مع
- * {@code getChildren().setAll()} — لأن التركيبة الأخيرة بتسبب
- * {@code IndexOutOfBoundsException} في {@code Parent.updateCachedBounds}
- * أثناء layout pulse.
- *
- * <h3>ملاحظة معمارية مهمة (٢):</h3>
- * <p>{@link ListCell} بيعيد استخدام نفس الـ cell objects أثناء الـ scroll.
- * لو {@code updateItem} بتبني {@code HBox}/{@code Label} جداد في كل نداء،
- * بتحصل عملية إضافة/إزالة عنيفة على شجرة الـ scene graph. الحل: الـ graphic
- * بيتبني <b>مرة واحدة بس</b> في constructor الـ cell، و{@code updateItem}
- * بيكتفي بتحديث الـ text/style فقط.
- *
- * <h3>ملاحظة مهمة (٣) — التنسيقات:</h3>
- * <p>كل التنسيقات (ألوان + أحجام + fonts) بتتحدد من ملف {@code settings.css}
- * عبر الـ styleClass المخصصة:
- * <ul>
- *   <li>{@code .backup-item} — الحاوية الرئيسية</li>
- *   <li>{@code .backup-item-name} — اسم الملف</li>
- *   <li>{@code .backup-item-size} — الحجم</li>
- *   <li>{@code .backup-item-date} — التاريخ</li>
- *   <li>{@code .table-tag-dump} / {@code .table-tag-sql} — تاجات الصيغة</li>
- *   <li>{@code .table-action-btn} — زر الاستعادة</li>
- *   <li>{@code .empty-placeholder} — رسالة القائمة الفاضية</li>
- *   <li>{@code .status-msg-ok/error/warn/empty} — حالات الرسائل</li>
- * </ul>
- */
 public class BackupController implements Initializable {
 
     private final BackupService service = new BackupService();
 
-    // ── Header ──
     @FXML
     private Label statusDot;
     @FXML
     private Label statusLabel;
 
-    // ── النسخ الكامل ──
     @FXML
-    private RadioButton radioCustomFormat;
-    @FXML
-    private RadioButton radioPlainFormat;
+    private RadioButton radioCustomFormat, radioPlainFormat;
     @FXML
     private Slider compressionSlider;
     @FXML
@@ -81,13 +46,10 @@ public class BackupController implements Initializable {
     @FXML
     private Label backupStatusLabel;
 
-    // ── استعادة من ملف مرفوع ──
     @FXML
     private TextField uploadFilePath;
     @FXML
-    private RadioButton radioReplace;
-    @FXML
-    private RadioButton radioMerge;
+    private RadioButton radioReplace, radioMerge;
     @FXML
     private Button btnRestoreFile;
     @FXML
@@ -95,11 +57,8 @@ public class BackupController implements Initializable {
     @FXML
     private Label restoreFileStatusLabel;
 
-    // ── النسخ المحلية ──
     @FXML
-    private RadioButton radioLocalReplace;
-    @FXML
-    private RadioButton radioLocalMerge;
+    private RadioButton radioLocalReplace, radioLocalMerge;
     @FXML
     private Label backupsCountLabel;
     @FXML
@@ -111,7 +70,6 @@ public class BackupController implements Initializable {
     @FXML
     private Label restoreLocalStatusArea;
 
-    // ── النسخ التلقائي ──
     @FXML
     private ToggleButton toggleAutoBackup;
     @FXML
@@ -123,15 +81,12 @@ public class BackupController implements Initializable {
     @FXML
     private Label autoBackupStatusLabel;
 
-    // ── أدوات SQL ──
     @FXML
     private TextField sqlFilePath;
     @FXML
     private CheckBox chkStopOnError;
     @FXML
-    private Button btnValidateScript;
-    @FXML
-    private Button btnExecuteScript;
+    private Button btnValidateScript, btnExecuteScript;
     @FXML
     private ProgressBar scriptProgress;
     @FXML
@@ -139,20 +94,14 @@ public class BackupController implements Initializable {
     @FXML
     private Label scriptResultArea;
 
-    // ── State ──
     private final ObservableList<BackupFileInfo> backupsListData = FXCollections.observableArrayList();
-    private File selectedUploadFile;
-    private File selectedSqlFile;
+    private File selectedUploadFile, selectedSqlFile;
     private BackupFileInfo selectedBackupItem;
 
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd  HH:mm:ss");
 
     private static final String EMPTY_PLACEHOLDER = "— لا توجد بيانات —";
-
-    // ════════════════════════════════════════════════════
-    //  Init
-    // ════════════════════════════════════════════════════
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -172,8 +121,6 @@ public class BackupController implements Initializable {
         clearStatusInArea(restoreLocalStatusArea);
         clearStatusInArea(scriptResultArea);
     }
-
-    // ── Toggle Groups ──
 
     private void setupFormatToggleGroup() {
         ToggleGroup group = new ToggleGroup();
@@ -199,16 +146,16 @@ public class BackupController implements Initializable {
         compressionSlider.valueProperty().addListener((obs, o, n) -> {
             int val = n.intValue();
             compressionValueLabel.getStyleClass().removeAll(
-                    "slider-value-ok", "slider-value-warn", "slider-value-error");
+                    "stg-slider-value-ok", "stg-slider-value-warn", "stg-slider-value-error");
             if (val >= 7) {
                 compressionValueLabel.setText(val + " → ضغط عالي - ملف صغير");
-                compressionValueLabel.getStyleClass().add("slider-value-ok");
+                compressionValueLabel.getStyleClass().add("stg-slider-value-ok");
             } else if (val <= 3) {
                 compressionValueLabel.setText(val + " → ضغط منخفض - ملف كبير");
-                compressionValueLabel.getStyleClass().add("slider-value-error");
+                compressionValueLabel.getStyleClass().add("stg-slider-value-error");
             } else {
                 compressionValueLabel.setText(val + " → ضغط متوسط");
-                compressionValueLabel.getStyleClass().add("slider-value-warn");
+                compressionValueLabel.getStyleClass().add("stg-slider-value-warn");
             }
         });
     }
@@ -219,20 +166,12 @@ public class BackupController implements Initializable {
         maxFilesSpinner.setValueFactory(factory);
     }
 
-    // ════════════════════════════════════════════════════
-    //  ListView Setup
-    // ════════════════════════════════════════════════════
-
     private void setupBackupsListView() {
         backupsListView.setItems(backupsListData);
-
-        // ⭐ cellFactory بيرجع cell بتبني الـ graphic مرة واحدة
-        // وتعيد استخدامه، مش تبنيه من جديد في كل updateItem.
         backupsListView.setCellFactory(lv -> new BackupItemCell());
 
-        // ✅ placeholder بلون فاتح (من settings.css)
         Label emptyLabel = new Label("📭 لا توجد نسخ احتياطية محفوظة");
-        emptyLabel.getStyleClass().add("empty-placeholder");
+        emptyLabel.getStyleClass().add("stg-empty-placeholder");
         backupsListView.setPlaceholder(emptyLabel);
 
         backupsListView.getSelectionModel().selectedItemProperty()
@@ -242,15 +181,6 @@ public class BackupController implements Initializable {
                 });
     }
 
-    /**
-     * Cell مخصص لعرض نسخة واحدة.
-     * <p>
-     * ⭐ مهم جدًا: كل الـ Nodes بتتبنى مرة واحدة بس جوه الـ constructor.
-     * {@code updateItem} بيعمل تحديث للمحتوى فقط، من غير ما يضيف/يشيل
-     * عناصر من شجرة الـ scene graph.
-     * <p>
-     * كل التنسيقات بتتحدد من settings.css عبر الـ styleClass.
-     */
     private class BackupItemCell extends ListCell<BackupFileInfo> {
 
         private final HBox row = new HBox();
@@ -264,21 +194,20 @@ public class BackupController implements Initializable {
             row.setAlignment(Pos.CENTER_LEFT);
             row.setSpacing(10);
             row.setPadding(new Insets(6, 10, 6, 10));
-            row.getStyleClass().add("backup-item");
+            row.getStyleClass().add("stg-backup-item");
 
-            fileNameLabel.getStyleClass().add("backup-item-name");
+            fileNameLabel.getStyleClass().add("stg-backup-item-name");
             fileNameLabel.setMinWidth(180);
             HBox.setHgrow(fileNameLabel, Priority.ALWAYS);
 
-            sizeLabel.getStyleClass().add("backup-item-size");
+            sizeLabel.getStyleClass().add("stg-backup-item-size");
             sizeLabel.setMinWidth(70);
 
-            dateLabel.getStyleClass().add("backup-item-date");
+            dateLabel.getStyleClass().add("stg-backup-item-date");
             dateLabel.setMinWidth(150);
 
-            restoreBtn.getStyleClass().add("table-action-btn");
+            restoreBtn.getStyleClass().add("stg-table-action-btn");
 
-            // بناء الشجرة مرة واحدة فقط
             row.getChildren().setAll(fileNameLabel, formatTag, sizeLabel, dateLabel, restoreBtn);
         }
 
@@ -297,8 +226,8 @@ public class BackupController implements Initializable {
 
             boolean isCustom = item.getFormat() == BackupFormat.CUSTOM;
             formatTag.setText(isCustom ? "Custom" : "Plain SQL");
-            formatTag.getStyleClass().removeAll("table-tag-dump", "table-tag-sql");
-            formatTag.getStyleClass().add(isCustom ? "table-tag-dump" : "table-tag-sql");
+            formatTag.getStyleClass().removeAll("stg-table-tag-dump", "stg-table-tag-sql");
+            formatTag.getStyleClass().add(isCustom ? "stg-table-tag-dump" : "stg-table-tag-sql");
 
             sizeLabel.setText(item.getSizeFormatted());
 
@@ -311,9 +240,7 @@ public class BackupController implements Initializable {
         }
     }
 
-    // ════════════════════════════════════════════════════
-    //  Handlers — النسخ الكامل
-    // ════════════════════════════════════════════════════
+    // ─── Handlers ───
 
     @FXML
     private void handleFullBackup() {
@@ -341,10 +268,6 @@ public class BackupController implements Initializable {
                         handleConnectionError(backupStatusLabel, this::setBackupBusy, ex));
     }
 
-    // ════════════════════════════════════════════════════
-    //  Handlers — الاستعادة من ملف مرفوع
-    // ════════════════════════════════════════════════════
-
     @FXML
     private void handleChooseFile() {
         FileChooser chooser = new FileChooser();
@@ -365,8 +288,7 @@ public class BackupController implements Initializable {
     @FXML
     private void handleRestoreFromFile() {
         if (selectedUploadFile == null) return;
-        RestoreMode mode = radioReplace.isSelected()
-                ? RestoreMode.REPLACE : RestoreMode.MERGE;
+        RestoreMode mode = radioReplace.isSelected() ? RestoreMode.REPLACE : RestoreMode.MERGE;
         if (mode == RestoreMode.REPLACE && !confirmReplace("الملف المحدد")) return;
 
         setRestoreFileBusy(true);
@@ -377,20 +299,13 @@ public class BackupController implements Initializable {
                     setRestoreFileBusy(false);
                     showStatus(restoreFileStatusLabel,
                             response.isSuccess()
-                                    ? "✅ " + service.nullSafe(response.getMessage(),
-                                    "تمت الاستعادة بنجاح")
-                                    : "❌ " + service.nullSafe(response.getMessage(),
-                                    "فشلت الاستعادة"),
+                                    ? "✅ " + service.nullSafe(response.getMessage(), "تمت الاستعادة بنجاح")
+                                    : "❌ " + service.nullSafe(response.getMessage(), "فشلت الاستعادة"),
                             response.isSuccess() ? "ok" : "error");
                 }))
                 .exceptionally(ex ->
-                        handleConnectionError(restoreFileStatusLabel,
-                                this::setRestoreFileBusy, ex));
+                        handleConnectionError(restoreFileStatusLabel, this::setRestoreFileBusy, ex));
     }
-
-    // ════════════════════════════════════════════════════
-    //  Handlers — النسخ المحلية
-    // ════════════════════════════════════════════════════
 
     @FXML
     private void handleRefreshBackups() {
@@ -398,8 +313,7 @@ public class BackupController implements Initializable {
 
         service.listBackups()
                 .thenAccept(response -> Platform.runLater(() -> {
-                    if (response != null && response.isSuccess()
-                            && response.getData() != null) {
+                    if (response != null && response.isSuccess() && response.getData() != null) {
                         List<BackupFileInfo> data = response.getData();
                         backupsListData.setAll(data);
                         backupsCountLabel.setText(data.size() + " نسخة");
@@ -453,10 +367,8 @@ public class BackupController implements Initializable {
                     setRestoreLocalBusy(false);
                     showStatusInArea(restoreLocalStatusArea,
                             response.isSuccess()
-                                    ? "✅ " + service.nullSafe(response.getMessage(),
-                                    "تمت الاستعادة بنجاح")
-                                    : "❌ " + service.nullSafe(response.getMessage(),
-                                    "فشلت الاستعادة"),
+                                    ? "✅ " + service.nullSafe(response.getMessage(), "تمت الاستعادة بنجاح")
+                                    : "❌ " + service.nullSafe(response.getMessage(), "فشلت الاستعادة"),
                             response.isSuccess() ? "ok" : "error");
                 }))
                 .exceptionally(ex -> {
@@ -468,10 +380,6 @@ public class BackupController implements Initializable {
                     return null;
                 });
     }
-
-    // ════════════════════════════════════════════════════
-    //  Handlers — النسخ التلقائي
-    // ════════════════════════════════════════════════════
 
     @FXML
     private void handleCronPreset(javafx.event.ActionEvent event) {
@@ -506,10 +414,6 @@ public class BackupController implements Initializable {
                 enabled ? "ok" : "warn");
     }
 
-    // ════════════════════════════════════════════════════
-    //  Handlers — أدوات SQL
-    // ════════════════════════════════════════════════════
-
     @FXML
     private void handleChooseSqlFile() {
         FileChooser chooser = new FileChooser();
@@ -541,10 +445,8 @@ public class BackupController implements Initializable {
                     setScriptBusy(false);
                     showStatus(scriptStatusLabel,
                             response.isSuccess()
-                                    ? "✅ " + service.nullSafe(response.getMessage(),
-                                    "التوقيع صحيح")
-                                    : "❌ " + service.nullSafe(response.getMessage(),
-                                    "التوقيع غير صحيح"),
+                                    ? "✅ " + service.nullSafe(response.getMessage(), "التوقيع صحيح")
+                                    : "❌ " + service.nullSafe(response.getMessage(), "التوقيع غير صحيح"),
                             response.isSuccess() ? "ok" : "error");
                 }))
                 .exceptionally(ex ->
@@ -559,8 +461,7 @@ public class BackupController implements Initializable {
         boolean stopOnError = chkStopOnError.isSelected();
 
         setScriptBusy(true);
-        showStatus(scriptStatusLabel,
-                "⏳ جاري تنفيذ السكريبت على قاعدة البيانات...", "");
+        showStatus(scriptStatusLabel, "⏳ جاري تنفيذ السكريبت على قاعدة البيانات...", "");
         showStatusInArea(scriptResultArea, "جاري التنفيذ...\n\nلا تغلق البرنامج.", "warn");
 
         service.executeScript(selectedSqlFile.toPath(), stopOnError)
@@ -569,19 +470,16 @@ public class BackupController implements Initializable {
                     ScriptExecuteResult result = response.getData();
                     if (response.isSuccess() && result != null) {
                         showStatus(scriptStatusLabel,
-                                "✅ " + service.nullSafe(response.getMessage(),
-                                        "تم التنفيذ بنجاح"), "ok");
+                                "✅ " + service.nullSafe(response.getMessage(), "تم التنفيذ بنجاح"), "ok");
                         showStatusInArea(scriptResultArea,
                                 service.buildScriptReport(result), "ok");
                     } else {
                         showStatus(scriptStatusLabel,
-                                "❌ " + service.nullSafe(response.getMessage(),
-                                        "فشل التنفيذ"), "error");
+                                "❌ " + service.nullSafe(response.getMessage(), "فشل التنفيذ"), "error");
                         showStatusInArea(scriptResultArea,
                                 result != null
                                         ? service.buildScriptReport(result)
-                                        : service.nullSafe(response.getMessage(),
-                                        "فشل التنفيذ بدون تفاصيل"),
+                                        : service.nullSafe(response.getMessage(), "فشل التنفيذ بدون تفاصيل"),
                                 "error");
                     }
                 }))
@@ -589,15 +487,15 @@ public class BackupController implements Initializable {
                         handleConnectionError(scriptStatusLabel, this::setScriptBusy, ex));
     }
 
-    // ════════════════════════════════════════════════════
-    //  UI Helpers
-    // ════════════════════════════════════════════════════
+    // ─── UI Helpers ───
 
     private boolean confirmExecuteScript(String fileName) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("تأكيد تنفيذ السكريبت");
         confirm.setHeaderText("⚠ سيتم تنفيذ الأوامر على قاعدة البيانات مباشرة");
         confirm.setContentText("الملف: " + fileName + "\n\nهل أنت متأكد؟");
+        confirm.getDialogPane().getStyleClass().add("stg-dialog");
+        SettingsThemeLoader.apply(confirm.getDialogPane());
 
         ButtonType btnYes = new ButtonType("تنفيذ", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnNo = new ButtonType("إلغاء", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -606,9 +504,7 @@ public class BackupController implements Initializable {
         return confirm.showAndWait().map(b -> b == btnYes).orElse(false);
     }
 
-    private Void handleConnectionError(Label label,
-                                       Consumer<Boolean> busySetter,
-                                       Throwable ex) {
+    private Void handleConnectionError(Label label, Consumer<Boolean> busySetter, Throwable ex) {
         Platform.runLater(() -> {
             busySetter.accept(false);
             showStatus(label, "❌ خطأ في الاتصال: " + ex.getMessage(), "error");
@@ -639,34 +535,33 @@ public class BackupController implements Initializable {
     }
 
     private void toggleProgress(ProgressBar bar, boolean busy) {
-        bar.getStyleClass().removeAll(
-                "progress-bar-hidden", "progress-bar-visible");
-        bar.getStyleClass().add(
-                busy ? "progress-bar-visible" : "progress-bar-hidden");
+        bar.getStyleClass().removeAll("stg-progress-bar-hidden", "stg-progress-bar-visible");
+        bar.getStyleClass().add(busy ? "stg-progress-bar-visible" : "stg-progress-bar-hidden");
     }
 
     private void showStatus(Label label, String message, String type) {
         label.setText(message);
         label.getStyleClass().removeAll(
-                "status-msg-ok", "status-msg-error", "status-msg-warn", "status-msg-empty");
+                "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn", "stg-status-msg-empty");
         switch (type) {
-            case "ok" -> label.getStyleClass().add("status-msg-ok");
-            case "error" -> label.getStyleClass().add("status-msg-error");
-            case "warn" -> label.getStyleClass().add("status-msg-warn");
-            default -> { /* اتركه بدون class إضافي */ }
+            case "ok" -> label.getStyleClass().add("stg-status-msg-ok");
+            case "error" -> label.getStyleClass().add("stg-status-msg-error");
+            case "warn" -> label.getStyleClass().add("stg-status-msg-warn");
+            default -> {
+            }
         }
     }
 
     private void showStatusInArea(Label area, String message, String type) {
         area.setText(message);
-        area.setStyle(""); // امسح أي inline style قديم
+        area.setStyle("");
         area.getStyleClass().removeAll(
-                "status-msg-ok", "status-msg-error", "status-msg-warn", "status-msg-empty");
+                "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn", "stg-status-msg-empty");
         switch (type) {
-            case "ok" -> area.getStyleClass().add("status-msg-ok");
-            case "error" -> area.getStyleClass().add("status-msg-error");
-            case "warn" -> area.getStyleClass().add("status-msg-warn");
-            default -> area.getStyleClass().add("status-msg-empty");
+            case "ok" -> area.getStyleClass().add("stg-status-msg-ok");
+            case "error" -> area.getStyleClass().add("stg-status-msg-error");
+            case "warn" -> area.getStyleClass().add("stg-status-msg-warn");
+            default -> area.getStyleClass().add("stg-status-msg-empty");
         }
     }
 
@@ -674,8 +569,8 @@ public class BackupController implements Initializable {
         area.setText(EMPTY_PLACEHOLDER);
         area.setStyle("");
         area.getStyleClass().removeAll(
-                "status-msg-ok", "status-msg-error", "status-msg-warn");
-        area.getStyleClass().add("status-msg-empty");
+                "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+        area.getStyleClass().add("stg-status-msg-empty");
     }
 
     private boolean confirmReplace(String target) {
@@ -686,16 +581,14 @@ public class BackupController implements Initializable {
                 "هذه العملية ستحذف جميع بيانات قاعدة البيانات الحالية\n" +
                         "وتستعيد من: " + target + "\n\n" +
                         "هل أنت متأكد؟");
+        alert.getDialogPane().getStyleClass().add("stg-dialog");
+        SettingsThemeLoader.apply(alert.getDialogPane());
 
-        ButtonType btnConfirm = new ButtonType("نعم، استعادة",
-                ButtonBar.ButtonData.OK_DONE);
-        ButtonType btnCancel = new ButtonType("إلغاء",
-                ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType btnConfirm = new ButtonType("نعم، استعادة", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel = new ButtonType("إلغاء", ButtonBar.ButtonData.CANCEL_CLOSE);
         alert.getButtonTypes().setAll(btnConfirm, btnCancel);
 
-        return alert.showAndWait()
-                .map(b -> b == btnConfirm)
-                .orElse(false);
+        return alert.showAndWait().map(b -> b == btnConfirm).orElse(false);
     }
 
     private void updateCronHint(String cron) {

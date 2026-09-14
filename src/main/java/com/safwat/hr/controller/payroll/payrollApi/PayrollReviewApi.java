@@ -1,7 +1,8 @@
 package com.safwat.hr.controller.payroll.payrollApi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
+
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewMainRecordForRangeDate;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewNonPrimaryRangeDate;
 import com.safwat.hr.network.ApiClient;
@@ -87,11 +88,11 @@ public class PayrollReviewApi {
     }
 
     @SneakyThrows
-    public List<SearchEmp> searchInEmployee(PayrollRequest request) {
+    public List<EmployeeSearchResult> searchInEmployee(PayrollRequest request) {
         return ApiClient.post(
                 ApiEndpoints.PayrollReview.SEARCH2,
                 request,
-                new TypeReference<List<SearchEmp>>() {
+                new TypeReference<List<EmployeeSearchResult>>() {
                 }
         ).getData();
     }

@@ -1,7 +1,7 @@
 /* theme-pepsi.css — ثيم مستوحى من ألوان بيبسي مع خلفيات رمادية فاتحة */
 @import "common.css";
 @import "chat-styles.css";
-
+@import "settings.css";
 
 .root {
     /* خلفيات رمادية فاتحة جداً (احترافي) */

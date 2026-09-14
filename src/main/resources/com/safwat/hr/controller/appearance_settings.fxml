@@ -3,8 +3,7 @@
 <!-- ============================================================
      شاشة "تخصيص الواجهة" — Appearance Settings
      ✅ RTL كامل
-     ✅ لون ListView = نفس لون الخلفية
-     ✅ ComboBox بخط فاتح (class="combo-light")
+     ✅ كلاسات stg- لتجنب التداخل مع الثيم الأساسي
      ============================================================ -->
 
 <?import javafx.geometry.Insets?>
@@ -15,59 +14,52 @@
             fx:controller="com.safwat.hr.controller.appearance.AppearanceSettingsController"
             prefWidth="900.0" prefHeight="640.0"
             nodeOrientation="RIGHT_TO_LEFT"
-            styleClass="settings-root">
+            styleClass="stg-root">
 
     <!-- ═══════════════════ HEADER ═══════════════════ -->
     <top>
-        <HBox alignment="CENTER_RIGHT" spacing="12"
-              styleClass="settings-header">
+        <HBox alignment="CENTER_RIGHT" spacing="12" styleClass="stg-header">
             <padding>
                 <Insets top="14" right="20" bottom="14" left="20"/>
             </padding>
 
-            <Label text="🎛" style="-fx-font-size:20px;"/>
+            <Label styleClass="stg-header-icon" text="🎛"/>
             <VBox spacing="2">
-                <Label text="تخصيص الواجهة"
-                       styleClass="header-title"/>
-                <Label fx:id="subtitleLabel" text=""
-                       styleClass="header-subtitle"/>
+                <Label styleClass="stg-header-title" text="تخصيص الواجهة"/>
+                <Label fx:id="subtitleLabel" styleClass="stg-header-subtitle" text=""/>
             </VBox>
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <Label text="الواجهة:"
-                   style="-fx-font-size:11px; -fx-text-fill:#8b90b8;"/>
+            <Label styleClass="stg-field-label" text="الواجهة:"/>
             <ComboBox fx:id="viewCombo" prefWidth="220"
                       promptText="اختر واجهة..."
-                      styleClass="combo-light"/>
+                      styleClass="stg-combo-light"/>
         </HBox>
     </top>
 
     <!-- ═══════════════════ BODY ═══════════════════ -->
     <center>
-        <SplitPane dividerPositions="0.22" styleClass="main-split">
+        <SplitPane dividerPositions="0.22" styleClass="stg-main-split">
 
             <!-- ── Sidebar: التصنيفات ── -->
-            <VBox minWidth="170" maxWidth="230"
-                  styleClass="sidebar">
+            <VBox minWidth="170" maxWidth="230" styleClass="stg-sidebar">
                 <padding>
                     <Insets top="10" bottom="10"/>
                 </padding>
 
-                <Label text="التخصيصات"
-                       styleClass="sidebar-section-label">
+                <Label text="التخصيصات" styleClass="stg-sidebar-section-label">
                     <VBox.margin>
                         <Insets bottom="6" right="14"/>
                     </VBox.margin>
                 </Label>
 
                 <ListView fx:id="categoryList" VBox.vgrow="ALWAYS"
-                          styleClass="category-list"/>
+                          styleClass="stg-category-list"/>
             </VBox>
 
             <!-- ── منطقة المحتوى ── -->
-            <StackPane fx:id="contentArea"
-                       style="-fx-background-color:#1a1d2e;"/>
+            <StackPane fx:id="contentArea" styleClass="stg-entries-area"/>
 
         </SplitPane>
     </center>

@@ -2,6 +2,7 @@ package com.safwat.hr.controller.appearance;
 
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ViewRegistry;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,18 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FontSettingsManager {
 
     private static final String CONFIG_SECTION_PREFIX = "fonts_";
-    private static final String CSS_PATH =
-            "/com/safwat/hr/css/settings.css";
-
-    private static final String C_BG = "#1a1d2e";
-    private static final String C_CARD = "#242740";
-    private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN = "#43c59e";
-    private static final String C_WARN = "#f5a623";
-    private static final String C_RED = "#e05c5c";
-    private static final String C_TEXT = "#e8eaf6";
-    private static final String C_MUTED = "#8b90b8";
-    private static final String C_BORDER = "#333659";
+    private static final String CSS_PATH = "/com/safwat/hr/css/settings.css";
 
     private static final Map<String, List<WeakReference<Parent>>> REGISTERED_ROOTS = new ConcurrentHashMap<>();
 
@@ -90,7 +80,6 @@ public class FontSettingsManager {
 
         Scene scene = new Scene(buildPanel(), 620, 640);
 
-        // ✅ حمّل الـ CSS عشان combo-light / spinner-light يشتغلوا
         try {
             String css = Objects.requireNonNull(
                     FontSettingsManager.class.getResource(CSS_PATH),
@@ -104,8 +93,6 @@ public class FontSettingsManager {
         stage.setScene(scene);
         stage.showAndWait();
     }
-
-    // ==================== FontCard ====================
 
     private static class FontCard {
         final ComponentType type;
@@ -128,53 +115,50 @@ public class FontSettingsManager {
         }
     }
 
-    // ==================== buildPanel ====================
-
     public Parent buildPanel() {
         List<FontCard> cards = new ArrayList<>();
         Set<ComponentType> dirty = new LinkedHashSet<>();
 
-        // ---------- Header ----------
+        // ─── Header ───
         Label headerIcon = new Label("🔤");
-        headerIcon.setStyle("-fx-font-size:20px;");
+        headerIcon.getStyleClass().add("stg-header-icon");
+
         Label headerTitle = new Label("إعدادات الخطوط");
-        headerTitle.setStyle("-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
+        headerTitle.getStyleClass().add("stg-header-title");
+
         Label headerSubtitle = new Label("تخصيص خطوط واجهة: " + viewId);
-        headerSubtitle.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_MUTED + ";");
+        headerSubtitle.getStyleClass().add("stg-header-subtitle");
+
         VBox titleBox = new VBox(2, headerTitle, headerSubtitle);
 
         TextField searchField = new TextField();
         searchField.setPromptText("🔍 ابحث عن كومبوننت...");
         searchField.setPrefWidth(220);
-        searchField.setStyle(inputStyle());
+        searchField.getStyleClass().add("stg-search-field");
 
         HBox header = new HBox(12, headerIcon, titleBox, spacer(), searchField);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(14, 20, 14, 20));
-        header.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
-                + "; -fx-border-width:0 0 1 0;");
+        header.getStyleClass().add("stg-page-header");
 
-        // ---------- Footer ----------
+        // ─── Footer ───
         Label statusLabel = new Label("جاهز");
-        statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+        statusLabel.getStyleClass().add("stg-status-msg");
 
         Label pendingBadge = new Label("");
         pendingBadge.setVisible(false);
-        pendingBadge.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:11px; -fx-font-weight:bold;");
+        pendingBadge.getStyleClass().add("stg-pending-badge");
 
         Button discardBtn = new Button("↩ تجاهل");
         discardBtn.setVisible(false);
-        discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
-                + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
+        discardBtn.getStyleClass().add("stg-btn-danger-outline");
 
         Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
-        resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
-                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
+        resetAllBtn.getStyleClass().add("stg-btn-secondary");
 
         Button saveAllBtn = new Button("💾 حفظ وتطبيق الكل");
         saveAllBtn.setDisable(true);
-        saveAllBtn.setStyle("-fx-background-color:" + C_ACCENT + "; -fx-text-fill:white;"
-                + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:6 16 6 16;");
+        saveAllBtn.getStyleClass().add("stg-btn-primary");
 
         Runnable updateFooter = () -> {
             int n = dirty.size();
@@ -185,14 +169,16 @@ public class FontSettingsManager {
             pendingBadge.setText(n + " تغيير غير محفوظ");
             if (n == 0) {
                 statusLabel.setText("جاهز");
-                statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+                statusLabel.getStyleClass().removeAll(
+                        "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+                statusLabel.getStyleClass().add("stg-status-msg");
             }
         };
 
-        // ---------- Body ----------
+        // ─── Body ───
         VBox cardsContainer = new VBox(10);
         cardsContainer.setPadding(new Insets(14));
-        cardsContainer.setStyle("-fx-background-color:" + C_BG + ";");
+        cardsContainer.getStyleClass().add("stg-main-content");
 
         for (ComponentType type : ComponentType.values()) {
             JSONObject saved = loadComponentSettings(type);
@@ -203,7 +189,7 @@ public class FontSettingsManager {
 
         ScrollPane scroll = new ScrollPane(cardsContainer);
         scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background:" + C_BG + "; -fx-background-color:" + C_BG + ";");
+        scroll.getStyleClass().add("stg-main-scroll");
 
         searchField.textProperty().addListener((obs, o, n) -> {
             String q = n == null ? "" : n.trim().toLowerCase();
@@ -217,61 +203,61 @@ public class FontSettingsManager {
         discardBtn.setOnAction(e -> {
             for (FontCard c : cards) {
                 applySavedToCard(c, loadComponentSettings(c.type));
-                c.node.setStyle(cardStyle(false));
+                c.node.getStyleClass().remove("stg-card-changed");
             }
             dirty.clear();
             updateFooter.run();
             statusLabel.setText("تم تجاهل التغييرات");
-            statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-warn");
         });
 
-        resetAllBtn.setOnAction(e -> {
-            showConfirm(
-                    resetAllBtn,
-                    "تأكيد استعادة الافتراضي",
-                    "هتمسح كل إعدادات الخطوط لواجهة \"" + viewId + "\" ويرجع للثيم الافتراضي فوراً.",
-                    () -> {
-                        resetToDefaults(viewId);
-                        for (FontCard c : cards) {
-                            applySavedToCard(c, new JSONObject());
-                            c.node.setStyle(cardStyle(false));
-                        }
-                        dirty.clear();
-                        updateFooter.run();
-                        statusLabel.setText("✓ تم الرجوع للخطوط الافتراضية");
-                        statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+        resetAllBtn.setOnAction(e -> showConfirm(
+                resetAllBtn,
+                "تأكيد استعادة الافتراضي",
+                "هتمسح كل إعدادات الخطوط لواجهة \"" + viewId + "\" ويرجع للثيم الافتراضي فوراً.",
+                () -> {
+                    resetToDefaults(viewId);
+                    for (FontCard c : cards) {
+                        applySavedToCard(c, new JSONObject());
+                        c.node.getStyleClass().remove("stg-card-changed");
                     }
-            );
-        });
+                    dirty.clear();
+                    updateFooter.run();
+                    statusLabel.setText("✓ تم الرجوع للخطوط الافتراضية");
+                    statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+                    statusLabel.getStyleClass().add("stg-status-msg-ok");
+                }
+        ));
 
         saveAllBtn.setOnAction(e -> {
             for (FontCard c : cards) {
                 saveComponentSettings(c.type, c.familyCombo.getValue(), c.sizeSpinner.getValue(),
                         c.boldCheck.isSelected(), c.italicCheck.isSelected());
-                c.node.setStyle(cardStyle(false));
+                c.node.getStyleClass().remove("stg-card-changed");
             }
             dirty.clear();
             updateFooter.run();
             reapply(viewId);
             statusLabel.setText("✓ تم الحفظ والتطبيق الفوري");
-            statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-ok");
         });
 
         HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, resetAllBtn, saveAllBtn);
         footer.setAlignment(Pos.CENTER_LEFT);
         footer.setPadding(new Insets(10, 20, 10, 20));
-        footer.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
-                + "; -fx-border-width:1 0 0 0;");
+        footer.getStyleClass().add("stg-footer");
 
         BorderPane root = new BorderPane();
         root.setTop(header);
         root.setCenter(scroll);
         root.setBottom(footer);
-        root.setStyle("-fx-background-color:" + C_BG + ";");
+        root.getStyleClass().add("stg-root");
+
+        SettingsThemeLoader.apply(searchField);
         return root;
     }
-
-    // ==================== Confirm بدون Alert ====================
 
     private static void showConfirm(Node anchor, String title, String message, Runnable onConfirm) {
         Stage popup = new Stage();
@@ -282,16 +268,14 @@ public class FontSettingsManager {
         Label msg = new Label(message);
         msg.setWrapText(true);
         msg.setMaxWidth(340);
-        msg.setStyle("-fx-text-fill:" + C_TEXT + "; -fx-font-size:13px;");
+        msg.getStyleClass().add("stg-dialog-title");
 
         Button cancelBtn = new Button("إلغاء");
-        cancelBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
-                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:7 18 7 18; -fx-cursor:hand;");
+        cancelBtn.getStyleClass().add("stg-btn-dialog-secondary");
         cancelBtn.setOnAction(ev -> popup.close());
 
         Button confirmBtn = new Button("تأكيد");
-        confirmBtn.setStyle("-fx-background-color:" + C_RED + "; -fx-text-fill:white;"
-                + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:7 18 7 18; -fx-cursor:hand;");
+        confirmBtn.getStyleClass().add("stg-btn-dialog-primary");
         confirmBtn.setOnAction(ev -> {
             popup.close();
             onConfirm.run();
@@ -302,7 +286,7 @@ public class FontSettingsManager {
 
         VBox root = new VBox(16, msg, buttons);
         root.setPadding(new Insets(24));
-        root.setStyle("-fx-background-color:" + C_CARD + ";");
+        root.getStyleClass().add("stg-dialog-content");
         root.setMinWidth(380);
 
         if (anchor != null && anchor.getScene() != null
@@ -310,26 +294,26 @@ public class FontSettingsManager {
             popup.initOwner(owner);
         }
 
-        popup.setScene(new Scene(root));
+        Scene scene = new Scene(root);
+        SettingsThemeLoader.apply(root);
+        popup.setScene(scene);
         popup.show();
     }
-
-    // ==================== buildCard ====================
 
     private FontCard buildCard(ComponentType type, JSONObject saved,
                                Set<ComponentType> dirty, Runnable updateFooter) {
         VBox card = new VBox(8);
         card.setPadding(new Insets(12));
-        card.setStyle(cardStyle(false));
+        card.getStyleClass().add("stg-card");
 
         HBox titleRow = new HBox(8);
         titleRow.setAlignment(Pos.CENTER_LEFT);
         Label icon = new Label(type.getIcon());
-        icon.setStyle("-fx-font-size:14px;");
+        icon.getStyleClass().add("stg-card-icon");
         Label name = new Label(type.getDisplayName());
-        name.setStyle("-fx-font-size:12.5px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
+        name.getStyleClass().add("stg-card-title");
         Label preview = new Label("نموذج معاينة Aa 123");
-        preview.setStyle("-fx-text-fill:" + C_MUTED + ";");
+        preview.getStyleClass().add("stg-field-hint");
         titleRow.getChildren().addAll(icon, name, spacer(), preview);
         card.getChildren().add(titleRow);
 
@@ -337,27 +321,25 @@ public class FontSettingsManager {
         controlsRow.setAlignment(Pos.CENTER_LEFT);
 
         Label familyLbl = new Label("الخط:");
-        familyLbl.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:11px;");
+        familyLbl.getStyleClass().add("stg-field-label");
 
-        // ✅ ComboBox بخط فاتح
         ComboBox<String> familyCombo = new ComboBox<>(
                 FXCollections.observableArrayList(Font.getFamilies()));
-        familyCombo.getStyleClass().add("combo-light");
+        familyCombo.getStyleClass().add("stg-combo-light");
         familyCombo.setPrefWidth(190);
 
         Label sizeLbl = new Label("الحجم:");
-        sizeLbl.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:11px;");
+        sizeLbl.getStyleClass().add("stg-field-label");
 
-        // ✅ Spinner بخط فاتح
         Spinner<Integer> sizeSpinner = new Spinner<>(6, 72, 14);
         sizeSpinner.setEditable(true);
         sizeSpinner.setPrefWidth(80);
-        sizeSpinner.getStyleClass().add("spinner-light");
+        sizeSpinner.getStyleClass().add("stg-spinner-light");
 
         CheckBox boldCheck = new CheckBox("Bold");
-        boldCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
+        boldCheck.getStyleClass().add("stg-checkbox-dark");
         CheckBox italicCheck = new CheckBox("Italic");
-        italicCheck.setStyle("-fx-text-fill:" + C_TEXT + ";");
+        italicCheck.getStyleClass().add("stg-checkbox-dark");
 
         controlsRow.getChildren().addAll(familyLbl, familyCombo, sizeLbl, sizeSpinner, boldCheck, italicCheck);
         card.getChildren().add(controlsRow);
@@ -367,7 +349,9 @@ public class FontSettingsManager {
 
         Runnable markDirty = () -> {
             dirty.add(type);
-            card.setStyle(cardStyle(true));
+            if (!card.getStyleClass().contains("stg-card-changed")) {
+                card.getStyleClass().add("stg-card-changed");
+            }
             updateFooter.run();
         };
 
@@ -407,8 +391,6 @@ public class FontSettingsManager {
         c.italicCheck.setSelected(saved.optBoolean("italic", false));
     }
 
-    // ==================== تخزين ====================
-
     private JSONObject loadComponentSettings(ComponentType type) {
         JSONObject section = AppConfig.getSection(sectionKey());
         return section.has(type.name()) ? section.getJSONObject(type.name()) : new JSONObject();
@@ -426,8 +408,6 @@ public class FontSettingsManager {
     private String sectionKey() {
         return CONFIG_SECTION_PREFIX + viewId;
     }
-
-    // ==================== تسجيل + تطبيق + استعادة ====================
 
     public static void applySettings(String viewId, Parent root) {
         if (root == null || viewId == null) return;
@@ -484,8 +464,6 @@ public class FontSettingsManager {
             list.add(new WeakReference<>(root));
         }
     }
-
-    // ==================== Recursive helpers ====================
 
     private static void applyRecursive(Node node, JSONObject section) {
         for (ComponentType type : ComponentType.values()) {
@@ -569,23 +547,9 @@ public class FontSettingsManager {
                 family, size, bold ? "bold" : "normal", italic ? "italic" : "normal");
     }
 
-    // ==================== Helpers ====================
-
     private static Region spacer() {
         Region r = new Region();
         HBox.setHgrow(r, Priority.ALWAYS);
         return r;
-    }
-
-    private static String cardStyle(boolean changed) {
-        return "-fx-background-color:" + C_CARD + "; -fx-background-radius:8;"
-                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER)
-                + "; -fx-border-radius:8; -fx-border-width:1;";
-    }
-
-    private static String inputStyle() {
-        return "-fx-background-color:" + C_BG + "; -fx-text-fill:" + C_TEXT + ";"
-                + "-fx-prompt-text-fill:" + C_MUTED + "; -fx-border-color:" + C_BORDER + ";"
-                + "-fx-border-radius:6; -fx-background-radius:6;";
     }
 }

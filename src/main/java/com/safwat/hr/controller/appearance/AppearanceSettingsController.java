@@ -19,9 +19,6 @@ import java.util.ResourceBundle;
 
 public class AppearanceSettingsController implements Initializable {
 
-    private static final String CSS_PATH =
-            "/com/safwat/hr/css/settings.css";
-
     private enum Category {
         FONTS("🔤  خطوط", true),
         COLORS("🎨  ألوان", true),
@@ -68,11 +65,11 @@ public class AppearanceSettingsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // ✅ ضمان إن combo-light موجود على viewCombo
-        if (!viewCombo.getStyleClass().contains("combo-light")) {
-            viewCombo.getStyleClass().add("combo-light");
+        // ✅ ضمان إن stg-combo-light موجود على viewCombo
+        if (!viewCombo.getStyleClass().contains("stg-combo-light")) {
+            viewCombo.getStyleClass().add("stg-combo-light");
         }
-        viewCombo.setStyle(""); // نظّف أي style inline قديم
+        viewCombo.setStyle("");
 
         categoryList.setItems(FXCollections.observableArrayList(Category.values()));
         categoryList.setCellFactory(lv -> new ListCell<>() {
@@ -113,7 +110,7 @@ public class AppearanceSettingsController implements Initializable {
         if (viewId == null) {
             contentArea.getChildren().clear();
             Label placeholder = new Label("👈 اختر واجهة");
-            placeholder.setStyle("-fx-text-fill:#8b90b8; -fx-font-size:13px;");
+            placeholder.getStyleClass().add("stg-perm-empty");
             StackPane.setAlignment(placeholder, Pos.CENTER);
             contentArea.getChildren().add(placeholder);
             return;
@@ -126,14 +123,6 @@ public class AppearanceSettingsController implements Initializable {
         }
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  فتح الشاشة
-    // ══════════════════════════════════════════════════════════
-
-    /**
-     * ✅ show() بدل showAndWait() — يتجنب GTK nested event loop crash
-     * ✅ يحمّل settings.css على الـ Scene عشان combo-light/color-picker-light يشتغلوا
-     */
     public static void open(String viewId) {
         final String fxmlPath = "/com/safwat/hr/controller/appearance_settings.fxml";
         final String title = "تخصيص الواجهة";
@@ -141,14 +130,10 @@ public class AppearanceSettingsController implements Initializable {
         ViewManager.openIndependentView(
                 fxmlPath,
                 title,
-                null,                          // مفيش owner
-                null,                          // مفيش modality (زي الكود الأصلي)
-                true,                          // resizable
+                null, null, true,
                 (ctrl, stage) -> {
                     AppearanceSettingsController controller =
                             (AppearanceSettingsController) ctrl;
-
-                    // ✅ نأجّل setViewId لبعد show() — بنستخدم Platform.runLater
                     javafx.application.Platform.runLater(
                             () -> controller.setViewId(title));
                 }

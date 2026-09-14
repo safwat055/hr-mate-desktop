@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollChangeCardApi;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollReviewApi;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollYearlyApi;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.SessionManager;
@@ -101,7 +101,7 @@ public class PayrollManagerService {
         return customList;
     }
 
-    public List<SearchEmp> getEmployeeInYearly() {
+    public List<EmployeeSearchResult> getEmployeeInYearly() {
         LocalDate date = getFirstDayOfMonth(managerController.getTxtMonthForEmpAnnual().getText());
         PayrollRequest request = PayrollRequest.builder()
                 .startDate(date)
@@ -251,7 +251,7 @@ public class PayrollManagerService {
         return payrollReviewApi.getEmployeeMonthsReview(request);
     }
 
-    public List<SearchEmp> getEmployeeInReview(String searchValue) {
+    public List<EmployeeSearchResult> getEmployeeInReview(String searchValue) {
 
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue)
@@ -357,7 +357,7 @@ public class PayrollManagerService {
         );
     }
 
-    public List<SearchEmp> getEmployeeInSub(String searchValue) {
+    public List<EmployeeSearchResult> getEmployeeInSub(String searchValue) {
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue)
                 .build();

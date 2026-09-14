@@ -4,7 +4,7 @@
 
 @import "common.css";
 @import "chat-styles.css";
-
+@import "settings.css";
 
 .root {
     -app-bg: #E9EAEC;
@@ -13,9 +13,10 @@
     -card-border: #C9CCD1;
     -card-shadow: rgba(0, 0, 0, 0.10);
 
-    -text-primary: #3A3D42;
-    -text-secondary: #6B6F76;
-    -text-muted: #7A7D82;
+    /* ✅ تحسين التباين: نصوص أغمق */
+    -text-primary: #2E3136; /* كان #3A3D42 */
+    -text-secondary: #4A4E55; /* كان #6B6F76 */
+    -text-muted: #5C6066; /* كان #7A7D82 */
     -on-brand: white;
 
     -brand-navy: #4B5563;
@@ -43,11 +44,7 @@
 
     -nav-gradient: linear-gradient(to bottom, #2B2D30, #45474B, #55575B, #38393C, #1C1D1F);
 
-    /* ── تحديد متغيرات Modena الأساسية نفسها ────────────────────
-       ده اللي بيخلي أي عنصر تحكّم افتراضي (ComboBox arrow, Spinner,
-       DatePicker popup, ScrollBar buttons ...) يتلوّن صح تلقائيًا
-       حتى لو معملناش له كلاس خاص — بدل ما يفضل عالق بألوان Modena
-       الافتراضية زي ما كان بيحصل قبل كده. */
+    /* ── تحديد متغيرات Modena الأساسية نفسها ──────────────────── */
     -fx-base: -soft-box-bg;
     -fx-background: -app-bg;
     -fx-control-inner-background: -control-bg;
@@ -58,11 +55,7 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   تنسيقات الـ Popups (القوائم المنسدلة / ComboBox / Tooltip) — بقيم
-   صريحة (مش متغيرات) هنا بالذات. الـ Popup ده window منفصل عن نافذة
-   البرنامج الأساسية، وبعض إصدارات JavaFX مش بتوصّل صح للمتغيرات
-   المُعرّفة في common.css جوّه الـ popups دي، فكتبنا القيم صراحةً
-   عشان نضمن إن النص يبان صح 100% مهما كان.
+   تنسيقات الـ Popups (القوائم المنسدلة / ComboBox / Tooltip)
 ══════════════════════════════════════════════════════════════════ */
 
 .context-menu {
@@ -74,12 +67,12 @@
 
 .menu-item {
     -fx-background-color: #F7F7F8;
-    -fx-text-fill: #3A3D42 !important;
+    -fx-text-fill: #2E3136 !important;
     -fx-padding: 6 12 6 12;
 }
 
 .menu-item .label {
-    -fx-text-fill: #3A3D42 !important;
+    -fx-text-fill: #2E3136 !important;
 }
 
 .menu-item:focused {
@@ -98,7 +91,7 @@
 
 .combo-box-popup .list-cell {
     -fx-background-color: #F7F7F8;
-    -fx-text-fill: #3A3D42;
+    -fx-text-fill: #2E3136;
 }
 
 .combo-box-popup .list-cell:filled:selected,
@@ -112,7 +105,7 @@
 }
 
 .tooltip {
-    -fx-background-color: #3A3D42;
+    -fx-background-color: #2E3136;
     -fx-text-fill: white;
     -fx-background-radius: 3;
     -fx-padding: 5 8 5 8;

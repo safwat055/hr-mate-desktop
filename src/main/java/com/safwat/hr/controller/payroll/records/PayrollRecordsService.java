@@ -1,7 +1,8 @@
 package com.safwat.hr.controller.payroll.records;
 
 import com.safwat.hr.controller.payroll.payrollApi.PayrollReviewApi;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewMainRecordForRangeDate;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewNonPrimaryRangeDate;
 import com.safwat.hr.notification.model.HRNotification;
@@ -18,7 +19,7 @@ import java.util.List;
 public class PayrollRecordsService {
     private final PayrollReviewApi payrollReviewApi = PayrollReviewApi.getInstance();
 
-    public List<SearchEmp> searchEmployee(String searchValue) {
+    public List<EmployeeSearchResult> searchEmployee(String searchValue) {
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue).build();
         return payrollReviewApi.searchInEmployee(request);

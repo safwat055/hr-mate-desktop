@@ -1,272 +1,220 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<BorderPane styleClass="backup-root"
-            stylesheets="@../css/settings.css"
-            xmlns="http://javafx.com/javafx/26"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.safwat.hr.controller.backup.BackupController">
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-    <!-- ══════════════════════════════════════════════
-         Header
-    ══════════════════════════════════════════════ -->
+<BorderPane nodeOrientation="RIGHT_TO_LEFT" prefHeight="790.0" prefWidth="955.0" styleClass="stg-backup-root" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.backup.BackupController">
+
+    <!-- ═══ Header ═══ -->
     <top>
-        <VBox styleClass="page-header">
+        <VBox styleClass="stg-page-header">
             <HBox alignment="CENTER_LEFT" spacing="12">
-                <Label styleClass="header-icon" text="💾"/>
+                <Label styleClass="stg-header-icon" text="💾" />
                 <VBox spacing="2">
-                    <Label styleClass="page-title" text="النسخ الاحتياطي والاستعادة"/>
-                    <Label styleClass="page-subtitle" text="إدارة نسخ قاعدة البيانات بأمان"/>
+                    <Label styleClass="stg-page-title" text="النسخ الاحتياطي والاستعادة" />
+                    <Label styleClass="stg-page-subtitle" text="إدارة نسخ قاعدة البيانات بأمان" />
                 </VBox>
-                <Region HBox.hgrow="ALWAYS"/>
-                <HBox fx:id="statusChip" alignment="CENTER" spacing="6" styleClass="status-chip">
-                    <Label fx:id="statusDot" styleClass="status-dot-ok" text="●"/>
-                    <Label fx:id="statusLabel" styleClass="status-text" text="متصل"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <HBox fx:id="statusChip" alignment="CENTER" spacing="6" styleClass="stg-status-chip">
+                    <Label fx:id="statusDot" styleClass="stg-status-dot-ok" text="●" />
+                    <Label fx:id="statusLabel" styleClass="stg-status-text" text="متصل" />
                 </HBox>
             </HBox>
         </VBox>
     </top>
 
-    <!-- ══════════════════════════════════════════════
-         Main Content
-    ══════════════════════════════════════════════ -->
+    <!-- ═══ Main Content ═══ -->
     <center>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="main-scroll">
-            <VBox spacing="20" styleClass="main-content">
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="1119.0" prefWidth="955.0" styleClass="stg-main-scroll">
+            <VBox spacing="20" styleClass="stg-main-content">
 
                 <!-- ─── الصف الأول: نسخ + استعادة سريعة ─── -->
                 <HBox alignment="TOP_LEFT" spacing="16">
 
                     <!-- ┌─ بطاقة النسخ الكامل ─┐ -->
-                    <VBox spacing="0" styleClass="card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                            <Label styleClass="card-icon" text="🗄"/>
-                            <Label styleClass="card-title" text="نسخ احتياطي كامل"/>
+                    <VBox spacing="0" styleClass="stg-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                            <Label styleClass="stg-card-icon" text="🗄" />
+                            <Label styleClass="stg-card-title" text="نسخ احتياطي كامل" />
                         </HBox>
-                        <VBox spacing="14" styleClass="card-body">
-                            <Label styleClass="card-description"
-                                   text="ينسخ قاعدة البيانات كاملة بصيغة Custom Format (مضغوطة)." wrapText="true"/>
+                        <VBox spacing="14" styleClass="stg-card-body">
+                            <Label styleClass="stg-card-description" text="ينسخ قاعدة البيانات كاملة بصيغة Custom Format (مضغوطة)." wrapText="true" />
 
                             <VBox spacing="8">
-                                <Label styleClass="field-label" text="صيغة الملف"/>
+                                <Label styleClass="stg-field-label" text="صيغة الملف" />
                                 <HBox spacing="10">
-                                    <RadioButton fx:id="radioCustomFormat" selected="true" styleClass="radio-opt"
-                                                 text="Custom (.dump) — موصى به"/>
-                                    <RadioButton fx:id="radioPlainFormat" styleClass="radio-opt"
-                                                 text="Plain SQL (.sql)"/>
+                                    <RadioButton fx:id="radioCustomFormat" selected="true" styleClass="stg-radio-opt" text="Custom (.dump) — موصى به" />
+                                    <RadioButton fx:id="radioPlainFormat" styleClass="stg-radio-opt" text="Plain SQL (.sql)" />
                                 </HBox>
                             </VBox>
 
                             <VBox spacing="6">
-                                <Label styleClass="field-label" text="مستوى الضغط (0 = بلا ضغط، 9 = أقصى)"/>
+                                <Label styleClass="stg-field-label" text="مستوى الضغط (0 = بلا ضغط، 9 = أقصى)" />
                                 <HBox alignment="CENTER_LEFT" spacing="10">
-                                    <Slider fx:id="compressionSlider" blockIncrement="1" majorTickUnit="3" max="9"
-                                            min="0" minorTickCount="2" showTickLabels="true" showTickMarks="true"
-                                            snapToTicks="true" value="6" HBox.hgrow="ALWAYS"/>
+                                    <Slider fx:id="compressionSlider" blockIncrement="1" majorTickUnit="3" max="9" min="0" minorTickCount="2" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="6" HBox.hgrow="ALWAYS" />
                                 </HBox>
                             </VBox>
-                            <Label fx:id="compressionValueLabel" maxWidth="1.7976931348623157E308" prefHeight="27.0"
-                                   prefWidth="381.0" styleClass="slider-value" text="6"/>
+                            <Label fx:id="compressionValueLabel" maxWidth="1.7976931348623157E308" prefHeight="27.0" prefWidth="381.0" styleClass="stg-slider-value" text="6" />
 
-                            <Button fx:id="btnBackup" maxWidth="Infinity" onAction="#handleFullBackup"
-                                    styleClass="btn-primary" text="▶  بدء النسخ الاحتياطي"/>
+                            <Button fx:id="btnBackup" maxWidth="Infinity" onAction="#handleFullBackup" styleClass="stg-btn-primary" text="▶  بدء النسخ الاحتياطي" />
 
-                            <ProgressBar fx:id="backupProgress" maxWidth="Infinity" progress="-1"
-                                         styleClass="progress-bar-hidden"/>
-                            <Label fx:id="backupStatusLabel" styleClass="status-msg" text="" wrapText="true"/>
+                            <ProgressBar fx:id="backupProgress" maxWidth="Infinity" progress="-1" styleClass="stg-progress-bar-hidden" />
+                            <Label fx:id="backupStatusLabel" styleClass="stg-status-msg" text="" wrapText="true" />
                         </VBox>
                     </VBox>
 
                     <!-- ┌─ بطاقة الاستعادة من ملف مرفوع ─┐ -->
-                    <VBox spacing="0" styleClass="card" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                            <Label styleClass="card-icon" text="📤"/>
-                            <Label styleClass="card-title" text="استعادة من ملف"/>
+                    <VBox prefHeight="334.0" prefWidth="380.0" spacing="0" styleClass="stg-card" HBox.hgrow="ALWAYS">
+                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                            <Label styleClass="stg-card-icon" text="📤" />
+                            <Label styleClass="stg-card-title" text="استعادة من ملف" />
                         </HBox>
-                        <VBox spacing="14" styleClass="card-body">
-                            <Label styleClass="card-description"
-                                   text="ارفع ملف نسخة احتياطية (.dump أو .sql) لاستعادته." wrapText="true"/>
+                        <VBox prefHeight="316.0" prefWidth="421.0" spacing="14" styleClass="stg-card-body">
+                            <Label styleClass="stg-card-description" text="ارفع ملف نسخة احتياطية (.dump أو .sql) لاستعادته." wrapText="true" />
 
                             <VBox spacing="6">
-                                <Label styleClass="field-label" text="ملف النسخة الاحتياطية"/>
+                                <Label styleClass="stg-field-label" text="ملف النسخة الاحتياطية" />
                                 <HBox alignment="CENTER_LEFT" spacing="8">
-                                    <TextField fx:id="uploadFilePath" editable="false"
-                                               promptText="لم يتم اختيار ملف..."
-                                               styleClass="file-field" HBox.hgrow="ALWAYS"/>
-                                    <Button onAction="#handleChooseFile" styleClass="btn-secondary"
-                                            text="اختر ملف"/>
+                                    <TextField fx:id="uploadFilePath" editable="false" promptText="لم يتم اختيار ملف..." styleClass="stg-file-field" HBox.hgrow="ALWAYS" />
+                                    <Button onAction="#handleChooseFile" styleClass="stg-btn-secondary" text="اختر ملف" />
                                 </HBox>
                             </VBox>
 
                             <VBox spacing="6">
-                                <Label styleClass="field-label" text="وضع الاستعادة"/>
-                                <VBox spacing="6" styleClass="mode-box">
-                                    <RadioButton fx:id="radioReplace" selected="true" styleClass="radio-opt"
-                                                 text="استبدال كامل"/>
-                                    <Label styleClass="radio-hint"
-                                           text="يمسح البيانات الحالية ثم يعيد كتابتها من النسخة. آمن ونظيف."
-                                           wrapText="true"/>
-                                    <RadioButton fx:id="radioMerge" styleClass="radio-opt"
-                                                 text="كتابة فوق الموجود (Merge)"/>
-                                    <Label styleClass="radio-hint radio-hint-warn"
-                                           text="يضيف البيانات فوق الموجودة. قد يسبب تعارضاً في المفاتيح."
-                                           wrapText="true"/>
+                                <Label styleClass="stg-field-label" text="وضع الاستعادة" />
+                                <VBox spacing="6" styleClass="stg-mode-box">
+                                    <RadioButton fx:id="radioReplace" selected="true" styleClass="stg-radio-opt" text="استبدال كامل" />
+                                    <Label styleClass="stg-radio-hint" text="يمسح البيانات الحالية ثم يعيد كتابتها من النسخة. آمن ونظيف." wrapText="true" />
+                                    <RadioButton fx:id="radioMerge" styleClass="stg-radio-opt" text="كتابة فوق الموجود (Merge)" />
+                                    <Label styleClass="stg-radio-hint,stg-radio-hint-warn" text="يضيف البيانات فوق الموجودة. قد يسبب تعارضاً في المفاتيح." wrapText="true" />
                                 </VBox>
                             </VBox>
 
-                            <Button fx:id="btnRestoreFile" disable="true" maxWidth="Infinity"
-                                    onAction="#handleRestoreFromFile" styleClass="btn-danger"
-                                    text="⬆  استعادة من الملف"/>
+                            <Button fx:id="btnRestoreFile" disable="true" maxWidth="Infinity" onAction="#handleRestoreFromFile" styleClass="stg-btn-danger" text="⬆  استعادة من الملف" />
 
-                            <ProgressBar fx:id="restoreFileProgress" maxWidth="Infinity" progress="-1"
-                                         styleClass="progress-bar-hidden"/>
-                            <Label fx:id="restoreFileStatusLabel" styleClass="status-msg" text="" wrapText="true"/>
+                            <ProgressBar fx:id="restoreFileProgress" maxWidth="Infinity" progress="-1" styleClass="stg-progress-bar-hidden" />
+                            <Label fx:id="restoreFileStatusLabel" styleClass="stg-status-msg" text="" wrapText="true" />
                         </VBox>
                     </VBox>
                 </HBox>
 
                 <!-- ─── الصف الثاني: النسخ المحلية ─── -->
-                <VBox spacing="0" styleClass="card">
-                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                        <Label styleClass="card-icon" text="📁"/>
-                        <Label styleClass="card-title" text="النسخ المحفوظة محلياً"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label fx:id="backupsCountLabel" styleClass="count-label" text="0 نسخة"/>
-                        <Button onAction="#handleRefreshBackups" styleClass="btn-ghost" text="↻  تحديث"/>
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="📁" />
+                        <Label styleClass="stg-card-title" text="النسخ المحفوظة محلياً" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="backupsCountLabel" styleClass="stg-count-label" text="0 نسخة" />
+                        <Button onAction="#handleRefreshBackups" styleClass="stg-btn-ghost" text="↻  تحديث" />
                     </HBox>
-                    <VBox spacing="12" styleClass="card-body">
+                    <VBox spacing="12" styleClass="stg-card-body">
 
                         <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label styleClass="field-label" text="وضع الاستعادة:"/>
-                            <RadioButton fx:id="radioLocalReplace" selected="true" styleClass="radio-opt"
-                                         text="استبدال كامل"/>
-                            <RadioButton fx:id="radioLocalMerge" styleClass="radio-opt" text="Merge"/>
+                            <Label styleClass="stg-field-label" text="وضع الاستعادة:" />
+                            <RadioButton fx:id="radioLocalReplace" selected="true" styleClass="stg-radio-opt" text="استبدال كامل" />
+                            <RadioButton fx:id="radioLocalMerge" styleClass="stg-radio-opt" text="Merge" />
                         </HBox>
 
-                        <ListView fx:id="backupsListView"
-                                  minHeight="120" prefHeight="260"
-                                  styleClass="backups-list-view"/>
+                        <ListView fx:id="backupsListView" minHeight="120" prefHeight="260" styleClass="stg-backups-list-view" />
 
-                        <Label fx:id="restoreLocalStatusArea"
-                               wrapText="true" maxWidth="Infinity"
-                               styleClass="status-area-label"
-                               minHeight="50" prefHeight="60"/>
+                        <Label fx:id="restoreLocalStatusArea" maxWidth="Infinity" minHeight="50" prefHeight="60" styleClass="stg-status-area-label" wrapText="true" />
 
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Button fx:id="btnRestoreSelected" disable="true" onAction="#handleRestoreSelected"
-                                    styleClass="btn-danger" text="⬇  استعادة النسخة المحددة"/>
-                            <ProgressBar fx:id="restoreLocalProgress" maxWidth="200" progress="-1"
-                                         styleClass="progress-bar-hidden"/>
+                            <Button fx:id="btnRestoreSelected" disable="true" onAction="#handleRestoreSelected" styleClass="stg-btn-danger" text="⬇  استعادة النسخة المحددة" />
+                            <ProgressBar fx:id="restoreLocalProgress" maxWidth="200" progress="-1" styleClass="stg-progress-bar-hidden" />
                         </HBox>
 
                     </VBox>
                 </VBox>
 
                 <!-- ─── الصف الثالث: النسخ التلقائي ─── -->
-                <VBox spacing="0" styleClass="card">
-                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                        <Label styleClass="card-icon" text="⏱"/>
-                        <Label styleClass="card-title" text="النسخ التلقائي"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <ToggleButton fx:id="toggleAutoBackup" onAction="#handleToggleAutoBackup"
-                                      styleClass="toggle-btn" text="غير مفعّل"/>
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="⏱" />
+                        <Label styleClass="stg-card-title" text="النسخ التلقائي" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <ToggleButton fx:id="toggleAutoBackup" onAction="#handleToggleAutoBackup" styleClass="stg-toggle-btn" text="غير مفعّل" />
                     </HBox>
-                    <VBox spacing="14" styleClass="card-body">
-                        <Label styleClass="card-description"
-                               text="يتم النسخ تلقائياً وفق الجدول المحدد. التغييرات تُطبَّق فور إعادة تشغيل الخادم."
-                               wrapText="true"/>
+                    <VBox spacing="14" styleClass="stg-card-body">
+                        <Label styleClass="stg-card-description" text="يتم النسخ تلقائياً وفق الجدول المحدد. التغييرات تُطبَّق فور إعادة تشغيل الخادم." wrapText="true" />
 
                         <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label minWidth="160" styleClass="field-label" text="Cron expression:"/>
-                            <TextField fx:id="cronField" prefWidth="160" styleClass="cron-field"
-                                       text="0 0 2 * * ?"/>
-                            <Label fx:id="cronHintLabel" styleClass="cron-hint" text="كل يوم الساعة 2:00 صباحاً"/>
+                            <Label minWidth="160" styleClass="stg-field-label" text="Cron expression:" />
+                            <TextField fx:id="cronField" prefWidth="160" styleClass="stg-cron-field" text="0 0 2 * * ?" />
+                            <Label fx:id="cronHintLabel" styleClass="stg-cron-hint" text="كل يوم الساعة 2:00 صباحاً" />
                         </HBox>
 
                         <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label minWidth="160" styleClass="field-label" text="اختيار سريع:"/>
+                            <Label minWidth="160" styleClass="stg-field-label" text="اختيار سريع:" />
                             <HBox alignment="CENTER_LEFT" spacing="6">
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="يومي"
-                                        userData="0 0 2 * * ?"/>
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="يومين"
-                                        userData="0 0 2 */2 * ?"/>
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="3 أيام"
-                                        userData="0 0 2 */3 * ?"/>
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="5 أيام"
-                                        userData="0 0 2 */5 * ?"/>
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="أسبوعي"
-                                        userData="0 0 2 */7 * ?"/>
-                                <Button onAction="#handleCronPreset" styleClass="btn-cron-preset" text="شهري"
-                                        userData="0 0 2 1 * ?"/>
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="يومي" userData="0 0 2 * * ?" />
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="يومين" userData="0 0 2 */2 * ?" />
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="3 أيام" userData="0 0 2 */3 * ?" />
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="5 أيام" userData="0 0 2 */5 * ?" />
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="أسبوعي" userData="0 0 2 */7 * ?" />
+                                <Button onAction="#handleCronPreset" styleClass="stg-btn-cron-preset" text="شهري" userData="0 0 2 1 * ?" />
                             </HBox>
                         </HBox>
 
                         <HBox alignment="CENTER_LEFT" spacing="16">
-                            <Label minWidth="160" styleClass="field-label" text="أقصى عدد نسخ محفوظة:"/>
-                            <Spinner fx:id="maxFilesSpinner" editable="true" initialValue="7" max="30" min="1"
-                                     prefWidth="80" styleClass="spinner-light"/>
-                            <Label styleClass="field-hint" text="نسخة (الأقدم يُحذف تلقائياً)"/>
+                            <Label minWidth="160" styleClass="stg-field-label" text="أقصى عدد نسخ محفوظة:" />
+                            <Spinner fx:id="maxFilesSpinner" editable="true" initialValue="7" max="30" min="1" prefWidth="80" styleClass="stg-spinner-light" />
+                            <Label styleClass="stg-field-hint" text="نسخة (الأقدم يُحذف تلقائياً)" />
                         </HBox>
 
-                        <Button onAction="#handleSaveAutoBackupSettings" prefWidth="220" styleClass="btn-secondary"
-                                text="حفظ إعدادات النسخ التلقائي"/>
+                        <Button onAction="#handleSaveAutoBackupSettings" prefWidth="220" styleClass="stg-btn-secondary" text="حفظ إعدادات النسخ التلقائي" />
 
-                        <Label fx:id="autoBackupStatusLabel" styleClass="status-msg" text="" wrapText="true"/>
+                        <Label fx:id="autoBackupStatusLabel" styleClass="stg-status-msg" text="" wrapText="true" />
                     </VBox>
                 </VBox>
 
                 <!-- ─── الصف الرابع: تنفيذ سكريبتات SQL ─── -->
-                <VBox spacing="0" styleClass="card">
-                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-                        <Label styleClass="card-icon" text="⚙"/>
-                        <Label styleClass="card-title" text="تنفيذ سكريبتات قاعدة البيانات (Admin)"/>
-                        <Region HBox.hgrow="ALWAYS"/>
-                        <Label styleClass="count-label" text="للأدمن فقط"/>
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="⚙" />
+                        <Label styleClass="stg-card-title" text="تنفيذ سكريبتات قاعدة البيانات (Admin)" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label styleClass="stg-count-label" text="للأدمن فقط" />
                     </HBox>
-                    <VBox spacing="12" styleClass="card-body">
-                        <Label styleClass="card-description"
-                               text="ارفع ملف SQL موقّع لينفذ على قاعدة البيانات (إضافة / حذف / تعديل / إعادة هيكلة). يجب أن يحتوي الملف على التوقيع في أول سطر وآخر سطر."
-                               wrapText="true"/>
+                    <VBox spacing="12" styleClass="stg-card-body">
+                        <Label styleClass="stg-card-description" text="ارفع ملف SQL موقّع لينفذ على قاعدة البيانات (إضافة / حذف / تعديل / إعادة هيكلة). يجب أن يحتوي الملف على التوقيع في أول سطر وآخر سطر." wrapText="true" />
 
                         <VBox spacing="6">
-                            <Label styleClass="field-label" text="ملف SQL"/>
+                            <Label styleClass="stg-field-label" text="ملف SQL" />
                             <HBox alignment="CENTER_LEFT" spacing="8">
-                                <TextField fx:id="sqlFilePath" editable="false"
-                                           promptText="لم يتم اختيار ملف..."
-                                           styleClass="file-field" HBox.hgrow="ALWAYS"/>
-                                <Button onAction="#handleChooseSqlFile" styleClass="btn-secondary"
-                                        text="اختر ملف"/>
+                                <TextField fx:id="sqlFilePath" editable="false" promptText="لم يتم اختيار ملف..." styleClass="stg-file-field" HBox.hgrow="ALWAYS" />
+                                <Button onAction="#handleChooseSqlFile" styleClass="stg-btn-secondary" text="اختر ملف" />
                             </HBox>
                         </VBox>
 
-                        <VBox spacing="6" styleClass="mode-box">
-                            <CheckBox fx:id="chkStopOnError" selected="true" styleClass="radio-opt"
-                                      text="إيقاف التنفيذ والتراجع عن كل التغييرات عند أي خطأ (موصى به)"/>
-                            <Label styleClass="radio-hint"
-                                   text="لو الاختيار مفعّل: أي خطأ في أي أمر يرجع قاعدة البيانات لحالتها قبل السكريبت (Rollback)."
-                                   wrapText="true"/>
-                            <Label styleClass="radio-hint radio-hint-warn"
-                                   text="⚠ نصيحة: نفّذ نسخة احتياطية قبل تشغيل أي سكريبت يعدّل الهيكل أو يحذف بيانات."
-                                   wrapText="true"/>
+                        <VBox spacing="6" styleClass="stg-mode-box">
+                            <CheckBox fx:id="chkStopOnError" selected="true" styleClass="stg-radio-opt" text="إيقاف التنفيذ والتراجع عن كل التغييرات عند أي خطأ (موصى به)" />
+                            <Label styleClass="stg-radio-hint" text="لو الاختيار مفعّل: أي خطأ في أي أمر يرجع قاعدة البيانات لحالتها قبل السكريبت (Rollback)." wrapText="true" />
+                            <Label styleClass="stg-radio-hint,stg-radio-hint-warn" text="⚠ نصيحة: نفّذ نسخة احتياطية قبل تشغيل أي سكريبت يعدّل الهيكل أو يحذف بيانات." wrapText="true" />
                         </VBox>
 
                         <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Button fx:id="btnValidateScript" disable="true" onAction="#handleValidateScript"
-                                    styleClass="btn-secondary" text="🔍 فحص التوقيع"/>
-                            <Button fx:id="btnExecuteScript" disable="true" onAction="#handleExecuteScript"
-                                    styleClass="btn-danger" text="▶ تنفيذ السكريبت"/>
-                            <ProgressBar fx:id="scriptProgress" maxWidth="200" progress="-1"
-                                         styleClass="progress-bar-hidden"/>
+                            <Button fx:id="btnValidateScript" disable="true" onAction="#handleValidateScript" styleClass="stg-btn-secondary" text="🔍 فحص التوقيع" />
+                            <Button fx:id="btnExecuteScript" disable="true" onAction="#handleExecuteScript" styleClass="stg-btn-danger" text="▶ تنفيذ السكريبت" />
+                            <ProgressBar fx:id="scriptProgress" maxWidth="200" progress="-1" styleClass="stg-progress-bar-hidden" />
                         </HBox>
 
-                        <Label fx:id="scriptStatusLabel" text="" wrapText="true"
-                               styleClass="status-msg"/>
+                        <Label fx:id="scriptStatusLabel" styleClass="stg-status-msg" text="" wrapText="true" />
 
-                        <Label fx:id="scriptResultArea"
-                               wrapText="true" maxWidth="Infinity"
-                               styleClass="status-area-label"
-                               minHeight="60" prefHeight="140"/>
+                        <Label fx:id="scriptResultArea" maxWidth="Infinity" minHeight="60" prefHeight="140" styleClass="stg-status-area-label" wrapText="true" />
                     </VBox>
                 </VBox>
             </VBox>

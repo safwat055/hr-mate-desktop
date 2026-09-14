@@ -6,49 +6,49 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.safwat.hr.controller.admin.system.LogsController"
-      styleClass="app-bg"
+      styleClass="stg-app-bg"
       spacing="14.0">
     <padding>
         <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
     </padding>
 
     <!-- ═══ Header ═══ -->
-    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="page-header">
-        <Label styleClass="header-icon" text="📊"/>
+    <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-page-header">
+        <Label styleClass="stg-header-icon" text="📊"/>
         <VBox spacing="2">
-            <Label styleClass="page-title" text="سجل الأحداث"/>
-            <Label styleClass="page-subtitle" text="مراقبة سجلات النظام الحيّة"/>
+            <Label styleClass="stg-page-title" text="سجل الأحداث"/>
+            <Label styleClass="stg-page-subtitle" text="مراقبة سجلات النظام الحيّة"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblLogCount" styleClass="status-badge" text="السجلات: 0"/>
+        <Label fx:id="lblLogCount" styleClass="stg-status-badge" text="السجلات: 0"/>
     </HBox>
 
     <!-- ═══ Toolbar ═══ -->
-    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="toolbar-dark">
-        <Button fx:id="btnRefresh" styleClass="btn-secondary" text="🔄 تحديث"/>
-        <Button fx:id="btnClear" styleClass="btn-danger" text="🗑 مسح"/>
-        <Button fx:id="btnExport" styleClass="btn-primary" text="📥 تصدير"/>
-        <CheckBox fx:id="chkAutoScroll" selected="true" styleClass="checkbox-dark"
+    <HBox alignment="CENTER_LEFT" spacing="8" styleClass="stg-toolbar-dark">
+        <Button fx:id="btnRefresh" styleClass="stg-btn-secondary" text="🔄 تحديث"/>
+        <Button fx:id="btnClear" styleClass="stg-btn-danger" text="🗑 مسح"/>
+        <Button fx:id="btnExport" styleClass="stg-btn-primary" text="📥 تصدير"/>
+        <CheckBox fx:id="chkAutoScroll" selected="true" styleClass="stg-checkbox-dark"
                   text="تمرير تلقائي"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="txtFilter" styleClass="search-pill"
+        <TextField fx:id="txtFilter" styleClass="stg-search-pill"
                    promptText="🔍 بحث..." prefWidth="240"/>
-        <Button fx:id="btnFilter" styleClass="icon-btn,icon-btn-accent" text="🔍"/>
-        <Button fx:id="btnClearFilter" styleClass="icon-btn" text="✖"/>
+        <Button fx:id="btnFilter" styleClass="stg-icon-btn,stg-icon-btn-accent" text="🔍"/>
+        <Button fx:id="btnClearFilter" styleClass="stg-icon-btn" text="✖"/>
     </HBox>
 
     <!-- ═══ Card: السجلات ═══ -->
-    <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
-        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="card-header">
-            <Label styleClass="card-icon" text="📄"/>
-            <Label styleClass="card-title" text="محتوى السجل"/>
+    <VBox spacing="0" styleClass="stg-card" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+            <Label styleClass="stg-card-icon" text="📄"/>
+            <Label styleClass="stg-card-title" text="محتوى السجل"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label styleClass="info-muted" text="live"/>
+            <Label styleClass="stg-info-muted" text="live"/>
         </HBox>
         <TextArea fx:id="txtLogs"
                   editable="false"
                   wrapText="true"
-                  styleClass="textarea-dark,textarea-in-card"
+                  styleClass="stg-textarea-dark,stg-textarea-in-card"
                   prefHeight="420"
                   VBox.vgrow="ALWAYS"/>
     </VBox>

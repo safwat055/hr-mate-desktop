@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.appearance;
 
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -25,15 +26,6 @@ public class ColorSettingsManager {
     private static final String THEMES_DIR = "/com/safwat/hr/css/";
     private static final String OVERRIDES_FILE = System.getProperty("user.dir")
             + "/app/config/user-theme-overrides.css";
-
-    private static final String C_BG = "#1a1d2e";
-    private static final String C_CARD = "#242740";
-    private static final String C_ACCENT = "#4f8ef7";
-    private static final String C_GREEN = "#43c59e";
-    private static final String C_WARN = "#f5a623";
-    private static final String C_TEXT = "#e8eaf6";
-    private static final String C_MUTED = "#8b90b8";
-    private static final String C_BORDER = "#333659";
 
     private static final Map<String, String> ARABIC_LABELS = new LinkedHashMap<>();
 
@@ -231,53 +223,49 @@ public class ColorSettingsManager {
         Set<ColorVar> dirty = new LinkedHashSet<>();
         List<VBox> cardNodes = new ArrayList<>();
 
-        // ---------- Header ----------
+        // ─── Header ───
         Label headerIcon = new Label("🎨");
-        headerIcon.setStyle("-fx-font-size:20px;");
+        headerIcon.getStyleClass().add("stg-header-icon");
 
         Label headerTitle = new Label("ألوان الثيم");
-        headerTitle.setStyle("-fx-font-size:15px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
+        headerTitle.getStyleClass().add("stg-header-title");
 
         Label headerSubtitle = new Label("تخصيص ألوان الثيم النشط: "
                 + AppConfig.getString("ui", "theme", "theme-blue.css"));
-        headerSubtitle.setStyle("-fx-font-size:11px; -fx-text-fill:" + C_MUTED + ";");
+        headerSubtitle.getStyleClass().add("stg-header-subtitle");
 
         VBox titleBox = new VBox(2, headerTitle, headerSubtitle);
 
         TextField searchField = new TextField();
         searchField.setPromptText("🔍 ابحث عن لون...");
         searchField.setPrefWidth(200);
-        searchField.setStyle(inputStyle());
+        searchField.getStyleClass().add("stg-search-field");
 
         HBox header = new HBox(12, headerIcon, titleBox, spacer(), searchField);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(14, 20, 14, 20));
-        header.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
-                + "; -fx-border-width:0 0 1 0;");
+        header.getStyleClass().add("stg-page-header");
 
-        // ---------- Footer ----------
+        // ─── Footer ───
         Label statusLabel = new Label("جاهز");
-        statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+        statusLabel.getStyleClass().add("stg-status-msg");
 
         Label pendingBadge = new Label("");
         pendingBadge.setVisible(false);
-        pendingBadge.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:11px; -fx-font-weight:bold;");
+        pendingBadge.getStyleClass().add("stg-pending-badge");
 
         Button discardBtn = new Button("↩ تجاهل");
         discardBtn.setVisible(false);
-        discardBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_WARN
-                + "; -fx-border-color:" + C_WARN + "; -fx-border-radius:6; -fx-padding:6 14 6 14;");
+        discardBtn.getStyleClass().add("stg-btn-danger-outline");
 
         Button resetAllBtn = new Button("🔄 استعادة الافتراضي");
-        resetAllBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
-                + "; -fx-border-color:" + C_BORDER + "; -fx-border-radius:6; -fx-padding:6 14 6 14; -fx-cursor:hand;");
+        resetAllBtn.getStyleClass().add("stg-btn-secondary");
         Tooltip.install(resetAllBtn, new Tooltip(
                 "يمسح كل تخصيصات الألوان ويرجع للثيم الأصلي على الكل فوراً"));
 
         Button saveAllBtn = new Button("💾 حفظ وتطبيق الكل");
         saveAllBtn.setDisable(true);
-        saveAllBtn.setStyle("-fx-background-color:" + C_ACCENT + "; -fx-text-fill:white;"
-                + "-fx-font-weight:bold; -fx-background-radius:6; -fx-padding:6 16 6 16;");
+        saveAllBtn.getStyleClass().add("stg-btn-primary");
 
         Runnable updateFooter = () -> {
             int n = dirty.size();
@@ -288,14 +276,16 @@ public class ColorSettingsManager {
             pendingBadge.setText(n + " تغيير غير محفوظ");
             if (n == 0) {
                 statusLabel.setText("جاهز");
-                statusLabel.setStyle("-fx-text-fill:" + C_MUTED + "; -fx-font-size:12px;");
+                statusLabel.getStyleClass().removeAll(
+                        "stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+                statusLabel.getStyleClass().add("stg-status-msg");
             }
         };
 
-        // ---------- Body ----------
+        // ─── Body ───
         VBox cardsContainer = new VBox(8);
         cardsContainer.setPadding(new Insets(14));
-        cardsContainer.setStyle("-fx-background-color:" + C_BG + ";");
+        cardsContainer.getStyleClass().add("stg-main-content");
 
         for (ColorVar v : vars) {
             VBox card = buildColorRow(v, pickers, dirty, updateFooter);
@@ -305,9 +295,8 @@ public class ColorSettingsManager {
 
         ScrollPane scroll = new ScrollPane(cardsContainer);
         scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background:" + C_BG + "; -fx-background-color:" + C_BG + ";");
+        scroll.getStyleClass().add("stg-main-scroll");
 
-        // ---------- بحث ----------
         searchField.textProperty().addListener((obs, o, n) -> {
             String q = n == null ? "" : n.trim().toLowerCase();
             for (int i = 0; i < vars.size(); i++) {
@@ -320,25 +309,26 @@ public class ColorSettingsManager {
             }
         });
 
-        // ---------- تجاهل التغييرات ----------
         discardBtn.setOnAction(e -> {
             for (ColorVar v : vars) {
                 v.currentValue = v.themeDefault;
                 pickers.get(v).setValue(safeWebColor(v.themeDefault));
             }
             dirty.clear();
-            cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
+            cardNodes.forEach(c -> c.getStyleClass().remove("stg-card-changed"));
             updateFooter.run();
             statusLabel.setText("تم تجاهل التغييرات");
-            statusLabel.setStyle("-fx-text-fill:" + C_WARN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-warn");
         });
 
-        // ✅ استعادة الكل للافتراضي مع تأكيد
         resetAllBtn.setOnAction(e -> {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("استعادة الافتراضي");
             confirm.setHeaderText("هتمسح كل تخصيصات الألوان اللي حفظتها");
             confirm.setContentText("هيرجع للثيم الأصلي فورًا على كل الشاشات المفتوحة.\nمتقدرش ترجع لتخصيصاتك القديمة بعد كده. كمّل؟");
+            confirm.getDialogPane().getStyleClass().add("stg-dialog");
+            SettingsThemeLoader.apply(confirm.getDialogPane());
             confirm.showAndWait().ifPresent(btn -> {
                 if (btn == ButtonType.OK) {
                     resetAllToDefaults();
@@ -347,15 +337,15 @@ public class ColorSettingsManager {
                         pickers.get(v).setValue(safeWebColor(v.themeDefault));
                     }
                     dirty.clear();
-                    cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
+                    cardNodes.forEach(c -> c.getStyleClass().remove("stg-card-changed"));
                     updateFooter.run();
                     statusLabel.setText("✓ تم الرجوع للثيم الافتراضي على الكل");
-                    statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+                    statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+                    statusLabel.getStyleClass().add("stg-status-msg-ok");
                 }
             });
         });
 
-        // ---------- حفظ وتطبيق ----------
         saveAllBtn.setOnAction(e -> {
             for (ColorVar v : vars) {
                 Color c = pickers.get(v).getValue();
@@ -363,58 +353,58 @@ public class ColorSettingsManager {
             }
             saveColorVars(vars);
             dirty.clear();
-            cardNodes.forEach(c -> c.setStyle(cardStyle(false)));
+            cardNodes.forEach(c -> c.getStyleClass().remove("stg-card-changed"));
             updateFooter.run();
             reapplyToRegisteredScenes();
             statusLabel.setText("✓ تم الحفظ والتطبيق الفوري");
-            statusLabel.setStyle("-fx-text-fill:" + C_GREEN + "; -fx-font-size:12px;");
+            statusLabel.getStyleClass().removeAll("stg-status-msg-ok", "stg-status-msg-error", "stg-status-msg-warn");
+            statusLabel.getStyleClass().add("stg-status-msg-ok");
         });
 
         HBox footer = new HBox(10, statusLabel, spacer(), pendingBadge, discardBtn, resetAllBtn, saveAllBtn);
         footer.setAlignment(Pos.CENTER_LEFT);
         footer.setPadding(new Insets(10, 20, 10, 20));
-        footer.setStyle("-fx-background-color:" + C_CARD + "; -fx-border-color:" + C_BORDER
-                + "; -fx-border-width:1 0 0 0;");
+        footer.getStyleClass().add("stg-footer");
 
         BorderPane root = new BorderPane();
         root.setTop(header);
         root.setCenter(scroll);
         root.setBottom(footer);
-        root.setStyle("-fx-background-color:" + C_BG + ";");
+        root.getStyleClass().add("stg-root");
+
+        SettingsThemeLoader.apply(searchField);
         return root;
     }
-
-    // ==================== بناء كارت لون واحد ====================
 
     private static VBox buildColorRow(ColorVar v, Map<ColorVar, ColorPicker> pickers,
                                       Set<ColorVar> dirty, Runnable updateFooter) {
         VBox card = new VBox(4);
         card.setPadding(new Insets(10, 12, 10, 12));
-        card.setStyle(cardStyle(false));
+        card.getStyleClass().add("stg-card");
 
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
 
         VBox labelsBox = new VBox(1);
         Label name = new Label(v.arabicLabel);
-        name.setStyle("-fx-font-size:12.5px; -fx-font-weight:bold; -fx-text-fill:" + C_TEXT + ";");
+        name.getStyleClass().add("stg-card-title");
         Label keyLbl = new Label(v.key);
-        keyLbl.setStyle("-fx-font-size:10px; -fx-font-family:monospace; -fx-text-fill:" + C_MUTED + ";");
+        keyLbl.getStyleClass().add("stg-field-value-muted");
         labelsBox.getChildren().addAll(name, keyLbl);
 
-        // ✅ ColorPicker بخط فاتح
         ColorPicker picker = new ColorPicker(safeWebColor(v.currentValue));
-        picker.getStyleClass().add("color-picker-light");
+        picker.getStyleClass().add("stg-color-picker-light");
         pickers.put(v, picker);
 
         Button resetBtn = new Button("↺");
         resetBtn.setTooltip(new Tooltip("استعادة لون الثيم الافتراضي لهذا اللون فقط"));
-        resetBtn.setStyle("-fx-background-color:transparent; -fx-text-fill:" + C_MUTED
-                + "; -fx-cursor:hand; -fx-font-size:13px;");
+        resetBtn.getStyleClass().add("stg-icon-btn");
         resetBtn.setOnAction(e -> {
             picker.setValue(safeWebColor(v.themeDefault));
             dirty.add(v);
-            card.setStyle(cardStyle(true));
+            if (!card.getStyleClass().contains("stg-card-changed")) {
+                card.getStyleClass().add("stg-card-changed");
+            }
             updateFooter.run();
         });
 
@@ -423,14 +413,14 @@ public class ColorSettingsManager {
 
         picker.valueProperty().addListener((obs, o, n) -> {
             dirty.add(v);
-            card.setStyle(cardStyle(true));
+            if (!card.getStyleClass().contains("stg-card-changed")) {
+                card.getStyleClass().add("stg-card-changed");
+            }
             updateFooter.run();
         });
 
         return card;
     }
-
-    // ==================== helpers ====================
 
     private static Color safeWebColor(String cssValue) {
         try {
@@ -454,17 +444,5 @@ public class ColorSettingsManager {
         Region r = new Region();
         HBox.setHgrow(r, Priority.ALWAYS);
         return r;
-    }
-
-    private static String cardStyle(boolean changed) {
-        return "-fx-background-color:" + C_CARD + "; -fx-background-radius:8;"
-                + "-fx-border-color:" + (changed ? C_ACCENT : C_BORDER)
-                + "; -fx-border-radius:8; -fx-border-width:1;";
-    }
-
-    private static String inputStyle() {
-        return "-fx-background-color:" + C_BG + "; -fx-text-fill:" + C_TEXT + ";"
-                + "-fx-prompt-text-fill:" + C_MUTED + "; -fx-border-color:" + C_BORDER + ";"
-                + "-fx-border-radius:6; -fx-background-radius:6;";
     }
 }

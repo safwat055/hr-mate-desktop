@@ -1,7 +1,8 @@
 package com.safwat.hr.controller.report;
 
 import com.safwat.hr.controller.payroll.payrollApi.PayrollYearlyApi;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.ReportApiClient;
 import com.safwat.hr.network.SessionManager;
@@ -557,18 +558,21 @@ public class PayrollReportController implements Initializable {
     public void searchEmployee() {
         PayrollRequest request = PayrollRequest.builder().build();
         request.setSearchValue(txt_searchEmp.getText());
-        List<SearchEmp> data = payrollYearlyApi.searchInEmployee(request);
+        List<EmployeeSearchResult> data = payrollYearlyApi.searchInEmployee(request);
 
         if (data.size() == 1) {
             fillEmployeeLabels(data.getFirst());
             return;
         }
 
-        Optional<SearchEmp> result = SearchDialog.builder(SearchEmp.class)
+        Optional<EmployeeSearchResult> result = SearchDialog.builder(EmployeeSearchResult.class)
                 .title("نتائج البحث")
-                .column("رقم قومي", SearchEmp::getNational_id)
-                .column("رقم موظف", SearchEmp::getPay_id)
-                .column("اسم", SearchEmp::getEmp_name)
+                .column("رقم قومي", EmployeeSearchResult::getNational_id)
+                .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                .column("اسم", EmployeeSearchResult::getEmp_name)
+                .column("اسم", EmployeeSearchResult::getJob)
+                .column("اسم", EmployeeSearchResult::getPay_management)
+                .column("اسم", EmployeeSearchResult::getAssignment_class)
                 .data(data)
                 .searchPlaceholder("ابحث للتصفية")
                 .show();
@@ -576,7 +580,7 @@ public class PayrollReportController implements Initializable {
         result.ifPresent(this::fillEmployeeLabels);
     }
 
-    private void fillEmployeeLabels(SearchEmp emp) {
+    private void fillEmployeeLabels(EmployeeSearchResult emp) {
         lbl_nationalId.setText(emp.getNational_id());
         lbl_payId.setText(emp.getPay_id());
         lbl_name.setText(emp.getEmp_name());

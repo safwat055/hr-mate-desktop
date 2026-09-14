@@ -1,10 +1,10 @@
 package com.safwat.hr.controller.payroll.changeCard.service;
 
-import com.safwat.hr.notification.model.HRNotification;
-import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.controller.payroll.payrollApi.PayrollChangeCardApi;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ChangeCardView;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
+import com.safwat.hr.notification.model.HRNotification;
+import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
@@ -22,7 +22,7 @@ import java.util.List;
 public class PayrollChangeService {
     private final PayrollChangeCardApi payrollChangeCardApi = PayrollChangeCardApi.getInstance();
 
-    public List<SearchEmp> searchInEmployee(String searchValue) {
+    public List<EmployeeSearchResult> searchInEmployee(String searchValue) {
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue)
                 .build();

@@ -139,7 +139,7 @@
     "table_chk_total": true,
     "table_chk_nationalId": true,
     "colorOverridesVersion": "1789352219756",
-    "theme": "theme-gray.css",
+    "theme": "theme-light.css",
     "fontSize": "10.0"
   },
   "fonts_/com/safwat/hr/controller/report/PayrollReport.fxml": {

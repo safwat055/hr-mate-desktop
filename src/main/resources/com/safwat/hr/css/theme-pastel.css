@@ -9,9 +9,10 @@
     -card-border: #E8D4F0;
     -card-shadow: rgba(150, 100, 180, 0.08);
 
-    -text-primary: #3A2A4A;
-    -text-secondary: #7A5A8A;
-    -text-muted: #A88AB8;
+    /* ✅ تحسين التباين: نصوص أغمق */
+    -text-primary: #2E1E3A; /* كان #3A2A4A */
+    -text-secondary: #5A3A6A; /* كان #7A5A8A */
+    -text-muted: #8A6A9A; /* كان #A88AB8 */
     -on-brand: #FFFFFF;
 
     -brand-navy: #6A4A7A;
@@ -57,11 +58,11 @@
 
 .menu-item {
     -fx-background-color: white;
-    -fx-text-fill: #3A2A4A !important;
+    -fx-text-fill: #2E1E3A !important;
 }
 
 .menu-item .label {
-    -fx-text-fill: #3A2A4A !important;
+    -fx-text-fill: #2E1E3A !important;
 }
 
 .menu-item:focused {
@@ -80,7 +81,7 @@
 
 .combo-box-popup .list-cell {
     -fx-background-color: white;
-    -fx-text-fill: #3A2A4A;
+    -fx-text-fill: #2E1E3A;
 }
 
 .combo-box-popup .list-cell:filled:selected,
@@ -94,6 +95,6 @@
 }
 
 .tooltip {
-    -fx-background-color: #3A2A4A;
+    -fx-background-color: #2E1E3A;
     -fx-text-fill: white;
 }

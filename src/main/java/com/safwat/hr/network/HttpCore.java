@@ -20,6 +20,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * ══════════════════════════════════════════════════════════════════
@@ -36,6 +39,13 @@ import java.util.Map;
  * endpoint في التطبيق)، أضفنا overloads في {@code baseBuilder} تقبل
  * {@link Duration} مخصص. كل الاستخدامات القديمة فضلت شغالة زي ما هي
  * بالـ 45 ثانية الافتراضية — التغيير ده backward-compatible 100%.
+ * <p>
+ * ⭐ ملاحظة عن الـ Thread Pool:
+ * {@link #HTTP_EXECUTOR} هو thread pool مخصص للشبكة — منفصل تمامًا عن
+ * {@code ForkJoinPool.commonPool()} الافتراضي. ده بيمنع thread starvation
+ * لما الـ HTTP requests تتأخر، ويحمي الـ JavaFX UI thread من أي تأثير.
+ * الـ pool حجمه {@link #HTTP_THREADS} وكل threads فيه daemon threads
+ * (تنتهي تلقائيًا مع إغلاق التطبيق).
  */
 public final class HttpCore {
 
@@ -50,6 +60,30 @@ public final class HttpCore {
      * الـ timeout الافتراضي لكل نداءات التطبيق العادية.
      */
     public static final Duration TIMEOUT = Duration.ofSeconds(45);
+
+    /**
+     * عدد الـ threads في الـ HTTP Pool.
+     * 6 threads = كافية لـ HR desktop app بدون إسراف في الموارد.
+     * لو الاستخدام راح لـ concurrent requests أكتر، رفّع لـ 10.
+     */
+    private static final int HTTP_THREADS = 6;
+
+    /**
+     * Thread pool مخصص للشبكة — بديل عن ForkJoinPool.commonPool().
+     * <p>
+     * السبب: ForkJoinPool مشترك مع كل حاجة تانية في الـ JVM،
+     * فلو HTTP request اتأخر بيحصل thread starvation وبيتعكس على الـ UI.
+     * Pool منفصل بيعزل الشبكة تمامًا عن باقي التطبيق.
+     */
+    public static final ExecutorService HTTP_EXECUTOR = Executors.newFixedThreadPool(
+            HTTP_THREADS,
+            r -> {
+                Thread t = new Thread(r, "hr-http-" + Thread.currentThread().threadId());
+                t.setDaemon(true);   // يموت مع التطبيق تلقائيًا
+                t.setPriority(Thread.NORM_PRIORITY);
+                return t;
+            }
+    );
 
     // ─────────────────────────────────────────────
     //  Singleton
@@ -103,10 +137,15 @@ public final class HttpCore {
         // الاتصال المفروض يكون سريع دايمًا حتى لو الطلب نفسه هياخد وقت
         // طويل بعد كده. الـ per-request timeout (اللي بيتغير) هو اللي بيتحكم
         // في مدة انتظار الاستجابة الكاملة.
+        //
+        // ⭐ executor(HTTP_EXECUTOR): بيخلي الـ HttpClient يشتغل على
+        // pool منفصل بدل ForkJoinPool.commonPool() — ده الحل الجذري
+        // لمشكلة تعليق الـ UI لما الـ HTTP requests تتأخر.
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(TIMEOUT)
+                .executor(HTTP_EXECUTOR)
                 .build();
 
         String url = AppConfig.getString("connection", "url", "http://");
@@ -301,6 +340,33 @@ public final class HttpCore {
                     .append(URLEncoder.encode(v, StandardCharsets.UTF_8));
         });
         return sb.toString();
+    }
+
+    // ─────────────────────────────────────────────
+    //  Lifecycle
+    // ─────────────────────────────────────────────
+
+    /**
+     * يُغلق الـ HTTP_EXECUTOR بشكل نظيف.
+     * <p>
+     * استدعيه مرة واحدة فقط عند إغلاق التطبيق —
+     * مثلًا في {@code Application.stop()} أو shutdown hook:
+     * <pre>
+     *   Runtime.getRuntime().addShutdownHook(
+     *       new Thread(HttpCore::shutdown));
+     * </pre>
+     * الـ daemon threads بتموت تلقائيًا لو ما استدعيتش الـ shutdown،
+     * لكن الاستدعاء اليدوي أنظف ويضمن إنهاء الـ in-flight requests.
+     */
+    public static void shutdown() {
+        HTTP_EXECUTOR.shutdown();
+        try {
+            if (!HTTP_EXECUTOR.awaitTermination(5, TimeUnit.SECONDS))
+                HTTP_EXECUTOR.shutdownNow();
+        } catch (InterruptedException ex) {
+            HTTP_EXECUTOR.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     // ─────────────────────────────────────────────

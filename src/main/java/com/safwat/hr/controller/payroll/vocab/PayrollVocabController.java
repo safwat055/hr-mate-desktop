@@ -1,6 +1,6 @@
 package com.safwat.hr.controller.payroll.vocab;
 
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.controller.payroll.vocab.service.PayrollVocabService;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
@@ -99,16 +99,19 @@ public class PayrollVocabController implements Initializable {
         SmartSearchHelper.bind(
                 txt_search, btn_search,
                 () -> vocabService.searchEmployee(txt_search.getText()),
-                SearchDialog.builder(SearchEmp.class)
+                SearchDialog.builder(EmployeeSearchResult.class)
                         .title("بحث عن موظف")
-                        .column("رقم قومى", SearchEmp::getNational_id)
-                        .column("رقم موظف", SearchEmp::getPay_id)
-                        .column("الاسم", SearchEmp::getEmp_name),
+                        .column("رقم قومى", EmployeeSearchResult::getNational_id)
+                        .column("رقم موظف", EmployeeSearchResult::getPay_id)
+                        .column("الاسم", EmployeeSearchResult::getEmp_name)
+                        .column("الوظيفة", EmployeeSearchResult::getJob)
+                        .column("الادارة", EmployeeSearchResult::getPay_management)
+                        .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                 },
-                SmartSearchHelper.FieldBind.of(txt_nationalID, SearchEmp::getNational_id),
-                SmartSearchHelper.FieldBind.of(txt_name, SearchEmp::getEmp_name),
-                SmartSearchHelper.FieldBind.of(txt_payID, SearchEmp::getPay_id)
+                SmartSearchHelper.FieldBind.of(txt_nationalID, EmployeeSearchResult::getNational_id),
+                SmartSearchHelper.FieldBind.of(txt_name, EmployeeSearchResult::getEmp_name),
+                SmartSearchHelper.FieldBind.of(txt_payID, EmployeeSearchResult::getPay_id)
         );
     }
 

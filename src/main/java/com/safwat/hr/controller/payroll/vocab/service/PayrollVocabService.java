@@ -1,7 +1,8 @@
 package com.safwat.hr.controller.payroll.vocab.service;
 
 import com.safwat.hr.controller.payroll.payrollApi.PayrollReviewApi;
-import com.safwat.hr.controller.payroll.payrollApi.dto.SearchEmp;
+
+import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.PayrollRequest;
@@ -20,7 +21,7 @@ public class PayrollVocabService {
     private final PayrollReviewApi payrollReviewApi = PayrollReviewApi.getInstance();
 
 
-    public List<SearchEmp> searchEmployee(String searchValue) {
+    public List<EmployeeSearchResult> searchEmployee(String searchValue) {
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue).build();
         return payrollReviewApi.searchInEmployee(request);
