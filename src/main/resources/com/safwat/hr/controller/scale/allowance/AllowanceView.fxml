@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 <!--
     شاشة البدلات — AllowanceView.fxml
     ────────────────────────────────────────────────────────────
@@ -11,14 +7,17 @@
     تاب 2: جدول البدلات (إضافة / تعديل / حذف / reset)
 -->
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <ScrollPane
-    fitToHeight="true"
-    fitToWidth="true"
-    nodeOrientation="RIGHT_TO_LEFT"
-    styleClass="app-bg"
-    xmlns="http://javafx.com/javafx/17"
-    xmlns:fx="http://javafx.com/fxml/1"
-    fx:controller="com.safwat.hr.hrScale.allowance.controller.AllowanceController">
+        fitToHeight="true"
+        fitToWidth="true"
+        nodeOrientation="RIGHT_TO_LEFT"
+        styleClass="app-bg"
+        xmlns="http://javafx.com/javafx/17"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.safwat.hr.controller.allowance.AllowanceFxController">
 
     <content>
         <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">

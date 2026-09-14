@@ -1,9 +1,5 @@
 package com.safwat.hr.controller.allowance;
 
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto.AllowanceLineDto;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto.AllowanceLineDto.Source;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto.OverrideRequest;
-import com.safwat.hr.hrScale.allowance.entity.EmployeeAllowanceConfig.OverrideEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -77,7 +73,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     private Button btn_close;
 
     // ── State ────────────────────────────────────────────────────
-    private AllowanceLineDto currentLine;
+    private AllowanceResultDto.AllowanceLineDto currentLine;
     private String nationalId;
     private Runnable onSaved;
     private final ObservableList<OverrideEntry> entries = FXCollections.observableArrayList();
@@ -102,7 +98,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     /**
      * يُستدعى من الـ Controller الرئيسي قبل فتح الـ Dialog.
      */
-    public void init(AllowanceLineDto line, String nationalId, Runnable onSaved) {
+    public void init(AllowanceResultDto.AllowanceLineDto line, String nationalId, Runnable onSaved) {
         this.currentLine = line;
         this.nationalId = nationalId;
         this.onSaved = onSaved;
@@ -113,7 +109,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         lbl_current_source.setStyle(sourceLabelStyle(line.source()));
 
         // زر الإرجاع يظهر فقط لو المصدر يدوي
-        btn_revert_auto.setVisible(line.source() == Source.MANUAL);
+        btn_revert_auto.setVisible(line.source() == AllowanceResultDto.AllowanceLineDto.Source.MANUAL);
 
         // حمّل الفترات الموجودة
         if (line.overrides() != null) {
@@ -297,7 +293,7 @@ public class AllowanceOverrideDialogController implements Initializable {
             return;
         }
 
-        OverrideRequest request = new OverrideRequest(
+        AllowanceResultDto.OverrideRequest request = new AllowanceResultDto.OverrideRequest(
                 currentLine.code(),
                 new ArrayList<>(entries)
         );
@@ -306,7 +302,7 @@ public class AllowanceOverrideDialogController implements Initializable {
 
         // الـ endpoint بيرجع ApiResponse<Boolean> (الباك اند بيلفها Optional.of(true))
         FxApiSupport.put(
-                "/api/allowances/employee/" + nationalId + "/override",
+                "/allowances/employee/" + nationalId + "/override",
                 request,
                 Boolean.class,
                 saved -> {
@@ -334,7 +330,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/api/allowances/employee/" + nationalId
+                        "/allowances/employee/" + nationalId
                                 + "/override/" + currentLine.code(),
                         () -> {
                             if (onSaved != null) onSaved.run();
@@ -359,7 +355,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         lbl_form_error.setVisible(true);
     }
 
-    private String sourceLabel(Source src) {
+    private String sourceLabel(AllowanceResultDto.AllowanceLineDto.Source src) {
         return switch (src) {
             case AUTO -> "تلقائي";
             case MANUAL -> "يدوي";
@@ -367,7 +363,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         };
     }
 
-    private String sourceLabelStyle(Source src) {
+    private String sourceLabelStyle(AllowanceResultDto.AllowanceLineDto.Source src) {
         return switch (src) {
             case AUTO -> "-fx-text-fill:#607d8b; -fx-font-weight:bold;";
             case MANUAL -> "-fx-text-fill:#1976d2; -fx-font-weight:bold;";

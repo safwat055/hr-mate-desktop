@@ -287,7 +287,7 @@ public class MainViewController implements Initializable {
     }
 
     private void openPayVocab() {
-        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollVocab(), "مفردات مرتب", true);
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollVocab(), "مفردات بيرول", true);
     }
 
     @FXML
@@ -335,6 +335,10 @@ public class MainViewController implements Initializable {
         ViewManager.openNoIndependentView(new FXMLPaths().getBackupView(), "نسخ احتياطي");
     }
 
+    @FXML
+    void openAllowancesView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getAllowanceView(), "مفردات", true);
+    }
     // ══════════════════════════════════════════════════════════════
     //  Themes
     // ══════════════════════════════════════════════════════════════

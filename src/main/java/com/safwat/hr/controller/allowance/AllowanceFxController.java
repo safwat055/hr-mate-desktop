@@ -2,11 +2,8 @@ package com.safwat.hr.controller.allowance;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto.AllowanceLineDto;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceResultDto.AllowanceLineDto.Source;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition;
-import com.safwat.hr.hrScale.scale.ScaleDto;
+
+import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -39,7 +36,7 @@ import java.util.ResourceBundle;
  *   <li>فتح dialog إدارة قواعد البدلات (allowance_definition)</li>
  * </ul>
  *
- * <p><b>ملاحظة أداء مهمة:</b> بيانات الموظف الأساسية ({@link ScaleDto}
+ * <p><b>ملاحظة أداء مهمة:</b> بيانات الموظف الأساسية ({@link }
  * — الاسم، القانون، تاريخ التعيين، الـ timeline...) ثابتة ومش بتتغير
  * حسب "تاريخ الاحتساب" في تاب البدلات — التاريخ بيأثر بس على *نتيجة*
  * احتساب البدلات، مش على بيانات الموظف نفسها. عشان كده بتتحمّل مرة
@@ -102,17 +99,17 @@ public class AllowanceFxController implements Initializable {
 
     // ── جدول البدلات ────────────────────────────────────────────
     @FXML
-    private TableView<AllowanceLineDto> table_allowances;
+    private TableView<AllowanceResultDto.AllowanceLineDto> table_allowances;
     @FXML
-    private TableColumn<AllowanceLineDto, String> col_nameAr;
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, String> col_nameAr;
     @FXML
-    private TableColumn<AllowanceLineDto, BigDecimal> col_value;
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, BigDecimal> col_value;
     @FXML
-    private TableColumn<AllowanceLineDto, LocalDate> col_effectiveFrom;
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, LocalDate> col_effectiveFrom;
     @FXML
-    private TableColumn<AllowanceLineDto, Source> col_source;
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, AllowanceResultDto.AllowanceLineDto.Source> col_source;
     @FXML
-    private TableColumn<AllowanceLineDto, Void> col_actions;
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, Void> col_actions;
 
     // ── State ────────────────────────────────────────────────────
     private String currentNationalId;
@@ -185,7 +182,7 @@ public class AllowanceFxController implements Initializable {
         clearError();
 
         FxApiSupport.get(
-                "/api/allowances/employee/" + currentNationalId + dateParam,
+                "/allowances/employee/" + currentNationalId + dateParam,
                 AllowanceResultDto.class,
                 result -> {
                     showLoading(false);
@@ -207,14 +204,14 @@ public class AllowanceFxController implements Initializable {
 
     private void loadDefinitions() {
         FxApiSupport.getList(
-                "/api/allowances/definitions",
+                "/allowances/definitions",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 defs -> {
                     // فلتر البدلات اللي مش موجودة عند الموظف
                     List<String> existing = currentResult != null
                             ? currentResult.allowances().stream()
-                            .map(AllowanceLineDto::code).toList()
+                            .map(AllowanceResultDto.AllowanceLineDto::code).toList()
                             : List.of();
                     List<AllowanceDefinition> available = defs.stream()
                             .filter(d -> !existing.contains(d.getCode()))
@@ -243,7 +240,7 @@ public class AllowanceFxController implements Initializable {
         }
 
         FxApiSupport.get(
-                "/api/salary-scale/" + currentNationalId,
+                "/salary-scale/" + currentNationalId,
                 ScaleDto.class,
                 dto -> {
                     cachedScaleDto = dto;
@@ -288,7 +285,7 @@ public class AllowanceFxController implements Initializable {
         // الدرجة من آخر نقطة في الـ timeline
         if (dto.getTimeline() != null && !dto.getTimeline().isEmpty()) {
             txt_empDegree.setText(
-                    dto.getTimeline().getLast().degreeLabel()
+                    dto.getTimeline().getLast().getDegreeLabel()
             );
         }
     }
@@ -343,7 +340,7 @@ public class AllowanceFxController implements Initializable {
         col_source.setCellValueFactory(new PropertyValueFactory<>("source"));
         col_source.setCellFactory(tc -> new TableCell<>() {
             @Override
-            protected void updateItem(Source src, boolean empty) {
+            protected void updateItem(AllowanceResultDto.AllowanceLineDto.Source src, boolean empty) {
                 super.updateItem(src, empty);
                 if (empty || src == null) {
                     setGraphic(null);
@@ -373,12 +370,12 @@ public class AllowanceFxController implements Initializable {
                 btnDelete.setPrefWidth(36);
 
                 btnEdit.setOnAction(e -> {
-                    AllowanceLineDto item = getTableView().getItems().get(getIndex());
+                    AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
                     openOverrideDialog(item);
                 });
 
                 btnDelete.setOnAction(e -> {
-                    AllowanceLineDto item = getTableView().getItems().get(getIndex());
+                    AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
                     handleDeleteAllowance(item.code());
                 });
             }
@@ -390,9 +387,9 @@ public class AllowanceFxController implements Initializable {
                     setGraphic(null);
                     return;
                 }
-                AllowanceLineDto item = getTableView().getItems().get(getIndex());
+                AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
                 // EXCLUDED مش قابل للتعديل
-                boolean excluded = item.source() == Source.EXCLUDED;
+                boolean excluded = item.source() == AllowanceResultDto.AllowanceLineDto.Source.EXCLUDED;
                 btnEdit.setDisable(excluded);
 
                 HBox box = new HBox(6, btnEdit, btnDelete);
@@ -423,10 +420,10 @@ public class AllowanceFxController implements Initializable {
     //  فتح Dialog تعديل الفترات
     // ════════════════════════════════════════════════════════════
 
-    private void openOverrideDialog(AllowanceLineDto line) {
+    private void openOverrideDialog(AllowanceResultDto.AllowanceLineDto line) {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/AllowanceOverrideDialog.fxml")
+                    getClass().getResource("/com/safwat/hr/controller/scale/allowance/AllowanceOverrideDialog.fxml")
             );
             Parent root = loader.load();
 
@@ -458,7 +455,7 @@ public class AllowanceFxController implements Initializable {
     private void openDefinitionsDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/fxml/AllowanceDefinitionDialog.fxml")
+                    getClass().getResource("/com/safwat/hr/controller/scale/allowance/AllowanceDefinitionDialog.fxml")
             );
             Parent root = loader.load();
 
@@ -491,12 +488,12 @@ public class AllowanceFxController implements Initializable {
         }
 
         // نفتح dialog فارغ لإدخال أول فترة
-        AllowanceLineDto dummy = new AllowanceLineDto(
+        AllowanceResultDto.AllowanceLineDto dummy = new AllowanceResultDto.AllowanceLineDto(
                 selected.getCode(),
                 selected.getNameAr(),
                 BigDecimal.ZERO,
                 LocalDate.now(),
-                Source.MANUAL,
+                AllowanceResultDto.AllowanceLineDto.Source.MANUAL,
                 List.of()
         );
         openOverrideDialog(dummy);
@@ -511,7 +508,7 @@ public class AllowanceFxController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/api/allowances/employee/" + currentNationalId + "/allowance/" + code,
+                        "/allowances/employee/" + currentNationalId + "/allowance/" + code,
                         this::loadAllowances,
                         this::showError
                 );
@@ -531,7 +528,7 @@ public class AllowanceFxController implements Initializable {
                 // JSONB)، وده مش مرتبط بـ cachedScaleDto (بيانات السلم
                 // الوظيفي) — فمش محتاجين نمسح الكاش هنا، البيانات لسه صحيحة.
                 FxApiSupport.delete(
-                        "/api/allowances/employee/" + currentNationalId + "/reset",
+                        "/allowances/employee/" + currentNationalId + "/reset",
                         this::loadAllowances,
                         this::showError
                 );
@@ -543,7 +540,7 @@ public class AllowanceFxController implements Initializable {
     //  Helpers
     // ════════════════════════════════════════════════════════════
 
-    private String sourceLabel(Source src) {
+    private String sourceLabel(AllowanceResultDto.AllowanceLineDto.Source src) {
         return switch (src) {
             case AUTO -> "تلقائي";
             case MANUAL -> "يدوي";
@@ -551,7 +548,7 @@ public class AllowanceFxController implements Initializable {
         };
     }
 
-    private String sourceBadgeStyle(Source src) {
+    private String sourceBadgeStyle(AllowanceResultDto.AllowanceLineDto.Source src) {
         String base = "-fx-background-radius:4; -fx-font-weight:bold; -fx-text-fill:white; -fx-font-size:11;";
         return base + switch (src) {
             case AUTO -> "-fx-background-color:#607d8b;";

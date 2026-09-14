@@ -1,12 +1,7 @@
 package com.safwat.hr.controller.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.hrScale.allowance.dto.AllowanceDefinitionRequest;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition.BaseSource;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition.Behavior;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition.CalcType;
-import com.safwat.hr.hrScale.allowance.entity.AllowanceDefinition.Scope;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -53,11 +48,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<AllowanceDefinition, LocalDate> col_def_effectiveFrom;
     @FXML
-    private TableColumn<AllowanceDefinition, Behavior> col_def_behavior;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.Behavior> col_def_behavior;
     @FXML
-    private TableColumn<AllowanceDefinition, CalcType> col_def_calcType;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.CalcType> col_def_calcType;
     @FXML
-    private TableColumn<AllowanceDefinition, Scope> col_def_scope;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.Scope> col_def_scope;
 
     @FXML
     private Button btn_new_code;
@@ -72,11 +67,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<AllowanceDefinition, LocalDate> col_hist_effectiveFrom;
     @FXML
-    private TableColumn<AllowanceDefinition, Behavior> col_hist_behavior;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.Behavior> col_hist_behavior;
     @FXML
-    private TableColumn<AllowanceDefinition, CalcType> col_hist_calcType;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.CalcType> col_hist_calcType;
     @FXML
-    private TableColumn<AllowanceDefinition, BaseSource> col_hist_baseSource;
+    private TableColumn<AllowanceDefinition, AllowanceDefinition.BaseSource> col_hist_baseSource;
     @FXML
     private TableColumn<AllowanceDefinition, Void> col_hist_actions;
 
@@ -94,13 +89,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private DatePicker date_effectiveFrom;
     @FXML
-    private ComboBox<Behavior> combo_behavior;
+    private ComboBox<AllowanceDefinition.Behavior> combo_behavior;
     @FXML
-    private ComboBox<CalcType> combo_calcType;
+    private ComboBox<AllowanceDefinition.CalcType> combo_calcType;
     @FXML
-    private ComboBox<BaseSource> combo_baseSource;
+    private ComboBox<AllowanceDefinition.BaseSource> combo_baseSource;
     @FXML
-    private ComboBox<Scope> combo_scope;
+    private ComboBox<AllowanceDefinition.Scope> combo_scope;
     @FXML
     private TextField txt_excludedMonths;
     @FXML
@@ -166,7 +161,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         btn_close.setOnAction(e -> closeDialog());
 
         combo_calcType.valueProperty().addListener((obs, old, val) ->
-                combo_baseSource.setDisable(val != CalcType.PERCENT_BY_DEGREE));
+                combo_baseSource.setDisable(val != AllowanceDefinition.CalcType.PERCENT_BY_DEGREE));
 
         hideForm();
         loadDefinitions();
@@ -188,7 +183,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     private void loadDefinitions() {
         FxApiSupport.getList(
-                "/api/allowances/definitions",
+                "/allowances/definitions",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 defs -> table_definitions.setItems(FXCollections.observableArrayList(defs)),
@@ -198,7 +193,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     private void loadHistory(String code) {
         FxApiSupport.getList(
-                "/api/allowances/definitions/" + code + "/history",
+                "/allowances/definitions/" + code + "/history",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 history -> table_history.setItems(FXCollections.observableArrayList(history)),
@@ -311,10 +306,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     private void setupCombos() {
-        combo_behavior.setItems(FXCollections.observableArrayList(Behavior.values()));
-        combo_calcType.setItems(FXCollections.observableArrayList(CalcType.values()));
-        combo_baseSource.setItems(FXCollections.observableArrayList(BaseSource.values()));
-        combo_scope.setItems(FXCollections.observableArrayList(Scope.values()));
+        combo_behavior.setItems(FXCollections.observableArrayList(AllowanceDefinition.Behavior.values()));
+        combo_calcType.setItems(FXCollections.observableArrayList(AllowanceDefinition.CalcType.values()));
+        combo_baseSource.setItems(FXCollections.observableArrayList(AllowanceDefinition.BaseSource.values()));
+        combo_scope.setItems(FXCollections.observableArrayList(AllowanceDefinition.Scope.values()));
     }
 
     private TableCell<AllowanceDefinition, LocalDate> dateCell() {
@@ -365,7 +360,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_behavior.setValue(snap.getBehavior());
         combo_calcType.setValue(snap.getCalcType());
         combo_baseSource.setValue(snap.getBaseSource());
-        combo_scope.setValue(snap.getScope() != null ? snap.getScope() : Scope.GENERAL);
+        combo_scope.setValue(snap.getScope() != null ? snap.getScope() : AllowanceDefinition.Scope.GENERAL);
         txt_excludedMonths.setText(joinOrEmpty(snap.getExcludedMonths()));
         txt_eligibleLaws.setText(joinOrEmpty(snap.getEligibleLaws()));
         txt_eligibleLawCodes.setText(joinOrEmpty(snap.getEligibleLawCodes()));
@@ -389,7 +384,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_behavior.setValue(null);
         combo_calcType.setValue(null);
         combo_baseSource.setValue(null);
-        combo_scope.setValue(Scope.GENERAL);
+        combo_scope.setValue(AllowanceDefinition.Scope.GENERAL);
         txt_excludedMonths.clear();
         txt_eligibleLaws.clear();
         txt_eligibleLawCodes.clear();
@@ -449,10 +444,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
         String code = txt_code.getText().trim();
         String nameAr = txt_nameAr.getText().trim();
         LocalDate effectiveFrom = date_effectiveFrom.getValue();
-        Behavior behavior = combo_behavior.getValue();
-        CalcType calcType = combo_calcType.getValue();
-        BaseSource baseSource = combo_baseSource.getValue();
-        Scope scope = combo_scope.getValue();
+        AllowanceDefinition.Behavior behavior = combo_behavior.getValue();
+        AllowanceDefinition.CalcType calcType = combo_calcType.getValue();
+        AllowanceDefinition.BaseSource baseSource = combo_baseSource.getValue();
+        AllowanceDefinition.Scope scope = combo_scope.getValue();
 
         if (code.isBlank()) {
             showFormError("كود البدل مطلوب");
@@ -470,7 +465,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("سلوك الاحتساب ونوعه مطلوبين");
             return;
         }
-        if (calcType == CalcType.PERCENT_BY_DEGREE && baseSource == null) {
+        if (calcType == AllowanceDefinition.CalcType.PERCENT_BY_DEGREE && baseSource == null) {
             showFormError("PERCENT_BY_DEGREE يحتاج تحديد مصدر الأساسي");
             return;
         }
@@ -497,7 +492,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         if (editingId != null) {
             FxApiSupport.put(
-                    "/api/allowances/definitions/" + editingId,
+                    "/allowances/definitions/" + editingId,
                     request,
                     AllowanceDefinition.class,
                     saved -> onSaveSuccess(),
@@ -505,7 +500,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             );
         } else {
             FxApiSupport.post(
-                    "/api/allowances/definitions",
+                    "/allowances/definitions",
                     request,
                     AllowanceDefinition.class,
                     saved -> onSaveSuccess(),
@@ -541,7 +536,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/api/allowances/definitions/" + snap.getId(),
+                        "/allowances/definitions/" + snap.getId(),
                         () -> {
                             loadDefinitions();
                             loadHistory(snap.getCode());

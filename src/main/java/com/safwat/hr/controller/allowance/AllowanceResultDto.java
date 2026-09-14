@@ -1,15 +1,19 @@
 package com.safwat.hr.controller.allowance;
 
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
- * ناتج احتساب بدلات موظف — يُرسل للفرونت.
+ * ناتج احتساب بدلات موظف — نسخة الفرونت (client-side).
  *
- * <p>كل بدل يظهر كسطر واحد في الجدول بالقيمة المحسوبة في التاريخ المطلوب.
+ * <p>يُستقبل من GET /api/allowances/employee/{nationalId}
+ * ويُملأ به {@code table_allowances} في {@code AllowanceFxController}.
+ *
+ * <p>يعكس بالضبط {@code AllowanceResultDto} في الباك —
+ * بما فيها {@code OverrideEntry} من هذا الـ package
+ * (مش من entity الباك).
  */
 public record AllowanceResultDto(
 
@@ -21,6 +25,13 @@ public record AllowanceResultDto(
 
     /**
      * سطر بدل واحد في الجدول.
+     *
+     * <p>بيُستخدم كـ item في {@code TableView<AllowanceLineDto>}
+     * في {@code AllowanceFxController}.
+     *
+     * <p>ملاحظة: الـ record fields محتاجة getters بالشكل الاعتيادي
+     * (بدون is/get) عشان {@code PropertyValueFactory} يشتغل معها
+     * صح في جدول JavaFX — وده السلوك الافتراضي للـ records.
      */
     public record AllowanceLineDto(
 
@@ -40,7 +51,9 @@ public record AllowanceResultDto(
             Source source,
 
             /**
-             * الفترات اليدوية المخزنة — null لو source = AUTO أو EXCLUDED
+             * الفترات اليدوية المخزنة.
+             * null لو source = AUTO أو EXCLUDED.
+             * بيُعرض في {@code AllowanceOverrideDialogController}.
              */
             List<OverrideEntry> overrides
     ) {
@@ -62,11 +75,14 @@ public record AllowanceResultDto(
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Request DTOs
+    //  Request DTOs — بتُبنى في الفرونت وتُرسل للباك
     // ══════════════════════════════════════════════════════════════
 
     /**
      * تعديل أو إضافة فترات يدوية لبدل معين.
+     *
+     * <p>يُرسل في PUT /api/allowances/employee/{nationalId}/override
+     * من {@code AllowanceOverrideDialogController#handleSaveAll()}.
      */
     public record OverrideRequest(
             String allowanceCode,
@@ -75,7 +91,11 @@ public record AllowanceResultDto(
     }
 
     /**
-     * إضافة بدل جديد غير مضاف للموظف مع أول فترة يدوية.
+     * إضافة بدل جديد للموظف مع أول فترة يدوية.
+     *
+     * <p>يُرسل في POST /api/allowances/employee/{nationalId}/allowance
+     * من {@code AllowanceFxController#handleAddAllowance()} عبر
+     * {@code AllowanceOverrideDialogController}.
      */
     public record AddAllowanceRequest(
             String allowanceCode,
@@ -91,6 +111,8 @@ public record AllowanceResultDto(
 
     /**
      * ناتج الاحتساب على فترة كاملة — للكشف الشهري.
+     *
+     * <p>يُستقبل من GET /api/allowances/employee/{nationalId}/timeline
      * Map<تاريخ نقطة التغيير، إجمالي البدلات>
      */
     public record AllowanceTimelineDto(

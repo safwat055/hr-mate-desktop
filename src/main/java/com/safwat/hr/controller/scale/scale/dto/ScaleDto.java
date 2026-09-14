@@ -33,6 +33,7 @@ public class ScaleDto {
     private LocalDate retiredDate;
     private LocalDate basic30Date;
     private LocalDate basic30From;
+    private BigDecimal basic30Value;
     private BigDecimal startTied;
     // ══════════════════════════════════════════
     //  فترة القطع

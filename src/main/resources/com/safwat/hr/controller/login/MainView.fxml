@@ -116,7 +116,8 @@
                                                 </padding>
                                                 <Button fx:id="btn_payments" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير صرف" />
                                                 <Button fx:id="btn_changeCard" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
-                                                <Button fx:id="btn_PayrollVocab" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات" />
+                                                <Button fx:id="btn_PayrollVocab" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات بيرول" />
+                                    <Button layoutX="27.0" layoutY="86.0" onAction="#openAllowancesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات" />
                                                 <Button fx:id="btn_records" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجلات" />
                                                 <Button fx:id="btn_tableView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="شيت الادخال" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اضافة موظف" />
