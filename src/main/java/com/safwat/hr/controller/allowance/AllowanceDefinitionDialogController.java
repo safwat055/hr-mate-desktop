@@ -1,7 +1,8 @@
 package com.safwat.hr.controller.allowance;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.safwat.hr.controller.allowance.AllowanceDefinition.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,13 +11,16 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 /**
  * Controller لشاشة إدارة قواعد البدلات (allowance_definition).
@@ -28,10 +32,18 @@ import java.util.stream.Collectors;
  *   <li>إضافة كود جديد بالكامل، أو snapshot جديد (تاريخ سريان مختلف)
  *       لكود موجود — تعديل طريقة الاحتساب مع الوقت</li>
  *   <li>تعديل أو حذف snapshot موجود</li>
+ *   <li>تصنيف العنصر (استحقاق/استقطاع/تأمينات/ضريبة/دمغة) وخضوعه
+ *       لوعاء التأمينات و/أو الضريبة والدمغة</li>
  * </ul>
  *
  * <p>الفورم مرن مع {@code valuesMap} — بيتعامل معاه كـ قائمة مفتاح/قيمة
  * حرة، فمش محتاجين نعرف مسبقًا هل المفتاح رقم درجة أو "all" أو "percent".
+ *
+ * <p><b>عرض عربي:</b> كل الـ enums (behavior, calcType, baseSource,
+ * scope, elementType) بتتعرض بأسماء عربي مفهومة للمستخدم في الجداول
+ * والـ ComboBoxes — القيمة الفعلية (الإنجليزية) هي اللي بتتبعت للباك
+ * اند، العرض بس هو اللي بيتترجم. راجع {@link #arabicConverter} وقاموس
+ * التسميات تحت.
  *
  * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport} فوق
  * {@code com.safwat.hr.network.ApiClient} الـ static.
@@ -51,6 +63,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private TableColumn<AllowanceDefinition, AllowanceDefinition.Behavior> col_def_behavior;
     @FXML
     private TableColumn<AllowanceDefinition, AllowanceDefinition.CalcType> col_def_calcType;
+    @FXML
+    private TableColumn<AllowanceDefinition, ElementType> col_def_elementType;
     @FXML
     private TableColumn<AllowanceDefinition, AllowanceDefinition.Scope> col_def_scope;
 
@@ -73,6 +87,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<AllowanceDefinition, AllowanceDefinition.BaseSource> col_hist_baseSource;
     @FXML
+    private TableColumn<AllowanceDefinition, ElementType> col_hist_elementType;
+    @FXML
     private TableColumn<AllowanceDefinition, Void> col_hist_actions;
 
     // ── فورم الإضافة/التعديل ─────────────────────────────────────
@@ -89,13 +105,19 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private DatePicker date_effectiveFrom;
     @FXML
-    private ComboBox<AllowanceDefinition.Behavior> combo_behavior;
+    private ComboBox<Behavior> combo_behavior;
     @FXML
-    private ComboBox<AllowanceDefinition.CalcType> combo_calcType;
+    private ComboBox<CalcType> combo_calcType;
     @FXML
-    private ComboBox<AllowanceDefinition.BaseSource> combo_baseSource;
+    private ComboBox<BaseSource> combo_baseSource;
     @FXML
-    private ComboBox<AllowanceDefinition.Scope> combo_scope;
+    private ComboBox<Scope> combo_scope;
+    @FXML
+    private ComboBox<ElementType> combo_elementType;
+    @FXML
+    private CheckBox chk_subjectToInsurance;
+    @FXML
+    private CheckBox chk_subjectToTaxAndStamp;
     @FXML
     private TextField txt_excludedMonths;
     @FXML
@@ -143,6 +165,71 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
+    //  قاموس التسميات العربية — عرض بس، القيمة المُرسلة تفضل enum name
+    // ════════════════════════════════════════════════════════════
+
+    private static String behaviorLabel(Behavior b) {
+        return switch (b) {
+            case REPLACE -> "استبدال (REPLACE)";
+            case ADD -> "إضافة (ADD)";
+        };
+    }
+
+    private static String calcTypeLabel(CalcType c) {
+        return switch (c) {
+            case PERCENT_BY_DEGREE -> "نسبة % حسب الدرجة";
+            case PERCENT_ALL_DEGREE -> "نسبة لكل الدرجات";
+            case AMOUNT_BY_DEGREE -> "مبلغ ثابت حسب الدرجة";
+            case FIXED_AMOUNT -> "مبلغ ثابت لكل الدرجات";
+            case SALARY_ENGINE -> "نسبة من إجمالي المحرك";
+            case DEPENDS_SALARY_ENGINE -> "مبلغ بعد اكتمال المحرك";
+        };
+    }
+
+    private static String baseSourceLabel(BaseSource s) {
+        return switch (s) {
+            case FROM_BASIC -> "من الأساسي 30/6";
+            case FROM_STEP_SALARY -> "من أساسي الدرجة";
+            case CURRENT_BASIC -> "من الأساسي الحالي";
+        };
+    }
+
+    private static String scopeLabel(Scope s) {
+        return switch (s) {
+            case GENERAL -> "عام (لكل المستحقين)";
+            case SPECIAL -> "خاص (يدوي فقط)";
+        };
+    }
+
+    private static String elementTypeLabel(ElementType e) {
+        return switch (e) {
+            case ENTITLEMENT -> "استحقاق";
+            case DEDUCTION -> "استقطاع";
+            case INSURANCE -> "عنصر تأمينات";
+            case TAX -> "عنصر ضريبة";
+            case STAMP -> "عنصر دمغة";
+        };
+    }
+
+    /**
+     * بيبني StringConverter بيعرض تسمية عربي لكل enum، من غير ما يغيّر القيمة الفعلية.
+     */
+    @SuppressWarnings("unchecked")
+    private static <E> StringConverter<E> arabicConverter(Function<Object, String> labelFn) {
+        return new StringConverter<>() {
+            @Override
+            public String toString(E val) {
+                return val == null ? "" : labelFn.apply(val);
+            }
+
+            @Override
+            public E fromString(String s) {
+                return null; // الـ ComboBoxes هنا مش editable
+            }
+        };
+    }
+
+    // ════════════════════════════════════════════════════════════
     //  Initialize
     // ════════════════════════════════════════════════════════════
 
@@ -161,7 +248,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         btn_close.setOnAction(e -> closeDialog());
 
         combo_calcType.valueProperty().addListener((obs, old, val) ->
-                combo_baseSource.setDisable(val != AllowanceDefinition.CalcType.PERCENT_BY_DEGREE));
+                combo_baseSource.setDisable(val != CalcType.PERCENT_BY_DEGREE && val != CalcType.PERCENT_ALL_DEGREE));
 
         hideForm();
         loadDefinitions();
@@ -213,12 +300,22 @@ public class AllowanceDefinitionDialogController implements Initializable {
         col_def_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
         col_def_effectiveFrom.setCellFactory(tc -> dateCell());
+
         col_def_behavior.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
+        col_def_behavior.setCellFactory(tc -> behaviorCell());
+
         col_def_calcType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
+        col_def_calcType.setCellFactory(tc -> calcTypeCell());
+
+        col_def_elementType.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
+        col_def_elementType.setCellFactory(tc -> elementTypeCell());
+
         col_def_scope.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getScope()));
+        col_def_scope.setCellFactory(tc -> scopeCell());
 
         table_definitions.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
             if (sel != null) {
@@ -238,12 +335,22 @@ public class AllowanceDefinitionDialogController implements Initializable {
         col_hist_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
         col_hist_effectiveFrom.setCellFactory(tc -> dateCell());
+
         col_hist_behavior.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
+        col_hist_behavior.setCellFactory(tc -> behaviorCell());
+
         col_hist_calcType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
+        col_hist_calcType.setCellFactory(tc -> calcTypeCell());
+
         col_hist_baseSource.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBaseSource()));
+        col_hist_baseSource.setCellFactory(tc -> baseSourceCell());
+
+        col_hist_elementType.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
+        col_hist_elementType.setCellFactory(tc -> elementTypeCell());
 
         col_hist_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏");
@@ -251,11 +358,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
             {
                 btnEdit.getStyleClass().add("btn-purple");
-                btnEdit.setPrefHeight(26);
-                btnEdit.setPrefWidth(36);
+                btnEdit.setPrefHeight(28);
+                btnEdit.setPrefWidth(40);
                 btnDelete.getStyleClass().add("btn-danger");
-                btnDelete.setPrefHeight(26);
-                btnDelete.setPrefWidth(36);
+                btnDelete.setPrefHeight(28);
+                btnDelete.setPrefWidth(40);
 
                 btnEdit.setOnAction(e -> {
                     AllowanceDefinition snap = getTableView().getItems().get(getIndex());
@@ -264,6 +371,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 btnDelete.setOnAction(e -> {
                     AllowanceDefinition snap = getTableView().getItems().get(getIndex());
                     handleDelete(snap);
+                    
                 });
             }
 
@@ -274,7 +382,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
                     setGraphic(null);
                     return;
                 }
-                HBox box = new HBox(6, btnEdit, btnDelete);
+                HBox box = new HBox(8, btnEdit, btnDelete);
                 box.setStyle("-fx-alignment: CENTER;");
                 setGraphic(box);
             }
@@ -291,8 +399,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
             {
                 btnDelete.getStyleClass().add("btn-danger");
-                btnDelete.setPrefHeight(24);
-                btnDelete.setPrefWidth(32);
+                btnDelete.setPrefHeight(26);
+                btnDelete.setPrefWidth(36);
                 btnDelete.setOnAction(e -> valueRows.remove(getTableView().getItems().get(getIndex())));
             }
 
@@ -306,10 +414,20 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     private void setupCombos() {
-        combo_behavior.setItems(FXCollections.observableArrayList(AllowanceDefinition.Behavior.values()));
-        combo_calcType.setItems(FXCollections.observableArrayList(AllowanceDefinition.CalcType.values()));
-        combo_baseSource.setItems(FXCollections.observableArrayList(AllowanceDefinition.BaseSource.values()));
-        combo_scope.setItems(FXCollections.observableArrayList(AllowanceDefinition.Scope.values()));
+        combo_behavior.setItems(FXCollections.observableArrayList(Behavior.values()));
+        combo_behavior.setConverter(arabicConverter(v -> behaviorLabel((Behavior) v)));
+
+        combo_calcType.setItems(FXCollections.observableArrayList(CalcType.values()));
+        combo_calcType.setConverter(arabicConverter(v -> calcTypeLabel((CalcType) v)));
+
+        combo_baseSource.setItems(FXCollections.observableArrayList(BaseSource.values()));
+        combo_baseSource.setConverter(arabicConverter(v -> baseSourceLabel((BaseSource) v)));
+
+        combo_scope.setItems(FXCollections.observableArrayList(Scope.values()));
+        combo_scope.setConverter(arabicConverter(v -> scopeLabel((Scope) v)));
+
+        combo_elementType.setItems(FXCollections.observableArrayList(ElementType.values()));
+        combo_elementType.setConverter(arabicConverter(v -> elementTypeLabel((ElementType) v)));
     }
 
     private TableCell<AllowanceDefinition, LocalDate> dateCell() {
@@ -318,6 +436,61 @@ public class AllowanceDefinitionDialogController implements Initializable {
             protected void updateItem(LocalDate date, boolean empty) {
                 super.updateItem(date, empty);
                 setText(empty || date == null ? null : date.format(DATE_FMT));
+                setStyle("-fx-alignment: CENTER;");
+            }
+        };
+    }
+
+    private TableCell<AllowanceDefinition, Behavior> behaviorCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(Behavior val, boolean empty) {
+                super.updateItem(val, empty);
+                setText(empty || val == null ? null : behaviorLabel(val));
+                setStyle("-fx-alignment: CENTER;");
+            }
+        };
+    }
+
+    private TableCell<AllowanceDefinition, CalcType> calcTypeCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(CalcType val, boolean empty) {
+                super.updateItem(val, empty);
+                setText(empty || val == null ? null : calcTypeLabel(val));
+                setStyle("-fx-alignment: CENTER;");
+            }
+        };
+    }
+
+    private TableCell<AllowanceDefinition, BaseSource> baseSourceCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(BaseSource val, boolean empty) {
+                super.updateItem(val, empty);
+                setText(empty || val == null ? "—" : baseSourceLabel(val));
+                setStyle("-fx-alignment: CENTER;");
+            }
+        };
+    }
+
+    private TableCell<AllowanceDefinition, ElementType> elementTypeCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(ElementType val, boolean empty) {
+                super.updateItem(val, empty);
+                setText(empty || val == null ? null : elementTypeLabel(val));
+                setStyle("-fx-alignment: CENTER;");
+            }
+        };
+    }
+
+    private TableCell<AllowanceDefinition, Scope> scopeCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(Scope val, boolean empty) {
+                super.updateItem(val, empty);
+                setText(empty || val == null ? null : scopeLabel(val));
                 setStyle("-fx-alignment: CENTER;");
             }
         };
@@ -345,6 +518,12 @@ public class AllowanceDefinitionDialogController implements Initializable {
         txt_code.setDisable(true); // نفس الكود إجباري
         txt_nameAr.setText(selected.getNameAr());
         txt_nameEn.setText(selected.getNameEn());
+        // نورّث تصنيف العنصر من آخر snapshot كنقطة بداية منطقية — المستخدم يقدر يغيّرها
+        combo_elementType.setValue(
+                selected.getElementType() != null ? selected.getElementType() : ElementType.ENTITLEMENT
+        );
+        chk_subjectToInsurance.setSelected(selected.isSubjectToInsurance());
+        chk_subjectToTaxAndStamp.setSelected(selected.isSubjectToTaxAndStamp());
         lbl_form_title.setText("إضافة تاريخ جديد لبدل: " + selected.getCode());
         showForm();
     }
@@ -360,7 +539,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_behavior.setValue(snap.getBehavior());
         combo_calcType.setValue(snap.getCalcType());
         combo_baseSource.setValue(snap.getBaseSource());
-        combo_scope.setValue(snap.getScope() != null ? snap.getScope() : AllowanceDefinition.Scope.GENERAL);
+        combo_scope.setValue(snap.getScope() != null ? snap.getScope() : Scope.GENERAL);
+        combo_elementType.setValue(snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
+        chk_subjectToInsurance.setSelected(snap.isSubjectToInsurance());
+        chk_subjectToTaxAndStamp.setSelected(snap.isSubjectToTaxAndStamp());
         txt_excludedMonths.setText(joinOrEmpty(snap.getExcludedMonths()));
         txt_eligibleLaws.setText(joinOrEmpty(snap.getEligibleLaws()));
         txt_eligibleLawCodes.setText(joinOrEmpty(snap.getEligibleLawCodes()));
@@ -384,7 +566,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_behavior.setValue(null);
         combo_calcType.setValue(null);
         combo_baseSource.setValue(null);
-        combo_scope.setValue(AllowanceDefinition.Scope.GENERAL);
+        combo_scope.setValue(Scope.GENERAL);
+        combo_elementType.setValue(ElementType.ENTITLEMENT);
+        chk_subjectToInsurance.setSelected(false);
+        chk_subjectToTaxAndStamp.setSelected(false);
         txt_excludedMonths.clear();
         txt_eligibleLaws.clear();
         txt_eligibleLawCodes.clear();
@@ -444,10 +629,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
         String code = txt_code.getText().trim();
         String nameAr = txt_nameAr.getText().trim();
         LocalDate effectiveFrom = date_effectiveFrom.getValue();
-        AllowanceDefinition.Behavior behavior = combo_behavior.getValue();
-        AllowanceDefinition.CalcType calcType = combo_calcType.getValue();
-        AllowanceDefinition.BaseSource baseSource = combo_baseSource.getValue();
-        AllowanceDefinition.Scope scope = combo_scope.getValue();
+        Behavior behavior = combo_behavior.getValue();
+        CalcType calcType = combo_calcType.getValue();
+        BaseSource baseSource = combo_baseSource.getValue();
+        Scope scope = combo_scope.getValue();
+        ElementType elementType = combo_elementType.getValue();
 
         if (code.isBlank()) {
             showFormError("كود البدل مطلوب");
@@ -465,8 +651,12 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("سلوك الاحتساب ونوعه مطلوبين");
             return;
         }
-        if (calcType == AllowanceDefinition.CalcType.PERCENT_BY_DEGREE && baseSource == null) {
+        if (calcType == CalcType.PERCENT_BY_DEGREE && baseSource == null) {
             showFormError("PERCENT_BY_DEGREE يحتاج تحديد مصدر الأساسي");
+            return;
+        }
+        if (elementType == null) {
+            showFormError("طبيعة العنصر (استحقاق/استقطاع/...) مطلوبة");
             return;
         }
         if (valueRows.isEmpty()) {
@@ -481,11 +671,14 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 code, nameAr,
                 txt_nameEn.getText().isBlank() ? null : txt_nameEn.getText().trim(),
                 effectiveFrom, behavior, calcType, baseSource, scope,
+                elementType,
+                chk_subjectToInsurance.isSelected(),
+                chk_subjectToTaxAndStamp.isSelected(),
                 valuesMap,
                 splitOrNull(txt_excludedMonths.getText()),
                 splitOrNull(txt_eligibleLaws.getText()),
                 splitOrNull(txt_eligibleLawCodes.getText()),
-                txt_notes.getText().isBlank() ? null : txt_notes.getText().trim()
+                txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim()
         );
 
         btn_save_definition.setDisable(true);

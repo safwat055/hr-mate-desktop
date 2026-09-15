@@ -98,6 +98,22 @@ public class AllowanceDefinition {
      */
     private List<String> eligibleLawCodes;
 
+    /**
+     * طبيعة العنصر:
+     * ENTITLEMENT (افتراضي) | DEDUCTION | INSURANCE | TAX | STAMP
+     */
+    private ElementType elementType;
+
+    /**
+     * هل داخل في وعاء اشتراك التأمينات؟
+     */
+    private boolean subjectToInsurance;
+
+    /**
+     * هل داخل في وعاء ضريبة الدخل والدمغة؟
+     */
+    private boolean subjectToTaxAndStamp;
+
     private String notes;
 
     // ══════════════════════════════════════════════════════════════
@@ -111,6 +127,7 @@ public class AllowanceDefinition {
 
     public enum CalcType {
         PERCENT_BY_DEGREE,
+        PERCENT_ALL_DEGREE,
         AMOUNT_BY_DEGREE,
         FIXED_AMOUNT,
         SALARY_ENGINE,
@@ -126,5 +143,28 @@ public class AllowanceDefinition {
     public enum Scope {
         GENERAL,
         SPECIAL
+    }
+
+    public enum ElementType {
+        /**
+         * استحقاق — الافتراضي
+         */
+        ENTITLEMENT,
+        /**
+         * استقطاع
+         */
+        DEDUCTION,
+        /**
+         * عنصر تأمينات
+         */
+        INSURANCE,
+        /**
+         * عنصر ضريبة
+         */
+        TAX,
+        /**
+         * عنصر دمغة
+         */
+        STAMP
     }
 }

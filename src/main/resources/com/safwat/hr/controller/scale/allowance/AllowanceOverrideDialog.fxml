@@ -16,15 +16,15 @@
 <?import javafx.scene.layout.*?>
 <VBox
         nodeOrientation="RIGHT_TO_LEFT"
-        spacing="10"
-        prefWidth="600"
+        spacing="18"
+        prefWidth="720"
         styleClass="card"
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="com.safwat.hr.controller.allowance.AllowanceOverrideDialogController">
 
     <padding>
-        <Insets bottom="15" left="15" right="15" top="15"/>
+        <Insets bottom="20" left="20" right="20" top="20"/>
     </padding>
 
     <!-- عنوان -->
@@ -35,9 +35,9 @@
            text="تعديل فترات البدل"/>
 
     <!-- معلومات البدل -->
-    <HBox alignment="CENTER_RIGHT" spacing="12" styleClass="card">
+    <HBox alignment="CENTER_RIGHT" spacing="16" styleClass="card">
         <padding>
-            <Insets bottom="8" left="12" right="12" top="8"/>
+            <Insets bottom="12" left="16" right="16" top="12"/>
         </padding>
 
         <Label styleClass="bold" text="البدل:"/>
@@ -52,87 +52,87 @@
 
         <!-- زر إرجاع لأوتوماتيك — بيظهر بس لو المصدر MANUAL -->
         <Button fx:id="btn_revert_auto"
-                prefHeight="30" prefWidth="140"
+                prefHeight="34" prefWidth="160"
                 styleClass="btn-secondary"
                 text="↩ إرجاع لأوتوماتيك"
                 visible="false"/>
     </HBox>
 
     <!-- جدول الفترات -->
-    <VBox styleClass="card" spacing="0" VBox.vgrow="ALWAYS">
-        <HBox alignment="CENTER_RIGHT" spacing="8">
+    <VBox styleClass="card" spacing="4" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_RIGHT" spacing="12">
             <padding>
-                <Insets bottom="6" left="8" right="8" top="6"/>
+                <Insets bottom="10" left="12" right="12" top="10"/>
             </padding>
             <Label alignment="CENTER" maxWidth="Infinity"
                    styleClass="panel-header compact"
                    text="الفترات الزمنية"
                    HBox.hgrow="ALWAYS"/>
             <Button fx:id="btn_add_entry"
-                    prefHeight="28" prefWidth="90"
+                    prefHeight="32" prefWidth="110"
                     styleClass="btn-success"
                     text="+ فترة جديدة"/>
         </HBox>
 
         <TableView fx:id="table_entries"
                    nodeOrientation="RIGHT_TO_LEFT"
-                   prefHeight="220"
+                   prefHeight="240"
                    editable="false"
                    styleClass="bold">
             <columns>
                 <TableColumn fx:id="col_entry_from"
                              text="من تاريخ"
-                             prefWidth="160"/>
+                             prefWidth="180"/>
                 <TableColumn fx:id="col_entry_to"
                              text="إلى تاريخ"
-                             prefWidth="160"/>
+                             prefWidth="180"/>
                 <TableColumn fx:id="col_entry_value"
                              text="القيمة (ج)"
-                             prefWidth="120"/>
+                             prefWidth="140"/>
                 <TableColumn fx:id="col_entry_actions"
                              text="إجراءات"
-                             prefWidth="130"/>
+                             prefWidth="150"/>
             </columns>
             <padding>
-                <Insets bottom="4" left="4" right="4" top="2"/>
+                <Insets bottom="8" left="8" right="8" top="4"/>
             </padding>
         </TableView>
     </VBox>
 
     <!-- فورم إضافة / تعديل فترة -->
-    <VBox fx:id="pane_entry_form" styleClass="card" spacing="8" visible="false" managed="false">
+    <VBox fx:id="pane_entry_form" styleClass="card" spacing="14" visible="false" managed="false">
         <padding>
-            <Insets bottom="10" left="12" right="12" top="10"/>
+            <Insets bottom="16" left="16" right="16" top="14"/>
         </padding>
 
         <Label fx:id="lbl_form_title"
                styleClass="bold text-navy"
                text="إضافة فترة جديدة"/>
 
-        <HBox spacing="12" alignment="CENTER_RIGHT">
+        <HBox spacing="18" alignment="CENTER_RIGHT">
 
             <!-- من تاريخ -->
-            <VBox spacing="4">
+            <VBox spacing="6">
                 <Label styleClass="bold fs-12" text="من تاريخ *"/>
                 <DatePicker fx:id="date_entry_from"
-                            prefHeight="32" prefWidth="150"
+                            prefHeight="36" prefWidth="170"
                             promptText="yyyy-MM-dd"/>
             </VBox>
 
             <!-- إلى تاريخ -->
-            <VBox spacing="4">
+            <VBox spacing="6">
                 <Label styleClass="bold fs-12" text="إلى تاريخ (فارغ = مفتوح)"/>
                 <DatePicker fx:id="date_entry_to"
-                            prefHeight="32" prefWidth="150"
+                            prefHeight="36" prefWidth="170"
                             promptText="yyyy-MM-dd"/>
             </VBox>
 
             <!-- القيمة -->
-            <VBox spacing="4">
+            <VBox spacing="6">
                 <Label styleClass="bold fs-12" text="القيمة (ج) *"/>
                 <TextField fx:id="txt_entry_value"
                            alignment="CENTER"
-                           prefHeight="32" prefWidth="120"
+                           prefHeight="36" prefWidth="140"
                            promptText="0.00"/>
             </VBox>
 
@@ -144,27 +144,27 @@
                visible="false"/>
 
         <!-- أزرار الفورم -->
-        <HBox spacing="8" alignment="CENTER_LEFT">
+        <HBox spacing="12" alignment="CENTER_LEFT">
             <Button fx:id="btn_save_entry"
-                    prefHeight="32" prefWidth="90"
+                    prefHeight="36" prefWidth="100"
                     styleClass="btn-success"
                     text="✔ حفظ"/>
             <Button fx:id="btn_cancel_entry"
-                    prefHeight="32" prefWidth="80"
+                    prefHeight="36" prefWidth="90"
                     styleClass="btn-secondary"
                     text="إلغاء"/>
         </HBox>
     </VBox>
 
     <!-- أزرار الـ Dialog الرئيسية -->
-    <HBox spacing="8" alignment="CENTER_LEFT">
+    <HBox spacing="12" alignment="CENTER_LEFT">
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btn_save_all"
-                prefHeight="34" prefWidth="110"
+                prefHeight="38" prefWidth="130"
                 styleClass="btn-primary"
                 text="💾 حفظ الكل"/>
         <Button fx:id="btn_close"
-                prefHeight="34" prefWidth="80"
+                prefHeight="38" prefWidth="90"
                 styleClass="btn-secondary"
                 text="إغلاق"/>
     </HBox>

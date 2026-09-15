@@ -1,5 +1,6 @@
 package com.safwat.hr.controller.allowance;
 
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

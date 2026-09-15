@@ -1,9 +1,6 @@
 package com.safwat.hr.controller.allowance;
 
-import com.safwat.hr.controller.allowance.AllowanceDefinition.BaseSource;
-import com.safwat.hr.controller.allowance.AllowanceDefinition.Behavior;
-import com.safwat.hr.controller.allowance.AllowanceDefinition.CalcType;
-import com.safwat.hr.controller.allowance.AllowanceDefinition.Scope;
+import com.safwat.hr.controller.allowance.AllowanceDefinition.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +35,15 @@ public record AllowanceDefinitionRequest(
         CalcType calcType,
         BaseSource baseSource,
         Scope scope,
+
+        /** ENTITLEMENT (افتراضي) | DEDUCTION | INSURANCE | TAX | STAMP */
+        ElementType elementType,
+
+        /** هل داخل في وعاء اشتراك التأمينات؟ */
+        boolean subjectToInsurance,
+
+        /** هل داخل في وعاء ضريبة الدخل والدمغة؟ */
+        boolean subjectToTaxAndStamp,
 
         /** { "6": 45, "7": 50 } أو { "all": 300 } أو { "percent": 10 } — حسب calcType */
         Map<String, BigDecimal> valuesMap,

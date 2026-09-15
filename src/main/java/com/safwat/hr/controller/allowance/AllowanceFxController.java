@@ -12,7 +12,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -36,18 +35,20 @@ import java.util.ResourceBundle;
  *   <li>فتح dialog إدارة قواعد البدلات (allowance_definition)</li>
  * </ul>
  *
- * <p><b>ملاحظة أداء مهمة:</b> بيانات الموظف الأساسية ({@link }
+ * <p><b>ملاحظة أداء مهمة:</b> بيانات الموظف الأساسية ({@link ScaleDto}
  * — الاسم، القانون، تاريخ التعيين، الـ timeline...) ثابتة ومش بتتغير
  * حسب "تاريخ الاحتساب" في تاب البدلات — التاريخ بيأثر بس على *نتيجة*
  * احتساب البدلات، مش على بيانات الموظف نفسها. عشان كده بتتحمّل مرة
  * واحدة بس لكل موظف (عند البحث) وتتخزن في {@link #cachedScaleDto}،
  * وأي إعادة احتساب بعد كده (تغيير التاريخ + زر "احتساب") بتستخدم
- * النسخة المخزنة من غير ما تعمل call جديد لـ /api/salary-scale.
+ * النسخة المخزنة من غير ما تعمل call جديد لـ /salary-scale.
  * الكاش بيتشال (يتصفّر) لما نبحث عن موظف تاني برقم قومي مختلف.
  *
  * <p><b>ملاحظة شبكة:</b> كل نداءات الـ API بتعدي على
  * {@link FxApiSupport} (غلاف فوق {@code com.safwat.hr.network.ApiClient}
- * الـ static/CompletableFuture)، مش على أي instance قديم.
+ * الـ static/CompletableFuture)، مش على أي instance قديم. المسارات هنا
+ * من غير بادئة {@code /api} لأن الـ base URL بتاع الـ ApiClient أصلاً
+ * حاطط {@code /api} جواه.
  */
 public class AllowanceFxController implements Initializable {
 
@@ -167,7 +168,7 @@ public class AllowanceFxController implements Initializable {
     /**
      * إعادة احتساب البدلات بالتاريخ الحالي في date_calculation.
      *
-     * <p>بتنادي endpoint البدلات بس ({@code /api/allowances/employee/{id}}).
+     * <p>بتنادي endpoint البدلات بس ({@code /allowances/employee/{id}}).
      * بيانات الموظف الأساسية (ScaleDto) بتتحمّل مرة واحدة فقط عبر
      * {@link #ensureEmployeeDetailsLoaded()} — مش بتتحمّل تاني هنا.
      */
@@ -310,9 +311,17 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
-        col_nameAr.setCellValueFactory(new PropertyValueFactory<>("nameAr"));
+        // ملاحظة: AllowanceLineDto عبارة عن record — accessor methods بتاعته
+        // من غير بادئة get/is (مثلاً effectiveFrom()، مش getEffectiveFrom()).
+        // PropertyValueFactory بيدور بالـ reflection على أسلوب JavaBean
+        // التقليدي بس، فمبيلاقيش حاجة وبيرمي IllegalStateException وقت
+        // الرسم. عشان كده كل الأعمدة هنا بتستخدم lambda بتنادي الـ
+        // accessor مباشرة بدل PropertyValueFactory.
+        col_nameAr.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleStringProperty(d.getValue().nameAr()));
 
-        col_value.setCellValueFactory(new PropertyValueFactory<>("value"));
+        col_value.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
             @Override
             protected void updateItem(BigDecimal val, boolean empty) {
@@ -326,7 +335,8 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        col_effectiveFrom.setCellValueFactory(new PropertyValueFactory<>("effectiveFrom"));
+        col_effectiveFrom.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveFrom()));
         col_effectiveFrom.setCellFactory(tc -> new TableCell<>() {
             @Override
             protected void updateItem(LocalDate date, boolean empty) {
@@ -337,7 +347,8 @@ public class AllowanceFxController implements Initializable {
         });
 
         // عمود المصدر مع Badge ملوّن
-        col_source.setCellValueFactory(new PropertyValueFactory<>("source"));
+        col_source.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().source()));
         col_source.setCellFactory(tc -> new TableCell<>() {
             @Override
             protected void updateItem(AllowanceResultDto.AllowanceLineDto.Source src, boolean empty) {

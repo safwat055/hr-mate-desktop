@@ -34,7 +34,7 @@ final class FxApiSupport {
     // ─────────────────────────────────────────────
 
     static <T> void get(String path, Class<T> type,
-                        Consumer<T> onSuccess, Consumer<String> onError) {
+                         Consumer<T> onSuccess, Consumer<String> onError) {
         ApiClient.getAsync(path, type)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -45,7 +45,7 @@ final class FxApiSupport {
      * <pre>{@code FxApiSupport.getList("/api/x", new TypeReference<List<X>>() {}, onS, onE);}</pre>
      */
     static <T> void getList(String path, TypeReference<List<T>> typeRef,
-                            Consumer<List<T>> onSuccess, Consumer<String> onError) {
+                             Consumer<List<T>> onSuccess, Consumer<String> onError) {
         ApiClient.getAsync(path, Map.of(), typeRef)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -55,7 +55,7 @@ final class FxApiSupport {
     // ─────────────────────────────────────────────
 
     static <T> void post(String path, Object body, Class<T> type,
-                         Consumer<T> onSuccess, Consumer<String> onError) {
+                          Consumer<T> onSuccess, Consumer<String> onError) {
         ApiClient.postAsync(path, body, type)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -65,7 +65,7 @@ final class FxApiSupport {
     // ─────────────────────────────────────────────
 
     static <T> void put(String path, Object body, Class<T> type,
-                        Consumer<T> onSuccess, Consumer<String> onError) {
+                         Consumer<T> onSuccess, Consumer<String> onError) {
         CompletableFuture
                 .supplyAsync(() -> {
                     try {
