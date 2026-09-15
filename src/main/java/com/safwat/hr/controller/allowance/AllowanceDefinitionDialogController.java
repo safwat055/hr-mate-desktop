@@ -371,7 +371,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 btnDelete.setOnAction(e -> {
                     AllowanceDefinition snap = getTableView().getItems().get(getIndex());
                     handleDelete(snap);
-                    
+
                 });
             }
 
@@ -635,10 +635,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         Scope scope = combo_scope.getValue();
         ElementType elementType = combo_elementType.getValue();
 
-        if (code.isBlank()) {
-            showFormError("كود البدل مطلوب");
-            return;
-        }
+
         if (nameAr.isBlank()) {
             showFormError("اسم البدل بالعربي مطلوب");
             return;
