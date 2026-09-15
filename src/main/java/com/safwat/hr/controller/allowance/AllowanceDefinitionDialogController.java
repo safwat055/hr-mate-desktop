@@ -150,7 +150,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private Button btn_cancel_form;
     @FXML
     private Button btn_close;
-
+    @FXML
+    private ComboBox<AllowanceDefinition.TimelineAnchor> combo_timelineAnchor;
     // ── State ────────────────────────────────────────────────────
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
@@ -177,6 +178,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
         public String toString() {
             return label;
         }
+    }
+
+    private static String timelineAnchorLabel(AllowanceDefinition.TimelineAnchor a) {
+        return switch (a) {
+            case TARGET_DATE -> "شهرى";
+            case EFFECTIVE_FROM -> "شهر القرار";
+        };
     }
 
     /**
@@ -468,6 +476,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
         // ComboBox الـ valuesMap key
         combo_map_key.setItems(FXCollections.observableArrayList(MAP_KEY_OPTIONS));
         combo_map_key.setVisibleRowCount(12);
+
+        combo_timelineAnchor.setItems(FXCollections.observableArrayList(
+                AllowanceDefinition.TimelineAnchor.values()));
+        combo_timelineAnchor.setConverter(arabicConverter(v -> timelineAnchorLabel((AllowanceDefinition.TimelineAnchor) v)));
     }
 
     /**
@@ -595,6 +607,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_scope.setValue(snap.getScope() != null ? snap.getScope() : Scope.GENERAL);
         combo_elementType.setValue(
                 snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
+        combo_timelineAnchor.setValue(
+                snap.getTimelineAnchor() != null
+                        ? snap.getTimelineAnchor()
+                        : AllowanceDefinition.TimelineAnchor.TARGET_DATE
+        );
         chk_subjectToInsurance.setSelected(snap.isSubjectToInsurance());
         chk_subjectToTaxAndStamp.setSelected(snap.isSubjectToTaxAndStamp());
         txt_excludedMonths.setText(joinOrEmpty(snap.getExcludedMonths()));
@@ -609,6 +626,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         lbl_form_title.setText("تعديل: " + snap.getCode() + " @ " + snap.getEffectiveFrom());
         showForm();
+        // في showFormForEdit
+        System.out.println("timelineAnchor from server: " + snap.getTimelineAnchor());
     }
 
     private void clearForm() {
@@ -631,6 +650,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         valueRows.clear();
         combo_map_key.setValue(null);
         txt_map_value.clear();
+        combo_timelineAnchor.setValue(AllowanceDefinition.TimelineAnchor.TARGET_DATE);
         lbl_form_error.setVisible(false);
     }
 
@@ -774,6 +794,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
         Map<String, BigDecimal> valuesMap = new LinkedHashMap<>();
         valueRows.forEach(r -> valuesMap.put(r.key(), r.value()));
 
+        AllowanceDefinition.TimelineAnchor timelineAnchor = combo_timelineAnchor.getValue();
+
         AllowanceDefinitionRequest request = new AllowanceDefinitionRequest(
                 code, nameAr,
                 txt_nameEn.getText().isBlank() ? null : txt_nameEn.getText().trim(),
@@ -785,9 +807,17 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 splitOrNull(txt_excludedMonths.getText()),
                 splitOrNull(txt_eligibleLaws.getText()),
                 splitOrNull(txt_eligibleLawCodes.getText()),
+                timelineAnchor,                                   // ← جديد
                 txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim()
         );
 
+
+        if (timelineAnchor == null) {
+            throw new IllegalStateException(
+                    "timelineAnchor = null — الـ ComboBox فاضي أو مفيش اختيار. " +
+                            "شوف الـ diagnostics فوق."
+            );
+        }
         btn_save_definition.setDisable(true);
 
         if (editingId != null) {
@@ -804,6 +834,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
                     request,
                     AllowanceDefinition.class,
                     saved -> onSaveSuccess(),
+
                     this::onSaveError
             );
         }

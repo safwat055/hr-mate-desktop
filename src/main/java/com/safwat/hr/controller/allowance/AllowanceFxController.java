@@ -3,7 +3,9 @@ package com.safwat.hr.controller.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import com.safwat.hr.controller.allowance.AllowanceResultDto.ElementType;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
+import com.safwat.hr.controller.statutory.StatutoryDialogController;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,10 +18,12 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -30,29 +34,23 @@ import java.util.ResourceBundle;
  * <ul>
  *   <li>البحث عن موظف وتحميل بياناته</li>
  *   <li>عرض بيانات الموظف في تاب 1</li>
- *   <li>عرض وإدارة البدلات في تاب 2</li>
+ *   <li>عرض وإدارة البدلات في تاب 2 (مع تمييز الاستحقاقات/الاستقطاعات)</li>
  *   <li>فتح dialog تعديل الفترات</li>
  *   <li>فتح dialog إدارة قواعد البدلات (allowance_definition)</li>
+ *   <li>فتح dialog إدارة الاستقطاعات القانونية (تأمينات/ضريبة/دمغة)</li>
  * </ul>
  *
- * <p><b>ملاحظة أداء مهمة:</b> بيانات الموظف الأساسية ({@link ScaleDto}
- * — الاسم، القانون، تاريخ التعيين، الـ timeline...) ثابتة ومش بتتغير
- * حسب "تاريخ الاحتساب" في تاب البدلات — التاريخ بيأثر بس على *نتيجة*
- * احتساب البدلات، مش على بيانات الموظف نفسها. عشان كده بتتحمّل مرة
- * واحدة بس لكل موظف (عند البحث) وتتخزن في {@link #cachedScaleDto}،
- * وأي إعادة احتساب بعد كده (تغيير التاريخ + زر "احتساب") بتستخدم
- * النسخة المخزنة من غير ما تعمل call جديد لـ /salary-scale.
- * الكاش بيتشال (يتصفّر) لما نبحث عن موظف تاني برقم قومي مختلف.
- *
- * <p><b>ملاحظة شبكة:</b> كل نداءات الـ API بتعدي على
- * {@link FxApiSupport} (غلاف فوق {@code com.safwat.hr.network.ApiClient}
- * الـ static/CompletableFuture)، مش على أي instance قديم. المسارات هنا
- * من غير بادئة {@code /api} لأن الـ base URL بتاع الـ ApiClient أصلاً
- * حاطط {@code /api} جواه.
+ * <p><b>عرض جدول البدلات:</b> كل سطر فيه نوع العنصر (استحقاق / استقطاع /
+ * تأمينات / ضريبة / دمغة)، والقيمة بتُعرض <b>بالقيمة المطلقة (abs)</b>
+ * مع لون مميز — أحمر للاستقطاعات وأخضر للاستحقاقات.
+ * ترتيب السطور: استحقاقات فوق، استقطاعات تحت، عناصر العرض (حصة الحكومة)
+ * في الآخر. الإجمالي (الصافي) بيتحسب من الباك على القيم بإشاراتها الأصلية.
  */
 public class AllowanceFxController implements Initializable {
 
     // ── شريط البحث ──────────────────────────────────────────────
+    @FXML
+    private Button btn_statutory;
     @FXML
     private TextField txt_nationalId;
     @FXML
@@ -104,6 +102,8 @@ public class AllowanceFxController implements Initializable {
     @FXML
     private TableColumn<AllowanceResultDto.AllowanceLineDto, String> col_nameAr;
     @FXML
+    private TableColumn<AllowanceResultDto.AllowanceLineDto, ElementType> col_elementType;
+    @FXML
     private TableColumn<AllowanceResultDto.AllowanceLineDto, BigDecimal> col_value;
     @FXML
     private TableColumn<AllowanceResultDto.AllowanceLineDto, LocalDate> col_effectiveFrom;
@@ -132,12 +132,15 @@ public class AllowanceFxController implements Initializable {
         setupCombo();
         date_calculation.setValue(LocalDate.now());
 
+        btn_statutory.setOnAction(e -> openStatutoryDialog());
+
         // Enter في حقل البحث يشغل البحث
         txt_nationalId.setOnAction(e -> handleSearch());
         btn_search.setOnAction(e -> handleSearch());
         btn_recalculate.setOnAction(e -> loadAllowances());
         btn_addAllowance.setOnAction(e -> handleAddAllowance());
         btn_reset.setOnAction(e -> handleReset());
+
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(e -> openDefinitionsDialog());
         }
@@ -155,7 +158,6 @@ public class AllowanceFxController implements Initializable {
         }
 
         // بحث عن موظف مختلف عن اللي محمّل حاليًا → امسح الكاش القديم
-        // (لو نفس الموظف، سيب الكاش زي ما هو، مفيش داعي لإعادة تحميله)
         if (!id.equals(currentNationalId)) {
             cachedScaleDto = null;
             currentResult = null;
@@ -167,10 +169,6 @@ public class AllowanceFxController implements Initializable {
 
     /**
      * إعادة احتساب البدلات بالتاريخ الحالي في date_calculation.
-     *
-     * <p>بتنادي endpoint البدلات بس ({@code /allowances/employee/{id}}).
-     * بيانات الموظف الأساسية (ScaleDto) بتتحمّل مرة واحدة فقط عبر
-     * {@link #ensureEmployeeDetailsLoaded()} — مش بتتحمّل تاني هنا.
      */
     private void loadAllowances() {
         if (currentNationalId == null) return;
@@ -190,8 +188,6 @@ public class AllowanceFxController implements Initializable {
                     currentResult = result;
                     fillAllowancesTable(result);
                     btn_reset.setVisible(true);
-                    // حمّل قائمة البدلات المتاحة بعد ما currentResult
-                    // اتحدث (مش قبله)، عشان الفلترة تبقى صح
                     loadDefinitions();
                 },
                 err -> {
@@ -230,10 +226,6 @@ public class AllowanceFxController implements Initializable {
     //  ملء تاب بيانات الموظف
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * يتأكد إن بيانات الموظف الأساسية محمّلة، وميعملش call جديد
-     * لو الكاش موجود بالفعل لنفس الموظف.
-     */
     private void ensureEmployeeDetailsLoaded() {
         if (cachedScaleDto != null) {
             applyEmployeeDetails(cachedScaleDto);
@@ -283,7 +275,6 @@ public class AllowanceFxController implements Initializable {
                         ? dto.getQualitativeGroup()
                         : "—"
         );
-        // الدرجة من آخر نقطة في الـ timeline
         if (dto.getTimeline() != null && !dto.getTimeline().isEmpty()) {
             txt_empDegree.setText(
                     dto.getTimeline().getLast().getDegreeLabel()
@@ -295,15 +286,20 @@ public class AllowanceFxController implements Initializable {
     //  ملء جدول البدلات
     // ════════════════════════════════════════════════════════════
 
+    /**
+     * ترتيب السطور: استحقاقات → استقطاعات → عناصر عرض (حكومة).
+     * القيم بإشاراتها الأصلية في الـ DTO، والواجهة هي اللي بتعرض abs.
+     */
     private void fillAllowancesTable(AllowanceResultDto result) {
-        table_allowances.setItems(
-                FXCollections.observableArrayList(result.allowances())
-        );
+        List<AllowanceResultDto.AllowanceLineDto> sorted = result.allowances().stream()
+                .sorted(Comparator
+                        .comparingInt(this::sortPriority)
+                        .thenComparing(AllowanceResultDto.AllowanceLineDto::nameAr))
+                .toList();
 
-        // الإجمالي
-        lbl_total.setText(
-                result.totalAllowances().toPlainString() + " ج"
-        );
+        table_allowances.setItems(FXCollections.observableArrayList(sorted));
+
+        lbl_total.setText(result.totalAllowances().toPlainString() + " ج");
     }
 
     // ════════════════════════════════════════════════════════════
@@ -311,15 +307,32 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
-        // ملاحظة: AllowanceLineDto عبارة عن record — accessor methods بتاعته
-        // من غير بادئة get/is (مثلاً effectiveFrom()، مش getEffectiveFrom()).
-        // PropertyValueFactory بيدور بالـ reflection على أسلوب JavaBean
-        // التقليدي بس، فمبيلاقيش حاجة وبيرمي IllegalStateException وقت
-        // الرسم. عشان كده كل الأعمدة هنا بتستخدم lambda بتنادي الـ
-        // accessor مباشرة بدل PropertyValueFactory.
+        // ═══ اسم البدل ═══
         col_nameAr.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleStringProperty(d.getValue().nameAr()));
 
+        // ═══ عمود النوع — badge ملوّن ═══
+        col_elementType.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
+        col_elementType.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(ElementType et, boolean empty) {
+                super.updateItem(et, empty);
+                if (empty || et == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Label badge = new Label(elementTypeLabel(et));
+                badge.setStyle(elementTypeBadgeStyle(et));
+                badge.setPadding(new Insets(2, 8, 2, 8));
+                setGraphic(badge);
+                setText(null);
+                setStyle("-fx-alignment: CENTER;");
+            }
+        });
+
+        // ═══ عمود القيمة — abs + لون حسب النوع ═══
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -328,13 +341,17 @@ public class AllowanceFxController implements Initializable {
                 super.updateItem(val, empty);
                 if (empty || val == null) {
                     setText(null);
-                } else {
-                    setText(val.toPlainString() + " ج");
                     setStyle("-fx-alignment: CENTER;");
+                    return;
                 }
+                AllowanceResultDto.AllowanceLineDto line =
+                        getTableView().getItems().get(getIndex());
+                setText(val.abs().toPlainString() + " ج");
+                setStyle("-fx-alignment: CENTER; " + valueStyle(line));
             }
         });
 
+        // ═══ من تاريخ ═══
         col_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveFrom()));
         col_effectiveFrom.setCellFactory(tc -> new TableCell<>() {
@@ -346,7 +363,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // عمود المصدر مع Badge ملوّن
+        // ═══ المصدر — badge ملوّن ═══
         col_source.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().source()));
         col_source.setCellFactory(tc -> new TableCell<>() {
@@ -367,7 +384,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // عمود الإجراءات
+        // ═══ الإجراءات ═══
         col_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏ تعديل");
             private final Button btnDelete = new Button("🗑");
@@ -399,9 +416,13 @@ public class AllowanceFxController implements Initializable {
                     return;
                 }
                 AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
-                // EXCLUDED مش قابل للتعديل
+
                 boolean excluded = item.source() == AllowanceResultDto.AllowanceLineDto.Source.EXCLUDED;
-                btnEdit.setDisable(excluded);
+                boolean displayOnly = item.displayOnly();
+
+                // الأزرار معطّلة للـ EXCLUDED و displayOnly
+                btnEdit.setDisable(excluded || displayOnly);
+                btnDelete.setDisable(displayOnly);
 
                 HBox box = new HBox(6, btnEdit, btnDelete);
                 box.setStyle("-fx-alignment: CENTER;");
@@ -457,12 +478,6 @@ public class AllowanceFxController implements Initializable {
     //  فتح Dialog إدارة قواعد البدلات
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * بيفتح شاشة إدارة قواعد البدلات (allowance_definition) — إضافة
-     * بدل جديد بالكامل، إضافة snapshot جديد لكود موجود، تعديل أو حذف
-     * snapshot. لما الـ dialog يتقفل، بنعيد تحميل قائمة الـ Dropdown
-     * ({@link #loadDefinitions()}) عشان تعكس أي تعديل حصل.
-     */
     private void openDefinitionsDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(
@@ -487,6 +502,27 @@ public class AllowanceFxController implements Initializable {
         }
     }
 
+    private void openStatutoryDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/scale/allowance/StatutoryDialog.fxml"));
+            Parent root = loader.load();
+
+            StatutoryDialogController controller = loader.getController();
+            controller.init(() -> {
+                // لو فيه حاجة محتاجة تتحدث في الشاشة الرئيسية بعد الحفظ
+            });
+
+            Stage dialog = new Stage();
+            dialog.setTitle("إدارة الاستقطاعات القانونية");
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+        } catch (IOException ex) {
+            showError("خطأ في فتح شاشة الاستقطاعات: " + ex.getMessage());
+        }
+    }
+
     // ════════════════════════════════════════════════════════════
     //  عمليات API
     // ════════════════════════════════════════════════════════════
@@ -498,14 +534,19 @@ public class AllowanceFxController implements Initializable {
             return;
         }
 
-        // نفتح dialog فارغ لإدخال أول فترة
+        // نفتح dialog فارغ لإدخال أول فترة — allow الدالة دي مش هتنفع
+        // للـ statutory elements (تأمينات/ضريبة/دمغة) لأن دي مش بتتضاف يدوي.
         AllowanceResultDto.AllowanceLineDto dummy = new AllowanceResultDto.AllowanceLineDto(
                 selected.getCode(),
                 selected.getNameAr(),
                 BigDecimal.ZERO,
                 LocalDate.now(),
                 AllowanceResultDto.AllowanceLineDto.Source.MANUAL,
-                List.of()
+                List.of(),
+                ElementType.ENTITLEMENT,
+                false,
+                false,
+                false
         );
         openOverrideDialog(dummy);
     }
@@ -535,9 +576,6 @@ public class AllowanceFxController implements Initializable {
         confirm.setHeaderText(null);
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
-                // ملحوظة: إعادة الضبط بتمسح config البدلات بس (allowances
-                // JSONB)، وده مش مرتبط بـ cachedScaleDto (بيانات السلم
-                // الوظيفي) — فمش محتاجين نمسح الكاش هنا، البيانات لسه صحيحة.
                 FxApiSupport.delete(
                         "/allowances/employee/" + currentNationalId + "/reset",
                         this::loadAllowances,
@@ -548,8 +586,63 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Helpers
+    //  Helpers — عرض
     // ════════════════════════════════════════════════════════════
+
+    /**
+     * ترتيب العرض:
+     * 1 = استحقاقات (ENTITLEMENT)
+     * 2 = استقطاعات (DEDUCTION / INSURANCE / TAX / STAMP)
+     * 3 = عناصر عرض فقط (displayOnly — حصة الحكومة)
+     */
+    private int sortPriority(AllowanceResultDto.AllowanceLineDto line) {
+        if (line.displayOnly()) return 3;
+        if (line.elementType() == ElementType.ENTITLEMENT) return 1;
+        return 2;
+    }
+
+    /**
+     * لون القيمة:
+     * - استحقاق: أخضر غامق
+     * - استقطاع: أحمر غامق
+     * - عرض فقط (حكومة): رمادي italic
+     */
+    private String valueStyle(AllowanceResultDto.AllowanceLineDto line) {
+        if (line.displayOnly()) {
+            return "-fx-text-fill:#888; -fx-font-style:italic;";
+        }
+        if (line.value() != null && line.value().signum() < 0) {
+            return "-fx-text-fill:#c62828; -fx-font-weight:bold;";
+        }
+        return "-fx-text-fill:#2e7d32; -fx-font-weight:bold;";
+    }
+
+    /**
+     * التسمية العربية لنوع العنصر.
+     */
+    private String elementTypeLabel(ElementType et) {
+        return switch (et) {
+            case ENTITLEMENT -> "استحقاق";
+            case DEDUCTION -> "استقطاع";
+            case INSURANCE -> "تأمينات";
+            case TAX -> "ضريبة";
+            case STAMP -> "دمغة";
+        };
+    }
+
+    /**
+     * ستايل Badge النوع — لون لكل نوع.
+     */
+    private String elementTypeBadgeStyle(ElementType et) {
+        String base = "-fx-background-radius:4; -fx-font-weight:bold; -fx-text-fill:white; -fx-font-size:11;";
+        return base + switch (et) {
+            case ENTITLEMENT -> "-fx-background-color:#2e7d32;";  // أخضر
+            case DEDUCTION -> "-fx-background-color:#c62828;";  // أحمر
+            case INSURANCE -> "-fx-background-color:#1565c0;";  // أزرق
+            case TAX -> "-fx-background-color:#6a1b9a;";  // بنفسجي
+            case STAMP -> "-fx-background-color:#e65100;";  // برتقالي
+        };
+    }
 
     private String sourceLabel(AllowanceResultDto.AllowanceLineDto.Source src) {
         return switch (src) {

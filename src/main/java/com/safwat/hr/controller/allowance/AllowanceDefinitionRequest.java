@@ -26,7 +26,6 @@ import java.util.Map;
  * حسب calcType المختار.
  */
 public record AllowanceDefinitionRequest(
-
         String code,
         String nameAr,
         String nameEn,
@@ -35,28 +34,14 @@ public record AllowanceDefinitionRequest(
         CalcType calcType,
         BaseSource baseSource,
         Scope scope,
-
-        /** ENTITLEMENT (افتراضي) | DEDUCTION | INSURANCE | TAX | STAMP */
         ElementType elementType,
-
-        /** هل داخل في وعاء اشتراك التأمينات؟ */
         boolean subjectToInsurance,
-
-        /** هل داخل في وعاء ضريبة الدخل والدمغة؟ */
         boolean subjectToTaxAndStamp,
-
-        /** { "6": 45, "7": 50 } أو { "all": 300 } أو { "percent": 10 } — حسب calcType */
         Map<String, BigDecimal> valuesMap,
-
-        /** ["2023-08", "2023-09"] */
         List<String> excludedMonths,
-
-        /** ["47", "81"] — null = كل القوانين */
         List<String> eligibleLaws,
-
-        /** ["7", "7.1"] — null = كل الأكواد الوظيفية */
         List<String> eligibleLawCodes,
-
+        TimelineAnchor timelineAnchor,        // ← لازم يكون موجود
         String notes
 ) {
 }

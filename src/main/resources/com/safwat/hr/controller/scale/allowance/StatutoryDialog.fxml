@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane prefHeight="800.0" prefWidth="1200.0"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.statutory.StatutoryDialogController">
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="870" prefWidth="1180" spacing="16" styleClass="card">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="20"/>
+            </padding>
+
+            <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header"
+                   text="إدارة الاستقطاعات القانونية"/>
+
+            <TabPane tabClosingPolicy="UNAVAILABLE" prefHeight="720">
+
+                <!-- ═══════════════════════════════════════════════════════
+                     Tab 1 — التأمينات
+                ═══════════════════════════════════════════════════════ -->
+                <Tab text="التأمينات">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets bottom="12" left="12" right="12" top="12"/>
+                        </padding>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="12">
+                            <Label styleClass="panel-header compact"
+                                   text="إعدادات التأمينات (نسب + حدود الوعاء)" HBox.hgrow="ALWAYS"
+                                   maxWidth="Infinity"/>
+                            <Button onAction="#onAddInsurance" prefHeight="34" prefWidth="160"
+                                    styleClass="btn-success" text="+ إضافة إعداد"/>
+                        </HBox>
+
+                        <TableView fx:id="table_insurance" prefHeight="280" nodeOrientation="RIGHT_TO_LEFT">
+                            <columns>
+                                <TableColumn fx:id="col_ins_from" prefWidth="110" text="من تاريخ"/>
+                                <TableColumn fx:id="col_ins_to" prefWidth="110" text="إلى تاريخ"/>
+                                <TableColumn fx:id="col_ins_mode" prefWidth="90" text="النوع"/>
+                                <TableColumn fx:id="col_ins_employee" prefWidth="160" text="نسبة الموظف %"/>
+                                <TableColumn fx:id="col_ins_employer" prefWidth="180" text="نسبة صاحب العمل %"/>
+                                <TableColumn fx:id="col_ins_floor" prefWidth="110" text="الحد الأدنى"/>
+                                <TableColumn fx:id="col_ins_ceiling" prefWidth="110" text="الحد الأقصى"/>
+                                <TableColumn fx:id="col_ins_actions" prefWidth="110" text="إجراءات"/>
+                            </columns>
+                        </TableView>
+
+                        <VBox fx:id="pane_ins_form" managed="false" spacing="12" styleClass="card" visible="false">
+                            <padding>
+                                <Insets bottom="14" left="14" right="14" top="12"/>
+                            </padding>
+                            <Label fx:id="lbl_ins_form_title" styleClass="bold fs-14" text="إضافة إعداد"/>
+
+                            <!-- التاريخ -->
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="من تاريخ *"/>
+                                    <TextField fx:id="txt_ins_from" prefWidth="160" promptText="2024-01-01"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="إلى تاريخ"/>
+                                    <TextField fx:id="txt_ins_to" prefWidth="160" promptText="(فاضي = ساري)"/>
+                                </VBox>
+                            </HBox>
+
+                            <!-- ═══ النظام الموحّد (بعد 2020) ═══ -->
+                            <Label styleClass="bold fs-12 text-navy"
+                                   text="— النظام الموحّد (بعد 2020) — اترك فارغ لو بتستخدم نظام الوعائين"/>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="نسبة الموظف %"/>
+                                    <TextField fx:id="txt_ins_employee" prefWidth="160" promptText="11"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="نسبة صاحب العمل %"/>
+                                    <TextField fx:id="txt_ins_employer" prefWidth="160" promptText="17.25"/>
+                                </VBox>
+                            </HBox>
+
+                            <!-- ═══ نظام الوعائين (قبل 2020) ═══ -->
+                            <Label styleClass="bold fs-12 text-navy"
+                                   text="— نظام الوعائين (قبل 2020) — اترك فارغ لو بتستخدم النظام الموحّد"/>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="موظف (أساسي) %"/>
+                                    <TextField fx:id="txt_ins_basic_employee" prefWidth="150" promptText="13"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="صاحب عمل (أساسي) %"/>
+                                    <TextField fx:id="txt_ins_basic_employer" prefWidth="150" promptText="17"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="موظف (متغير) %"/>
+                                    <TextField fx:id="txt_ins_variable_employee" prefWidth="150" promptText="10"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="صاحب عمل (متغير) %"/>
+                                    <TextField fx:id="txt_ins_variable_employer" prefWidth="150" promptText="15"/>
+                                </VBox>
+                            </HBox>
+
+                            <!-- الحدود المشتركة -->
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="الحد الأدنى"/>
+                                    <TextField fx:id="txt_ins_floor" prefWidth="140" promptText="2000"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="الحد الأقصى"/>
+                                    <TextField fx:id="txt_ins_ceiling" prefWidth="140" promptText="12600"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="ملاحظات"/>
+                                    <TextField fx:id="txt_ins_notes" maxWidth="Infinity"/>
+                                </VBox>
+                            </HBox>
+
+                            <Label fx:id="lbl_ins_error" styleClass="text-danger fs-12" visible="false"/>
+                            <HBox spacing="10">
+                                <Button fx:id="btn_ins_save" prefWidth="100" styleClass="btn-primary" text="💾 حفظ"/>
+                                <Button fx:id="btn_ins_cancel" prefWidth="90" styleClass="btn-secondary" text="إلغاء"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </Tab>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     Tab 2 — الضريبة
+                ═══════════════════════════════════════════════════════ -->
+                <Tab text="الضريبة">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets bottom="12" left="12" right="12" top="12"/>
+                        </padding>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="12">
+                            <Label styleClass="panel-header compact"
+                                   text="شرائح ضريبة الدخل (القيم سنوية — تُقسَّم على 12 في المحرك)"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Button onAction="#onAddTax" prefHeight="34" prefWidth="160"
+                                    styleClass="btn-success" text="+ إضافة شريحة"/>
+                        </HBox>
+
+                        <TableView fx:id="table_tax" prefHeight="280" nodeOrientation="RIGHT_TO_LEFT">
+                            <columns>
+                                <TableColumn fx:id="col_tax_from" prefWidth="120" text="من تاريخ"/>
+                                <TableColumn fx:id="col_tax_to" prefWidth="120" text="إلى تاريخ"/>
+                                <TableColumn fx:id="col_tax_order" prefWidth="80" text="الترتيب"/>
+                                <TableColumn fx:id="col_tax_fromAmt" prefWidth="140" text="من مبلغ"/>
+                                <TableColumn fx:id="col_tax_toAmt" prefWidth="140" text="إلى مبلغ"/>
+                                <TableColumn fx:id="col_tax_rate" prefWidth="100" text="النسبة %"/>
+                                <TableColumn fx:id="col_tax_actions" prefWidth="110" text="إجراءات"/>
+                            </columns>
+                        </TableView>
+
+                        <VBox fx:id="pane_tax_form" managed="false" spacing="12" styleClass="card" visible="false">
+                            <padding>
+                                <Insets bottom="14" left="14" right="14" top="12"/>
+                            </padding>
+                            <Label fx:id="lbl_tax_form_title" styleClass="bold fs-14" text="إضافة شريحة"/>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="من تاريخ *"/>
+                                    <TextField fx:id="txt_tax_from" prefWidth="140" promptText="2024-01-01"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="إلى تاريخ"/>
+                                    <TextField fx:id="txt_tax_to" prefWidth="140" promptText="(فاضي = ساري)"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="الترتيب *"/>
+                                    <TextField fx:id="txt_tax_order" prefWidth="80" promptText="1"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="النسبة % *"/>
+                                    <TextField fx:id="txt_tax_rate" prefWidth="100" promptText="10"/>
+                                </VBox>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="من مبلغ *"/>
+                                    <TextField fx:id="txt_tax_fromAmt" prefWidth="140" promptText="20000"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="إلى مبلغ"/>
+                                    <TextField fx:id="txt_tax_toAmt" prefWidth="140"
+                                               promptText="30000 (فاضي = آخِر شريحة)"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="ملاحظات"/>
+                                    <TextField fx:id="txt_tax_notes" maxWidth="Infinity"/>
+                                </VBox>
+                            </HBox>
+                            <Label fx:id="lbl_tax_error" styleClass="text-danger fs-12" visible="false"/>
+                            <HBox spacing="10">
+                                <Button fx:id="btn_tax_save" prefWidth="100" styleClass="btn-primary" text="💾 حفظ"/>
+                                <Button fx:id="btn_tax_cancel" prefWidth="90" styleClass="btn-secondary" text="إلغاء"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </Tab>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     Tab 3 — الدمغة
+                ═══════════════════════════════════════════════════════ -->
+                <Tab text="الدمغة">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets bottom="12" left="12" right="12" top="12"/>
+                        </padding>
+
+                        <HBox alignment="CENTER_RIGHT" spacing="12">
+                            <Label styleClass="panel-header compact"
+                                   text="شرائح الدمغة (نسب على الوعاء الضريبي)"
+                                   HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                            <Button onAction="#onAddStamp" prefHeight="34" prefWidth="160"
+                                    styleClass="btn-success" text="+ إضافة شريحة"/>
+                        </HBox>
+
+                        <TableView fx:id="table_stamp" prefHeight="280" nodeOrientation="RIGHT_TO_LEFT">
+                            <columns>
+                                <TableColumn fx:id="col_stamp_from" prefWidth="120" text="من تاريخ"/>
+                                <TableColumn fx:id="col_stamp_to" prefWidth="120" text="إلى تاريخ"/>
+                                <TableColumn fx:id="col_stamp_order" prefWidth="80" text="الترتيب"/>
+                                <TableColumn fx:id="col_stamp_fromAmt" prefWidth="140" text="من مبلغ"/>
+                                <TableColumn fx:id="col_stamp_toAmt" prefWidth="140" text="إلى مبلغ"/>
+                                <TableColumn fx:id="col_stamp_rate" prefWidth="100" text="النسبة %"/>
+                                <TableColumn fx:id="col_stamp_actions" prefWidth="110" text="إجراءات"/>
+                            </columns>
+                        </TableView>
+
+                        <VBox fx:id="pane_stamp_form" managed="false" spacing="12" styleClass="card" visible="false">
+                            <padding>
+                                <Insets bottom="14" left="14" right="14" top="12"/>
+                            </padding>
+                            <Label fx:id="lbl_stamp_form_title" styleClass="bold fs-14" text="إضافة شريحة"/>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="من تاريخ *"/>
+                                    <TextField fx:id="txt_stamp_from" prefWidth="140" promptText="2024-01-01"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="إلى تاريخ"/>
+                                    <TextField fx:id="txt_stamp_to" prefWidth="140" promptText="(فاضي = ساري)"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="الترتيب *"/>
+                                    <TextField fx:id="txt_stamp_order" prefWidth="80" promptText="1"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="النسبة % *"/>
+                                    <TextField fx:id="txt_stamp_rate" prefWidth="100" promptText="0.5"/>
+                                </VBox>
+                            </HBox>
+                            <HBox alignment="CENTER_RIGHT" spacing="14">
+                                <VBox spacing="6">
+                                    <Label text="من مبلغ *"/>
+                                    <TextField fx:id="txt_stamp_fromAmt" prefWidth="140" promptText="0"/>
+                                </VBox>
+                                <VBox spacing="6">
+                                    <Label text="إلى مبلغ"/>
+                                    <TextField fx:id="txt_stamp_toAmt" prefWidth="140"
+                                               promptText="50 (فاضي = آخِر شريحة)"/>
+                                </VBox>
+                                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                    <Label text="ملاحظات"/>
+                                    <TextField fx:id="txt_stamp_notes" maxWidth="Infinity"/>
+                                </VBox>
+                            </HBox>
+                            <Label fx:id="lbl_stamp_error" styleClass="text-danger fs-12" visible="false"/>
+                            <HBox spacing="10">
+                                <Button fx:id="btn_stamp_save" prefWidth="100" styleClass="btn-primary" text="💾 حفظ"/>
+                                <Button fx:id="btn_stamp_cancel" prefWidth="90" styleClass="btn-secondary"
+                                        text="إلغاء"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </Tab>
+
+            </TabPane>
+
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btn_close" prefHeight="38" prefWidth="100"
+                        styleClass="btn-secondary" text="إغلاق"/>
+            </HBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

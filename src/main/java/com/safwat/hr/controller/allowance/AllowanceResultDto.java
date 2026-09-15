@@ -10,10 +10,6 @@ import java.util.Map;
  *
  * <p>يُستقبل من GET /api/allowances/employee/{nationalId}
  * ويُملأ به {@code table_allowances} في {@code AllowanceFxController}.
- *
- * <p>يعكس بالضبط {@code AllowanceResultDto} في الباك —
- * بما فيها {@code OverrideEntry} من هذا الـ package
- * (مش من entity الباك).
  */
 public record AllowanceResultDto(
 
@@ -25,13 +21,6 @@ public record AllowanceResultDto(
 
     /**
      * سطر بدل واحد في الجدول.
-     *
-     * <p>بيُستخدم كـ item في {@code TableView<AllowanceLineDto>}
-     * في {@code AllowanceFxController}.
-     *
-     * <p>ملاحظة: الـ record fields محتاجة getters بالشكل الاعتيادي
-     * (بدون is/get) عشان {@code PropertyValueFactory} يشتغل معها
-     * صح في جدول JavaFX — وده السلوك الافتراضي للـ records.
      */
     public record AllowanceLineDto(
 
@@ -41,7 +30,12 @@ public record AllowanceResultDto(
             /** اسم البدل بالعربي */
             String nameAr,
 
-            /** القيمة المحسوبة في التاريخ المطلوب */
+            /**
+             * القيمة المحسوبة في التاريخ المطلوب.
+             * <p><b>ملاحظة:</b> القيمة بإشارتها الأصلية:
+             * موجبة للاستحقاقات، سالبة للاستقطاعات.
+             * الواجهة هي اللي بتعرض القيمة المطلقة (abs) مع عمود النوع.
+             */
             BigDecimal value,
 
             /** تاريخ بداية القيمة الحالية */
@@ -53,50 +47,71 @@ public record AllowanceResultDto(
             /**
              * الفترات اليدوية المخزنة.
              * null لو source = AUTO أو EXCLUDED.
-             * بيُعرض في {@code AllowanceOverrideDialogController}.
              */
-            List<OverrideEntry> overrides
+            List<OverrideEntry> overrides,
+
+            /**
+             * نوع العنصر — لتحديد العرض (لون، ترتيب).
+             * <ul>
+             *   <li>ENTITLEMENT — استحقاق</li>
+             *   <li>DEDUCTION   — استقطاع عادي</li>
+             *   <li>INSURANCE   — تأمينات</li>
+             *   <li>TAX         — ضريبة</li>
+             *   <li>STAMP       — دمغة</li>
+             * </ul>
+             */
+            ElementType elementType,
+
+            /**
+             * هل السطر ده في وعاء التأمينات؟
+             */
+            boolean subjectToInsurance,
+
+            /**
+             * هل السطر ده في وعاء الضريبة/الدمغة؟
+             */
+            boolean subjectToTaxAndStamp,
+
+            /**
+             * <b>عرض فقط</b> — لو true، السطر مش بيتحسب في الإجمالي.
+             * <p>بيُستخدم لحصة الحكومة من التأمينات (مش بتتخصم من الموظف،
+             * بس بتتعرض للتوضيح).
+             */
+            boolean displayOnly
     ) {
 
         public enum Source {
-            /**
-             * محسوب تلقائياً من allowance_definition
-             */
             AUTO,
-            /**
-             * قيمة يدوية من المستخدم
-             */
             MANUAL,
-            /**
-             * شهر مستثنى — القيمة صفر
-             */
             EXCLUDED
         }
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Request DTOs — بتُبنى في الفرونت وتُرسل للباك
+    //  Enums — مطابقة للباك
     // ══════════════════════════════════════════════════════════════
 
     /**
-     * تعديل أو إضافة فترات يدوية لبدل معين.
-     *
-     * <p>يُرسل في PUT /api/allowances/employee/{nationalId}/override
-     * من {@code AllowanceOverrideDialogController#handleSaveAll()}.
+     * نوع العنصر — نفس enum الباك بالظبط.
      */
+    public enum ElementType {
+        ENTITLEMENT,
+        DEDUCTION,
+        INSURANCE,
+        TAX,
+        STAMP
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Request DTOs
+    // ══════════════════════════════════════════════════════════════
+
     public record OverrideRequest(
             String allowanceCode,
             List<OverrideEntry> entries
     ) {
     }
 
-    /**
-     * إضافة بدل جديد للموظف مع أول فترة يدوية.
-     *
-     * <p>يُرسل في POST /api/allowances/employee/{nationalId}/allowance
-     * من {@code AllowanceFxController#handleAddAllowance()} عبر
-     * {@code AllowanceOverrideDialogController}.
-     */
     public record AddAllowanceRequest(
             String allowanceCode,
             LocalDate from,
@@ -109,12 +124,6 @@ public record AllowanceResultDto(
     //  Timeline
     // ══════════════════════════════════════════════════════════════
 
-    /**
-     * ناتج الاحتساب على فترة كاملة — للكشف الشهري.
-     *
-     * <p>يُستقبل من GET /api/allowances/employee/{nationalId}/timeline
-     * Map<تاريخ نقطة التغيير، إجمالي البدلات>
-     */
     public record AllowanceTimelineDto(
             String nationalId,
             Map<LocalDate, BigDecimal> timeline

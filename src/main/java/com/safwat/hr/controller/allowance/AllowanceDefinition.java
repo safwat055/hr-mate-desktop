@@ -119,7 +119,8 @@ public class AllowanceDefinition {
      * هل داخل في وعاء ضريبة الدخل والدمغة؟
      */
     private boolean subjectToTaxAndStamp;
-
+    
+    private TimelineAnchor timelineAnchor;
     private String notes;
 
     // ══════════════════════════════════════════════════════════════
@@ -157,6 +158,11 @@ public class AllowanceDefinition {
     public enum Scope {
         GENERAL,
         SPECIAL
+    }
+
+    public enum TimelineAnchor {
+        TARGET_DATE,       // الحالة عند targetDate (الافتراضي)
+        EFFECTIVE_FROM     // الحالة عند تاريخ سريان البدل
     }
 
     public enum ElementType {

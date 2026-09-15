@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  * <p>مبني على {@link ApiResponse#isSuccess()}, {@link ApiResponse#getData()},
  * {@link ApiResponse#getMessage()}.
  */
-final class FxApiSupport {
+public final class FxApiSupport {
 
     private FxApiSupport() {
     }
@@ -34,7 +34,7 @@ final class FxApiSupport {
     // ─────────────────────────────────────────────
 
     static <T> void get(String path, Class<T> type,
-                         Consumer<T> onSuccess, Consumer<String> onError) {
+                        Consumer<T> onSuccess, Consumer<String> onError) {
         ApiClient.getAsync(path, type)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -44,8 +44,8 @@ final class FxApiSupport {
      * ممكن نبنيها جوه ميثود generic بسبب type erasure). مثال:
      * <pre>{@code FxApiSupport.getList("/api/x", new TypeReference<List<X>>() {}, onS, onE);}</pre>
      */
-    static <T> void getList(String path, TypeReference<List<T>> typeRef,
-                             Consumer<List<T>> onSuccess, Consumer<String> onError) {
+    public static <T> void getList(String path, TypeReference<List<T>> typeRef,
+                                   Consumer<List<T>> onSuccess, Consumer<String> onError) {
         ApiClient.getAsync(path, Map.of(), typeRef)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -54,8 +54,8 @@ final class FxApiSupport {
     //  POST
     // ─────────────────────────────────────────────
 
-    static <T> void post(String path, Object body, Class<T> type,
-                          Consumer<T> onSuccess, Consumer<String> onError) {
+    public static <T> void post(String path, Object body, Class<T> type,
+                                Consumer<T> onSuccess, Consumer<String> onError) {
         ApiClient.postAsync(path, body, type)
                 .thenAccept(resp -> Platform.runLater(() -> handle(resp, onSuccess, onError)));
     }
@@ -64,8 +64,8 @@ final class FxApiSupport {
     //  PUT — مفيش async جاهزة في ApiClient، بنغلفها إحنا
     // ─────────────────────────────────────────────
 
-    static <T> void put(String path, Object body, Class<T> type,
-                         Consumer<T> onSuccess, Consumer<String> onError) {
+    public static <T> void put(String path, Object body, Class<T> type,
+                               Consumer<T> onSuccess, Consumer<String> onError) {
         CompletableFuture
                 .supplyAsync(() -> {
                     try {
@@ -86,7 +86,7 @@ final class FxApiSupport {
     //  (الباك اند بيلفها بـ Optional.of(true))
     // ─────────────────────────────────────────────
 
-    static void delete(String path, Runnable onSuccess, Consumer<String> onError) {
+    public static void delete(String path, Runnable onSuccess, Consumer<String> onError) {
         CompletableFuture
                 .supplyAsync(() -> {
                     try {

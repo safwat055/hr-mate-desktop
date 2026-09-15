@@ -12,22 +12,25 @@
     ملاحظة:
       - تاريخ السريان حقل نصي بصيغة yyyy-MM-dd (وليس DatePicker)
       - valuesMap key يبقى ComboBox بالدرجات + all + percent
+      - الجداول ثابتة الحجم (minHeight) — لا تصغر عند ظهور الفورم
 -->
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<ScrollPane prefHeight="709.0" prefWidth="1082.0" xmlns="http://javafx.com/javafx/26"
+<ScrollPane fitToWidth="true" prefHeight="800" prefWidth="1180"
+            xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.safwat.hr.controller.allowance.AllowanceDefinitionDialogController">
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="800" prefWidth="1080" spacing="18" styleClass="card">
+        <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="18" styleClass="card">
 
             <padding>
                 <Insets bottom="20" left="20" right="20" top="20"/>
             </padding>
 
-            <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="إدارة قواعد البدلات"/>
+            <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header"
+                   text="إدارة قواعد البدلات"/>
 
             <!-- ══════════════════════════════════════════════════
                  جدول كل القواعد (أحدث snapshot لكل كود)
@@ -39,11 +42,13 @@
                     </padding>
                     <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header compact"
                            text="كل قواعد البدلات" HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btn_new_code" prefHeight="34" prefWidth="160" styleClass="btn-success"
-                            text="+ بدل جديد بالكامل"/>
+                    <Button fx:id="btn_new_code" prefHeight="34" prefWidth="160"
+                            styleClass="btn-success" text="+ بدل جديد بالكامل"/>
                 </HBox>
 
-                <TableView fx:id="table_definitions" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="210"
+                <TableView fx:id="table_definitions" editable="false"
+                           nodeOrientation="RIGHT_TO_LEFT"
+                           prefHeight="220" minHeight="220"
                            styleClass="bold">
                     <columns>
                         <TableColumn fx:id="col_def_code" prefWidth="100" text="الكود"/>
@@ -69,12 +74,15 @@
                         <Insets bottom="10" left="12" right="12" top="10"/>
                     </padding>
                     <Label fx:id="lbl_history_title" alignment="CENTER" maxWidth="Infinity"
-                           styleClass="panel-header compact" text="اختر بدل من الأعلى لعرض تاريخه" HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="btn_new_snapshot" prefHeight="34" prefWidth="180" styleClass="btn-purple"
-                            text="+ تاريخ سريان جديد"/>
+                           styleClass="panel-header compact"
+                           text="اختر بدل من الأعلى لعرض تاريخه" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btn_new_snapshot" prefHeight="34" prefWidth="180"
+                            styleClass="btn-purple" text="+ تاريخ سريان جديد"/>
                 </HBox>
 
-                <TableView fx:id="table_history" editable="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="190"
+                <TableView fx:id="table_history" editable="false"
+                           nodeOrientation="RIGHT_TO_LEFT"
+                           prefHeight="220" minHeight="220"
                            styleClass="bold">
                     <columns>
                         <TableColumn fx:id="col_hist_effectiveFrom" prefWidth="120" text="من تاريخ"/>
@@ -116,7 +124,8 @@
                     </VBox>
                     <VBox spacing="6">
                         <Label styleClass="bold fs-12" text="تاريخ السريان (yyyy-MM-dd) *"/>
-                        <TextField fx:id="txt_effectiveFrom" prefHeight="36" prefWidth="180" promptText="2024-07-01"/>
+                        <TextField fx:id="txt_effectiveFrom" prefHeight="36" prefWidth="180"
+                                   promptText="2024-07-01"/>
                     </VBox>
                 </HBox>
 
@@ -140,7 +149,7 @@
                     </VBox>
                 </HBox>
 
-                <!-- الصف 3: تصنيف العنصر -->
+                <!-- الصف 3: تصنيف العنصر + مصدر الدرجة (Timeline Anchor) -->
                 <HBox alignment="CENTER_RIGHT" spacing="18" styleClass="card">
                     <padding>
                         <Insets bottom="10" left="14" right="14" top="10"/>
@@ -148,6 +157,10 @@
                     <VBox spacing="6">
                         <Label styleClass="bold fs-12" text="طبيعة العنصر *"/>
                         <ComboBox fx:id="combo_elementType" prefHeight="36" prefWidth="170"/>
+                    </VBox>
+                    <VBox spacing="6">
+                        <Label styleClass="bold fs-12" text="مصدر الدرجة"/>
+                        <ComboBox fx:id="combo_timelineAnchor" prefHeight="36" prefWidth="220"/>
                     </VBox>
                     <Separator orientation="VERTICAL"/>
                     <CheckBox fx:id="chk_subjectToInsurance" text="خاضع للتأمينات"/>
@@ -158,13 +171,16 @@
                 <VBox spacing="8">
                     <Label styleClass="bold fs-12" text="القيم (اختر المفتاح من القائمة وأدخل القيمة) *"/>
                     <HBox alignment="CENTER_RIGHT" spacing="10">
-                        <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="220" promptText="اختر المفتاح"/>
+                        <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="220"
+                                  promptText="اختر المفتاح"/>
                         <TextField fx:id="txt_map_value" prefHeight="34" prefWidth="120" promptText="القيمة"/>
-                        <Button fx:id="btn_add_map_entry" prefHeight="34" prefWidth="90" styleClass="btn-success"
-                                text="+ إضافة"/>
+                        <Button fx:id="btn_add_map_entry" prefHeight="34" prefWidth="90"
+                                styleClass="btn-success" text="+ إضافة"/>
                     </HBox>
-                    <TableView fx:id="table_values" editable="false" maxHeight="-Infinity" minHeight="-Infinity"
-                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="150">
+                    <TableView fx:id="table_values" editable="false"
+                               maxHeight="-Infinity" minHeight="150"
+                               nodeOrientation="RIGHT_TO_LEFT"
+                               prefHeight="150">
                         <columns>
                             <TableColumn fx:id="col_map_key" prefWidth="220" text="المفتاح"/>
                             <TableColumn fx:id="col_map_value" prefWidth="140" text="القيمة"/>
@@ -176,16 +192,20 @@
                 <!-- الاستحقاق والاستثناءات -->
                 <HBox alignment="CENTER_RIGHT" spacing="18">
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label styleClass="bold fs-12" text="الشهور المستثناة (yyyy-MM، مفصولة بفاصلة)"/>
-                        <TextField fx:id="txt_excludedMonths" prefHeight="34" promptText="2023-08, 2023-09"/>
+                        <Label styleClass="bold fs-12"
+                               text="الشهور المستثناة (yyyy-MM، مفصولة بفاصلة)"/>
+                        <TextField fx:id="txt_excludedMonths" prefHeight="34"
+                                   promptText="2023-08, 2023-09"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                         <Label styleClass="bold fs-12" text="القوانين المستحقة (فارغ = الكل)"/>
                         <TextField fx:id="txt_eligibleLaws" prefHeight="34" promptText="47, 81"/>
                     </VBox>
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
-                        <Label styleClass="bold fs-12" text="الأكواد الوظيفية المستحقة (فارغ = الكل)"/>
-                        <TextField fx:id="txt_eligibleLawCodes" prefHeight="34" promptText="7, 7.1, 7.2"/>
+                        <Label styleClass="bold fs-12"
+                               text="الأكواد الوظيفية المستحقة (فارغ = الكل)"/>
+                        <TextField fx:id="txt_eligibleLawCodes" prefHeight="34"
+                                   promptText="7, 7.1, 7.2"/>
                     </VBox>
                 </HBox>
 
@@ -197,10 +217,10 @@
                 <Label fx:id="lbl_form_error" styleClass="text-danger fs-12" visible="false"/>
 
                 <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Button fx:id="btn_save_definition" prefHeight="38" prefWidth="110" styleClass="btn-primary"
-                            text="💾 حفظ"/>
-                    <Button fx:id="btn_cancel_form" prefHeight="38" prefWidth="90" styleClass="btn-secondary"
-                            text="إلغاء"/>
+                    <Button fx:id="btn_save_definition" prefHeight="38" prefWidth="110"
+                            styleClass="btn-primary" text="💾 حفظ"/>
+                    <Button fx:id="btn_cancel_form" prefHeight="38" prefWidth="90"
+                            styleClass="btn-secondary" text="إلغاء"/>
                 </HBox>
             </VBox>
 
@@ -208,7 +228,8 @@
 
             <HBox alignment="CENTER_LEFT" spacing="12">
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="btn_close" prefHeight="38" prefWidth="100" styleClass="btn-secondary" text="إغلاق"/>
+                <Button fx:id="btn_close" prefHeight="38" prefWidth="100"
+                        styleClass="btn-secondary" text="إغلاق"/>
             </HBox>
 
         </VBox>
