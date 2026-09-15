@@ -1,6 +1,5 @@
 package com.safwat.hr.controller.allowance;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.allowance.AllowanceDefinition.*;
 import javafx.collections.FXCollections;
@@ -17,8 +16,10 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -36,17 +37,15 @@ import java.util.stream.Collectors;
  *       لوعاء التأمينات و/أو الضريبة والدمغة</li>
  * </ul>
  *
- * <p>الفورم مرن مع {@code valuesMap} — بيتعامل معاه كـ قائمة مفتاح/قيمة
- * حرة، فمش محتاجين نعرف مسبقًا هل المفتاح رقم درجة أو "all" أو "percent".
+ * <p><b>عرض عربي:</b> كل الـ enums بتتعرض بأسماء عربي مفهومة للمستخدم،
+ * والقيم الفعلية (الإنجليزية) هي اللي بتتبعت للباك.
  *
- * <p><b>عرض عربي:</b> كل الـ enums (behavior, calcType, baseSource,
- * scope, elementType) بتتعرض بأسماء عربي مفهومة للمستخدم في الجداول
- * والـ ComboBoxes — القيمة الفعلية (الإنجليزية) هي اللي بتتبعت للباك
- * اند، العرض بس هو اللي بيتترجم. راجع {@link #arabicConverter} وقاموس
- * التسميات تحت.
- *
- * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport} فوق
- * {@code com.safwat.hr.network.ApiClient} الـ static.
+ * <p><b>التحكم في الإدخال:</b>
+ * <ul>
+ *   <li>{@code valuesMap} key → ComboBox (الدرجات + all + percent)</li>
+ *   <li>التاريخ → TextField بصيغة {@code yyyy-MM-dd} + validation</li>
+ *   <li>الشهور المستثناة → TextField بصيغة {@code yyyy-MM} + validation</li>
+ * </ul>
  */
 public class AllowanceDefinitionDialogController implements Initializable {
 
@@ -103,7 +102,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TextField txt_nameEn;
     @FXML
-    private DatePicker date_effectiveFrom;
+    private TextField txt_effectiveFrom;      // ← نصي بدل DatePicker
     @FXML
     private ComboBox<Behavior> combo_behavior;
     @FXML
@@ -127,7 +126,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TextArea txt_notes;
 
-    // valuesMap — مفتاح/قيمة حر
+    // valuesMap — مفتاح (ComboBox) / قيمة (TextField)
     @FXML
     private TableView<MapEntryRow> table_values;
     @FXML
@@ -137,7 +136,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<MapEntryRow, Void> col_map_actions;
     @FXML
-    private TextField txt_map_key;
+    private ComboBox<MapKeyOption> combo_map_key;   // ← ComboBox بدل TextField
     @FXML
     private TextField txt_map_value;
     @FXML
@@ -154,15 +153,49 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     // ── State ────────────────────────────────────────────────────
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
+    private static final Pattern MONTH_PATTERN = Pattern.compile("^\\d{4}-\\d{2}$");
+
     private final ObservableList<MapEntryRow> valueRows = FXCollections.observableArrayList();
     private Long editingId = null; // null = إنشاء جديد
-    private Runnable onChanged; // بينادى لما نقفل الدايلوج لو حصل أي تعديل
+    private Runnable onChanged;
 
     /**
-     * سطر مفتاح/قيمة واحد في valuesMap
+     * سطر مفتاح/قيمة واحد في valuesMap.
+     * المفتاح String (بيتبعت للباك كـ String).
      */
     private record MapEntryRow(String key, BigDecimal value) {
     }
+
+    /**
+     * خيار في ComboBox الـ valuesMap key.
+     * {@code value} هي القيمة المُرسلة للباك ("6", "all", "percent")
+     * {@code label} هو العرض العربي
+     */
+    private record MapKeyOption(String value, String label) {
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    /**
+     * قائمة الخيارات المتاحة للـ valuesMap key.
+     * الدرجات من 6 لـ -2 بالأسماء العربية + all + percent.
+     */
+    private static final List<MapKeyOption> MAP_KEY_OPTIONS = List.of(
+            new MapKeyOption("6", "السادسة (6)"),
+            new MapKeyOption("5", "الخامسة (5)"),
+            new MapKeyOption("4", "الرابعة (4)"),
+            new MapKeyOption("3", "الثالثة (3)"),
+            new MapKeyOption("2", "الثانية (2)"),
+            new MapKeyOption("1", "الأولى (1)"),
+            new MapKeyOption("0", "مدير عام (0)"),
+            new MapKeyOption("-1", "العالية (-1)"),
+            new MapKeyOption("-2", "الممتازة (-2)"),
+            new MapKeyOption("all", "كل الدرجات (all)"),
+            new MapKeyOption("percent", "نسبة من المحرك (percent)")
+    );
 
     // ════════════════════════════════════════════════════════════
     //  قاموس التسميات العربية — عرض بس، القيمة المُرسلة تفضل enum name
@@ -183,13 +216,15 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case FIXED_AMOUNT -> "مبلغ ثابت لكل الدرجات";
             case SALARY_ENGINE -> "نسبة من إجمالي المحرك";
             case DEPENDS_SALARY_ENGINE -> "مبلغ بعد اكتمال المحرك";
+            case COMPENSATORY_BONUS -> "الحافز التعويضي";
+            case SUPPLEMENTARY_BONUS -> "الحافز التكميلي";
         };
     }
 
     private static String baseSourceLabel(BaseSource s) {
         return switch (s) {
             case FROM_BASIC -> "من الأساسي 30/6";
-            case FROM_STEP_SALARY -> "من أساسي الدرجة";
+            case FROM_STEP_SALARY -> "من مربوط الدرجة";
             case CURRENT_BASIC -> "من الأساسي الحالي";
         };
     }
@@ -211,9 +246,6 @@ public class AllowanceDefinitionDialogController implements Initializable {
         };
     }
 
-    /**
-     * بيبني StringConverter بيعرض تسمية عربي لكل enum، من غير ما يغيّر القيمة الفعلية.
-     */
     @SuppressWarnings("unchecked")
     private static <E> StringConverter<E> arabicConverter(Function<Object, String> labelFn) {
         return new StringConverter<>() {
@@ -248,18 +280,21 @@ public class AllowanceDefinitionDialogController implements Initializable {
         btn_close.setOnAction(e -> closeDialog());
 
         combo_calcType.valueProperty().addListener((obs, old, val) ->
-                combo_baseSource.setDisable(val != CalcType.PERCENT_BY_DEGREE && val != CalcType.PERCENT_ALL_DEGREE));
+                combo_baseSource.setDisable(
+                        val != CalcType.PERCENT_BY_DEGREE && val != CalcType.PERCENT_ALL_DEGREE));
+
+        // validation فوري لحقول التاريخ عند فقدان التركيز
+        txt_effectiveFrom.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (!isNowFocused) validateEffectiveFromField();
+        });
+        txt_excludedMonths.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (!isNowFocused) validateExcludedMonthsField();
+        });
 
         hideForm();
         loadDefinitions();
     }
 
-    /**
-     * يُستدعى من الـ Controller الرئيسي قبل فتح الـ Dialog.
-     *
-     * @param onChanged بينادى لما يحصل أي إنشاء/تعديل/حذف، عشان الشاشة
-     *                  الرئيسية تحدّث الـ Dropdown بتاعها
-     */
     public void init(Runnable onChanged) {
         this.onChanged = onChanged;
     }
@@ -371,7 +406,6 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 btnDelete.setOnAction(e -> {
                     AllowanceDefinition snap = getTableView().getItems().get(getIndex());
                     handleDelete(snap);
-
                 });
             }
 
@@ -391,7 +425,9 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     private void setupValuesTable() {
         col_map_key.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().key()));
+                new javafx.beans.property.SimpleStringProperty(
+                        mapKeyDisplay(d.getValue().key())
+                ));
         col_map_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_map_actions.setCellFactory(tc -> new TableCell<>() {
@@ -428,6 +464,23 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         combo_elementType.setItems(FXCollections.observableArrayList(ElementType.values()));
         combo_elementType.setConverter(arabicConverter(v -> elementTypeLabel((ElementType) v)));
+
+        // ComboBox الـ valuesMap key
+        combo_map_key.setItems(FXCollections.observableArrayList(MAP_KEY_OPTIONS));
+        combo_map_key.setVisibleRowCount(12);
+    }
+
+    /**
+     * عرض الـ key في الجدول — بيدور على الـ label العربي، ولو مش موجود
+     * (قيمة قديمة مثلاً) يعرض القيمة الخام.
+     */
+    private static String mapKeyDisplay(String rawKey) {
+        if (rawKey == null) return "";
+        return MAP_KEY_OPTIONS.stream()
+                .filter(o -> o.value().equals(rawKey))
+                .findFirst()
+                .map(MapKeyOption::label)
+                .orElse(rawKey);
     }
 
     private TableCell<AllowanceDefinition, LocalDate> dateCell() {
@@ -503,7 +556,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private void showFormForNewCode() {
         clearForm();
         editingId = null;
-        txt_code.setDisable(false);
+        txt_code.setDisable(true);   // الباك بيولّد UUID
         lbl_form_title.setText("إضافة بدل جديد بالكامل");
         showForm();
     }
@@ -515,10 +568,9 @@ public class AllowanceDefinitionDialogController implements Initializable {
         clearForm();
         editingId = null;
         txt_code.setText(selected.getCode());
-        txt_code.setDisable(true); // نفس الكود إجباري
+        txt_code.setDisable(true);
         txt_nameAr.setText(selected.getNameAr());
         txt_nameEn.setText(selected.getNameEn());
-        // نورّث تصنيف العنصر من آخر snapshot كنقطة بداية منطقية — المستخدم يقدر يغيّرها
         combo_elementType.setValue(
                 selected.getElementType() != null ? selected.getElementType() : ElementType.ENTITLEMENT
         );
@@ -532,15 +584,17 @@ public class AllowanceDefinitionDialogController implements Initializable {
         clearForm();
         editingId = snap.getId();
         txt_code.setText(snap.getCode());
-        txt_code.setDisable(true); // الكود مش قابل للتغيير في تعديل موجود
+        txt_code.setDisable(true);
         txt_nameAr.setText(snap.getNameAr());
         txt_nameEn.setText(snap.getNameEn());
-        date_effectiveFrom.setValue(snap.getEffectiveFrom());
+        if (snap.getEffectiveFrom() != null)
+            txt_effectiveFrom.setText(snap.getEffectiveFrom().format(DATE_FMT));
         combo_behavior.setValue(snap.getBehavior());
         combo_calcType.setValue(snap.getCalcType());
         combo_baseSource.setValue(snap.getBaseSource());
         combo_scope.setValue(snap.getScope() != null ? snap.getScope() : Scope.GENERAL);
-        combo_elementType.setValue(snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
+        combo_elementType.setValue(
+                snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
         chk_subjectToInsurance.setSelected(snap.isSubjectToInsurance());
         chk_subjectToTaxAndStamp.setSelected(snap.isSubjectToTaxAndStamp());
         txt_excludedMonths.setText(joinOrEmpty(snap.getExcludedMonths()));
@@ -559,10 +613,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     private void clearForm() {
         txt_code.clear();
-        txt_code.setDisable(false);
+        txt_code.setDisable(true);
         txt_nameAr.clear();
         txt_nameEn.clear();
-        date_effectiveFrom.setValue(null);
+        txt_effectiveFrom.clear();
         combo_behavior.setValue(null);
         combo_calcType.setValue(null);
         combo_baseSource.setValue(null);
@@ -575,7 +629,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         txt_eligibleLawCodes.clear();
         txt_notes.clear();
         valueRows.clear();
-        txt_map_key.clear();
+        combo_map_key.setValue(null);
         txt_map_value.clear();
         lbl_form_error.setVisible(false);
     }
@@ -596,11 +650,15 @@ public class AllowanceDefinitionDialogController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void handleAddMapEntry() {
-        String key = txt_map_key.getText().trim();
+        MapKeyOption keyOpt = combo_map_key.getValue();
         String valStr = txt_map_value.getText().trim();
 
-        if (key.isBlank() || valStr.isBlank()) {
-            showFormError("المفتاح والقيمة مطلوبين لإضافة صف في valuesMap");
+        if (keyOpt == null) {
+            showFormError("اختر المفتاح من القائمة");
+            return;
+        }
+        if (valStr.isBlank()) {
+            showFormError("القيمة مطلوبة");
             return;
         }
 
@@ -613,12 +671,58 @@ public class AllowanceDefinitionDialogController implements Initializable {
         }
 
         // لو المفتاح موجود بالفعل، استبدله بدل ما نكرره
-        valueRows.removeIf(r -> r.key().equals(key));
-        valueRows.add(new MapEntryRow(key, value));
+        valueRows.removeIf(r -> r.key().equals(keyOpt.value()));
+        valueRows.add(new MapEntryRow(keyOpt.value(), value));
 
-        txt_map_key.clear();
+        combo_map_key.setValue(null);
         txt_map_value.clear();
         lbl_form_error.setVisible(false);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  Validation
+    // ════════════════════════════════════════════════════════════
+
+    /**
+     * يتحقق من صيغة {@code yyyy-MM-dd} في {@code txt_effectiveFrom}.
+     *
+     * @return التاريخ المُحلل، أو {@code null} لو فيه خطأ (وبيعرض رسالة)
+     */
+    private LocalDate validateEffectiveFromField() {
+        String text = txt_effectiveFrom.getText();
+        if (text == null || text.isBlank()) return null;
+        text = text.trim();
+
+        if (!DATE_PATTERN.matcher(text).matches()) {
+            showFormError("تاريخ السريان لازم يكون بصيغة yyyy-MM-dd");
+            return null;
+        }
+        try {
+            return LocalDate.parse(text, DATE_FMT);
+        } catch (DateTimeParseException ex) {
+            showFormError("تاريخ السريان غير صحيح: " + text);
+            return null;
+        }
+    }
+
+    /**
+     * يتحقق من صيغة الشهور المستثناة: {@code yyyy-MM} مفصولة بفواصل.
+     *
+     * @return {@code true} لو صحيحة أو فاضية
+     */
+    private boolean validateExcludedMonthsField() {
+        String text = txt_excludedMonths.getText();
+        if (text == null || text.isBlank()) return true;
+
+        for (String part : text.split(",")) {
+            String s = part.trim();
+            if (s.isBlank()) continue;
+            if (!MONTH_PATTERN.matcher(s).matches()) {
+                showFormError("الشهور المستثناة لازم تكون بصيغة yyyy-MM مفصولة بفواصل");
+                return false;
+            }
+        }
+        return true;
     }
 
     // ════════════════════════════════════════════════════════════
@@ -626,30 +730,35 @@ public class AllowanceDefinitionDialogController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void handleSave() {
+        lbl_form_error.setVisible(false);
+
         String code = txt_code.getText().trim();
         String nameAr = txt_nameAr.getText().trim();
-        LocalDate effectiveFrom = date_effectiveFrom.getValue();
         Behavior behavior = combo_behavior.getValue();
         CalcType calcType = combo_calcType.getValue();
         BaseSource baseSource = combo_baseSource.getValue();
         Scope scope = combo_scope.getValue();
         ElementType elementType = combo_elementType.getValue();
 
+        // validation التاريخ
+        LocalDate effectiveFrom = validateEffectiveFromField();
+        if (effectiveFrom == null) {
+            if (txt_effectiveFrom.getText() == null || txt_effectiveFrom.getText().isBlank())
+                showFormError("تاريخ السريان مطلوب");
+            return;
+        }
 
         if (nameAr.isBlank()) {
             showFormError("اسم البدل بالعربي مطلوب");
-            return;
-        }
-        if (effectiveFrom == null) {
-            showFormError("تاريخ السريان مطلوب");
             return;
         }
         if (behavior == null || calcType == null) {
             showFormError("سلوك الاحتساب ونوعه مطلوبين");
             return;
         }
-        if (calcType == CalcType.PERCENT_BY_DEGREE && baseSource == null) {
-            showFormError("PERCENT_BY_DEGREE يحتاج تحديد مصدر الأساسي");
+        if ((calcType == CalcType.PERCENT_BY_DEGREE
+                || calcType == CalcType.PERCENT_ALL_DEGREE) && baseSource == null) {
+            showFormError(calcTypeLabel(calcType) + " يحتاج تحديد مصدر الأساسي");
             return;
         }
         if (elementType == null) {
@@ -660,6 +769,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("أضف على الأقل قيمة واحدة في valuesMap");
             return;
         }
+        if (!validateExcludedMonthsField()) return;
 
         Map<String, BigDecimal> valuesMap = new LinkedHashMap<>();
         valueRows.forEach(r -> valuesMap.put(r.key(), r.value()));

@@ -46,17 +46,20 @@ public class AllowanceDefinition {
     /**
      * نوع الاحتساب:
      * <ul>
-     *   <li>PERCENT_BY_DEGREE     — نسبة % حسب الدرجة</li>
-     *   <li>AMOUNT_BY_DEGREE      — مبلغ ثابت حسب الدرجة</li>
-     *   <li>FIXED_AMOUNT          — مبلغ ثابت لكل الدرجات</li>
-     *   <li>SALARY_ENGINE         — نسبة % من إجمالي المحرك (Phase 3)</li>
-     *   <li>DEPENDS_SALARY_ENGINE — مبلغ بعد اكتمال المحرك (Phase 3)</li>
+     *   <li>PERCENT_BY_DEGREE      — نسبة % حسب الدرجة</li>
+     *   <li>PERCENT_ALL_DEGREE     — نسبة % موحدة لكل الدرجات</li>
+     *   <li>AMOUNT_BY_DEGREE       — مبلغ ثابت حسب الدرجة</li>
+     *   <li>FIXED_AMOUNT           — مبلغ ثابت لكل الدرجات</li>
+     *   <li>SALARY_ENGINE          — نسبة % من إجمالي المحرك (Phase 3)</li>
+     *   <li>DEPENDS_SALARY_ENGINE  — مبلغ بعد اكتمال المحرك (Phase 3)</li>
+     *   <li>COMPENSATORY_BONUS     — الحافز التعويضي (محسوب تلقائياً)</li>
+     *   <li>SUPPLEMENTARY_BONUS    — الحافز التكميلي (Phase 4)</li>
      * </ul>
      */
     private CalcType calcType;
 
     /**
-     * مصدر الأساسي — يُستخدم مع PERCENT_BY_DEGREE فقط.
+     * مصدر الأساسي — يُستخدم مع PERCENT_BY_DEGREE و PERCENT_ALL_DEGREE فقط.
      * null = مش مهم مع باقي الأنواع.
      */
     private BaseSource baseSource;
@@ -71,11 +74,14 @@ public class AllowanceDefinition {
     /**
      * قيم البدل حسب CalcType:
      * <pre>
-     *   PERCENT_BY_DEGREE:    { "6": 45, "7": 50, "8": 55 }
-     *   AMOUNT_BY_DEGREE:     { "6": 150, "7": 200, "8": 250 }
+     *   PERCENT_BY_DEGREE:    { "6": 45, "7": 50 }
+     *   PERCENT_ALL_DEGREE:   { "all": 10 }
+     *   AMOUNT_BY_DEGREE:     { "6": 150, "7": 200 }
      *   FIXED_AMOUNT:         { "all": 300 }
      *   SALARY_ENGINE:        { "percent": 10 }
      *   DEPENDS_SALARY_ENGINE:{ "percent": 5 }
+     *   COMPENSATORY_BONUS:   { "all": 0 }   ← placeholder
+     *   SUPPLEMENTARY_BONUS:  { "6": 500, "7": 600 }
      * </pre>
      */
     private Map<String, BigDecimal> valuesMap;
@@ -131,7 +137,15 @@ public class AllowanceDefinition {
         AMOUNT_BY_DEGREE,
         FIXED_AMOUNT,
         SALARY_ENGINE,
-        DEPENDS_SALARY_ENGINE
+        DEPENDS_SALARY_ENGINE,
+        /**
+         * الحافز التعويضي — محسوب تلقائياً من فرق الصافي في 2015
+         */
+        COMPENSATORY_BONUS,
+        /**
+         * الحافز التكميلي — Phase 4
+         */
+        SUPPLEMENTARY_BONUS
     }
 
     public enum BaseSource {
