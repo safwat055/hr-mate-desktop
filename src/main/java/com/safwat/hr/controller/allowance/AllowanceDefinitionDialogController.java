@@ -192,17 +192,17 @@ public class AllowanceDefinitionDialogController implements Initializable {
      * الدرجات من 6 لـ -2 بالأسماء العربية + all + percent.
      */
     private static final List<MapKeyOption> MAP_KEY_OPTIONS = List.of(
-            new MapKeyOption("6", "السادسة (6)"),
-            new MapKeyOption("5", "الخامسة (5)"),
-            new MapKeyOption("4", "الرابعة (4)"),
-            new MapKeyOption("3", "الثالثة (3)"),
-            new MapKeyOption("2", "الثانية (2)"),
-            new MapKeyOption("1", "الأولى (1)"),
-            new MapKeyOption("0", "مدير عام (0)"),
-            new MapKeyOption("-1", "العالية (-1)"),
-            new MapKeyOption("-2", "الممتازة (-2)"),
-            new MapKeyOption("all", "كل الدرجات (all)"),
-            new MapKeyOption("percent", "نسبة من المحرك (percent)")
+            new MapKeyOption("6", "السادسة"),
+            new MapKeyOption("5", "الخامسة"),
+            new MapKeyOption("4", "الرابعة"),
+            new MapKeyOption("3", "الثالثة"),
+            new MapKeyOption("2", "الثانية"),
+            new MapKeyOption("1", "الأولى"),
+            new MapKeyOption("0", "مدير عام"),
+            new MapKeyOption("-1", "العالية"),
+            new MapKeyOption("-2", "الممتازة"),
+            new MapKeyOption("all", "كل الدرجات"),
+            new MapKeyOption("percent", "نسبة من المحرك")
     );
 
     // ════════════════════════════════════════════════════════════
@@ -626,8 +626,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         lbl_form_title.setText("تعديل: " + snap.getCode() + " @ " + snap.getEffectiveFrom());
         showForm();
-        // في showFormForEdit
-        System.out.println("timelineAnchor from server: " + snap.getTimelineAnchor());
+
     }
 
     private void clearForm() {
@@ -807,6 +806,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 splitOrNull(txt_excludedMonths.getText()),
                 splitOrNull(txt_eligibleLaws.getText()),
                 splitOrNull(txt_eligibleLawCodes.getText()),
+
                 timelineAnchor,                                   // ← جديد
                 txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim()
         );
