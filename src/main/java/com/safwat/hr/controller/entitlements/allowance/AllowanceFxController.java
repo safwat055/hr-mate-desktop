@@ -1,11 +1,9 @@
-package com.safwat.hr.controller.allowance;
-
+package com.safwat.hr.controller.entitlements.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import com.safwat.hr.controller.allowance.AllowanceResultDto.ElementType;
+import com.safwat.hr.controller.entitlements.allowance.AllowanceDefinition.ElementType;
+import com.safwat.hr.controller.entitlements.statutory.StatutoryDialogController;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
-import com.safwat.hr.controller.statutory.StatutoryDialogController;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,28 +25,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
 
-/**
- * Controller الرئيسي لشاشة البدلات.
- *
- * <p>مسؤول عن:
- * <ul>
- *   <li>البحث عن موظف وتحميل بياناته</li>
- *   <li>عرض بيانات الموظف في تاب 1</li>
- *   <li>عرض وإدارة البدلات في تاب 2 (مع تمييز الاستحقاقات/الاستقطاعات)</li>
- *   <li>فتح dialog تعديل الفترات</li>
- *   <li>فتح dialog إدارة قواعد البدلات (allowance_definition)</li>
- *   <li>فتح dialog إدارة الاستقطاعات القانونية (تأمينات/ضريبة/دمغة)</li>
- * </ul>
- *
- * <p><b>عرض جدول البدلات:</b> كل سطر فيه نوع العنصر (استحقاق / استقطاع /
- * تأمينات / ضريبة / دمغة)، والقيمة بتُعرض <b>بالقيمة المطلقة (abs)</b>
- * مع لون مميز — أحمر للاستقطاعات وأخضر للاستحقاقات.
- * ترتيب السطور: استحقاقات فوق، استقطاعات تحت، عناصر العرض (حصة الحكومة)
- * في الآخر. الإجمالي (الصافي) بيتحسب من الباك على القيم بإشاراتها الأصلية.
- */
 public class AllowanceFxController implements Initializable {
 
     // ── شريط البحث ──────────────────────────────────────────────
+    @FXML
+    private Button btn_supplementaryPdf;   // 🆕
     @FXML
     private Button btn_statutory;
     @FXML
@@ -115,10 +96,6 @@ public class AllowanceFxController implements Initializable {
     // ── State ────────────────────────────────────────────────────
     private String currentNationalId;
     private AllowanceResultDto currentResult;
-    /**
-     * كاش بيانات الموظف الأساسية — بتتحمّل مرة واحدة بس لكل موظف.
-     * null = لسه محمّلتش (أو اتشالت بسبب بحث جديد).
-     */
     private ScaleDto cachedScaleDto;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -133,21 +110,62 @@ public class AllowanceFxController implements Initializable {
         date_calculation.setValue(LocalDate.now());
 
         btn_statutory.setOnAction(e -> openStatutoryDialog());
-
-        // Enter في حقل البحث يشغل البحث
         txt_nationalId.setOnAction(e -> handleSearch());
         btn_search.setOnAction(e -> handleSearch());
         btn_recalculate.setOnAction(e -> loadAllowances());
         btn_addAllowance.setOnAction(e -> handleAddAllowance());
         btn_reset.setOnAction(e -> handleReset());
-
+        btn_supplementaryPdf.setOnAction(e -> handleExportSupplementaryPdf());   // 🆕
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(e -> openDefinitionsDialog());
         }
     }
 
+    private void showInfo(String msg) {
+        lbl_error.setStyle("-fx-text-fill:#2e7d32; -fx-font-weight:bold;");
+        lbl_error.setText(msg);
+        lbl_error.setVisible(true);
+
+        // تنظيف تلقائي بعد 5 ثواني
+        javafx.animation.PauseTransition pause =
+                new javafx.animation.PauseTransition(javafx.util.Duration.seconds(5));
+        pause.setOnFinished(e -> clearError());
+        pause.play();
+    }
+
+    /**
+     * تصدير تقرير الحافز التكميلي للموظف الحالي كـ PDF.
+     *
+     * <p>الملف بيتم تنزيله من الـ backend ويُحفظ في المكان اللي يختاره المستخدم.
+     */
+    private void handleExportSupplementaryPdf() {
+        if (currentNationalId == null || currentNationalId.isBlank()) {
+            showError("ابحث عن موظف أولاً");
+            return;
+        }
+
+        btn_supplementaryPdf.setDisable(true);
+        clearError();
+
+        String defaultFileName = "supplementary-" + currentNationalId + ".pdf";
+
+        FxApiSupport.downloadBinary(
+                "/entitlements/employee/" + currentNationalId + "/supplementary-bonus/pdf",
+                defaultFileName,
+                savedPath -> {
+                    btn_supplementaryPdf.setDisable(false);
+                    // رسالة نجاح (تظهر مؤقتاً)
+                    showInfo("✅ تم حفظ التقرير: " + savedPath);
+                },
+                err -> {
+                    btn_supplementaryPdf.setDisable(false);
+                    showError("خطأ في تصدير التقرير: " + err);
+                }
+        );
+    }
+
     // ════════════════════════════════════════════════════════════
-    //  البحث وتحميل البيانات
+    //  Search / Load — 🆕 paths محدّثة
     // ════════════════════════════════════════════════════════════
 
     private void handleSearch() {
@@ -157,19 +175,14 @@ public class AllowanceFxController implements Initializable {
             return;
         }
 
-        // بحث عن موظف مختلف عن اللي محمّل حاليًا → امسح الكاش القديم
         if (!id.equals(currentNationalId)) {
             cachedScaleDto = null;
             currentResult = null;
         }
-
         currentNationalId = id;
         loadAllowances();
     }
 
-    /**
-     * إعادة احتساب البدلات بالتاريخ الحالي في date_calculation.
-     */
     private void loadAllowances() {
         if (currentNationalId == null) return;
 
@@ -181,7 +194,7 @@ public class AllowanceFxController implements Initializable {
         clearError();
 
         FxApiSupport.get(
-                "/allowances/employee/" + currentNationalId + dateParam,
+                "/entitlements/employee/" + currentNationalId + dateParam,   // 🆕
                 AllowanceResultDto.class,
                 result -> {
                     showLoading(false);
@@ -201,11 +214,10 @@ public class AllowanceFxController implements Initializable {
 
     private void loadDefinitions() {
         FxApiSupport.getList(
-                "/allowances/definitions",
+                "/entitlements/allowances/definitions",   // 🆕
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 defs -> {
-                    // فلتر البدلات اللي مش موجودة عند الموظف
                     List<String> existing = currentResult != null
                             ? currentResult.allowances().stream()
                             .map(AllowanceResultDto.AllowanceLineDto::code).toList()
@@ -213,9 +225,7 @@ public class AllowanceFxController implements Initializable {
                     List<AllowanceDefinition> available = defs.stream()
                             .filter(d -> !existing.contains(d.getCode()))
                             .toList();
-                    combo_newAllowance.setItems(
-                            FXCollections.observableArrayList(available)
-                    );
+                    combo_newAllowance.setItems(FXCollections.observableArrayList(available));
                 },
                 err -> {
                 }
@@ -223,7 +233,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  ملء تاب بيانات الموظف
+    //  Employee Details — نفس المنطق (path /salary-scale/{id} زي ما هو)
     // ════════════════════════════════════════════════════════════
 
     private void ensureEmployeeDetailsLoaded() {
@@ -231,9 +241,8 @@ public class AllowanceFxController implements Initializable {
             applyEmployeeDetails(cachedScaleDto);
             return;
         }
-
         FxApiSupport.get(
-                "/salary-scale/" + currentNationalId,
+                "/salary-scale/" + currentNationalId,   // ← زي ما هو
                 ScaleDto.class,
                 dto -> {
                     cachedScaleDto = dto;
@@ -247,71 +256,44 @@ public class AllowanceFxController implements Initializable {
     private void applyEmployeeDetails(ScaleDto dto) {
         txt_empName.setText(dto.getEmpName());
         txt_empNationalId.setText(dto.getNationalId());
-        txt_empLawCode.setText(
-                dto.getLawCode() != null
-                        ? dto.getLawCode().stripTrailingZeros().toPlainString()
-                        : "—"
-        );
-        txt_empLaw.setText(
-                dto.getLaw() != null ? dto.getLaw().toString() : "—"
-        );
-        txt_empStartDate.setText(
-                dto.getStartDate() != null
-                        ? dto.getStartDate().format(DATE_FMT)
-                        : "—"
-        );
-        txt_empBasic30.setText(
-                dto.getBasic30Value() != null
-                        ? dto.getBasic30Value().toPlainString()
-                        : "—"
-        );
-        txt_empBasic30From.setText(
-                dto.getBasic30From() != null
-                        ? dto.getBasic30From().format(DATE_FMT)
-                        : "—"
-        );
-        txt_empGroup.setText(
-                dto.getQualitativeGroup() != null
-                        ? dto.getQualitativeGroup()
-                        : "—"
-        );
+        txt_empLawCode.setText(dto.getLawCode() != null
+                ? dto.getLawCode().stripTrailingZeros().toPlainString() : "—");
+        txt_empLaw.setText(dto.getLaw() != null ? dto.getLaw().toString() : "—");
+        txt_empStartDate.setText(dto.getStartDate() != null
+                ? dto.getStartDate().format(DATE_FMT) : "—");
+        txt_empBasic30.setText(dto.getBasic30Value() != null
+                ? dto.getBasic30Value().toPlainString() : "—");
+        txt_empBasic30From.setText(dto.getBasic30From() != null
+                ? dto.getBasic30From().format(DATE_FMT) : "—");
+        txt_empGroup.setText(dto.getQualitativeGroup() != null
+                ? dto.getQualitativeGroup() : "—");
         if (dto.getTimeline() != null && !dto.getTimeline().isEmpty()) {
-            txt_empDegree.setText(
-                    dto.getTimeline().getLast().getDegreeLabel()
-            );
+            txt_empDegree.setText(dto.getTimeline().getLast().getDegreeLabel());
         }
     }
 
     // ════════════════════════════════════════════════════════════
-    //  ملء جدول البدلات
+    //  Fill Table
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * ترتيب السطور: استحقاقات → استقطاعات → عناصر عرض (حكومة).
-     * القيم بإشاراتها الأصلية في الـ DTO، والواجهة هي اللي بتعرض abs.
-     */
     private void fillAllowancesTable(AllowanceResultDto result) {
         List<AllowanceResultDto.AllowanceLineDto> sorted = result.allowances().stream()
                 .sorted(Comparator
                         .comparingInt(this::sortPriority)
                         .thenComparing(AllowanceResultDto.AllowanceLineDto::nameAr))
                 .toList();
-
         table_allowances.setItems(FXCollections.observableArrayList(sorted));
-
         lbl_total.setText(result.totalAllowances().toPlainString() + " ج");
     }
 
     // ════════════════════════════════════════════════════════════
-    //  إعداد الجدول
+    //  Setup Table
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
-        // ═══ اسم البدل ═══
         col_nameAr.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleStringProperty(d.getValue().nameAr()));
 
-        // ═══ عمود النوع — badge ملوّن ═══
         col_elementType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
         col_elementType.setCellFactory(tc -> new TableCell<>() {
@@ -332,7 +314,6 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ عمود القيمة — abs + لون حسب النوع ═══
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -344,14 +325,12 @@ public class AllowanceFxController implements Initializable {
                     setStyle("-fx-alignment: CENTER;");
                     return;
                 }
-                AllowanceResultDto.AllowanceLineDto line =
-                        getTableView().getItems().get(getIndex());
+                AllowanceResultDto.AllowanceLineDto line = getTableView().getItems().get(getIndex());
                 setText(val.abs().toPlainString() + " ج");
                 setStyle("-fx-alignment: CENTER; " + valueStyle(line));
             }
         });
 
-        // ═══ من تاريخ ═══
         col_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveFrom()));
         col_effectiveFrom.setCellFactory(tc -> new TableCell<>() {
@@ -363,7 +342,6 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ المصدر — badge ملوّن ═══
         col_source.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().source()));
         col_source.setCellFactory(tc -> new TableCell<>() {
@@ -384,7 +362,6 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ الإجراءات ═══
         col_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏ تعديل");
             private final Button btnDelete = new Button("🗑");
@@ -396,16 +373,10 @@ public class AllowanceFxController implements Initializable {
                 btnDelete.getStyleClass().add("btn-danger");
                 btnDelete.setPrefHeight(26);
                 btnDelete.setPrefWidth(36);
-
-                btnEdit.setOnAction(e -> {
-                    AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
-                    openOverrideDialog(item);
-                });
-
-                btnDelete.setOnAction(e -> {
-                    AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
-                    handleDeleteAllowance(item.code());
-                });
+                btnEdit.setOnAction(e -> openOverrideDialog(
+                        getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> handleDeleteAllowance(
+                        getTableView().getItems().get(getIndex()).code()));
             }
 
             @Override
@@ -416,14 +387,10 @@ public class AllowanceFxController implements Initializable {
                     return;
                 }
                 AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
-
                 boolean excluded = item.source() == AllowanceResultDto.AllowanceLineDto.Source.EXCLUDED;
                 boolean displayOnly = item.displayOnly();
-
-                // الأزرار معطّلة للـ EXCLUDED و displayOnly
                 btnEdit.setDisable(excluded || displayOnly);
                 btnDelete.setDisable(displayOnly);
-
                 HBox box = new HBox(6, btnEdit, btnDelete);
                 box.setStyle("-fx-alignment: CENTER;");
                 setGraphic(box);
@@ -449,16 +416,15 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  فتح Dialog تعديل الفترات
+    //  Dialogs — 🆕 FXML loader paths
     // ════════════════════════════════════════════════════════════
 
     private void openOverrideDialog(AllowanceResultDto.AllowanceLineDto line) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/safwat/hr/controller/scale/allowance/AllowanceOverrideDialog.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml"  // 🆕
+            ));
             Parent root = loader.load();
-
             AllowanceOverrideDialogController ctrl = loader.getController();
             ctrl.init(line, currentNationalId, () -> loadAllowances());
 
@@ -468,23 +434,17 @@ public class AllowanceFxController implements Initializable {
             dialog.setScene(new Scene(root));
             dialog.setResizable(false);
             dialog.showAndWait();
-
         } catch (Exception ex) {
             showError("خطأ في فتح نافذة التعديل: " + ex.getMessage());
         }
     }
 
-    // ════════════════════════════════════════════════════════════
-    //  فتح Dialog إدارة قواعد البدلات
-    // ════════════════════════════════════════════════════════════
-
     private void openDefinitionsDialog() {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    getClass().getResource("/com/safwat/hr/controller/scale/allowance/AllowanceDefinitionDialog.fxml")
-            );
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml"  // 🆕
+            ));
             Parent root = loader.load();
-
             AllowanceDefinitionDialogController ctrl = loader.getController();
             ctrl.init(() -> {
                 if (currentNationalId != null) loadDefinitions();
@@ -496,7 +456,6 @@ public class AllowanceFxController implements Initializable {
             dialog.setScene(new Scene(root));
             dialog.setResizable(true);
             dialog.showAndWait();
-
         } catch (Exception ex) {
             showError("خطأ في فتح شاشة إدارة القواعد: " + ex.getMessage());
         }
@@ -505,12 +464,11 @@ public class AllowanceFxController implements Initializable {
     private void openStatutoryDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/scale/allowance/StatutoryDialog.fxml"));
+                    "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml"  // 🆕
+            ));
             Parent root = loader.load();
-
             StatutoryDialogController controller = loader.getController();
             controller.init(() -> {
-                // لو فيه حاجة محتاجة تتحدث في الشاشة الرئيسية بعد الحفظ
             });
 
             Stage dialog = new Stage();
@@ -524,9 +482,18 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  عمليات API
+    //  API Ops — 🆕 paths محدّثة
     // ════════════════════════════════════════════════════════════
 
+    /**
+     * إضافة البدل فوراً بتاريخ الاحتساب المختار + قيمة ابتدائية 0.
+     *
+     * <p><b>فصل المسؤوليات:</b>
+     * <ul>
+     *   <li>الزر ده بيضيف البدل للموظف فقط (POST /allowance)</li>
+     *   <li>تعديل القيمة/الفترات بيتم من زر "✏ تعديل" في الجدول</li>
+     * </ul>
+     */
     private void handleAddAllowance() {
         AllowanceDefinition selected = combo_newAllowance.getValue();
         if (selected == null) {
@@ -534,21 +501,36 @@ public class AllowanceFxController implements Initializable {
             return;
         }
 
-        // نفتح dialog فارغ لإدخال أول فترة — allow الدالة دي مش هتنفع
-        // للـ statutory elements (تأمينات/ضريبة/دمغة) لأن دي مش بتتضاف يدوي.
-        AllowanceResultDto.AllowanceLineDto dummy = new AllowanceResultDto.AllowanceLineDto(
+        LocalDate fromDate = date_calculation.getValue();
+        if (fromDate == null) {
+            showError("اختر تاريخ الاحتساب أولاً — سيُستخدم كتاريخ بداية البدل");
+            return;
+        }
+
+        AllowanceResultDto.AddAllowanceRequest req = new AllowanceResultDto.AddAllowanceRequest(
                 selected.getCode(),
-                selected.getNameAr(),
-                BigDecimal.ZERO,
-                LocalDate.now(),
-                AllowanceResultDto.AllowanceLineDto.Source.MANUAL,
-                List.of(),
-                ElementType.ENTITLEMENT,
-                false,
-                false,
-                false
+                fromDate,
+                null,                       // مفتوح
+                BigDecimal.ZERO             // قيمة ابتدائية — تُعدَّل من الجدول
         );
-        openOverrideDialog(dummy);
+
+        btn_addAllowance.setDisable(true);
+        clearError();
+
+        FxApiSupport.post(
+                "/entitlements/allowances/employee/" + currentNationalId + "/allowance",
+                req,
+                Boolean.class,
+                saved -> {
+                    btn_addAllowance.setDisable(false);
+                    combo_newAllowance.setValue(null);   // نظّف الاختيار
+                    loadAllowances();                    // يتحدّث الجدول + القائمة
+                },
+                err -> {
+                    btn_addAllowance.setDisable(false);
+                    showError("خطأ في الإضافة: " + err);
+                }
+        );
     }
 
     private void handleDeleteAllowance(String code) {
@@ -560,7 +542,8 @@ public class AllowanceFxController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/allowances/employee/" + currentNationalId + "/allowance/" + code,
+                        "/entitlements/allowances/employee/" + currentNationalId
+                                + "/allowance/" + code,                     // 🆕
                         this::loadAllowances,
                         this::showError
                 );
@@ -577,7 +560,7 @@ public class AllowanceFxController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/allowances/employee/" + currentNationalId + "/reset",
+                        "/entitlements/allowances/employee/" + currentNationalId + "/reset",   // 🆕
                         this::loadAllowances,
                         this::showError
                 );
@@ -586,40 +569,23 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Helpers — عرض
+    //  Helpers
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * ترتيب العرض:
-     * 1 = استحقاقات (ENTITLEMENT)
-     * 2 = استقطاعات (DEDUCTION / INSURANCE / TAX / STAMP)
-     * 3 = عناصر عرض فقط (displayOnly — حصة الحكومة)
-     */
     private int sortPriority(AllowanceResultDto.AllowanceLineDto line) {
         if (line.displayOnly()) return 3;
         if (line.elementType() == ElementType.ENTITLEMENT) return 1;
         return 2;
     }
 
-    /**
-     * لون القيمة:
-     * - استحقاق: أخضر غامق
-     * - استقطاع: أحمر غامق
-     * - عرض فقط (حكومة): رمادي italic
-     */
     private String valueStyle(AllowanceResultDto.AllowanceLineDto line) {
-        if (line.displayOnly()) {
-            return "-fx-text-fill:#888; -fx-font-style:italic;";
-        }
+        if (line.displayOnly()) return "-fx-text-fill:#888; -fx-font-style:italic;";
         if (line.value() != null && line.value().signum() < 0) {
             return "-fx-text-fill:#c62828; -fx-font-weight:bold;";
         }
         return "-fx-text-fill:#2e7d32; -fx-font-weight:bold;";
     }
 
-    /**
-     * التسمية العربية لنوع العنصر.
-     */
     private String elementTypeLabel(ElementType et) {
         return switch (et) {
             case ENTITLEMENT -> "استحقاق";
@@ -630,17 +596,14 @@ public class AllowanceFxController implements Initializable {
         };
     }
 
-    /**
-     * ستايل Badge النوع — لون لكل نوع.
-     */
     private String elementTypeBadgeStyle(ElementType et) {
         String base = "-fx-background-radius:4; -fx-font-weight:bold; -fx-text-fill:white; -fx-font-size:11;";
         return base + switch (et) {
-            case ENTITLEMENT -> "-fx-background-color:#2e7d32;";  // أخضر
-            case DEDUCTION -> "-fx-background-color:#c62828;";  // أحمر
-            case INSURANCE -> "-fx-background-color:#1565c0;";  // أزرق
-            case TAX -> "-fx-background-color:#6a1b9a;";  // بنفسجي
-            case STAMP -> "-fx-background-color:#e65100;";  // برتقالي
+            case ENTITLEMENT -> "-fx-background-color:#2e7d32;";
+            case DEDUCTION -> "-fx-background-color:#c62828;";
+            case INSURANCE -> "-fx-background-color:#1565c0;";
+            case TAX -> "-fx-background-color:#6a1b9a;";
+            case STAMP -> "-fx-background-color:#e65100;";
         };
     }
 

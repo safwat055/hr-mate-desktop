@@ -1,10 +1,10 @@
-package com.safwat.hr.controller.statutory;
+package com.safwat.hr.controller.entitlements.statutory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.controller.allowance.FxApiSupport;
-import com.safwat.hr.controller.statutory.StatutoryDtos.InsuranceRateConfigDto;
-import com.safwat.hr.controller.statutory.StatutoryDtos.StampDutyBracket;
-import com.safwat.hr.controller.statutory.StatutoryDtos.TaxBracket;
+import com.safwat.hr.controller.entitlements.allowance.FxApiSupport;
+import com.safwat.hr.controller.entitlements.statutory.StatutoryDtos.InsuranceRateConfigDto;
+import com.safwat.hr.controller.entitlements.statutory.StatutoryDtos.StampDutyBracket;
+import com.safwat.hr.controller.entitlements.statutory.StatutoryDtos.TaxBracket;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -236,7 +236,7 @@ public class StatutoryDialogController implements Initializable {
     }
 
     private void loadInsurance() {
-        FxApiSupport.getList("/statutory/insurance",
+        FxApiSupport.getList("/entitlements/statutory/insurance",
                 new TypeReference<List<InsuranceRateConfigDto>>() {
                 },
                 list -> {
@@ -247,7 +247,7 @@ public class StatutoryDialogController implements Initializable {
     }
 
     private void loadTax() {
-        FxApiSupport.getList("/statutory/tax",
+        FxApiSupport.getList("/entitlements/statutory/tax",
                 new TypeReference<List<TaxBracket>>() {
                 },
                 list -> {
@@ -258,7 +258,7 @@ public class StatutoryDialogController implements Initializable {
     }
 
     private void loadStamp() {
-        FxApiSupport.getList("/statutory/stamp",
+        FxApiSupport.getList("/entitlements/statutory/stamp",
                 new TypeReference<List<StampDutyBracket>>() {
                 },
                 list -> {
@@ -395,10 +395,10 @@ public class StatutoryDialogController implements Initializable {
 
             btn_ins_save.setDisable(true);
             if (editingInsuranceId == null) {
-                FxApiSupport.post("/statutory/insurance", dto, InsuranceRateConfigDto.class,
+                FxApiSupport.post("/entitlements/statutory/insurance", dto, InsuranceRateConfigDto.class,
                         saved -> onInsSaved(), this::onInsError);
             } else {
-                FxApiSupport.put("/statutory/insurance/" + editingInsuranceId, dto,
+                FxApiSupport.put("/entitlements/statutory/insurance/" + editingInsuranceId, dto,
                         InsuranceRateConfigDto.class,
                         saved -> onInsSaved(), this::onInsError);
             }
@@ -421,7 +421,7 @@ public class StatutoryDialogController implements Initializable {
 
     private void deleteInsurance(InsuranceRateConfigDto cfg) {
         if (!confirmDelete("إعداد التأمينات #" + cfg.id())) return;
-        FxApiSupport.delete("/statutory/insurance/" + cfg.id(),
+        FxApiSupport.delete("/entitlements/statutory/insurance/" + cfg.id(),
                 () -> {
                     loadInsurance();
                     if (onChanged != null) onChanged.run();
@@ -507,10 +507,10 @@ public class StatutoryDialogController implements Initializable {
 
             btn_tax_save.setDisable(true);
             if (editingTaxId == null) {
-                FxApiSupport.post("/statutory/tax", dto, TaxBracket.class,
+                FxApiSupport.post("/entitlements/statutory/tax", dto, TaxBracket.class,
                         saved -> onTaxSaved(), this::onTaxError);
             } else {
-                FxApiSupport.put("/statutory/tax/" + editingTaxId, dto, TaxBracket.class,
+                FxApiSupport.put("/entitlements/statutory/tax/" + editingTaxId, dto, TaxBracket.class,
                         saved -> onTaxSaved(), this::onTaxError);
             }
         } catch (IllegalArgumentException ex) {
@@ -532,7 +532,7 @@ public class StatutoryDialogController implements Initializable {
 
     private void deleteTax(TaxBracket b) {
         if (!confirmDelete("شريحة الضريبة #" + b.id())) return;
-        FxApiSupport.delete("/statutory/tax/" + b.id(),
+        FxApiSupport.delete("/entitlements/statutory/tax/" + b.id(),
                 () -> {
                     loadTax();
                     if (onChanged != null) onChanged.run();
@@ -614,10 +614,10 @@ public class StatutoryDialogController implements Initializable {
 
             btn_stamp_save.setDisable(true);
             if (editingStampId == null) {
-                FxApiSupport.post("/statutory/stamp", dto, StampDutyBracket.class,
+                FxApiSupport.post("/entitlements/statutory/stamp", dto, StampDutyBracket.class,
                         saved -> onStampSaved(), this::onStampError);
             } else {
-                FxApiSupport.put("/statutory/stamp/" + editingStampId, dto,
+                FxApiSupport.put("/entitlements/statutory/stamp/" + editingStampId, dto,
                         StampDutyBracket.class,
                         saved -> onStampSaved(), this::onStampError);
             }
@@ -640,7 +640,7 @@ public class StatutoryDialogController implements Initializable {
 
     private void deleteStamp(StampDutyBracket b) {
         if (!confirmDelete("شريحة الدمغة #" + b.id())) return;
-        FxApiSupport.delete("/statutory/stamp/" + b.id(),
+        FxApiSupport.delete("/entitlements/statutory/stamp/" + b.id(),
                 () -> {
                     loadStamp();
                     if (onChanged != null) onChanged.run();

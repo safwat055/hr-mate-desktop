@@ -21,7 +21,7 @@
         styleClass="card"
         xmlns="http://javafx.com/javafx/17"
         xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="com.safwat.hr.controller.allowance.AllowanceOverrideDialogController">
+        fx:controller="com.safwat.hr.controller.entitlements.allowance.AllowanceOverrideDialogController">
 
     <padding>
         <Insets bottom="20" left="20" right="20" top="20"/>

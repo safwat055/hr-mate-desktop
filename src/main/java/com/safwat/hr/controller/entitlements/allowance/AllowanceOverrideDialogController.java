@@ -1,5 +1,4 @@
-package com.safwat.hr.controller.allowance;
-
+package com.safwat.hr.controller.entitlements.allowance;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -20,8 +19,7 @@ import java.util.ResourceBundle;
 /**
  * Controller لـ Dialog تعديل فترات البدل اليدوية.
  *
- * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport} فوق
- * {@code com.safwat.hr.network.ApiClient} الـ static.
+ * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport}.
  */
 public class AllowanceOverrideDialogController implements Initializable {
 
@@ -78,7 +76,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     private String nationalId;
     private Runnable onSaved;
     private final ObservableList<OverrideEntry> entries = FXCollections.observableArrayList();
-    private OverrideEntry editingEntry = null; // null = إضافة جديدة
+    private OverrideEntry editingEntry = null;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     // ════════════════════════════════════════════════════════════
@@ -96,9 +94,6 @@ public class AllowanceOverrideDialogController implements Initializable {
         btn_revert_auto.setOnAction(e -> handleRevertAuto());
     }
 
-    /**
-     * يُستدعى من الـ Controller الرئيسي قبل فتح الـ Dialog.
-     */
     public void init(AllowanceResultDto.AllowanceLineDto line, String nationalId, Runnable onSaved) {
         this.currentLine = line;
         this.nationalId = nationalId;
@@ -109,10 +104,9 @@ public class AllowanceOverrideDialogController implements Initializable {
         lbl_current_source.setText(sourceLabel(line.source()));
         lbl_current_source.setStyle(sourceLabelStyle(line.source()));
 
-        // زر الإرجاع يظهر فقط لو المصدر يدوي
-        btn_revert_auto.setVisible(line.source() == AllowanceResultDto.AllowanceLineDto.Source.MANUAL);
+        btn_revert_auto.setVisible(
+                line.source() == AllowanceResultDto.AllowanceLineDto.Source.MANUAL);
 
-        // حمّل الفترات الموجودة
         if (line.overrides() != null) {
             entries.setAll(line.overrides());
         }
@@ -120,7 +114,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  إعداد الجدول
+    //  Setup
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
@@ -157,7 +151,6 @@ public class AllowanceOverrideDialogController implements Initializable {
             }
         });
 
-        // عمود الإجراءات
         col_entry_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏");
             private final Button btnDelete = new Button("🗑");
@@ -169,15 +162,8 @@ public class AllowanceOverrideDialogController implements Initializable {
                 btnDelete.getStyleClass().add("btn-danger");
                 btnDelete.setPrefHeight(26);
                 btnDelete.setPrefWidth(36);
-
-                btnEdit.setOnAction(e -> {
-                    OverrideEntry entry = getTableView().getItems().get(getIndex());
-                    showForm(entry);
-                });
-                btnDelete.setOnAction(e -> {
-                    OverrideEntry entry = getTableView().getItems().get(getIndex());
-                    entries.remove(entry);
-                });
+                btnEdit.setOnAction(e -> showForm(getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> entries.remove(getTableView().getItems().get(getIndex())));
             }
 
             @Override
@@ -195,14 +181,13 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  فورم الفترة
+    //  Form
     // ════════════════════════════════════════════════════════════
 
     private void showForm(OverrideEntry entry) {
         editingEntry = entry;
         lbl_form_title.setText(entry == null ? "إضافة فترة جديدة" : "تعديل فترة");
         lbl_form_error.setVisible(false);
-
         if (entry != null) {
             date_entry_from.setValue(entry.from());
             date_entry_to.setValue(entry.to());
@@ -212,7 +197,6 @@ public class AllowanceOverrideDialogController implements Initializable {
             date_entry_to.setValue(null);
             txt_entry_value.clear();
         }
-
         pane_entry_form.setVisible(true);
         pane_entry_form.setManaged(true);
     }
@@ -224,7 +208,6 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     private void handleSaveEntry() {
-        // Validation
         LocalDate from = date_entry_from.getValue();
         LocalDate to = date_entry_to.getValue();
         String valueStr = txt_entry_value.getText().trim();
@@ -254,7 +237,6 @@ public class AllowanceOverrideDialogController implements Initializable {
             return;
         }
 
-        // تحقق من عدم التداخل مع فترات أخرى
         OverrideEntry newEntry = new OverrideEntry(from, to, value);
         if (hasOverlap(newEntry, editingEntry)) {
             showFormError("هذه الفترة تتداخل مع فترة موجودة");
@@ -267,16 +249,17 @@ public class AllowanceOverrideDialogController implements Initializable {
         } else {
             entries.add(newEntry);
         }
-
-        // رتب الفترات تصاعدياً بالتاريخ
         entries.sort((a, b) -> a.from().compareTo(b.from()));
         hideForm();
     }
 
+    /**
+     * 🆕 بنستخدم reference equality بدل equals عشان نتجنب مشكلة
+     * الفترات المتطابقة تماماً.
+     */
     private boolean hasOverlap(OverrideEntry newEntry, OverrideEntry excluding) {
         for (OverrideEntry existing : entries) {
-            if (existing.equals(excluding)) continue;
-            // تحقق من التداخل
+            if (existing == excluding) continue;
             boolean startsBefore = existing.to() == null || !newEntry.from().isAfter(existing.to());
             boolean endsAfter = newEntry.to() == null || !newEntry.to().isBefore(existing.from());
             if (startsBefore && endsAfter) return true;
@@ -285,7 +268,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  حفظ الكل
+    //  Save All — 🆕 path محدّث
     // ════════════════════════════════════════════════════════════
 
     private void handleSaveAll() {
@@ -301,9 +284,8 @@ public class AllowanceOverrideDialogController implements Initializable {
 
         btn_save_all.setDisable(true);
 
-        // الـ endpoint بيرجع ApiResponse<Boolean> (الباك اند بيلفها Optional.of(true))
         FxApiSupport.put(
-                "/allowances/employee/" + nationalId + "/override",
+                "/entitlements/allowances/employee/" + nationalId + "/override",   // 🆕
                 request,
                 Boolean.class,
                 saved -> {
@@ -319,7 +301,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  إرجاع لأوتوماتيك
+    //  Revert Auto — 🆕 path محدّث
     // ════════════════════════════════════════════════════════════
 
     private void handleRevertAuto() {
@@ -331,8 +313,8 @@ public class AllowanceOverrideDialogController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/allowances/employee/" + nationalId
-                                + "/override/" + currentLine.code(),
+                        "/entitlements/allowances/employee/" + nationalId
+                                + "/override/" + currentLine.code(),   // 🆕
                         () -> {
                             if (onSaved != null) onSaved.run();
                             closeDialog();

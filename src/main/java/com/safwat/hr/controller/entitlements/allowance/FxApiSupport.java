@@ -1,10 +1,14 @@
-package com.safwat.hr.controller.allowance;
+package com.safwat.hr.controller.entitlements.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import javafx.application.Platform;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +32,7 @@ public final class FxApiSupport {
 
     private FxApiSupport() {
     }
+
 
     // ─────────────────────────────────────────────
     //  GET
@@ -121,5 +126,58 @@ public final class FxApiSupport {
     private static String rootMessage(Throwable ex) {
         Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
         return cause.getMessage() != null ? cause.getMessage() : cause.toString();
+
+
+    }
+
+    public static void downloadBinary(
+            String path,
+            String defaultFileName,
+            java.util.function.Consumer<String> onSuccess,
+            java.util.function.Consumer<String> onError
+    ) {
+        ApiClient.downloadBinaryAsync(path)
+                .whenComplete((bytes, ex) -> Platform.runLater(() -> {
+                    if (ex != null) {
+                        onError.accept(rootMessage(ex));
+                        return;
+                    }
+                    if (bytes == null || bytes.length == 0) {
+                        onError.accept("الملف فارغ أو فشل التحميل");
+                        return;
+                    }
+
+                    FileChooser fc = new FileChooser();
+                    fc.setTitle("احفظ التقرير");
+                    fc.setInitialFileName(defaultFileName);
+
+                    String ext = defaultFileName.contains(".")
+                            ? defaultFileName.substring(defaultFileName.lastIndexOf('.') + 1)
+                            : "*";
+                    fc.getExtensionFilters().add(
+                            new FileChooser.ExtensionFilter(ext.toUpperCase() + " Files", "*." + ext));
+
+                    Window owner = null;
+                    try {
+                        owner = javafx.stage.Window.getWindows().stream()
+                                .filter(Window::isFocused)
+                                .findFirst()
+                                .orElse(null);
+                    } catch (Exception ignored) {
+                    }
+
+                    File file = fc.showSaveDialog(owner);
+                    if (file == null) {
+                        onSuccess.accept("(تم الإلغاء)");
+                        return;
+                    }
+
+                    try {
+                        Files.write(file.toPath(), bytes);
+                        onSuccess.accept(file.getAbsolutePath());
+                    } catch (Exception e) {
+                        onError.accept("فشل حفظ الملف: " + e.getMessage());
+                    }
+                }));
     }
 }

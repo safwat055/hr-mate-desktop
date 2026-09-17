@@ -6,7 +6,7 @@
 <ScrollPane prefHeight="800.0" prefWidth="1200.0"
             xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.safwat.hr.controller.statutory.StatutoryDialogController">
+            fx:controller="com.safwat.hr.controller.entitlements.statutory.StatutoryDialogController">
     <content>
         <VBox nodeOrientation="RIGHT_TO_LEFT" prefHeight="870" prefWidth="1180" spacing="16" styleClass="card">
             <padding>

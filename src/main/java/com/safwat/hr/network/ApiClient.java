@@ -343,4 +343,74 @@ public final class ApiClient {
                 HttpResponse.BodyHandlers.ofString());
         return c.parseResponse(response, responseType);
     }
+
+    // ─────────────────────────────────────────────
+//  Binary Download
+// ─────────────────────────────────────────────
+
+    /**
+     * ينزّل ملف binary (PDF / XLSX / ...) من الـ endpoint.
+     *
+     * <p>بيستخدم نفس {@link HttpCore} — نفس BASE_URL، نفس Auth header،
+     * نفس الـ timeout الافتراضي.
+     *
+     * @param path المسار النسبي (بدون /api)
+     * @return محتوى الملف كـ byte[]
+     */
+    public static byte[] downloadBinary(String path)
+            throws IOException, InterruptedException {
+        return downloadBinary(path, HttpCore.TIMEOUT);
+    }
+
+    /**
+     * نفس {@link #downloadBinary(String)} لكن بـ timeout مخصص —
+     * مفيد للتقارير الطويلة (Excel لكل الموظفين).
+     */
+    public static byte[] downloadBinary(String path, Duration timeout)
+            throws IOException, InterruptedException {
+        HttpCore c = core();
+
+        HttpRequest.Builder builder = c.addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(java.net.URI.create(c.getBaseUrl() + path))
+                        .header("Accept", "application/pdf, application/octet-stream, */*")
+                        .timeout(timeout)
+                        .GET()
+        );
+
+        HttpResponse<byte[]> response = c.httpClient.send(
+                builder.build(),
+                HttpResponse.BodyHandlers.ofByteArray()
+        );
+
+        if (response.statusCode() >= 400) {
+            throw new IOException("فشل التحميل — HTTP " + response.statusCode());
+        }
+
+        byte[] body = response.body();
+        if (body == null || body.length == 0) {
+            throw new IOException("الملف فارغ");
+        }
+        return body;
+    }
+
+    /**
+     * نسخة async من {@link #downloadBinary(String)}.
+     */
+    public static CompletableFuture<byte[]> downloadBinaryAsync(String path) {
+        return downloadBinaryAsync(path, HttpCore.TIMEOUT);
+    }
+
+    /**
+     * نسخة async من {@link #downloadBinary(String, Duration)}.
+     */
+    public static CompletableFuture<byte[]> downloadBinaryAsync(String path, Duration timeout) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return downloadBinary(path, timeout);
+            } catch (Exception e) {
+                throw new java.util.concurrent.CompletionException(e);
+            }
+        });
+    }
 }

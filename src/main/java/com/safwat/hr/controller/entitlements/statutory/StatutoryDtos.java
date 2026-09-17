@@ -1,4 +1,4 @@
-package com.safwat.hr.controller.statutory;
+package com.safwat.hr.controller.entitlements.statutory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -77,7 +77,7 @@ public final class StatutoryDtos {
             Long id,
             LocalDate effectiveFrom,
             LocalDate effectiveTo,
-            
+
             int bracketOrder,
             BigDecimal fromAmount,
             BigDecimal toAmount,

@@ -1,7 +1,7 @@
-package com.safwat.hr.controller.allowance;
+package com.safwat.hr.controller.entitlements.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.controller.allowance.AllowanceDefinition.*;
+import com.safwat.hr.controller.entitlements.allowance.AllowanceDefinition.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,6 +14,7 @@ import javafx.util.StringConverter;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.text.Collator;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,31 +23,6 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
-/**
- * Controller لشاشة إدارة قواعد البدلات (allowance_definition).
- *
- * <p>بتسمح بـ:
- * <ul>
- *   <li>عرض أحدث snapshot لكل كود بدل (الجدول العلوي)</li>
- *   <li>عرض التاريخ الكامل لكود مُختار (الجدول السفلي)</li>
- *   <li>إضافة كود جديد بالكامل، أو snapshot جديد (تاريخ سريان مختلف)
- *       لكود موجود — تعديل طريقة الاحتساب مع الوقت</li>
- *   <li>تعديل أو حذف snapshot موجود</li>
- *   <li>تصنيف العنصر (استحقاق/استقطاع/تأمينات/ضريبة/دمغة) وخضوعه
- *       لوعاء التأمينات و/أو الضريبة والدمغة</li>
- * </ul>
- *
- * <p><b>عرض عربي:</b> كل الـ enums بتتعرض بأسماء عربي مفهومة للمستخدم،
- * والقيم الفعلية (الإنجليزية) هي اللي بتتبعت للباك.
- *
- * <p><b>التحكم في الإدخال:</b>
- * <ul>
- *   <li>{@code valuesMap} key → ComboBox (الدرجات + all + percent)</li>
- *   <li>التاريخ → TextField بصيغة {@code yyyy-MM-dd} + validation</li>
- *   <li>الشهور المستثناة → TextField بصيغة {@code yyyy-MM} + validation</li>
- * </ul>
- */
 public class AllowanceDefinitionDialogController implements Initializable {
 
     // ── جدول أحدث القواعد ────────────────────────────────────────
@@ -59,14 +35,15 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<AllowanceDefinition, LocalDate> col_def_effectiveFrom;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.Behavior> col_def_behavior;
+    private TableColumn<AllowanceDefinition, LocalDate> col_def_effectiveTo;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.CalcType> col_def_calcType;
+    private TableColumn<AllowanceDefinition, Behavior> col_def_behavior;
+    @FXML
+    private TableColumn<AllowanceDefinition, CalcType> col_def_calcType;
     @FXML
     private TableColumn<AllowanceDefinition, ElementType> col_def_elementType;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.Scope> col_def_scope;
-
+    private TableColumn<AllowanceDefinition, Scope> col_def_scope;
     @FXML
     private Button btn_new_code;
     @FXML
@@ -80,17 +57,19 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<AllowanceDefinition, LocalDate> col_hist_effectiveFrom;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.Behavior> col_hist_behavior;
+    private TableColumn<AllowanceDefinition, LocalDate> col_hist_effectiveTo;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.CalcType> col_hist_calcType;
+    private TableColumn<AllowanceDefinition, Behavior> col_hist_behavior;
     @FXML
-    private TableColumn<AllowanceDefinition, AllowanceDefinition.BaseSource> col_hist_baseSource;
+    private TableColumn<AllowanceDefinition, CalcType> col_hist_calcType;
+    @FXML
+    private TableColumn<AllowanceDefinition, BaseSource> col_hist_baseSource;
     @FXML
     private TableColumn<AllowanceDefinition, ElementType> col_hist_elementType;
     @FXML
     private TableColumn<AllowanceDefinition, Void> col_hist_actions;
 
-    // ── فورم الإضافة/التعديل ─────────────────────────────────────
+    // ── فورم ─────────────────────────────────────────────────────
     @FXML
     private VBox pane_form;
     @FXML
@@ -102,7 +81,9 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TextField txt_nameEn;
     @FXML
-    private TextField txt_effectiveFrom;      // ← نصي بدل DatePicker
+    private TextField txt_effectiveFrom;
+    @FXML
+    private TextField txt_effectiveTo;
     @FXML
     private ComboBox<Behavior> combo_behavior;
     @FXML
@@ -114,9 +95,17 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private ComboBox<ElementType> combo_elementType;
     @FXML
+    private ComboBox<TimelineAnchor> combo_timelineAnchor;
+    @FXML
     private CheckBox chk_subjectToInsurance;
     @FXML
     private CheckBox chk_subjectToTaxAndStamp;
+    @FXML
+    private CheckBox chk_inMinimumWageBase;
+    @FXML
+    private HBox pane_referenceDate;
+    @FXML
+    private TextField txt_referenceDate;
     @FXML
     private TextField txt_excludedMonths;
     @FXML
@@ -126,7 +115,6 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TextArea txt_notes;
 
-    // valuesMap — مفتاح (ComboBox) / قيمة (TextField)
     @FXML
     private TableView<MapEntryRow> table_values;
     @FXML
@@ -136,11 +124,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
     @FXML
     private TableColumn<MapEntryRow, Void> col_map_actions;
     @FXML
-    private ComboBox<MapKeyOption> combo_map_key;   // ← ComboBox بدل TextField
+    private ComboBox<MapKeyOption> combo_map_key;
     @FXML
     private TextField txt_map_value;
     @FXML
     private Button btn_add_map_entry;
+    @FXML
+    private VBox pane_valuesMap;      // ← لازم تضيف fx:id ده في الـ FXML
 
     @FXML
     private Label lbl_form_error;
@@ -150,29 +140,25 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private Button btn_cancel_form;
     @FXML
     private Button btn_close;
-    @FXML
-    private ComboBox<AllowanceDefinition.TimelineAnchor> combo_timelineAnchor;
+
     // ── State ────────────────────────────────────────────────────
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final Pattern MONTH_PATTERN = Pattern.compile("^\\d{4}-\\d{2}$");
 
     private final ObservableList<MapEntryRow> valueRows = FXCollections.observableArrayList();
-    private Long editingId = null; // null = إنشاء جديد
+    private Long editingId = null;
     private Runnable onChanged;
 
-    /**
-     * سطر مفتاح/قيمة واحد في valuesMap.
-     * المفتاح String (بيتبعت للباك كـ String).
-     */
+    private static final Comparator<AllowanceDefinition> ARABIC_NAME_COMPARATOR =
+            Comparator.comparing(
+                    d -> d.getNameAr() != null ? d.getNameAr() : "",
+                    Collator.getInstance(new Locale("ar"))
+            );
+
     private record MapEntryRow(String key, BigDecimal value) {
     }
 
-    /**
-     * خيار في ComboBox الـ valuesMap key.
-     * {@code value} هي القيمة المُرسلة للباك ("6", "all", "percent")
-     * {@code label} هو العرض العربي
-     */
     private record MapKeyOption(String value, String label) {
         @Override
         public String toString() {
@@ -180,18 +166,14 @@ public class AllowanceDefinitionDialogController implements Initializable {
         }
     }
 
-    private static String timelineAnchorLabel(AllowanceDefinition.TimelineAnchor a) {
-        return switch (a) {
-            case TARGET_DATE -> "شهرى";
-            case EFFECTIVE_FROM -> "شهر القرار";
-        };
-    }
+    // ══════════════════════════════════════════════════════════════
+    //  مجموعات مفاتيح valuesMap — كل نوع له مفاتيحه
+    // ══════════════════════════════════════════════════════════════
 
     /**
-     * قائمة الخيارات المتاحة للـ valuesMap key.
-     * الدرجات من 6 لـ -2 بالأسماء العربية + all + percent.
+     * مفاتيح الدرجات — للنسب والمبالغ حسب الدرجة + الحافز التكميلي.
      */
-    private static final List<MapKeyOption> MAP_KEY_OPTIONS = List.of(
+    private static final List<MapKeyOption> DEGREE_KEYS = List.of(
             new MapKeyOption("6", "السادسة"),
             new MapKeyOption("5", "الخامسة"),
             new MapKeyOption("4", "الرابعة"),
@@ -200,13 +182,81 @@ public class AllowanceDefinitionDialogController implements Initializable {
             new MapKeyOption("1", "الأولى"),
             new MapKeyOption("0", "مدير عام"),
             new MapKeyOption("-1", "العالية"),
-            new MapKeyOption("-2", "الممتازة"),
-            new MapKeyOption("all", "كل الدرجات"),
+            new MapKeyOption("-2", "الممتازة")
+    );
+
+    /**
+     * مفتاح "all" — للمبالغ والنسب الموحّدة.
+     */
+    private static final List<MapKeyOption> ALL_KEY = List.of(
+            new MapKeyOption("all", "كل الدرجات")
+    );
+
+    /**
+     * مفتاح "percent" — للبدلات المعتمدة على إجمالي المحرك.
+     */
+    private static final List<MapKeyOption> PERCENT_KEY = List.of(
             new MapKeyOption("percent", "نسبة من المحرك")
     );
 
+    /**
+     * مفاتيح الحالة الاجتماعية — للنوع FIXED_AMOUNT_BY_MARITAL_STATUS.
+     */
+    private static final List<MapKeyOption> MARITAL_KEYS = List.of(
+            new MapKeyOption("SINGLE", "أعزب"),
+            new MapKeyOption("MARRIED", "متزوج"),
+            new MapKeyOption("MARRIED_1_CHILD", "متزوج + طفل"),
+            new MapKeyOption("MARRIED_2_CHILDREN", "متزوج + طفلين أو أكثر"),
+            new MapKeyOption("WIDOWED", "أرمل"),
+            new MapKeyOption("WIDOWED_1_CHILD", "أرمل + طفل"),
+            new MapKeyOption("WIDOWED_2_CHILDREN", "أرمل + طفلين أو أكثر"),
+            new MapKeyOption("DIVORCED", "مطلق"),
+            new MapKeyOption("DIVORCED_1_CHILD", "مطلق + طفل"),
+            new MapKeyOption("DIVORCED_2_CHILDREN", "مطلق + طفلين أو أكثر")
+    );
+
+    /**
+     * ماب الـ labels لكل المفاتيح الممكنة — للاستخدام في {@link #mapKeyDisplay}
+     * عشان نعرض label عربي لأي مفتاح موجود في valuesMap.
+     */
+    private static final Map<String, String> KEY_LABELS = buildKeyLabels();
+
+    private static Map<String, String> buildKeyLabels() {
+        Map<String, String> m = new LinkedHashMap<>();
+        DEGREE_KEYS.forEach(k -> m.put(k.value(), k.label()));
+        ALL_KEY.forEach(k -> m.put(k.value(), k.label()));
+        PERCENT_KEY.forEach(k -> m.put(k.value(), k.label()));
+        MARITAL_KEYS.forEach(k -> m.put(k.value(), k.label()));
+        return Map.copyOf(m);
+    }
+
+    /**
+     * يرجّع قائمة مفاتيح valuesMap المناسبة لنوع الحساب.
+     *
+     * @return قائمة فارغة لو النوع مش محتاج valuesMap
+     */
+    private static List<MapKeyOption> mapKeyOptionsFor(CalcType calcType) {
+        if (calcType == null) return List.of();
+        return switch (calcType) {
+            case PERCENT_BY_DEGREE, AMOUNT_BY_DEGREE, SUPPLEMENTARY_BONUS -> DEGREE_KEYS;
+            case FIXED_AMOUNT, PERCENT_ALL_DEGREE -> ALL_KEY;
+            case SALARY_ENGINE, DEPENDS_SALARY_ENGINE -> PERCENT_KEY;
+            case FIXED_AMOUNT_BY_MARITAL_STATUS -> MARITAL_KEYS;
+            case COMPENSATORY_BONUS,
+                 SPECIAL_ALLOWANCE_ADDED, SPECIAL_ALLOWANCE_NOT_ADDED,
+                 SOCIAL_PACKAGE_MINIMUM -> List.of();
+        };
+    }
+
+    /**
+     * هل النوع ده محتاج المستخدم يدخل valuesMap يدوياً؟
+     */
+    private static boolean calcTypeNeedsValues(CalcType calcType) {
+        return !mapKeyOptionsFor(calcType).isEmpty();
+    }
+
     // ════════════════════════════════════════════════════════════
-    //  قاموس التسميات العربية — عرض بس، القيمة المُرسلة تفضل enum name
+    //  Labels
     // ════════════════════════════════════════════════════════════
 
     private static String behaviorLabel(Behavior b) {
@@ -226,6 +276,10 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case DEPENDS_SALARY_ENGINE -> "مبلغ بعد اكتمال المحرك";
             case COMPENSATORY_BONUS -> "الحافز التعويضي";
             case SUPPLEMENTARY_BONUS -> "الحافز التكميلي";
+            case SPECIAL_ALLOWANCE_ADDED -> "علاوة خاصة مضافة";
+            case SPECIAL_ALLOWANCE_NOT_ADDED -> "علاوة خاصة غير مضافة";
+            case SOCIAL_PACKAGE_MINIMUM -> "علاوة الحزمة الاجتماعية";
+            case FIXED_AMOUNT_BY_MARITAL_STATUS -> "مبلغ ثابت حسب الحالة الاجتماعية";
         };
     }
 
@@ -254,6 +308,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
         };
     }
 
+    private static String timelineAnchorLabel(TimelineAnchor a) {
+        return switch (a) {
+            case TARGET_DATE -> "شهرى";
+            case EFFECTIVE_FROM -> "شهر القرار";
+        };
+    }
+
     @SuppressWarnings("unchecked")
     private static <E> StringConverter<E> arabicConverter(Function<Object, String> labelFn) {
         return new StringConverter<>() {
@@ -264,7 +325,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
             @Override
             public E fromString(String s) {
-                return null; // الـ ComboBoxes هنا مش editable
+                return null;
             }
         };
     }
@@ -287,16 +348,32 @@ public class AllowanceDefinitionDialogController implements Initializable {
         btn_add_map_entry.setOnAction(e -> handleAddMapEntry());
         btn_close.setOnAction(e -> closeDialog());
 
-        combo_calcType.valueProperty().addListener((obs, old, val) ->
-                combo_baseSource.setDisable(
-                        val != CalcType.PERCENT_BY_DEGREE && val != CalcType.PERCENT_ALL_DEGREE));
+        // listener على calcType — يظبط baseSource + referenceDate + valuesMap
+        combo_calcType.valueProperty().addListener((obs, old, val) -> {
+            combo_baseSource.setDisable(
+                    val != CalcType.PERCENT_BY_DEGREE && val != CalcType.PERCENT_ALL_DEGREE);
 
-        // validation فوري لحقول التاريخ عند فقدان التركيز
-        txt_effectiveFrom.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (!isNowFocused) validateEffectiveFromField();
+            boolean needsRefDate = val == CalcType.SPECIAL_ALLOWANCE_ADDED
+                    || val == CalcType.SPECIAL_ALLOWANCE_NOT_ADDED
+                    || val == CalcType.SOCIAL_PACKAGE_MINIMUM;
+            pane_referenceDate.setVisible(needsRefDate);
+            pane_referenceDate.setManaged(needsRefDate);
+
+            // حدّث قائمة مفاتيح valuesMap + اظهر/اخفي القسم
+            updateMapKeyOptionsFor(val);
         });
-        txt_excludedMonths.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (!isNowFocused) validateExcludedMonthsField();
+
+        txt_effectiveFrom.focusedProperty().addListener((obs, was, isNow) -> {
+            if (!isNow) validateDateField(txt_effectiveFrom, true);
+        });
+        txt_effectiveTo.focusedProperty().addListener((obs, was, isNow) -> {
+            if (!isNow) validateDateField(txt_effectiveTo, false);
+        });
+        txt_referenceDate.focusedProperty().addListener((obs, was, isNow) -> {
+            if (!isNow) validateDateField(txt_referenceDate, false);
+        });
+        txt_excludedMonths.focusedProperty().addListener((obs, was, isNow) -> {
+            if (!isNow) validateExcludedMonthsField();
         });
 
         hideForm();
@@ -308,22 +385,27 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  تحميل البيانات
+    //  Load
     // ════════════════════════════════════════════════════════════
 
     private void loadDefinitions() {
         FxApiSupport.getList(
-                "/allowances/definitions",
+                "/entitlements/allowances/definitions",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
-                defs -> table_definitions.setItems(FXCollections.observableArrayList(defs)),
+                defs -> {
+                    List<AllowanceDefinition> sorted = defs.stream()
+                            .sorted(ARABIC_NAME_COMPARATOR)
+                            .toList();
+                    table_definitions.setItems(FXCollections.observableArrayList(sorted));
+                },
                 err -> showFormError("خطأ في تحميل القواعد: " + err)
         );
     }
 
     private void loadHistory(String code) {
         FxApiSupport.getList(
-                "/allowances/definitions/" + code + "/history",
+                "/entitlements/allowances/definitions/" + code + "/history",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 history -> table_history.setItems(FXCollections.observableArrayList(history)),
@@ -332,32 +414,23 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  إعداد الجداول
+    //  Setup Tables
     // ════════════════════════════════════════════════════════════
 
     private void setupDefinitionsTable() {
-        col_def_code.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getCode()));
-        col_def_nameAr.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(d.getValue().getNameAr()));
-        col_def_effectiveFrom.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
+        col_def_code.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().getCode()));
+        col_def_nameAr.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(d.getValue().getNameAr()));
+        col_def_effectiveFrom.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
         col_def_effectiveFrom.setCellFactory(tc -> dateCell());
-
-        col_def_behavior.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
+        col_def_effectiveTo.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveTo()));
+        col_def_effectiveTo.setCellFactory(tc -> dateCell());
+        col_def_behavior.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
         col_def_behavior.setCellFactory(tc -> behaviorCell());
-
-        col_def_calcType.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
+        col_def_calcType.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
         col_def_calcType.setCellFactory(tc -> calcTypeCell());
-
-        col_def_elementType.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
+        col_def_elementType.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
         col_def_elementType.setCellFactory(tc -> elementTypeCell());
-
-        col_def_scope.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getScope()));
+        col_def_scope.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getScope()));
         col_def_scope.setCellFactory(tc -> scopeCell());
 
         table_definitions.getSelectionModel().selectedItemProperty().addListener((obs, old, sel) -> {
@@ -375,24 +448,17 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     private void setupHistoryTable() {
-        col_hist_effectiveFrom.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
+        col_hist_effectiveFrom.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveFrom()));
         col_hist_effectiveFrom.setCellFactory(tc -> dateCell());
-
-        col_hist_behavior.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
+        col_hist_effectiveTo.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getEffectiveTo()));
+        col_hist_effectiveTo.setCellFactory(tc -> dateCell());
+        col_hist_behavior.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBehavior()));
         col_hist_behavior.setCellFactory(tc -> behaviorCell());
-
-        col_hist_calcType.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
+        col_hist_calcType.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getCalcType()));
         col_hist_calcType.setCellFactory(tc -> calcTypeCell());
-
-        col_hist_baseSource.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBaseSource()));
+        col_hist_baseSource.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getBaseSource()));
         col_hist_baseSource.setCellFactory(tc -> baseSourceCell());
-
-        col_hist_elementType.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
+        col_hist_elementType.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().getElementType()));
         col_hist_elementType.setCellFactory(tc -> elementTypeCell());
 
         col_hist_actions.setCellFactory(tc -> new TableCell<>() {
@@ -406,15 +472,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 btnDelete.getStyleClass().add("btn-danger");
                 btnDelete.setPrefHeight(28);
                 btnDelete.setPrefWidth(40);
-
-                btnEdit.setOnAction(e -> {
-                    AllowanceDefinition snap = getTableView().getItems().get(getIndex());
-                    showFormForEdit(snap);
-                });
-                btnDelete.setOnAction(e -> {
-                    AllowanceDefinition snap = getTableView().getItems().get(getIndex());
-                    handleDelete(snap);
-                });
+                btnEdit.setOnAction(e -> showFormForEdit(getTableView().getItems().get(getIndex())));
+                btnDelete.setOnAction(e -> handleDelete(getTableView().getItems().get(getIndex())));
             }
 
             @Override
@@ -432,12 +491,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     private void setupValuesTable() {
-        col_map_key.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(
-                        mapKeyDisplay(d.getValue().key())
-                ));
-        col_map_value.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
+        col_map_key.setCellValueFactory(d -> new javafx.beans.property.SimpleStringProperty(mapKeyDisplay(d.getValue().key())));
+        col_map_value.setCellValueFactory(d -> new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_map_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnDelete = new Button("🗑");
 
@@ -473,26 +528,38 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_elementType.setItems(FXCollections.observableArrayList(ElementType.values()));
         combo_elementType.setConverter(arabicConverter(v -> elementTypeLabel((ElementType) v)));
 
-        // ComboBox الـ valuesMap key
-        combo_map_key.setItems(FXCollections.observableArrayList(MAP_KEY_OPTIONS));
-        combo_map_key.setVisibleRowCount(12);
+        combo_timelineAnchor.setItems(FXCollections.observableArrayList(TimelineAnchor.values()));
+        combo_timelineAnchor.setConverter(arabicConverter(v -> timelineAnchorLabel((TimelineAnchor) v)));
 
-        combo_timelineAnchor.setItems(FXCollections.observableArrayList(
-                AllowanceDefinition.TimelineAnchor.values()));
-        combo_timelineAnchor.setConverter(arabicConverter(v -> timelineAnchorLabel((AllowanceDefinition.TimelineAnchor) v)));
+        // combo_map_key — فاضي في البداية، بيتعمّر لما المستخدم يختار calcType
+        combo_map_key.setVisibleRowCount(12);
     }
 
     /**
-     * عرض الـ key في الجدول — بيدور على الـ label العربي، ولو مش موجود
-     * (قيمة قديمة مثلاً) يعرض القيمة الخام.
+     * يحدّث قائمة مفاتيح valuesMap حسب النوع المختار.
+     * لو النوع مش محتاج valuesMap، بيخفي القسم كله.
      */
+    private void updateMapKeyOptionsFor(CalcType calcType) {
+        List<MapKeyOption> options = mapKeyOptionsFor(calcType);
+        combo_map_key.setItems(FXCollections.observableArrayList(options));
+        combo_map_key.setValue(null);
+
+        boolean needsValues = !options.isEmpty();
+
+        if (pane_valuesMap != null) {
+            pane_valuesMap.setVisible(needsValues);
+            pane_valuesMap.setManaged(needsValues);
+        }
+
+        // لو النوع مش محتاج values، امسح أي صفوف قديمة
+        if (!needsValues) {
+            valueRows.clear();
+        }
+    }
+
     private static String mapKeyDisplay(String rawKey) {
         if (rawKey == null) return "";
-        return MAP_KEY_OPTIONS.stream()
-                .filter(o -> o.value().equals(rawKey))
-                .findFirst()
-                .map(MapKeyOption::label)
-                .orElse(rawKey);
+        return KEY_LABELS.getOrDefault(rawKey, rawKey);
     }
 
     private TableCell<AllowanceDefinition, LocalDate> dateCell() {
@@ -500,7 +567,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             @Override
             protected void updateItem(LocalDate date, boolean empty) {
                 super.updateItem(date, empty);
-                setText(empty || date == null ? null : date.format(DATE_FMT));
+                setText(empty || date == null ? "—" : date.format(DATE_FMT));
                 setStyle("-fx-alignment: CENTER;");
             }
         };
@@ -562,13 +629,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  الفورم — إظهار/إخفاء
+    //  Form — show / hide
     // ════════════════════════════════════════════════════════════
 
     private void showFormForNewCode() {
         clearForm();
         editingId = null;
-        txt_code.setDisable(true);   // الباك بيولّد UUID
+        txt_code.setDisable(true);
         lbl_form_title.setText("إضافة بدل جديد بالكامل");
         showForm();
     }
@@ -576,18 +643,16 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private void showFormForNewSnapshot() {
         AllowanceDefinition selected = table_definitions.getSelectionModel().getSelectedItem();
         if (selected == null) return;
-
         clearForm();
         editingId = null;
         txt_code.setText(selected.getCode());
         txt_code.setDisable(true);
         txt_nameAr.setText(selected.getNameAr());
         txt_nameEn.setText(selected.getNameEn());
-        combo_elementType.setValue(
-                selected.getElementType() != null ? selected.getElementType() : ElementType.ENTITLEMENT
-        );
+        combo_elementType.setValue(selected.getElementType() != null ? selected.getElementType() : ElementType.ENTITLEMENT);
         chk_subjectToInsurance.setSelected(selected.isSubjectToInsurance());
         chk_subjectToTaxAndStamp.setSelected(selected.isSubjectToTaxAndStamp());
+        chk_inMinimumWageBase.setSelected(selected.isInMinimumWageBase());
         lbl_form_title.setText("إضافة تاريخ جديد لبدل: " + selected.getCode());
         showForm();
     }
@@ -601,23 +666,27 @@ public class AllowanceDefinitionDialogController implements Initializable {
         txt_nameEn.setText(snap.getNameEn());
         if (snap.getEffectiveFrom() != null)
             txt_effectiveFrom.setText(snap.getEffectiveFrom().format(DATE_FMT));
+        if (snap.getEffectiveTo() != null)
+            txt_effectiveTo.setText(snap.getEffectiveTo().format(DATE_FMT));
+
         combo_behavior.setValue(snap.getBehavior());
         combo_calcType.setValue(snap.getCalcType());
         combo_baseSource.setValue(snap.getBaseSource());
         combo_scope.setValue(snap.getScope() != null ? snap.getScope() : Scope.GENERAL);
-        combo_elementType.setValue(
-                snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
-        combo_timelineAnchor.setValue(
-                snap.getTimelineAnchor() != null
-                        ? snap.getTimelineAnchor()
-                        : AllowanceDefinition.TimelineAnchor.TARGET_DATE
-        );
+        combo_elementType.setValue(snap.getElementType() != null ? snap.getElementType() : ElementType.ENTITLEMENT);
+        combo_timelineAnchor.setValue(snap.getTimelineAnchor() != null ? snap.getTimelineAnchor() : TimelineAnchor.TARGET_DATE);
         chk_subjectToInsurance.setSelected(snap.isSubjectToInsurance());
         chk_subjectToTaxAndStamp.setSelected(snap.isSubjectToTaxAndStamp());
+        chk_inMinimumWageBase.setSelected(snap.isInMinimumWageBase());
+        if (snap.getReferenceDate() != null)
+            txt_referenceDate.setText(snap.getReferenceDate().format(DATE_FMT));
         txt_excludedMonths.setText(joinOrEmpty(snap.getExcludedMonths()));
         txt_eligibleLaws.setText(joinOrEmpty(snap.getEligibleLaws()));
         txt_eligibleLawCodes.setText(joinOrEmpty(snap.getEligibleLawCodes()));
         txt_notes.setText(snap.getNotes());
+
+        // ظبط قائمة مفاتيح valuesMap حسب النوع المحفوظ
+        updateMapKeyOptionsFor(snap.getCalcType());
 
         valueRows.clear();
         if (snap.getValuesMap() != null) {
@@ -626,7 +695,6 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         lbl_form_title.setText("تعديل: " + snap.getCode() + " @ " + snap.getEffectiveFrom());
         showForm();
-
     }
 
     private void clearForm() {
@@ -635,6 +703,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
         txt_nameAr.clear();
         txt_nameEn.clear();
         txt_effectiveFrom.clear();
+        txt_effectiveTo.clear();
+        txt_referenceDate.clear();
         combo_behavior.setValue(null);
         combo_calcType.setValue(null);
         combo_baseSource.setValue(null);
@@ -642,14 +712,24 @@ public class AllowanceDefinitionDialogController implements Initializable {
         combo_elementType.setValue(ElementType.ENTITLEMENT);
         chk_subjectToInsurance.setSelected(false);
         chk_subjectToTaxAndStamp.setSelected(false);
+        chk_inMinimumWageBase.setSelected(false);
         txt_excludedMonths.clear();
         txt_eligibleLaws.clear();
         txt_eligibleLawCodes.clear();
         txt_notes.clear();
         valueRows.clear();
+        combo_map_key.setItems(FXCollections.observableArrayList());
         combo_map_key.setValue(null);
         txt_map_value.clear();
-        combo_timelineAnchor.setValue(AllowanceDefinition.TimelineAnchor.TARGET_DATE);
+        combo_timelineAnchor.setValue(TimelineAnchor.TARGET_DATE);
+        pane_referenceDate.setVisible(false);
+        pane_referenceDate.setManaged(false);
+
+        if (pane_valuesMap != null) {
+            pane_valuesMap.setVisible(false);
+            pane_valuesMap.setManaged(false);
+        }
+
         lbl_form_error.setVisible(false);
     }
 
@@ -665,13 +745,12 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  valuesMap — إضافة صف
+    //  valuesMap
     // ════════════════════════════════════════════════════════════
 
     private void handleAddMapEntry() {
         MapKeyOption keyOpt = combo_map_key.getValue();
         String valStr = txt_map_value.getText().trim();
-
         if (keyOpt == null) {
             showFormError("اختر المفتاح من القائمة");
             return;
@@ -680,7 +759,6 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("القيمة مطلوبة");
             return;
         }
-
         BigDecimal value;
         try {
             value = new BigDecimal(valStr);
@@ -688,11 +766,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("القيمة يجب أن تكون رقماً");
             return;
         }
-
-        // لو المفتاح موجود بالفعل، استبدله بدل ما نكرره
         valueRows.removeIf(r -> r.key().equals(keyOpt.value()));
         valueRows.add(new MapEntryRow(keyOpt.value(), value));
-
         combo_map_key.setValue(null);
         txt_map_value.clear();
         lbl_form_error.setVisible(false);
@@ -702,37 +777,31 @@ public class AllowanceDefinitionDialogController implements Initializable {
     //  Validation
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * يتحقق من صيغة {@code yyyy-MM-dd} في {@code txt_effectiveFrom}.
-     *
-     * @return التاريخ المُحلل، أو {@code null} لو فيه خطأ (وبيعرض رسالة)
-     */
-    private LocalDate validateEffectiveFromField() {
-        String text = txt_effectiveFrom.getText();
-        if (text == null || text.isBlank()) return null;
+    private LocalDate validateDateField(TextField field, boolean required) {
+        String text = field.getText();
+        if (text == null || text.isBlank()) {
+            if (required) {
+                showFormError("التاريخ مطلوب");
+                return null;
+            }
+            return null;
+        }
         text = text.trim();
-
         if (!DATE_PATTERN.matcher(text).matches()) {
-            showFormError("تاريخ السريان لازم يكون بصيغة yyyy-MM-dd");
+            showFormError("التاريخ لازم يكون بصيغة yyyy-MM-dd");
             return null;
         }
         try {
             return LocalDate.parse(text, DATE_FMT);
         } catch (DateTimeParseException ex) {
-            showFormError("تاريخ السريان غير صحيح: " + text);
+            showFormError("تاريخ غير صحيح: " + text);
             return null;
         }
     }
 
-    /**
-     * يتحقق من صيغة الشهور المستثناة: {@code yyyy-MM} مفصولة بفواصل.
-     *
-     * @return {@code true} لو صحيحة أو فاضية
-     */
     private boolean validateExcludedMonthsField() {
         String text = txt_excludedMonths.getText();
         if (text == null || text.isBlank()) return true;
-
         for (String part : text.split(",")) {
             String s = part.trim();
             if (s.isBlank()) continue;
@@ -745,7 +814,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  حفظ
+    //  Save
     // ════════════════════════════════════════════════════════════
 
     private void handleSave() {
@@ -758,15 +827,22 @@ public class AllowanceDefinitionDialogController implements Initializable {
         BaseSource baseSource = combo_baseSource.getValue();
         Scope scope = combo_scope.getValue();
         ElementType elementType = combo_elementType.getValue();
+        TimelineAnchor timelineAnchor = combo_timelineAnchor.getValue();
 
-        // validation التاريخ
-        LocalDate effectiveFrom = validateEffectiveFromField();
+        // ── التواريخ
+        LocalDate effectiveFrom = validateDateField(txt_effectiveFrom, true);
         if (effectiveFrom == null) {
             if (txt_effectiveFrom.getText() == null || txt_effectiveFrom.getText().isBlank())
                 showFormError("تاريخ السريان مطلوب");
             return;
         }
+        LocalDate effectiveTo = validateDateField(txt_effectiveTo, false);
+        if (effectiveTo != null && !effectiveTo.isAfter(effectiveFrom)) {
+            showFormError("تاريخ النهاية لازم يكون بعد تاريخ البداية");
+            return;
+        }
 
+        // ── تحقق أساسي
         if (nameAr.isBlank()) {
             showFormError("اسم البدل بالعربي مطلوب");
             return;
@@ -781,62 +857,73 @@ public class AllowanceDefinitionDialogController implements Initializable {
             return;
         }
         if (elementType == null) {
-            showFormError("طبيعة العنصر (استحقاق/استقطاع/...) مطلوبة");
+            showFormError("طبيعة العنصر مطلوبة");
             return;
         }
-        if (valueRows.isEmpty()) {
-            showFormError("أضف على الأقل قيمة واحدة في valuesMap");
+        if (timelineAnchor == null) {
+            showFormError("مصدر الدرجة مطلوب");
             return;
         }
         if (!validateExcludedMonthsField()) return;
 
+        // ── التاريخ المرجعي
+        LocalDate referenceDate = null;
+        boolean needsRefDate = calcType == CalcType.SPECIAL_ALLOWANCE_ADDED
+                || calcType == CalcType.SPECIAL_ALLOWANCE_NOT_ADDED
+                || calcType == CalcType.SOCIAL_PACKAGE_MINIMUM;
+        if (needsRefDate) {
+            referenceDate = validateDateField(txt_referenceDate, true);
+            if (referenceDate == null) {
+                showFormError("التاريخ المرجعي مطلوب للنوع المختار");
+                return;
+            }
+        }
+
+        // ── valuesMap
+        boolean needsValues = calcTypeNeedsValues(calcType);
+
         Map<String, BigDecimal> valuesMap = new LinkedHashMap<>();
         valueRows.forEach(r -> valuesMap.put(r.key(), r.value()));
 
-        AllowanceDefinition.TimelineAnchor timelineAnchor = combo_timelineAnchor.getValue();
+        if (needsValues && valuesMap.isEmpty()) {
+            showFormError("أضف على الأقل قيمة واحدة في valuesMap");
+            return;
+        }
+        // placeholder للأنواع اللي مش محتاجة valuesMap
+        if (!needsValues && valuesMap.isEmpty()) {
+            valuesMap.put("all", BigDecimal.ZERO);
+        }
 
         AllowanceDefinitionRequest request = new AllowanceDefinitionRequest(
                 code, nameAr,
                 txt_nameEn.getText().isBlank() ? null : txt_nameEn.getText().trim(),
-                effectiveFrom, behavior, calcType, baseSource, scope,
-                elementType,
+                effectiveFrom,
+                effectiveTo,
+                behavior, calcType, baseSource, scope, elementType,
                 chk_subjectToInsurance.isSelected(),
                 chk_subjectToTaxAndStamp.isSelected(),
+                chk_inMinimumWageBase.isSelected(),
                 valuesMap,
+                referenceDate,
                 splitOrNull(txt_excludedMonths.getText()),
                 splitOrNull(txt_eligibleLaws.getText()),
                 splitOrNull(txt_eligibleLawCodes.getText()),
-
-                timelineAnchor,                                   // ← جديد
+                timelineAnchor,
                 txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim()
         );
 
-
-        if (timelineAnchor == null) {
-            throw new IllegalStateException(
-                    "timelineAnchor = null — الـ ComboBox فاضي أو مفيش اختيار. " +
-                            "شوف الـ diagnostics فوق."
-            );
-        }
         btn_save_definition.setDisable(true);
 
         if (editingId != null) {
             FxApiSupport.put(
-                    "/allowances/definitions/" + editingId,
-                    request,
-                    AllowanceDefinition.class,
-                    saved -> onSaveSuccess(),
-                    this::onSaveError
-            );
+                    "/entitlements/allowances/definitions/" + editingId,
+                    request, AllowanceDefinition.class,
+                    saved -> onSaveSuccess(), this::onSaveError);
         } else {
             FxApiSupport.post(
-                    "/allowances/definitions",
-                    request,
-                    AllowanceDefinition.class,
-                    saved -> onSaveSuccess(),
-
-                    this::onSaveError
-            );
+                    "/entitlements/allowances/definitions",
+                    request, AllowanceDefinition.class,
+                    saved -> onSaveSuccess(), this::onSaveError);
         }
     }
 
@@ -855,7 +942,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  حذف
+    //  Delete
     // ════════════════════════════════════════════════════════════
 
     private void handleDelete(AllowanceDefinition snap) {
@@ -867,14 +954,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/allowances/definitions/" + snap.getId(),
+                        "/entitlements/allowances/definitions/" + snap.getId(),
                         () -> {
                             loadDefinitions();
                             loadHistory(snap.getCode());
                             if (onChanged != null) onChanged.run();
                         },
-                        err -> showFormError("خطأ في الحذف: " + err)
-                );
+                        err -> showFormError("خطأ في الحذف: " + err));
             }
         });
     }
@@ -886,8 +972,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private List<String> splitOrNull(String text) {
         if (text == null || text.isBlank()) return null;
         return Arrays.stream(text.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
+                .map(String::trim).filter(s -> !s.isBlank())
                 .collect(Collectors.toList());
     }
 

@@ -1,4 +1,4 @@
-package com.safwat.hr.controller.allowance;
+package com.safwat.hr.controller.entitlements.allowance;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

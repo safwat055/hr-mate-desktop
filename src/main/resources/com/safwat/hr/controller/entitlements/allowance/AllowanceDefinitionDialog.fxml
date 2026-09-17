@@ -1,27 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-    Dialog إدارة قواعد البدلات — AllowanceDefinitionDialog.fxml
-    ────────────────────────────────────────────────────────────
-    بيتفتح من زر "⚙ قواعد البدلات" في الشاشة الرئيسية.
-    يعرض:
-      - جدول علوي: أحدث snapshot لكل كود بدل (كل القواعد)
-      - جدول سفلي: التاريخ الكامل للكود المُختار
-      - فورم مرن لإضافة/تعديل snapshot (valuesMap بمفتاح ComboBox)
-
-    ملاحظة:
-      - تاريخ السريان حقل نصي بصيغة yyyy-MM-dd (وليس DatePicker)
-      - valuesMap key يبقى ComboBox بالدرجات + all + percent
-      - الجداول ثابتة الحجم (minHeight) — لا تصغر عند ظهور الفورم
--->
-
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <ScrollPane fitToWidth="true" prefHeight="800" prefWidth="1180"
             xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.safwat.hr.controller.allowance.AllowanceDefinitionDialogController">
+            fx:controller="com.safwat.hr.controller.entitlements.allowance.AllowanceDefinitionDialogController">
     <content>
         <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="18" styleClass="card">
 
@@ -33,7 +18,7 @@
                    text="إدارة قواعد البدلات"/>
 
             <!-- ══════════════════════════════════════════════════
-                 جدول كل القواعد (أحدث snapshot لكل كود)
+                 جدول كل القواعد
             ══════════════════════════════════════════════════ -->
             <VBox spacing="4" styleClass="card">
                 <HBox alignment="CENTER_RIGHT" spacing="12">
@@ -48,12 +33,12 @@
 
                 <TableView fx:id="table_definitions" editable="false"
                            nodeOrientation="RIGHT_TO_LEFT"
-                           prefHeight="220" minHeight="220"
-                           styleClass="bold">
+                           prefHeight="220" minHeight="220" styleClass="bold">
                     <columns>
                         <TableColumn fx:id="col_def_code" prefWidth="100" text="الكود"/>
                         <TableColumn fx:id="col_def_nameAr" prefWidth="220" text="الاسم"/>
-                        <TableColumn fx:id="col_def_effectiveFrom" prefWidth="120" text="أحدث سريان"/>
+                        <TableColumn fx:id="col_def_effectiveFrom" prefWidth="110" text="أحدث سريان"/>
+                        <TableColumn fx:id="col_def_effectiveTo" prefWidth="110" text="ينتهي في"/>  <!-- 🆕 -->
                         <TableColumn fx:id="col_def_behavior" prefWidth="100" text="السلوك"/>
                         <TableColumn fx:id="col_def_calcType" prefWidth="190" text="نوع الاحتساب"/>
                         <TableColumn fx:id="col_def_elementType" prefWidth="130" text="طبيعة العنصر"/>
@@ -82,10 +67,10 @@
 
                 <TableView fx:id="table_history" editable="false"
                            nodeOrientation="RIGHT_TO_LEFT"
-                           prefHeight="220" minHeight="220"
-                           styleClass="bold">
+                           prefHeight="220" minHeight="220" styleClass="bold">
                     <columns>
-                        <TableColumn fx:id="col_hist_effectiveFrom" prefWidth="120" text="من تاريخ"/>
+                        <TableColumn fx:id="col_hist_effectiveFrom" prefWidth="110" text="من تاريخ"/>
+                        <TableColumn fx:id="col_hist_effectiveTo" prefWidth="110" text="إلى تاريخ"/>  <!-- 🆕 -->
                         <TableColumn fx:id="col_hist_behavior" prefWidth="100" text="السلوك"/>
                         <TableColumn fx:id="col_hist_calcType" prefWidth="190" text="نوع الاحتساب"/>
                         <TableColumn fx:id="col_hist_baseSource" prefWidth="150" text="مصدر الأساسي"/>
@@ -108,7 +93,7 @@
 
                 <Label fx:id="lbl_form_title" styleClass="bold text-navy fs-14" text="إضافة قاعدة"/>
 
-                <!-- الصف 1: كود + اسم عربي + اسم إنجليزي + تاريخ سريان -->
+                <!-- الصف 1: كود + اسم عربي + اسم إنجليزي -->
                 <HBox alignment="CENTER_RIGHT" spacing="18">
                     <VBox spacing="6">
                         <Label styleClass="bold fs-12" text="الكود"/>
@@ -122,14 +107,23 @@
                         <Label styleClass="bold fs-12" text="الاسم بالإنجليزي"/>
                         <TextField fx:id="txt_nameEn" maxWidth="Infinity" prefHeight="36"/>
                     </VBox>
+                </HBox>
+
+                <!-- الصف 2: تواريخ السريان -->
+                <HBox alignment="CENTER_RIGHT" spacing="18">
                     <VBox spacing="6">
                         <Label styleClass="bold fs-12" text="تاريخ السريان (yyyy-MM-dd) *"/>
                         <TextField fx:id="txt_effectiveFrom" prefHeight="36" prefWidth="180"
                                    promptText="2024-07-01"/>
                     </VBox>
+                    <VBox spacing="6">
+                        <Label styleClass="bold fs-12" text="تاريخ النهاية (فاضي = مفتوح)"/>
+                        <TextField fx:id="txt_effectiveTo" prefHeight="36" prefWidth="180"
+                                   promptText="(فاضي = ساري)"/>
+                    </VBox>
                 </HBox>
 
-                <!-- الصف 2: سلوك + نوع احتساب + مصدر أساسي + نطاق -->
+                <!-- الصف 3: سلوك + نوع احتساب + مصدر أساسي + نطاق -->
                 <HBox alignment="CENTER_RIGHT" spacing="18">
                     <VBox spacing="6">
                         <Label styleClass="bold fs-12" text="السلوك *"/>
@@ -149,7 +143,7 @@
                     </VBox>
                 </HBox>
 
-                <!-- الصف 3: تصنيف العنصر + مصدر الدرجة (Timeline Anchor) -->
+                <!-- الصف 4: تصنيف + Anchor + Checkboxes -->
                 <HBox alignment="CENTER_RIGHT" spacing="18" styleClass="card">
                     <padding>
                         <Insets bottom="10" left="14" right="14" top="10"/>
@@ -165,22 +159,37 @@
                     <Separator orientation="VERTICAL"/>
                     <CheckBox fx:id="chk_subjectToInsurance" text="خاضع للتأمينات"/>
                     <CheckBox fx:id="chk_subjectToTaxAndStamp" text="خاضع للضريبة والدمغة"/>
+                    <CheckBox fx:id="chk_inMinimumWageBase" text="يدخل في وعاء المعاشات"/>  <!-- 🆕 -->
                 </HBox>
 
-                <!-- valuesMap — مفتاح (ComboBox) / قيمة -->
+                <!-- 🆕 صف التاريخ المرجعي — مخفي افتراضياً، بيظهر بس للنوعين الجداد -->
+                <HBox fx:id="pane_referenceDate" alignment="CENTER_RIGHT" spacing="18"
+                      managed="false" styleClass="card" visible="false">
+                    <padding>
+                        <Insets bottom="10" left="14" right="14" top="10"/>
+                    </padding>
+                    <VBox spacing="6">
+                        <Label styleClass="bold fs-12"
+                               text="التاريخ المرجعي (yyyy-MM-dd) * — للنوع ده بس"/>
+                        <TextField fx:id="txt_referenceDate" prefHeight="36" prefWidth="200"
+                                   promptText="2015-07-01"/>
+                    </VBox>
+                    <Label styleClass="text-muted fs-12" wrapText="true" maxWidth="500"
+                           text="التاريخ ده بيتستخدم للبحث في خريطة العلاوات الخاصة في ScaleDto."/>
+                </HBox>
+
+                <!-- valuesMap -->
                 <VBox spacing="8">
                     <Label styleClass="bold fs-12" text="القيم (اختر المفتاح من القائمة وأدخل القيمة) *"/>
                     <HBox alignment="CENTER_RIGHT" spacing="10">
-                        <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="220"
-                                  promptText="اختر المفتاح"/>
+                        <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="220" promptText="اختر المفتاح"/>
                         <TextField fx:id="txt_map_value" prefHeight="34" prefWidth="120" promptText="القيمة"/>
                         <Button fx:id="btn_add_map_entry" prefHeight="34" prefWidth="90"
                                 styleClass="btn-success" text="+ إضافة"/>
                     </HBox>
                     <TableView fx:id="table_values" editable="false"
                                maxHeight="-Infinity" minHeight="150"
-                               nodeOrientation="RIGHT_TO_LEFT"
-                               prefHeight="150">
+                               nodeOrientation="RIGHT_TO_LEFT" prefHeight="150">
                         <columns>
                             <TableColumn fx:id="col_map_key" prefWidth="220" text="المفتاح"/>
                             <TableColumn fx:id="col_map_value" prefWidth="140" text="القيمة"/>
@@ -189,7 +198,7 @@
                     </TableView>
                 </VBox>
 
-                <!-- الاستحقاق والاستثناءات -->
+                <!-- الاستثناءات -->
                 <HBox alignment="CENTER_RIGHT" spacing="18">
                     <VBox spacing="6" HBox.hgrow="ALWAYS">
                         <Label styleClass="bold fs-12"
