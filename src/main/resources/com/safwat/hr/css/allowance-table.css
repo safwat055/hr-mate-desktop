@@ -1,0 +1,90 @@
+/* ══════════════════════════════════════════════════════════════════
+   allowance-table.css
+   ────────────────────────────────────────────────────────────────
+   كل ستايلات جدول البدلات — بدل الـ inline styles الـ hardcoded
+   في الكود. بيستخدم متغيرات الثيم من common.css.
+
+   الاستخدام: يتضاف في ملف الـ FXML:
+   <stylesheets>
+       <URL value="@../css/allowance-table.css"/>
+   </stylesheets>
+══════════════════════════════════════════════════════════════════ */
+
+/* ── Row styles ─────────────────────────────────────────────────
+   بيتطبقوا على خلايا الصف كـ styleClass في الكود
+   (AllowanceStyleResolver.rowStyleClass)
+────────────────────────────────────────────────────────────────── */
+
+.row-net .table-cell {
+    -fx-text-fill: -color-success;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.row-subtotal .table-cell {
+    -fx-text-fill: -text-primary;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-color: derive(-soft-box-bg, -5%);
+}
+
+.row-info .table-cell {
+    -fx-text-fill: -brand-navy;
+    -fx-font-weight: bold;
+    -fx-background-color: derive(-soft-box-bg, 3%);
+}
+
+.row-deduction .table-cell {
+    -fx-text-fill: -color-danger;
+    -fx-font-weight: bold;
+}
+
+.row-entitlement .table-cell {
+    -fx-text-fill: -color-success;
+    -fx-font-weight: bold;
+}
+
+.row-display-only .table-cell {
+    -fx-text-fill: -text-muted;
+    -fx-font-style: italic;
+}
+
+/* ── Badge styles ────────────────────────────────────────────────
+   (AllowanceStyleResolver.elementTypeBadgeClass / sourceBadgeClass)
+────────────────────────────────────────────────────────────────── */
+
+/* base — مشترك لكل البادجات */
+.badge {
+    -fx-background-radius: 4;
+    -fx-font-weight: bold;
+    -fx-text-fill: -on-brand;
+    -fx-font-size: 11px;
+}
+
+/* نوع العنصر */
+.badge-entitlement { -fx-background-color: -color-success; }
+.badge-deduction   { -fx-background-color: -color-danger; }
+.badge-insurance   { -fx-background-color: -color-primary; }
+.badge-tax         { -fx-background-color: -color-purple; }
+.badge-stamp       { -fx-background-color: #e65100; }
+
+/* مصدر العنصر */
+.badge-source-auto     { -fx-background-color: #607d8b; }
+.badge-source-manual   { -fx-background-color: -color-primary; }
+.badge-source-excluded { -fx-background-color: -color-danger; }
+
+/* ── Cell alignment ──────────────────────────────────────────── */
+.cell-center {
+    -fx-alignment: CENTER;
+}
+
+/* ── Labels الـ error/info في الشاشة ────────────────────────── */
+.lbl-error {
+    -fx-text-fill: -color-danger;
+    -fx-font-weight: bold;
+}
+
+.lbl-info {
+    -fx-text-fill: -color-success;
+    -fx-font-weight: bold;
+}

@@ -196,6 +196,14 @@
                         <Button fx:id="btn_add_map_entry" prefHeight="34" prefWidth="90"
                                 styleClass="btn-success" text="+ إضافة"/>
                     </HBox>
+                    <HBox fx:id="pane_sector" alignment="CENTER_RIGHT" spacing="18"
+                          managed="false" visible="false">
+                        <VBox spacing="6">
+                            <Label styleClass="bold fs-12" text="القطاع *"/>
+                            <ComboBox fx:id="combo_sector" prefHeight="36" prefWidth="220"
+                                      promptText="اختر القطاع..."/>
+                        </VBox>
+                    </HBox>
                     <TableView fx:id="table_values" editable="false"
                                maxHeight="-Infinity" minHeight="150"
                                nodeOrientation="RIGHT_TO_LEFT" prefHeight="150">

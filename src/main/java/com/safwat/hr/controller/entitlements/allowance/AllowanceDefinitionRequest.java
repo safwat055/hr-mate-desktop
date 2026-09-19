@@ -21,12 +21,13 @@ public record AllowanceDefinitionRequest(
         Scope scope,
         ElementType elementType,
         boolean subjectToInsurance,
-        
+
         boolean subjectToTaxAndStamp,
         boolean inMinimumWageBase,
         boolean displayOnly,                // 🆕
         boolean appliesToNewHires,          // 🆕
         Map<String, BigDecimal> valuesMap,
+        String eligibleSectorCode,
         List<String> excludedMonths,
         List<String> eligibleLaws,
         List<String> eligibleLawCodes,
