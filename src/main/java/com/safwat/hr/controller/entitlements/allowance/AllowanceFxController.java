@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -29,7 +30,7 @@ public class AllowanceFxController implements Initializable {
 
     // ── شريط البحث ──────────────────────────────────────────────
     @FXML
-    private Button btn_supplementaryPdf;   // 🆕
+    private Button btn_supplementaryPdf;
     @FXML
     private Button btn_statutory;
     @FXML
@@ -99,6 +100,14 @@ public class AllowanceFxController implements Initializable {
     private ScaleDto cachedScaleDto;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    // أكواد السطور الوهمية
+    private static final String CODE_SUBTOTAL_ENT = "SUBTOTAL_ENTITLEMENTS";
+    private static final String CODE_SUBTOTAL_DED = "SUBTOTAL_DEDUCTIONS";
+    private static final String CODE_INFO_BASIC = "INFO_BASIC";
+    private static final String CODE_INFO_VARIABLE = "INFO_VARIABLE";
+    private static final String CODE_INFO_COMBINED = "INFO_COMBINED";
+    private static final String CODE_NET = "NET";
+
     // ════════════════════════════════════════════════════════════
     //  Initialize
     // ════════════════════════════════════════════════════════════
@@ -115,29 +124,16 @@ public class AllowanceFxController implements Initializable {
         btn_recalculate.setOnAction(e -> loadAllowances());
         btn_addAllowance.setOnAction(e -> handleAddAllowance());
         btn_reset.setOnAction(e -> handleReset());
-        btn_supplementaryPdf.setOnAction(e -> handleExportSupplementaryPdf());   // 🆕
+        btn_supplementaryPdf.setOnAction(e -> handleExportSupplementaryPdf());
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(e -> openDefinitionsDialog());
         }
     }
 
-    private void showInfo(String msg) {
-        lbl_error.setStyle("-fx-text-fill:#2e7d32; -fx-font-weight:bold;");
-        lbl_error.setText(msg);
-        lbl_error.setVisible(true);
+    // ════════════════════════════════════════════════════════════
+    //  PDF
+    // ════════════════════════════════════════════════════════════
 
-        // تنظيف تلقائي بعد 5 ثواني
-        javafx.animation.PauseTransition pause =
-                new javafx.animation.PauseTransition(javafx.util.Duration.seconds(5));
-        pause.setOnFinished(e -> clearError());
-        pause.play();
-    }
-
-    /**
-     * تصدير تقرير الحافز التكميلي للموظف الحالي كـ PDF.
-     *
-     * <p>الملف بيتم تنزيله من الـ backend ويُحفظ في المكان اللي يختاره المستخدم.
-     */
     private void handleExportSupplementaryPdf() {
         if (currentNationalId == null || currentNationalId.isBlank()) {
             showError("ابحث عن موظف أولاً");
@@ -154,7 +150,6 @@ public class AllowanceFxController implements Initializable {
                 defaultFileName,
                 savedPath -> {
                     btn_supplementaryPdf.setDisable(false);
-                    // رسالة نجاح (تظهر مؤقتاً)
                     showInfo("✅ تم حفظ التقرير: " + savedPath);
                 },
                 err -> {
@@ -165,7 +160,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Search / Load — 🆕 paths محدّثة
+    //  Search / Load
     // ════════════════════════════════════════════════════════════
 
     private void handleSearch() {
@@ -194,7 +189,7 @@ public class AllowanceFxController implements Initializable {
         clearError();
 
         FxApiSupport.get(
-                "/entitlements/employee/" + currentNationalId + dateParam,   // 🆕
+                "/entitlements/employee/" + currentNationalId + dateParam,
                 AllowanceResultDto.class,
                 result -> {
                     showLoading(false);
@@ -214,7 +209,7 @@ public class AllowanceFxController implements Initializable {
 
     private void loadDefinitions() {
         FxApiSupport.getList(
-                "/entitlements/allowances/definitions",   // 🆕
+                "/entitlements/allowances/definitions",
                 new TypeReference<List<AllowanceDefinition>>() {
                 },
                 defs -> {
@@ -233,7 +228,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Employee Details — نفس المنطق (path /salary-scale/{id} زي ما هو)
+    //  Employee Details
     // ════════════════════════════════════════════════════════════
 
     private void ensureEmployeeDetailsLoaded() {
@@ -242,7 +237,7 @@ public class AllowanceFxController implements Initializable {
             return;
         }
         FxApiSupport.get(
-                "/salary-scale/" + currentNationalId,   // ← زي ما هو
+                "/salary-scale/" + currentNationalId,
                 ScaleDto.class,
                 dto -> {
                     cachedScaleDto = dto;
@@ -273,17 +268,113 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Fill Table
+    //  Fill Table — الترتيب الجديد
     // ════════════════════════════════════════════════════════════
 
     private void fillAllowancesTable(AllowanceResultDto result) {
-        List<AllowanceResultDto.AllowanceLineDto> sorted = result.allowances().stream()
-                .sorted(Comparator
-                        .comparingInt(this::sortPriority)
-                        .thenComparing(AllowanceResultDto.AllowanceLineDto::nameAr))
+        List<AllowanceResultDto.AllowanceLineDto> displayLines = new ArrayList<>();
+
+        // ═══ 1) الاستحقاقات ═══
+        List<AllowanceResultDto.AllowanceLineDto> entitlements = result.allowances().stream()
+                .filter(l -> !l.displayOnly())
+                .filter(l -> l.elementType() == ElementType.ENTITLEMENT)
+                .filter(l -> l.value() != null && l.value().signum() > 0)
+                .sorted(Comparator.comparing(AllowanceResultDto.AllowanceLineDto::nameAr))
                 .toList();
-        table_allowances.setItems(FXCollections.observableArrayList(sorted));
-        lbl_total.setText(result.totalAllowances().toPlainString() + " ج");
+        displayLines.addAll(entitlements);
+
+        // ═══ 2) جملة المستحق ═══
+        if (!entitlements.isEmpty()) {
+            displayLines.add(buildSubtotal(
+                    CODE_SUBTOTAL_ENT,
+                    "جملة المستحق",
+                    nvl(result.totalEntitlements()),
+                    ElementType.ENTITLEMENT));
+        }
+
+        // ═══ 3) الأوعية التأمينية ═══
+        BigDecimal basic = nvl(result.insurableBasic());
+        BigDecimal variable = nvl(result.insurableVariable());
+        BigDecimal combined = nvl(result.insurableCombined());
+
+        if (basic.signum() > 0) {
+            displayLines.add(buildInfo(CODE_INFO_BASIC, "الأجر الأساسي", basic));
+        }
+        if (variable.signum() > 0) {
+            displayLines.add(buildInfo(CODE_INFO_VARIABLE, "الأجر المتغير", variable));
+        }
+        if (combined.signum() > 0) {
+            displayLines.add(buildInfo(CODE_INFO_COMBINED, "الأجر الاشتراكي", combined));
+        }
+
+        // ═══ 4) الاستقطاعات ═══
+        List<AllowanceResultDto.AllowanceLineDto> deductions = result.allowances().stream()
+                .filter(l -> !l.displayOnly())
+                .filter(l -> l.value() != null && l.value().signum() < 0)
+                .filter(l -> l.elementType() == ElementType.DEDUCTION
+                        || l.elementType() == ElementType.TAX
+                        || l.elementType() == ElementType.STAMP
+                        || l.elementType() == ElementType.INSURANCE)
+                .sorted(Comparator.comparing(AllowanceResultDto.AllowanceLineDto::nameAr))
+                .toList();
+        displayLines.addAll(deductions);
+
+        // ═══ 5) جملة الاستقطاعات ═══
+        if (!deductions.isEmpty()) {
+            displayLines.add(buildSubtotal(
+                    CODE_SUBTOTAL_DED,
+                    "جملة الاستقطاعات",
+                    nvl(result.totalDeductions()).negate(),
+                    ElementType.DEDUCTION));
+        }
+
+        // ═══ 6) تأمينات الحكومة (display only) ═══
+        List<AllowanceResultDto.AllowanceLineDto> govLines = result.allowances().stream()
+                .filter(AllowanceResultDto.AllowanceLineDto::displayOnly)
+                .sorted(Comparator.comparing(AllowanceResultDto.AllowanceLineDto::nameAr))
+                .toList();
+        displayLines.addAll(govLines);
+
+        // ═══ 7) الصافي ═══
+        displayLines.add(buildNet(CODE_NET, "الصافي", nvl(result.netAmount())));
+
+        table_allowances.setItems(FXCollections.observableArrayList(displayLines));
+        lbl_total.setText(nvl(result.netAmount()).toPlainString() + " ج");
+    }
+
+    // ── Builders للسطور الوهمية ──
+
+    private AllowanceResultDto.AllowanceLineDto buildSubtotal(
+            String code, String nameAr, BigDecimal value, ElementType et) {
+        return new AllowanceResultDto.AllowanceLineDto(
+                code, nameAr, value,
+                null,
+                AllowanceResultDto.AllowanceLineDto.Source.AUTO,
+                null, et,
+                false, false, false,
+                true);
+    }
+
+    private AllowanceResultDto.AllowanceLineDto buildInfo(
+            String code, String nameAr, BigDecimal value) {
+        return new AllowanceResultDto.AllowanceLineDto(
+                code, nameAr, value,
+                null,
+                AllowanceResultDto.AllowanceLineDto.Source.AUTO,
+                null, ElementType.ENTITLEMENT,
+                false, false, false,
+                true);
+    }
+
+    private AllowanceResultDto.AllowanceLineDto buildNet(
+            String code, String nameAr, BigDecimal value) {
+        return new AllowanceResultDto.AllowanceLineDto(
+                code, nameAr, value,
+                null,
+                AllowanceResultDto.AllowanceLineDto.Source.AUTO,
+                null, ElementType.ENTITLEMENT,
+                false, false, false,
+                true);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -291,9 +382,26 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
+        // ═══ اسم البدل ═══
         col_nameAr.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleStringProperty(d.getValue().nameAr()));
+        col_nameAr.setCellFactory(tc -> new TableCell<>() {
+            @Override
+            protected void updateItem(String name, boolean empty) {
+                super.updateItem(name, empty);
+                if (empty || name == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                setText(name);
+                AllowanceResultDto.AllowanceLineDto item =
+                        getTableView().getItems().get(getIndex());
+                setStyle(nameStyle(item));
+            }
+        });
 
+        // ═══ عمود النوع ═══
         col_elementType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
         col_elementType.setCellFactory(tc -> new TableCell<>() {
@@ -301,6 +409,13 @@ public class AllowanceFxController implements Initializable {
             protected void updateItem(ElementType et, boolean empty) {
                 super.updateItem(et, empty);
                 if (empty || et == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                AllowanceResultDto.AllowanceLineDto item =
+                        getTableView().getItems().get(getIndex());
+                if (isVirtualLine(item.code())) {
                     setGraphic(null);
                     setText(null);
                     return;
@@ -314,6 +429,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
+        // ═══ عمود القيمة ═══
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -325,12 +441,22 @@ public class AllowanceFxController implements Initializable {
                     setStyle("-fx-alignment: CENTER;");
                     return;
                 }
-                AllowanceResultDto.AllowanceLineDto line = getTableView().getItems().get(getIndex());
+                AllowanceResultDto.AllowanceLineDto line =
+                        getTableView().getItems().get(getIndex());
+
+                String code = line.code();
+                if (isVirtualLine(code)) {
+                    setText(val.abs().toPlainString() + " ج");
+                    setStyle("-fx-alignment: CENTER; " + valueStyle(line));
+                    return;
+                }
+
                 setText(val.abs().toPlainString() + " ج");
                 setStyle("-fx-alignment: CENTER; " + valueStyle(line));
             }
         });
 
+        // ═══ من تاريخ ═══
         col_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveFrom()));
         col_effectiveFrom.setCellFactory(tc -> new TableCell<>() {
@@ -342,6 +468,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
+        // ═══ المصدر ═══
         col_source.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().source()));
         col_source.setCellFactory(tc -> new TableCell<>() {
@@ -349,6 +476,13 @@ public class AllowanceFxController implements Initializable {
             protected void updateItem(AllowanceResultDto.AllowanceLineDto.Source src, boolean empty) {
                 super.updateItem(src, empty);
                 if (empty || src == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                AllowanceResultDto.AllowanceLineDto item =
+                        getTableView().getItems().get(getIndex());
+                if (isVirtualLine(item.code())) {
                     setGraphic(null);
                     setText(null);
                     return;
@@ -362,6 +496,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
+        // ═══ الإجراءات ═══
         col_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏ تعديل");
             private final Button btnDelete = new Button("🗑");
@@ -386,7 +521,15 @@ public class AllowanceFxController implements Initializable {
                     setGraphic(null);
                     return;
                 }
-                AllowanceResultDto.AllowanceLineDto item = getTableView().getItems().get(getIndex());
+                AllowanceResultDto.AllowanceLineDto item =
+                        getTableView().getItems().get(getIndex());
+
+                // 🆕 السطور الوهمية — مش عايزين أزرار
+                if (isVirtualLine(item.code())) {
+                    setGraphic(null);
+                    return;
+                }
+
                 boolean excluded = item.source() == AllowanceResultDto.AllowanceLineDto.Source.EXCLUDED;
                 boolean displayOnly = item.displayOnly();
                 btnEdit.setDisable(excluded || displayOnly);
@@ -416,13 +559,13 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Dialogs — 🆕 FXML loader paths
+    //  Dialogs
     // ════════════════════════════════════════════════════════════
 
     private void openOverrideDialog(AllowanceResultDto.AllowanceLineDto line) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml"  // 🆕
+                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml"
             ));
             Parent root = loader.load();
             AllowanceOverrideDialogController ctrl = loader.getController();
@@ -442,7 +585,7 @@ public class AllowanceFxController implements Initializable {
     private void openDefinitionsDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml"  // 🆕
+                    "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml"
             ));
             Parent root = loader.load();
             AllowanceDefinitionDialogController ctrl = loader.getController();
@@ -464,7 +607,7 @@ public class AllowanceFxController implements Initializable {
     private void openStatutoryDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml"  // 🆕
+                    "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml"
             ));
             Parent root = loader.load();
             StatutoryDialogController controller = loader.getController();
@@ -482,18 +625,9 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  API Ops — 🆕 paths محدّثة
+    //  API Ops
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * إضافة البدل فوراً بتاريخ الاحتساب المختار + قيمة ابتدائية 0.
-     *
-     * <p><b>فصل المسؤوليات:</b>
-     * <ul>
-     *   <li>الزر ده بيضيف البدل للموظف فقط (POST /allowance)</li>
-     *   <li>تعديل القيمة/الفترات بيتم من زر "✏ تعديل" في الجدول</li>
-     * </ul>
-     */
     private void handleAddAllowance() {
         AllowanceDefinition selected = combo_newAllowance.getValue();
         if (selected == null) {
@@ -510,8 +644,8 @@ public class AllowanceFxController implements Initializable {
         AllowanceResultDto.AddAllowanceRequest req = new AllowanceResultDto.AddAllowanceRequest(
                 selected.getCode(),
                 fromDate,
-                null,                       // مفتوح
-                BigDecimal.ZERO             // قيمة ابتدائية — تُعدَّل من الجدول
+                null,
+                BigDecimal.ZERO
         );
 
         btn_addAllowance.setDisable(true);
@@ -523,8 +657,8 @@ public class AllowanceFxController implements Initializable {
                 Boolean.class,
                 saved -> {
                     btn_addAllowance.setDisable(false);
-                    combo_newAllowance.setValue(null);   // نظّف الاختيار
-                    loadAllowances();                    // يتحدّث الجدول + القائمة
+                    combo_newAllowance.setValue(null);
+                    loadAllowances();
                 },
                 err -> {
                     btn_addAllowance.setDisable(false);
@@ -534,6 +668,8 @@ public class AllowanceFxController implements Initializable {
     }
 
     private void handleDeleteAllowance(String code) {
+        if (isVirtualLine(code)) return;   // 🆕 حماية
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "هل تريد حذف البدل من قائمة الموظف؟\nيمكن استرجاعه بعد إعادة الضبط.",
                 ButtonType.YES, ButtonType.NO);
@@ -543,7 +679,7 @@ public class AllowanceFxController implements Initializable {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
                         "/entitlements/allowances/employee/" + currentNationalId
-                                + "/allowance/" + code,                     // 🆕
+                                + "/allowance/" + code,
                         this::loadAllowances,
                         this::showError
                 );
@@ -560,7 +696,7 @@ public class AllowanceFxController implements Initializable {
         confirm.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
-                        "/entitlements/allowances/employee/" + currentNationalId + "/reset",   // 🆕
+                        "/entitlements/allowances/employee/" + currentNationalId + "/reset",
                         this::loadAllowances,
                         this::showError
                 );
@@ -572,14 +708,56 @@ public class AllowanceFxController implements Initializable {
     //  Helpers
     // ════════════════════════════════════════════════════════════
 
-    private int sortPriority(AllowanceResultDto.AllowanceLineDto line) {
-        if (line.displayOnly()) return 3;
-        if (line.elementType() == ElementType.ENTITLEMENT) return 1;
-        return 2;
+    /**
+     * 🆕 هل السطر وهمي (Subtotal / Info / Net)؟
+     */
+    private boolean isVirtualLine(String code) {
+        if (code == null) return false;
+        return code.startsWith("SUBTOTAL_")
+                || code.startsWith("INFO_")
+                || CODE_NET.equals(code);
     }
 
+    /**
+     * 🆕 ستايل الاسم حسب نوع السطر.
+     */
+    private String nameStyle(AllowanceResultDto.AllowanceLineDto line) {
+        String code = line.code();
+        if (code == null) return "";
+
+        if (CODE_NET.equals(code)) {
+            return "-fx-font-weight:bold; -fx-font-size:14; -fx-text-fill:#1b5e20;";
+        }
+        if (code.startsWith("SUBTOTAL_")) {
+            return "-fx-font-weight:bold; -fx-font-size:13; -fx-text-fill:#000;";
+        }
+        if (code.startsWith("INFO_")) {
+            return "-fx-font-weight:bold; -fx-text-fill:#0d47a1;";
+        }
+        if (line.displayOnly()) {
+            return "-fx-text-fill:#888; -fx-font-style:italic;";
+        }
+        return "";
+    }
+
+    /**
+     * 🆕 ستايل القيمة.
+     */
     private String valueStyle(AllowanceResultDto.AllowanceLineDto line) {
-        if (line.displayOnly()) return "-fx-text-fill:#888; -fx-font-style:italic;";
+        String code = line.code();
+
+        if (CODE_NET.equals(code)) {
+            return "-fx-text-fill:#1b5e20; -fx-font-weight:bold; -fx-font-size:14;";
+        }
+        if (code != null && code.startsWith("SUBTOTAL_")) {
+            return "-fx-text-fill:#000; -fx-font-weight:bold; -fx-font-size:13;";
+        }
+        if (code != null && code.startsWith("INFO_")) {
+            return "-fx-text-fill:#0d47a1; -fx-font-weight:bold;";
+        }
+        if (line.displayOnly()) {
+            return "-fx-text-fill:#888; -fx-font-style:italic;";
+        }
         if (line.value() != null && line.value().signum() < 0) {
             return "-fx-text-fill:#c62828; -fx-font-weight:bold;";
         }
@@ -629,7 +807,19 @@ public class AllowanceFxController implements Initializable {
         btn_search.setDisable(show);
     }
 
+    private void showInfo(String msg) {
+        lbl_error.setStyle("-fx-text-fill:#2e7d32; -fx-font-weight:bold;");
+        lbl_error.setText(msg);
+        lbl_error.setVisible(true);
+
+        javafx.animation.PauseTransition pause =
+                new javafx.animation.PauseTransition(javafx.util.Duration.seconds(5));
+        pause.setOnFinished(e -> clearError());
+        pause.play();
+    }
+
     private void showError(String msg) {
+        lbl_error.setStyle("-fx-text-fill:#c62828; -fx-font-weight:bold;");
         lbl_error.setText(msg);
         lbl_error.setVisible(true);
     }
@@ -637,5 +827,28 @@ public class AllowanceFxController implements Initializable {
     private void clearError() {
         lbl_error.setText("");
         lbl_error.setVisible(false);
+        lbl_error.setStyle(null);
+    }
+
+    private static BigDecimal nvl(BigDecimal v) {
+        return v != null ? v : BigDecimal.ZERO;
+    }
+
+    /**
+     * يُستدعى من TabManager بعد ما التاب يفتح — لتمرير الرقم القومي
+     * من أي تاب تاني.
+     *
+     * <p>لو التاب مفتوح بالفعل والرقم اتغيّر، الميثود بتعمل بحث جديد.
+     */
+    public void setInitialNationalId(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) return;
+
+        // حطّ الرقم في الحقل
+        if (txt_nationalId != null) {
+            txt_nationalId.setText(nationalId.trim());
+        }
+
+        // شغّل البحث
+        handleSearch();
     }
 }

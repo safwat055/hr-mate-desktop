@@ -3,59 +3,25 @@ package com.safwat.hr.controller.entitlements.statutory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * DTOs لإدارة الاستقطاعات القانونية — نسخة الفرونت.
- */
 public final class StatutoryDtos {
 
     private StatutoryDtos() {
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  التأمينات
-    // ══════════════════════════════════════════════════════════════
-
     /**
-     * إعدادات التأمينات — نسخة الفرونت.
-     *
-     * <p><b>نظامان:</b>
-     * <ul>
-     *   <li><b>موحّد</b> (بعد 2020):
-     *       {@code employeeRate} + {@code employerRate} فقط.</li>
-     *   <li><b>وعائين</b> (قبل 2020):
-     *       {@code basicXxxRate} + {@code variableXxxRate} فقط.</li>
-     * </ul>
-     *
-     * <p>النسب عشرية (0.11 = 11%). الواجهة بتحوّلها لنسبة مئوية للعرض.
+     * إعدادات التأمينات — بعد الـ refactor: الـ ceilings + floor فقط.
+     * النسب بقت جزء من AllowanceDefinition.
      */
     public record InsuranceRateConfigDto(
             Long id,
             LocalDate effectiveFrom,
             LocalDate effectiveTo,
-            // نظام موحّد (بعد 2020)
-            BigDecimal employeeRate,
-            BigDecimal employerRate,
-            // نظام وعائين (قبل 2020)
-            BigDecimal basicEmployeeRate,
-            BigDecimal basicEmployerRate,
-            BigDecimal variableEmployeeRate,
-            BigDecimal variableEmployerRate,
-            // مشترك
             BigDecimal wageFloor,
-            BigDecimal wageCeiling,
+            BigDecimal basicCeiling,
+            BigDecimal variableCeiling,
             String notes
     ) {
-        /**
-         * هل الإعداد ده نظام وعائين؟
-         */
-        public boolean isSplitMode() {
-            return basicEmployeeRate != null;
-        }
     }
-
-    // ══════════════════════════════════════════════════════════════
-    //  الضريبة
-    // ══════════════════════════════════════════════════════════════
 
     public record TaxBracket(
             Long id,
@@ -69,15 +35,10 @@ public final class StatutoryDtos {
     ) {
     }
 
-    // ══════════════════════════════════════════════════════════════
-    //  الدمغة
-    // ══════════════════════════════════════════════════════════════
-
     public record StampDutyBracket(
             Long id,
             LocalDate effectiveFrom,
             LocalDate effectiveTo,
-
             int bracketOrder,
             BigDecimal fromAmount,
             BigDecimal toAmount,

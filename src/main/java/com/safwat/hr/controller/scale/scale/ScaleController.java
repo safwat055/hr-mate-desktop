@@ -1,16 +1,15 @@
 package com.safwat.hr.controller.scale.scale;
 
+import com.safwat.hr.controller.entitlements.allowance.AllowanceFxController;
 import com.safwat.hr.controller.scale.scale.dto.*;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.table.TableSetupHelper;
+import com.safwat.hr.ui.util.TabManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -800,5 +799,36 @@ public class ScaleController implements Initializable {
         a.setHeaderText(null);
         a.setContentText(msg);
         a.show();
+    }
+
+    @FXML
+    private void openAllowancesTab() {
+        String nationalId = txt_nationalId.getText();   // الرقم اللي عايز تمرره
+        if (nationalId.isEmpty()) {
+            return;
+        }
+        TabPane parentTab = findParentTabPane();   // شوف الدالة تحت
+        if (parentTab == null) return;
+
+        TabManager.loadFXMLInTab(
+                parentTab,
+                "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml", // مسار الـ FXML
+                "المفردات",
+                true,
+                controller -> {
+                    if (controller instanceof AllowanceFxController c) {
+                        c.setInitialNationalId(nationalId);
+                    }
+                }
+        );
+    }
+
+    private TabPane findParentTabPane() {
+        javafx.scene.Node node = getTxt_empName();   // أي عقدة في الشاشة
+        while (node != null) {
+            if (node instanceof TabPane tp) return tp;
+            node = node.getParent();
+        }
+        return null;
     }
 }

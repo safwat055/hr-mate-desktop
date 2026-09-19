@@ -1,8 +1,7 @@
 package com.safwat.hr.controller.backup;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.controller.backup.dto.BackupFileInfo;
-import com.safwat.hr.controller.backup.dto.RestoreMode;
+import com.safwat.hr.controller.backup.dto.*;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.FileTransferClient;
@@ -11,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * طبقة الخدمة لشاشة النسخ الاحتياطي واستعادة السكريبتات.
@@ -145,5 +145,106 @@ public class BackupService {
 
     private String urlEncode(String value) {
         return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+
+    // ════════════════════════════════════════════════════
+//  تصدير جداول قاعدة البيانات
+// ════════════════════════════════════════════════════
+
+    /**
+     * قائمة كل الـ schemas المتاحة (ما عدا النظامية).
+     */
+    public CompletableFuture<ApiResponse<List<SchemaSummary>>> listSchemas() {
+        return ApiClient.getAsync(
+                "/db-tools/export/schemas",
+                BACKUP_TIMEOUT,
+                new TypeReference<List<SchemaSummary>>() {
+                }
+        );
+    }
+
+    /**
+     * قائمة الجداول في schema معين.
+     */
+    public CompletableFuture<ApiResponse<List<TableSummary>>> listTables(String schema) {
+        return ApiClient.getAsync(
+                "/db-tools/export/schemas/" + urlEncode(schema) + "/tables",
+                BACKUP_TIMEOUT,
+                new TypeReference<List<TableSummary>>() {
+                }
+        );
+    }
+
+    /**
+     * معلومات جدول معين (عدد الصفوف + الأعمدة + الـ PK).
+     */
+    public CompletableFuture<ApiResponse<TableInfoDto>> getTableInfo(String schema, String table) {
+        return ApiClient.getAsync(
+                "/db-tools/export/schemas/" + urlEncode(schema)
+                        + "/tables/" + urlEncode(table) + "/info",
+                BACKUP_TIMEOUT,
+                new TypeReference<TableInfoDto>() {
+                }     // ← TypeReference بدل Class
+        );
+    }
+
+    /**
+     * تصدير الجدول كملف SQL. يرجّع byte[] جاهزة للحفظ.
+     *
+     * <p>المستخدم مسؤول عن فتح FileChooser وحفظ الملف.
+     */
+    public CompletableFuture<byte[]> exportTableBytes(String schema, String table, ExportMode mode) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String path = "/db-tools/export/schemas/" + urlEncode(schema)
+                        + "/tables/" + urlEncode(table)
+                        + "?mode=" + mode.name();
+                return ApiClient.downloadBinary(path, BACKUP_TIMEOUT);
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    /**
+     * يبني اسم الملف الافتراضي للتصدير.
+     */
+    public String buildExportFileName(String schema, String table) {
+        String ts = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        return schema + "_" + table + "_export_" + ts + ".sql";
+    }
+
+    /**
+     * تقرير مقروء لمعلومات الجدول.
+     */
+    public String buildTableInfoReport(TableInfoDto info) {
+        if (info == null) return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("الجدول: ").append(info.getSchema()).append('.').append(info.getTableName()).append('\n');
+        sb.append("عدد الصفوف (تقديري): ").append(info.getRowCount()).append('\n');
+        sb.append("عدد الأعمدة: ").append(info.getColumnCount()).append('\n');
+
+        List<String> pks = info.getPrimaryKeyColumns();
+        if (pks != null && !pks.isEmpty()) {
+            sb.append("Primary Key: ").append(String.join(", ", pks)).append('\n');
+        } else {
+            sb.append("Primary Key: — لا يوجد —\n");
+        }
+
+        sb.append("\n");
+        sb.append("الأعمدة:\n");
+        if (info.getColumns() != null) {
+            for (TableInfoDto.ColumnInfo c : info.getColumns()) {
+                sb.append("  • ").append(c.getName())
+                        .append("  [").append(c.getSqlType()).append(']');
+                if (c.isPrimaryKey()) sb.append("  PK");
+                if (!c.isNullable()) sb.append("  NOT NULL");
+                if (c.isAutoIncrement()) sb.append("  AUTO");
+                sb.append('\n');
+            }
+        }
+        return sb.toString();
     }
 }

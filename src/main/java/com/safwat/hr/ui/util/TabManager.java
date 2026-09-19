@@ -12,43 +12,68 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 @Slf4j
 public class TabManager {
 
-    private static final HashMap<String, Tab> loadedTabs = new HashMap<>();
+    /**
+     * نخزّن التاب + الـ Controller مع بعض عشان نقدر نعيد التهيئة لو التاب موجود.
+     */
+    private static final Map<String, TabInfo> loadedTabs = new HashMap<>();
+
+    private record TabInfo(Tab tab, Object controller) {
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Public API
+    // ══════════════════════════════════════════════════════════════
 
     /**
-     * بيحمّل FXML في تاب جديد ويطبق تلقائياً:
-     * - تسجيل الواجهة في ViewRegistry (تظهر في كومبو الإعدادات)
-     * - إعدادات الخطوط المحفوظة
-     * - إعدادات الزوم المحفوظة
-     * - ألوان الثيم + overrides المحفوظة
-     * مفيش أي سطر محتاج يتكتب في الكنترولر.
-     *
-     * @param tabPane  حاوية التبويبات
-     * @param fxmlPath مسار ملف الـ FXML
-     * @param tabTitle عنوان التاب — بيُستخدم كـ viewId للخطوط والزوم والتسجيل
-     * @param closAble هل التاب قابل للإغلاق
+     * النسخة القديمة — بدون initializer.
      */
-    public static void loadFXMLInTab(TabPane tabPane, String fxmlPath, String tabTitle, boolean closAble) {
+    public static void loadFXMLInTab(TabPane tabPane, String fxmlPath,
+                                     String tabTitle, boolean closAble) {
+        loadFXMLInTab(tabPane, fxmlPath, tabTitle, closAble, null);
+    }
 
-        // لو التاب اتحمّل قبل كده — بس نعرضه
+    /**
+     * نسخة جديدة — تقبل {@code controllerInitializer} يتنفّذ على الـ Controller
+     * بعد التحميل. بيُستخدم لتمرير بيانات للتاب (زي الرقم القومي).
+     *
+     * <p><b>مهم:</b> لو التاب مفتوح بالفعل، الـ initializer هيتنفّذ برضه
+     * على الـ Controller المخزّن — عشان البيانات تتحدّث.
+     */
+    public static void loadFXMLInTab(TabPane tabPane, String fxmlPath,
+                                     String tabTitle, boolean closAble,
+                                     Consumer<Object> controllerInitializer) {
+
+        // ── التاب موجود بالفعل ──
         if (loadedTabs.containsKey(fxmlPath)) {
-            Tab existingTab = loadedTabs.get(fxmlPath);
-            if (!tabPane.getTabs().contains(existingTab)) {
-                tabPane.getTabs().add(existingTab);
+            TabInfo info = loadedTabs.get(fxmlPath);
+            if (!tabPane.getTabs().contains(info.tab())) {
+                tabPane.getTabs().add(info.tab());
             }
-            tabPane.getSelectionModel().select(existingTab);
+            tabPane.getSelectionModel().select(info.tab());
+
+            if (controllerInitializer != null && info.controller() != null) {
+                controllerInitializer.accept(info.controller());
+            }
             return;
         }
 
+        // ── التاب جديد ──
         try {
             FXMLLoader loader = new FXMLLoader(TabManager.class.getResource(fxmlPath));
             Parent content = loader.load();
+            Object controller = loader.getController();
 
-            // ✅ تطبيق كل الإعدادات تلقائياً
             applyViewSettings(tabTitle, content);
+
+            if (controllerInitializer != null && controller != null) {
+                controllerInitializer.accept(controller);
+            }
 
             Tab tab = new Tab(tabTitle, content);
             tab.setClosable(closAble);
@@ -56,25 +81,22 @@ public class TabManager {
 
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
-            loadedTabs.put(fxmlPath, tab);
+
+            loadedTabs.put(fxmlPath, new TabInfo(tab, controller));
 
         } catch (IOException e) {
-            e.printStackTrace();
-            log.info(e.getMessage());
+            log.error("Failed to load FXML: {}", fxmlPath, e);
             SAFNotification.error(e.getMessage());
         }
     }
 
-    /**
-     * Helper مشترك — بيطبق كل إعدادات الواجهة بعد التحميل.
-     * الألوان بتتطبق على Scene مستقلة عشان التاب يرث من الـ Scene الرئيسية
-     * تلقائياً — فبنكتفي بتطبيق الخطوط والزوم على الـ root مباشرة.
-     */
+    // ══════════════════════════════════════════════════════════════
+    //  Helpers
+    // ══════════════════════════════════════════════════════════════
+
     static void applyViewSettings(String viewId, Parent root) {
         ViewRegistry.register(viewId);
         FontSettingsManager.applySettings(viewId, root);
         ZoomManager.applyZoom(viewId, root);
-        // الألوان: التاب بيرث الـ Scene الرئيسية تلقائياً من ThemeEventBus
-        // ColorSettingsManager.attachTheme مش محتاجه هنا لأن مفيش Scene منفصلة للتاب
     }
 }

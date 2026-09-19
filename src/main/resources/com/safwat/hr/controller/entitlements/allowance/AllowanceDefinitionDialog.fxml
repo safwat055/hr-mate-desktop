@@ -141,6 +141,13 @@
                         <Label styleClass="bold fs-12" text="النطاق"/>
                         <ComboBox fx:id="combo_scope" prefHeight="36" prefWidth="140"/>
                     </VBox>
+                    <HBox fx:id="pane_insuranceBase" alignment="CENTER_RIGHT" spacing="18"
+                          managed="false" visible="false">
+                        <VBox spacing="6">
+                            <Label styleClass="bold fs-12" text="وعاء التأمين *"/>
+                            <ComboBox fx:id="combo_insuranceBase" prefHeight="36" prefWidth="200"/>
+                        </VBox>
+                    </HBox>
                 </HBox>
 
                 <!-- الصف 4: تصنيف + Anchor + Checkboxes -->
@@ -160,6 +167,8 @@
                     <CheckBox fx:id="chk_subjectToInsurance" text="خاضع للتأمينات"/>
                     <CheckBox fx:id="chk_subjectToTaxAndStamp" text="خاضع للضريبة والدمغة"/>
                     <CheckBox fx:id="chk_inMinimumWageBase" text="يدخل في وعاء المعاشات"/>  <!-- 🆕 -->
+                    <CheckBox fx:id="chk_displayOnly" text="عرض فقط (بدون احتساب)"/>
+                    <CheckBox fx:id="chk_appliesToNewHires" text="يستحق للمعينين الجدد"/>
                 </HBox>
 
                 <!-- 🆕 صف التاريخ المرجعي — مخفي افتراضياً، بيظهر بس للنوعين الجداد -->

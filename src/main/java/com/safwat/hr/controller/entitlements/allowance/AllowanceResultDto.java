@@ -17,7 +17,17 @@ public record AllowanceResultDto(
         String nationalId,
         LocalDate calculatedAt,
         List<AllowanceLineDto> allowances,
-        BigDecimal totalAllowances
+        BigDecimal totalAllowances,
+
+        // 🆕 الأوعية التأمينية
+        BigDecimal insurableBasic,      // الأجر الأساسي
+        BigDecimal insurableVariable,   // الأجر المتغير
+        BigDecimal insurableCombined,   // الأجر الاشتراكي (BASIC + VARIABLE)
+
+        // 🆕 المجاميع
+        BigDecimal totalEntitlements,   // جملة المستحق
+        BigDecimal totalDeductions,     // جملة الاستقطاعات (موجبة)
+        BigDecimal netAmount            // الصافي
 ) {
 
     public record AllowanceLineDto(
@@ -27,10 +37,10 @@ public record AllowanceResultDto(
             LocalDate effectiveFrom,
             Source source,
             List<OverrideEntry> overrides,
-            ElementType elementType,        // ← من AllowanceDefinition
+            ElementType elementType,
             boolean subjectToInsurance,
             boolean subjectToTaxAndStamp,
-            boolean inMinimumWageBase,      // 🆕
+            boolean inMinimumWageBase,
             boolean displayOnly
     ) {
 
@@ -47,7 +57,6 @@ public record AllowanceResultDto(
         public enum Source {AUTO, MANUAL, EXCLUDED}
     }
 
-    
     // ══════════════════════════════════════════════════════════════
     //  Requests
     // ══════════════════════════════════════════════════════════════

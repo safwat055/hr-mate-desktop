@@ -7,31 +7,26 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Request لإنشاء أو تعديل snapshot — نسخة الفرونت.
- *
- * <p>يعكس بالضبط {@code AllowanceDefinitionRequest} record في الباك:
- * <ul>
- *   <li>POST /entitlements/allowances/definitions</li>
- *   <li>PUT  /entitlements/allowances/definitions/{id}</li>
- * </ul>
- */
 public record AllowanceDefinitionRequest(
         String code,
         String nameAr,
         String nameEn,
         LocalDate effectiveFrom,
-        LocalDate effectiveTo,               // 🆕
+        LocalDate effectiveTo,
+        LocalDate referenceDate,
         Behavior behavior,
         CalcType calcType,
         BaseSource baseSource,
+        InsuranceBase insuranceBase,        // 🆕
         Scope scope,
         ElementType elementType,
         boolean subjectToInsurance,
+        
         boolean subjectToTaxAndStamp,
-        boolean inMinimumWageBase,           // 🆕
+        boolean inMinimumWageBase,
+        boolean displayOnly,                // 🆕
+        boolean appliesToNewHires,          // 🆕
         Map<String, BigDecimal> valuesMap,
-        LocalDate referenceDate,             // 🆕
         List<String> excludedMonths,
         List<String> eligibleLaws,
         List<String> eligibleLawCodes,

@@ -138,8 +138,8 @@
   "ui": {
     "table_chk_total": true,
     "table_chk_nationalId": true,
-    "colorOverridesVersion": "1789577739959",
-    "theme": "theme-lightblue.css",
+    "colorOverridesVersion": "1789752787071",
+    "theme": "theme-gray.css",
     "fontSize": "10.0"
   },
   "fonts_/com/safwat/hr/controller/report/PayrollReport.fxml": {
@@ -226,6 +226,7 @@
     "مدير استحقاقات",
     "مدير التقارير",
     "مفردات",
+    "مفردات بيرول",
     "مفردات مرتب",
     "نسخ احتياطي",
     "نماذج التحميل",
@@ -233,7 +234,7 @@
     "👥 إدارة المستخدمين",
     "📊 السجلات",
     "🔑 تغيير كلمة المرور",
-    "مفردات بيرول"
+    "المفردات"
   ]},
   "fonts_تدرج راتب": {
     "COMBO_BOX": {

@@ -1,8 +1,6 @@
 package com.safwat.hr.controller.backup;
 
-import com.safwat.hr.controller.backup.dto.BackupFileInfo;
-import com.safwat.hr.controller.backup.dto.BackupFormat;
-import com.safwat.hr.controller.backup.dto.RestoreMode;
+import com.safwat.hr.controller.backup.dto.*;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -17,7 +15,9 @@ import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -93,7 +93,31 @@ public class BackupController implements Initializable {
     private Label scriptStatusLabel;
     @FXML
     private Label scriptResultArea;
+    // ── تصدير الجداول ──
+    @FXML
+    private ComboBox<SchemaSummary> combo_schema;
+    @FXML
+    private ComboBox<TableSummary> combo_table;
+    @FXML
+    private RadioButton radioExportReplace;
+    @FXML
+    private RadioButton radioExportMerge;
+    @FXML
+    private Button btnRefreshSchemas;
+    @FXML
+    private Button btnPreviewTable;
+    @FXML
+    private Button btnExportTable;
+    @FXML
+    private ProgressBar exportProgress;
+    @FXML
+    private Label exportStatusLabel;
+    @FXML
+    private Label tableInfoArea;
 
+    // ── State ──
+    private final javafx.collections.ObservableList<SchemaSummary> schemasListData = FXCollections.observableArrayList();
+    private final javafx.collections.ObservableList<TableSummary> tablesListData = FXCollections.observableArrayList();
     private final ObservableList<BackupFileInfo> backupsListData = FXCollections.observableArrayList();
     private File selectedUploadFile, selectedSqlFile;
     private BackupFileInfo selectedBackupItem;
@@ -112,6 +136,7 @@ public class BackupController implements Initializable {
         setupSpinner();
         setupBackupsListView();
         initStatusLabels();
+        setupExportSection();
         cronField.textProperty().addListener((obs, o, n) -> updateCronHint(n));
 
         SettingsThemeLoader.apply(autoBackupStatusLabel);
@@ -610,5 +635,192 @@ public class BackupController implements Initializable {
             case "0 0 */12 * * ?" -> "كل 12 ساعة";
             default -> "Cron مخصص";
         });
+    }
+    // ════════════════════════════════════════════════════
+//  تصدير الجداول
+// ════════════════════════════════════════════════════
+
+    private void setupExportSection() {
+        // Toggle group للـ mode
+        ToggleGroup exportModeGroup = new ToggleGroup();
+        radioExportReplace.setToggleGroup(exportModeGroup);
+        radioExportMerge.setToggleGroup(exportModeGroup);
+
+        // ComboBoxes
+        combo_schema.setItems(schemasListData);
+        combo_table.setItems(tablesListData);
+
+        // عند تغيير الـ schema → حمّل الجداول
+        combo_schema.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, sel) -> {
+                    tablesListData.clear();
+                    combo_table.setValue(null);
+                    clearExportInfo();
+                    if (sel != null) loadTablesForSchema(sel.getName());
+                });
+
+        // عند اختيار جدول → هيّئ زر المعاينة
+        combo_table.getSelectionModel().selectedItemProperty()
+                .addListener((obs, old, sel) -> {
+                    btnPreviewTable.setDisable(sel == null);
+                    btnExportTable.setDisable(sel == null);
+                    clearExportInfo();
+                });
+
+        // حالة ابتدائية
+        clearExportInfo();
+        btnPreviewTable.setDisable(true);
+        btnExportTable.setDisable(true);
+    }
+
+    private void clearExportInfo() {
+        tableInfoArea.setText(EMPTY_PLACEHOLDER);
+        tableInfoArea.setStyle("");
+        showStatus(exportStatusLabel, "", "");
+    }
+
+    @FXML
+    private void handleRefreshSchemas() {
+        btnRefreshSchemas.setDisable(true);
+        showStatus(exportStatusLabel, "⏳ جاري تحميل الـ schemas...", "");
+
+        service.listSchemas()
+                .thenAccept(response -> Platform.runLater(() -> {
+                    btnRefreshSchemas.setDisable(false);
+                    if (response.isSuccess() && response.getData() != null) {
+                        schemasListData.setAll(response.getData());
+                        showStatus(exportStatusLabel,
+                                "✅ تم تحميل " + schemasListData.size() + " schema", "ok");
+                    } else {
+                        schemasListData.clear();
+                        showStatus(exportStatusLabel,
+                                "❌ " + service.nullSafe(response.getMessage(), "فشل التحميل"), "error");
+                    }
+                }))
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        btnRefreshSchemas.setDisable(false);
+                        showStatus(exportStatusLabel,
+                                "❌ خطأ في الاتصال: " + ex.getMessage(), "error");
+                    });
+                    return null;
+                });
+    }
+
+    private void loadTablesForSchema(String schema) {
+        showStatus(exportStatusLabel, "⏳ جاري تحميل الجداول...", "");
+
+        service.listTables(schema)
+                .thenAccept(response -> Platform.runLater(() -> {
+                    if (response.isSuccess() && response.getData() != null) {
+                        tablesListData.setAll(response.getData());
+                        showStatus(exportStatusLabel,
+                                "✅ " + tablesListData.size() + " جدول في " + schema, "ok");
+                    } else {
+                        tablesListData.clear();
+                        showStatus(exportStatusLabel,
+                                "❌ " + service.nullSafe(response.getMessage(), "فشل التحميل"), "error");
+                    }
+                }))
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> showStatus(exportStatusLabel,
+                            "❌ خطأ: " + ex.getMessage(), "error"));
+                    return null;
+                });
+    }
+
+    @FXML
+    private void handlePreviewTable() {
+        SchemaSummary schema = combo_schema.getValue();
+        TableSummary table = combo_table.getValue();
+        if (schema == null || table == null) return;
+
+        btnPreviewTable.setDisable(true);
+        showStatus(exportStatusLabel, "⏳ جاري قراءة معلومات الجدول...", "");
+
+        service.getTableInfo(schema.getName(), table.getTableName())
+                .thenAccept(response -> Platform.runLater(() -> {
+                    btnPreviewTable.setDisable(false);
+                    if (response.isSuccess() && response.getData() != null) {
+                        tableInfoArea.setText(service.buildTableInfoReport(response.getData()));
+                        tableInfoArea.setStyle("");
+                        showStatus(exportStatusLabel, "✅ تم التحميل", "ok");
+                    } else {
+                        tableInfoArea.setText(EMPTY_PLACEHOLDER);
+                        showStatus(exportStatusLabel,
+                                "❌ " + service.nullSafe(response.getMessage(), "فشل التحميل"), "error");
+                    }
+                }))
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> {
+                        btnPreviewTable.setDisable(false);
+                        showStatus(exportStatusLabel, "❌ خطأ: " + ex.getMessage(), "error");
+                    });
+                    return null;
+                });
+    }
+
+    @FXML
+    private void handleExportTable() {
+        SchemaSummary schema = combo_schema.getValue();
+        TableSummary table = combo_table.getValue();
+        if (schema == null || table == null) return;
+
+        ExportMode mode = radioExportReplace.isSelected() ? ExportMode.REPLACE : ExportMode.MERGE;
+        String defaultFileName = service.buildExportFileName(
+                schema.getName(), table.getTableName());
+
+        // ── FileChooser ──
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("احفظ ملف التصدير");
+        chooser.setInitialFileName(defaultFileName);
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("SQL Files", "*.sql"));
+
+        File file = chooser.showSaveDialog(btnExportTable.getScene().getWindow());
+        if (file == null) return;
+
+        // ── تنفيذ ──
+        setExportBusy(true);
+        showStatus(exportStatusLabel,
+                "⏳ جاري تصدير " + schema.getName() + "." + table.getTableName() + "...", "");
+
+        service.exportTableBytes(schema.getName(), table.getTableName(), mode)
+                .whenComplete((bytes, ex) -> Platform.runLater(() -> {
+                    setExportBusy(false);
+                    if (ex != null) {
+                        showStatus(exportStatusLabel,
+                                "❌ فشل التصدير: " + ex.getMessage(), "error");
+                        return;
+                    }
+                    if (bytes == null || bytes.length == 0) {
+                        showStatus(exportStatusLabel, "❌ الملف فارغ", "error");
+                        return;
+                    }
+                    try {
+                        Files.write(file.toPath(), bytes);
+                        showStatus(exportStatusLabel,
+                                "✅ تم الحفظ: " + file.getName()
+                                        + "  (" + formatSize(bytes.length) + ")", "ok");
+                    } catch (IOException ioex) {
+                        showStatus(exportStatusLabel,
+                                "❌ فشل حفظ الملف: " + ioex.getMessage(), "error");
+                    }
+                }));
+    }
+
+    private void setExportBusy(boolean busy) {
+        btnRefreshSchemas.setDisable(busy);
+        btnPreviewTable.setDisable(busy || combo_table.getValue() == null);
+        btnExportTable.setDisable(busy || combo_table.getValue() == null);
+        combo_schema.setDisable(busy);
+        combo_table.setDisable(busy);
+        toggleProgress(exportProgress, busy);
+    }
+
+    private String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.2f MB", bytes / (1024.0 * 1024));
     }
 }

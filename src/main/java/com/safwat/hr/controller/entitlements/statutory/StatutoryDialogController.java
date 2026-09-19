@@ -40,15 +40,11 @@ public class StatutoryDialogController implements Initializable {
     @FXML
     private TableColumn<InsuranceRateConfigDto, LocalDate> col_ins_to;
     @FXML
-    private TableColumn<InsuranceRateConfigDto, String> col_ins_mode;
-    @FXML
-    private TableColumn<InsuranceRateConfigDto, String> col_ins_employee;
-    @FXML
-    private TableColumn<InsuranceRateConfigDto, String> col_ins_employer;
-    @FXML
     private TableColumn<InsuranceRateConfigDto, BigDecimal> col_ins_floor;
     @FXML
-    private TableColumn<InsuranceRateConfigDto, BigDecimal> col_ins_ceiling;
+    private TableColumn<InsuranceRateConfigDto, BigDecimal> col_ins_basicCeiling;
+    @FXML
+    private TableColumn<InsuranceRateConfigDto, BigDecimal> col_ins_variableCeiling;
     @FXML
     private TableColumn<InsuranceRateConfigDto, Void> col_ins_actions;
 
@@ -60,27 +56,12 @@ public class StatutoryDialogController implements Initializable {
     private TextField txt_ins_from;
     @FXML
     private TextField txt_ins_to;
-
-    // نظام موحّد
-    @FXML
-    private TextField txt_ins_employee;
-    @FXML
-    private TextField txt_ins_employer;
-
-    // نظام وعائين
-    @FXML
-    private TextField txt_ins_basic_employee;
-    @FXML
-    private TextField txt_ins_basic_employer;
-    @FXML
-    private TextField txt_ins_variable_employee;
-    @FXML
-    private TextField txt_ins_variable_employer;
-
     @FXML
     private TextField txt_ins_floor;
     @FXML
-    private TextField txt_ins_ceiling;
+    private TextField txt_ins_basicCeiling;
+    @FXML
+    private TextField txt_ins_variableCeiling;
     @FXML
     private TextField txt_ins_notes;
     @FXML
@@ -183,9 +164,7 @@ public class StatutoryDialogController implements Initializable {
     @FXML
     private Button btn_close;
 
-    // ══════════════════════════════════════════════════════════════
-    //  State
-    // ══════════════════════════════════════════════════════════════
+    // ── State ──
     private final ObservableList<InsuranceRateConfigDto> insItems = FXCollections.observableArrayList();
     private final ObservableList<TaxBracket> taxItems = FXCollections.observableArrayList();
     private final ObservableList<StampDutyBracket> stampItems = FXCollections.observableArrayList();
@@ -281,33 +260,17 @@ public class StatutoryDialogController implements Initializable {
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveTo()));
         col_ins_to.setCellFactory(tc -> dateCell());
 
-        col_ins_mode.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleStringProperty(
-                        d.getValue().isSplitMode() ? "وعائين" : "موحّد"));
-
-        col_ins_employee.setCellValueFactory(d -> {
-            InsuranceRateConfigDto c = d.getValue();
-            return new javafx.beans.property.SimpleStringProperty(
-                    c.isSplitMode()
-                            ? toPercent(c.basicEmployeeRate()) + "% + " + toPercent(c.variableEmployeeRate()) + "%"
-                            : toPercent(c.employeeRate()) + "%");
-        });
-
-        col_ins_employer.setCellValueFactory(d -> {
-            InsuranceRateConfigDto c = d.getValue();
-            return new javafx.beans.property.SimpleStringProperty(
-                    c.isSplitMode()
-                            ? toPercent(c.basicEmployerRate()) + "% + " + toPercent(c.variableEmployerRate()) + "%"
-                            : toPercent(c.employerRate()) + "%");
-        });
-
         col_ins_floor.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().wageFloor()));
         col_ins_floor.setCellFactory(tc -> moneyCell());
 
-        col_ins_ceiling.setCellValueFactory(d ->
-                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().wageCeiling()));
-        col_ins_ceiling.setCellFactory(tc -> moneyCell());
+        col_ins_basicCeiling.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().basicCeiling()));
+        col_ins_basicCeiling.setCellFactory(tc -> moneyCell());
+
+        col_ins_variableCeiling.setCellValueFactory(d ->
+                new javafx.beans.property.SimpleObjectProperty<>(d.getValue().variableCeiling()));
+        col_ins_variableCeiling.setCellFactory(tc -> moneyCell());
 
         col_ins_actions.setCellFactory(tc -> actionsCell(
                 this::showInsuranceFormForEdit,
@@ -329,19 +292,9 @@ public class StatutoryDialogController implements Initializable {
         lbl_ins_form_title.setText("تعديل إعداد التأمينات #" + cfg.id());
         txt_ins_from.setText(cfg.effectiveFrom() == null ? "" : cfg.effectiveFrom().format(DATE_FMT));
         txt_ins_to.setText(cfg.effectiveTo() == null ? "" : cfg.effectiveTo().format(DATE_FMT));
-
-        // النظام الموحّد
-        txt_ins_employee.setText(cfg.employeeRate() == null ? "" : toPercent(cfg.employeeRate()));
-        txt_ins_employer.setText(cfg.employerRate() == null ? "" : toPercent(cfg.employerRate()));
-
-        // نظام الوعائين
-        txt_ins_basic_employee.setText(cfg.basicEmployeeRate() == null ? "" : toPercent(cfg.basicEmployeeRate()));
-        txt_ins_basic_employer.setText(cfg.basicEmployerRate() == null ? "" : toPercent(cfg.basicEmployerRate()));
-        txt_ins_variable_employee.setText(cfg.variableEmployeeRate() == null ? "" : toPercent(cfg.variableEmployeeRate()));
-        txt_ins_variable_employer.setText(cfg.variableEmployerRate() == null ? "" : toPercent(cfg.variableEmployerRate()));
-
         txt_ins_floor.setText(cfg.wageFloor() == null ? "" : cfg.wageFloor().toPlainString());
-        txt_ins_ceiling.setText(cfg.wageCeiling() == null ? "" : cfg.wageCeiling().toPlainString());
+        txt_ins_basicCeiling.setText(cfg.basicCeiling() == null ? "" : cfg.basicCeiling().toPlainString());
+        txt_ins_variableCeiling.setText(cfg.variableCeiling() == null ? "" : cfg.variableCeiling().toPlainString());
         txt_ins_notes.setText(cfg.notes() == null ? "" : cfg.notes());
         show(pane_ins_form);
     }
@@ -352,50 +305,21 @@ public class StatutoryDialogController implements Initializable {
             LocalDate from = parseDate(txt_ins_from.getText(), "تاريخ السريان مطلوب", true);
             LocalDate to = parseDate(txt_ins_to.getText(), null, false);
 
-            // النظام الموحّد
-            BigDecimal empRate = parsePercentOrNull(txt_ins_employee.getText(), "نسبة الموظف");
-            BigDecimal emprRate = parsePercentOrNull(txt_ins_employer.getText(), "نسبة صاحب العمل");
-
-            // نظام الوعائين
-            BigDecimal basicEmp = parsePercentOrNull(txt_ins_basic_employee.getText(), "نسبة الموظف (أساسي)");
-            BigDecimal basicGov = parsePercentOrNull(txt_ins_basic_employer.getText(), "نسبة صاحب العمل (أساسي)");
-            BigDecimal varEmp = parsePercentOrNull(txt_ins_variable_employee.getText(), "نسبة الموظف (متغير)");
-            BigDecimal varGov = parsePercentOrNull(txt_ins_variable_employer.getText(), "نسبة صاحب العمل (متغير)");
-
-            // تحقق: لازم نستخدم نظام واحد بس
-            boolean hasCombined = empRate != null && emprRate != null;
-            boolean hasSplit = basicEmp != null && basicGov != null && varEmp != null && varGov != null;
-            boolean hasPartialCombined = (empRate == null) != (emprRate == null);
-            boolean hasPartialSplit = !hasSplit && (basicEmp != null || basicGov != null || varEmp != null || varGov != null);
-
-            if (hasCombined && hasSplit) {
-                throw new IllegalArgumentException("املا النظام الموحّد أو نظام الوعائين — مش الاتنين");
-            }
-            if (hasPartialCombined) {
-                throw new IllegalArgumentException("النظام الموحّد يحتاج النسبتين مع بعض");
-            }
-            if (hasPartialSplit) {
-                throw new IllegalArgumentException("نظام الوعائين يحتاج الأربع نسب مع بعض");
-            }
-            if (!hasCombined && !hasSplit) {
-                throw new IllegalArgumentException("املا نسب النظام الموحّد أو نسب نظام الوعائين");
-            }
-
             BigDecimal floor = parseMoney(txt_ins_floor.getText(), "الحد الأدنى");
-            BigDecimal ceiling = parseMoney(txt_ins_ceiling.getText(), "الحد الأقصى");
+            BigDecimal basicCeiling = parseMoney(txt_ins_basicCeiling.getText(), "حد الأساسي الأقصى");
+            BigDecimal variableCeiling = parseMoney(txt_ins_variableCeiling.getText(), "حد المتغير الأقصى");
             String notes = txt_ins_notes.getText();
 
             InsuranceRateConfigDto dto = new InsuranceRateConfigDto(
                     editingInsuranceId, from, to,
-                    empRate, emprRate,
-                    basicEmp, basicGov, varEmp, varGov,
-                    floor, ceiling,
+                    floor, basicCeiling, variableCeiling,
                     notes == null || notes.isBlank() ? null : notes.trim()
             );
 
             btn_ins_save.setDisable(true);
             if (editingInsuranceId == null) {
-                FxApiSupport.post("/entitlements/statutory/insurance", dto, InsuranceRateConfigDto.class,
+                FxApiSupport.post("/entitlements/statutory/insurance", dto,
+                        InsuranceRateConfigDto.class,
                         saved -> onInsSaved(), this::onInsError);
             } else {
                 FxApiSupport.put("/entitlements/statutory/insurance/" + editingInsuranceId, dto,
@@ -432,14 +356,9 @@ public class StatutoryDialogController implements Initializable {
     private void clearInsuranceForm() {
         txt_ins_from.clear();
         txt_ins_to.clear();
-        txt_ins_employee.clear();
-        txt_ins_employer.clear();
-        txt_ins_basic_employee.clear();
-        txt_ins_basic_employer.clear();
-        txt_ins_variable_employee.clear();
-        txt_ins_variable_employer.clear();
         txt_ins_floor.clear();
-        txt_ins_ceiling.clear();
+        txt_ins_basicCeiling.clear();
+        txt_ins_variableCeiling.clear();
         txt_ins_notes.clear();
         lbl_ins_error.setVisible(false);
     }
@@ -450,7 +369,7 @@ public class StatutoryDialogController implements Initializable {
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Tax — نفس اللي كان
+    //  Tax
     // ══════════════════════════════════════════════════════════════
 
     private void setupTaxTable() {
@@ -723,18 +642,12 @@ public class StatutoryDialogController implements Initializable {
         }
     }
 
-    /**
-     * نسبة عشرية مطلوبة — لازم تتعبى.
-     */
     private BigDecimal parsePercent(String text, String label) {
         if (text == null || text.isBlank())
             throw new IllegalArgumentException(label + " مطلوبة");
         return parsePercentInternal(text.trim(), label);
     }
 
-    /**
-     * نسبة عشرية اختيارية — null لو فاضية.
-     */
     private BigDecimal parsePercentOrNull(String text, String label) {
         if (text == null || text.isBlank()) return null;
         return parsePercentInternal(text.trim(), label);
