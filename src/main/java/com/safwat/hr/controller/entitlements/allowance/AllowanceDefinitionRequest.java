@@ -17,20 +17,19 @@ public record AllowanceDefinitionRequest(
         Behavior behavior,
         CalcType calcType,
         BaseSource baseSource,
-        InsuranceBase insuranceBase,        // 🆕
+        InsuranceBase insuranceBase,
         Scope scope,
         ElementType elementType,
         boolean subjectToInsurance,
-
         boolean subjectToTaxAndStamp,
         boolean inMinimumWageBase,
-        boolean displayOnly,                // 🆕
-        boolean appliesToNewHires,          // 🆕
+        boolean displayOnly,
+        boolean appliesToNewHires,
         Map<String, BigDecimal> valuesMap,
-        String eligibleSectorCode,
+        List<String> eligibleSectorCodes,      // 🆕 multi
+        List<String> eligibleJobTitles,        // 🆕 بديل eligibleLawCodes
         List<String> excludedMonths,
         List<String> eligibleLaws,
-        List<String> eligibleLawCodes,
         TimelineAnchor timelineAnchor,
         String notes
 ) {

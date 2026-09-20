@@ -25,7 +25,7 @@ public class ScaleDto {
     private String empName;
     private String codeId;
     private Integer law;
-    private BigDecimal lawCode;
+    private String lawCode;
     private String qualitativeGroup;
     private Integer startDegree;
     private LocalDate startDate;

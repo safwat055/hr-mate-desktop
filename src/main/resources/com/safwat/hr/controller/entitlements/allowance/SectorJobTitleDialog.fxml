@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="14" prefHeight="720" prefWidth="1180"
+      styleClass="card" xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.entitlements.allowance.SectorJobTitleDialogController">
+
+    <padding>
+        <Insets bottom="16" left="16" right="16" top="16"/>
+    </padding>
+
+    <!-- العنوان -->
+    <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header"
+           text="🏢 إدارة القطاعات والوظائف"/>
+
+    <!-- ══════════════════════════════════════════════════
+         Master-Detail Row
+    ══════════════════════════════════════════════════ -->
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+
+        <!-- ─── Master: القطاعات ─── -->
+        <VBox minWidth="360" prefWidth="380" spacing="8">
+            <Label styleClass="bold fs-13" text="القطاعات"/>
+
+            <TableView fx:id="table_sectors" nodeOrientation="RIGHT_TO_LEFT"
+                       styleClass="bold" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="col_sector_code" prefWidth="90" text="الكود"/>
+                    <TableColumn fx:id="col_sector_nameAr" prefWidth="170" text="الاسم العربي"/>
+                    <TableColumn fx:id="col_sector_order" prefWidth="60" text="ترتيب"/>
+                    <TableColumn fx:id="col_sector_active" prefWidth="60" text="فعّال"/>
+                </columns>
+                <placeholder>
+                    <Label styleClass="text-muted" text="لا توجد قطاعات"/>
+                </placeholder>
+            </TableView>
+
+            <HBox alignment="CENTER_RIGHT" spacing="8">
+                <Button fx:id="btn_add_sector" prefHeight="34" prefWidth="110"
+                        styleClass="btn-success" text="+ قطاع جديد"/>
+                <Button fx:id="btn_edit_sector" disable="true" prefHeight="34" prefWidth="90"
+                        styleClass="btn-purple" text="✏ تعديل"/>
+                <Button fx:id="btn_delete_sector" disable="true" prefHeight="34" prefWidth="90"
+                        styleClass="btn-danger" text="🗑 حذف"/>
+            </HBox>
+        </VBox>
+
+        <Separator orientation="VERTICAL"/>
+
+        <!-- ─── Detail: الوظائف ─── -->
+        <VBox spacing="8" HBox.hgrow="ALWAYS">
+            <Label fx:id="lbl_jobs_title" styleClass="bold fs-13"
+                   text="وظائف القطاع (اختر قطاعاً أولاً)"/>
+
+            <TableView fx:id="table_jobs" nodeOrientation="RIGHT_TO_LEFT"
+                       styleClass="bold" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="col_job_code" prefWidth="90" text="الكود"/>
+                    <TableColumn fx:id="col_job_nameAr" prefWidth="200" text="الاسم العربي"/>
+                    <TableColumn fx:id="col_job_nameEn" prefWidth="150" text="الاسم الإنجليزي"/>
+                    <TableColumn fx:id="col_job_law81" prefWidth="90" text="قانون 81"/>
+                    <TableColumn fx:id="col_job_order" prefWidth="60" text="ترتيب"/>
+                    <TableColumn fx:id="col_job_active" prefWidth="60" text="فعّال"/>
+                </columns>
+                <placeholder>
+                    <Label styleClass="text-muted" text="اختر قطاعاً لعرض وظائفه"/>
+                </placeholder>
+            </TableView>
+
+            <HBox alignment="CENTER_RIGHT" spacing="8">
+                <Button fx:id="btn_add_job" disable="true" prefHeight="34" prefWidth="110"
+                        styleClass="btn-success" text="+ وظيفة جديدة"/>
+                <Button fx:id="btn_edit_job" disable="true" prefHeight="34" prefWidth="90"
+                        styleClass="btn-purple" text="✏ تعديل"/>
+                <Button fx:id="btn_delete_job" disable="true" prefHeight="34" prefWidth="90"
+                        styleClass="btn-danger" text="🗑 حذف"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+    <!-- ══════════════════════════════════════════════════
+         Sector Form
+    ══════════════════════════════════════════════════ -->
+    <VBox fx:id="pane_sector_form" managed="false" spacing="10" styleClass="card" visible="false">
+        <padding>
+            <Insets bottom="12" left="14" right="14" top="12"/>
+        </padding>
+
+        <Label fx:id="lbl_sector_form_title" styleClass="bold text-navy" text="بيانات القطاع"/>
+
+        <HBox alignment="CENTER_RIGHT" spacing="12">
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text="الكود *"/>
+                <TextField fx:id="txt_sector_code" prefHeight="34" prefWidth="130"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="fs-12 bold" text="الاسم العربي *"/>
+                <TextField fx:id="txt_sector_nameAr" maxWidth="Infinity" prefHeight="34"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="fs-12 bold" text="الاسم الإنجليزي"/>
+                <TextField fx:id="txt_sector_nameEn" maxWidth="Infinity" prefHeight="34"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text="الترتيب"/>
+                <TextField fx:id="txt_sector_order" prefHeight="34" prefWidth="90"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text=" "/>
+                <CheckBox fx:id="chk_sector_active" selected="true" text="فعّال"/>
+            </VBox>
+        </HBox>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Button fx:id="btn_save_sector" prefHeight="34" prefWidth="100"
+                    styleClass="btn-primary" text="💾 حفظ"/>
+            <Button fx:id="btn_cancel_sector" prefHeight="34" prefWidth="90"
+                    styleClass="btn-secondary" text="إلغاء"/>
+            <Label fx:id="lbl_sector_error" styleClass="text-danger fs-12" visible="false"/>
+        </HBox>
+    </VBox>
+
+    <!-- ══════════════════════════════════════════════════
+         Job Form
+    ══════════════════════════════════════════════════ -->
+    <VBox fx:id="pane_job_form" managed="false" spacing="10" styleClass="card" visible="false">
+        <padding>
+            <Insets bottom="12" left="14" right="14" top="12"/>
+        </padding>
+
+        <Label fx:id="lbl_job_form_title" styleClass="bold text-navy" text="بيانات الوظيفة"/>
+
+        <HBox alignment="CENTER_RIGHT" spacing="12">
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text="الكود *"/>
+                <TextField fx:id="txt_job_code" prefHeight="34" prefWidth="130"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="fs-12 bold" text="الاسم العربي *"/>
+                <TextField fx:id="txt_job_nameAr" maxWidth="Infinity" prefHeight="34"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label styleClass="fs-12 bold" text="الاسم الإنجليزي"/>
+                <TextField fx:id="txt_job_nameEn" maxWidth="Infinity" prefHeight="34"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text="الترتيب"/>
+                <TextField fx:id="txt_job_order" prefHeight="34" prefWidth="90"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text=" "/>
+                <CheckBox fx:id="chk_job_law81" text="خاضع لـ 81"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label styleClass="fs-12 bold" text=" "/>
+                <CheckBox fx:id="chk_job_active" selected="true" text="فعّال"/>
+            </VBox>
+        </HBox>
+
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <Button fx:id="btn_save_job" prefHeight="34" prefWidth="100"
+                    styleClass="btn-primary" text="💾 حفظ"/>
+            <Button fx:id="btn_cancel_job" prefHeight="34" prefWidth="90"
+                    styleClass="btn-secondary" text="إلغاء"/>
+            <Label fx:id="lbl_job_error" styleClass="text-danger fs-12" visible="false"/>
+        </HBox>
+    </VBox>
+
+    <!-- ══════════════════════════════════════════════════
+         Footer
+    ══════════════════════════════════════════════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label fx:id="lbl_global_msg" styleClass="fs-12" visible="false"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btn_close" prefHeight="36" prefWidth="100"
+                styleClass="btn-secondary" text="إغلاق"/>
+    </HBox>
+
+</VBox>

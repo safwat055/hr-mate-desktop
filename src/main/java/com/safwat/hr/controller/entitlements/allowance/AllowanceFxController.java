@@ -4,11 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.entitlements.allowance.AllowanceDefinition.ElementType;
 import com.safwat.hr.controller.entitlements.statutory.StatutoryDialogController;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
+import com.safwat.hr.ui.TextFieldSetupHelper;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Side;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class AllowanceFxController implements Initializable {
 
@@ -68,11 +73,13 @@ public class AllowanceFxController implements Initializable {
 
     // ── تاب البدلات ─────────────────────────────────────────────
     @FXML
-    private DatePicker date_calculation;
+    private TextField txt_calculationDate;          // 🆕 بدل DatePicker
     @FXML
     private Button btn_recalculate;
     @FXML
-    private ComboBox<AllowanceDefinition> combo_newAllowance;
+    private TextField txt_newAllowance;             // 🆕 بدل ComboBox
+    @FXML
+    private Button btn_showAllowances;              // 🆕 زر عرض كل البدلات
     @FXML
     private Button btn_addAllowance;
     @FXML
@@ -93,12 +100,29 @@ public class AllowanceFxController implements Initializable {
     private TableColumn<AllowanceResultDto.AllowanceLineDto, AllowanceResultDto.AllowanceLineDto.Source> col_source;
     @FXML
     private TableColumn<AllowanceResultDto.AllowanceLineDto, Void> col_actions;
-
+    @FXML
+    private Button btn_manageSectors;
     // ── State ────────────────────────────────────────────────────
     private String currentNationalId;
     private AllowanceResultDto currentResult;
     private ScaleDto cachedScaleDto;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /**
+     * 🆕 البدلات المتاحة للإضافة — تُملأ من loadDefinitions.
+     */
+    private final ObservableList<AllowanceDefinition> availableAllowances =
+            FXCollections.observableArrayList();
+
+    /**
+     * 🆕 قائمة الاقتراحات المنسدلة.
+     */
+    private final ContextMenu suggestionsMenu = new ContextMenu();
+
+    /**
+     * 🆕 كود البدل اللي المستخدم اختاره من الاقتراحات.
+     */
+    private String selectedAllowanceCode = null;
 
     // أكواد السطور الوهمية
     private static final String CODE_SUBTOTAL_ENT = "SUBTOTAL_ENTITLEMENTS";
@@ -115,19 +139,158 @@ public class AllowanceFxController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupTable();
-        setupCombo();
-        date_calculation.setValue(LocalDate.now());
+        setupDateField();
+        setupAllowanceAutocomplete();
+        btn_manageSectors.setOnAction(e -> openSectorsDialog());
+        // القيمة الافتراضية لتاريخ الاحتساب = اليوم
+        txt_calculationDate.setText(LocalDate.now().format(DATE_FMT));
 
         btn_statutory.setOnAction(e -> openStatutoryDialog());
         txt_nationalId.setOnAction(e -> handleSearch());
         btn_search.setOnAction(e -> handleSearch());
         btn_recalculate.setOnAction(e -> loadAllowances());
         btn_addAllowance.setOnAction(e -> handleAddAllowance());
+        btn_showAllowances.setOnAction(e -> showAllAllowancesMenu());
         btn_reset.setOnAction(e -> handleReset());
         btn_supplementaryPdf.setOnAction(e -> handleExportSupplementaryPdf());
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(e -> openDefinitionsDialog());
         }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  🆕 Date Field — TextField + TextFieldSetupHelper
+    // ════════════════════════════════════════════════════════════
+
+    private void setupDateField() {
+        TextFieldSetupHelper.setupDateFields(txt_calculationDate);
+    }
+
+    /**
+     * يقرأ التاريخ من الحقل، أو null لو فاضي/غير صحيح.
+     */
+    private LocalDate getCalculationDate() {
+        return TextFieldSetupHelper.parseDateInput(txt_calculationDate.getText());
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  🆕 Allowance Autocomplete
+    // ════════════════════════════════════════════════════════════
+
+    private void setupAllowanceAutocomplete() {
+        // راقب الكتابة، اعرض اقتراحات
+        txt_newAllowance.textProperty().addListener((obs, oldVal, newVal) -> {
+            selectedAllowanceCode = null; // أي كتابة تلغي الاختيار السابق
+            if (newVal == null || newVal.isBlank()) {
+                suggestionsMenu.hide();
+                return;
+            }
+            String q = newVal.trim().toLowerCase();
+
+            List<AllowanceDefinition> matched = availableAllowances.stream()
+                    .filter(a -> a.getNameAr() != null
+                            && a.getNameAr().toLowerCase().contains(q)
+                            || (a.getCode() != null
+                            && a.getCode().toLowerCase().contains(q)))
+                    .limit(12)
+                    .toList();
+
+            if (matched.isEmpty()) {
+                suggestionsMenu.hide();
+                return;
+            }
+
+            suggestionsMenu.getItems().clear();
+            for (AllowanceDefinition a : matched) {
+                MenuItem item = new MenuItem(a.getNameAr());
+                item.setOnAction(e -> {
+                    txt_newAllowance.setText(a.getNameAr());
+                    selectedAllowanceCode = a.getCode();
+                    // حرّك المؤشر للآخر
+                    Platform.runLater(() ->
+                            txt_newAllowance.positionCaret(txt_newAllowance.getText().length()));
+                    suggestionsMenu.hide();
+                });
+                suggestionsMenu.getItems().add(item);
+            }
+
+            if (txt_newAllowance.isFocused() && !suggestionsMenu.isShowing()) {
+                suggestionsMenu.show(txt_newAllowance, Side.BOTTOM, 0, 0);
+            }
+        });
+
+        // إخفاء القائمة عند فقدان التركيز (مع تأخير بسيط للسماح بالضغط)
+        txt_newAllowance.focusedProperty().addListener((obs, was, isNow) -> {
+            if (!isNow) {
+                Platform.runLater(suggestionsMenu::hide);
+            }
+        });
+
+        // ESC يقفل القائمة
+        txt_newAllowance.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case ESCAPE -> suggestionsMenu.hide();
+                case DOWN -> {
+                    if (!suggestionsMenu.getItems().isEmpty()) {
+                        suggestionsMenu.getItems().get(0).fire();
+                    }
+                }
+                default -> { /* no-op */ }
+            }
+        });
+    }
+
+    /**
+     * 🆕 زر البحث: يعرض كل البدلات المتاحة (بدون فلترة).
+     */
+    private void showAllAllowancesMenu() {
+        if (availableAllowances.isEmpty()) {
+            showError("لا توجد بدلات متاحة للإضافة");
+            return;
+        }
+
+        suggestionsMenu.getItems().clear();
+        for (AllowanceDefinition a : availableAllowances) {
+            MenuItem item = new MenuItem(a.getNameAr());
+            item.setOnAction(e -> {
+                txt_newAllowance.setText(a.getNameAr());
+                selectedAllowanceCode = a.getCode();
+                suggestionsMenu.hide();
+            });
+            suggestionsMenu.getItems().add(item);
+        }
+
+        if (!suggestionsMenu.isShowing()) {
+            suggestionsMenu.show(txt_newAllowance, Side.BOTTOM, 0, 0);
+        }
+    }
+
+    /**
+     * 🆕 يحاول إيجاد البدل المُختار:
+     * 1) من selectedAllowanceCode (لو المستخدم اختار من القائمة)
+     * 2) من نص الحقل (مطابقة بالاسم أو الكود)
+     */
+    private AllowanceDefinition resolveSelectedAllowance() {
+        String typed = txt_newAllowance.getText();
+        if (typed == null || typed.isBlank()) return null;
+        typed = typed.trim();
+
+        // 1) من الاختيار المباشر
+        if (selectedAllowanceCode != null) {
+            final String code = selectedAllowanceCode;
+            AllowanceDefinition byCode = availableAllowances.stream()
+                    .filter(a -> code.equals(a.getCode()))
+                    .findFirst()
+                    .orElse(null);
+            if (byCode != null) return byCode;
+        }
+
+        // 2) مطابقة دقيقة بالاسم أو الكود
+        final String q = typed;
+        return availableAllowances.stream()
+                .filter(a -> q.equals(a.getNameAr()) || q.equals(a.getCode()))
+                .findFirst()
+                .orElse(null);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -181,8 +344,10 @@ public class AllowanceFxController implements Initializable {
     private void loadAllowances() {
         if (currentNationalId == null) return;
 
-        String dateParam = date_calculation.getValue() != null
-                ? "?date=" + date_calculation.getValue().format(DATE_FMT)
+        // 🆕 اقرأ التاريخ من الـ TextField
+        LocalDate calcDate = getCalculationDate();
+        String dateParam = calcDate != null
+                ? "?date=" + calcDate.format(DATE_FMT)
                 : "";
 
         showLoading(true);
@@ -217,10 +382,14 @@ public class AllowanceFxController implements Initializable {
                             ? currentResult.allowances().stream()
                             .map(AllowanceResultDto.AllowanceLineDto::code).toList()
                             : List.of();
-                    List<AllowanceDefinition> available = defs.stream()
-                            .filter(d -> !existing.contains(d.getCode()))
-                            .toList();
-                    combo_newAllowance.setItems(FXCollections.observableArrayList(available));
+
+                    // 🆕 امتل الـ ObservableList بدل الـ ComboBox
+                    availableAllowances.setAll(
+                            defs.stream()
+                                    .filter(d -> !existing.contains(d.getCode()))
+                                    .sorted(Comparator.comparing(AllowanceDefinition::getNameAr))
+                                    .collect(Collectors.toList())
+                    );
                 },
                 err -> {
                 }
@@ -252,7 +421,7 @@ public class AllowanceFxController implements Initializable {
         txt_empName.setText(dto.getEmpName());
         txt_empNationalId.setText(dto.getNationalId());
         txt_empLawCode.setText(dto.getLawCode() != null
-                ? dto.getLawCode().stripTrailingZeros().toPlainString() : "—");
+                ? dto.getLawCode() : "—");
         txt_empLaw.setText(dto.getLaw() != null ? dto.getLaw().toString() : "—");
         txt_empStartDate.setText(dto.getStartDate() != null
                 ? dto.getStartDate().format(DATE_FMT) : "—");
@@ -268,13 +437,13 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Fill Table — الترتيب الجديد
+    //  Fill Table
     // ════════════════════════════════════════════════════════════
 
     private void fillAllowancesTable(AllowanceResultDto result) {
         List<AllowanceResultDto.AllowanceLineDto> displayLines = new ArrayList<>();
 
-        // ═══ 1) الاستحقاقات ═══
+        // 1) الاستحقاقات
         List<AllowanceResultDto.AllowanceLineDto> entitlements = result.allowances().stream()
                 .filter(l -> !l.displayOnly())
                 .filter(l -> l.elementType() == ElementType.ENTITLEMENT)
@@ -283,7 +452,7 @@ public class AllowanceFxController implements Initializable {
                 .toList();
         displayLines.addAll(entitlements);
 
-        // ═══ 2) جملة المستحق ═══
+        // 2) جملة المستحق
         if (!entitlements.isEmpty()) {
             displayLines.add(buildSubtotal(
                     CODE_SUBTOTAL_ENT,
@@ -292,7 +461,7 @@ public class AllowanceFxController implements Initializable {
                     ElementType.ENTITLEMENT));
         }
 
-        // ═══ 3) الأوعية التأمينية ═══
+        // 3) الأوعية التأمينية
         BigDecimal basic = nvl(result.insurableBasic());
         BigDecimal variable = nvl(result.insurableVariable());
         BigDecimal combined = nvl(result.insurableCombined());
@@ -307,7 +476,7 @@ public class AllowanceFxController implements Initializable {
             displayLines.add(buildInfo(CODE_INFO_COMBINED, "الأجر الاشتراكي", combined));
         }
 
-        // ═══ 4) الاستقطاعات ═══
+        // 4) الاستقطاعات
         List<AllowanceResultDto.AllowanceLineDto> deductions = result.allowances().stream()
                 .filter(l -> !l.displayOnly())
                 .filter(l -> l.value() != null && l.value().signum() < 0)
@@ -319,7 +488,7 @@ public class AllowanceFxController implements Initializable {
                 .toList();
         displayLines.addAll(deductions);
 
-        // ═══ 5) جملة الاستقطاعات ═══
+        // 5) جملة الاستقطاعات
         if (!deductions.isEmpty()) {
             displayLines.add(buildSubtotal(
                     CODE_SUBTOTAL_DED,
@@ -328,14 +497,14 @@ public class AllowanceFxController implements Initializable {
                     ElementType.DEDUCTION));
         }
 
-        // ═══ 6) تأمينات الحكومة (display only) ═══
+        // 6) تأمينات الحكومة (display only)
         List<AllowanceResultDto.AllowanceLineDto> govLines = result.allowances().stream()
                 .filter(AllowanceResultDto.AllowanceLineDto::displayOnly)
                 .sorted(Comparator.comparing(AllowanceResultDto.AllowanceLineDto::nameAr))
                 .toList();
         displayLines.addAll(govLines);
 
-        // ═══ 7) الصافي ═══
+        // 7) الصافي
         displayLines.add(buildNet(CODE_NET, "الصافي", nvl(result.netAmount())));
 
         table_allowances.setItems(FXCollections.observableArrayList(displayLines));
@@ -382,7 +551,7 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
-        // ═══ اسم البدل ═══
+        // اسم البدل
         col_nameAr.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleStringProperty(d.getValue().nameAr()));
         col_nameAr.setCellFactory(tc -> new TableCell<>() {
@@ -401,7 +570,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ عمود النوع ═══
+        // عمود النوع
         col_elementType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
         col_elementType.setCellFactory(tc -> new TableCell<>() {
@@ -429,7 +598,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ عمود القيمة ═══
+        // عمود القيمة
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -444,19 +613,12 @@ public class AllowanceFxController implements Initializable {
                 AllowanceResultDto.AllowanceLineDto line =
                         getTableView().getItems().get(getIndex());
 
-                String code = line.code();
-                if (isVirtualLine(code)) {
-                    setText(val.abs().toPlainString() + " ج");
-                    setStyle("-fx-alignment: CENTER; " + valueStyle(line));
-                    return;
-                }
-
                 setText(val.abs().toPlainString() + " ج");
                 setStyle("-fx-alignment: CENTER; " + valueStyle(line));
             }
         });
 
-        // ═══ من تاريخ ═══
+        // من تاريخ
         col_effectiveFrom.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().effectiveFrom()));
         col_effectiveFrom.setCellFactory(tc -> new TableCell<>() {
@@ -468,7 +630,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ المصدر ═══
+        // المصدر
         col_source.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().source()));
         col_source.setCellFactory(tc -> new TableCell<>() {
@@ -496,7 +658,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ═══ الإجراءات ═══
+        // الإجراءات
         col_actions.setCellFactory(tc -> new TableCell<>() {
             private final Button btnEdit = new Button("✏ تعديل");
             private final Button btnDelete = new Button("🗑");
@@ -524,7 +686,6 @@ public class AllowanceFxController implements Initializable {
                 AllowanceResultDto.AllowanceLineDto item =
                         getTableView().getItems().get(getIndex());
 
-                // 🆕 السطور الوهمية — مش عايزين أزرار
                 if (isVirtualLine(item.code())) {
                     setGraphic(null);
                     return;
@@ -537,23 +698,6 @@ public class AllowanceFxController implements Initializable {
                 HBox box = new HBox(6, btnEdit, btnDelete);
                 box.setStyle("-fx-alignment: CENTER;");
                 setGraphic(box);
-            }
-        });
-    }
-
-    private void setupCombo() {
-        combo_newAllowance.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(AllowanceDefinition item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getNameAr());
-            }
-        });
-        combo_newAllowance.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(AllowanceDefinition item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "اختر بدل..." : item.getNameAr());
             }
         });
     }
@@ -629,15 +773,22 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void handleAddAllowance() {
-        AllowanceDefinition selected = combo_newAllowance.getValue();
+        // 🆕 تحديد البدل من الـ TextField
+        AllowanceDefinition selected = resolveSelectedAllowance();
         if (selected == null) {
-            showError("اختر البدل المراد إضافته");
+            String typed = txt_newAllowance.getText();
+            if (typed == null || typed.isBlank()) {
+                showError("اكتب اسم البدل أو اختره من القائمة");
+            } else {
+                showError("لم يتم العثور على بدل مطابق: " + typed);
+            }
             return;
         }
 
-        LocalDate fromDate = date_calculation.getValue();
+        // 🆕 تحديد التاريخ من الـ TextField
+        LocalDate fromDate = getCalculationDate();
         if (fromDate == null) {
-            showError("اختر تاريخ الاحتساب أولاً — سيُستخدم كتاريخ بداية البدل");
+            showError("اكتب تاريخ احتساب صحيح أولاً (سيُستخدم كتاريخ بداية البدل)");
             return;
         }
 
@@ -657,7 +808,8 @@ public class AllowanceFxController implements Initializable {
                 Boolean.class,
                 saved -> {
                     btn_addAllowance.setDisable(false);
-                    combo_newAllowance.setValue(null);
+                    txt_newAllowance.clear();
+                    selectedAllowanceCode = null;
                     loadAllowances();
                 },
                 err -> {
@@ -668,7 +820,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     private void handleDeleteAllowance(String code) {
-        if (isVirtualLine(code)) return;   // 🆕 حماية
+        if (isVirtualLine(code)) return;
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "هل تريد حذف البدل من قائمة الموظف؟\nيمكن استرجاعه بعد إعادة الضبط.",
@@ -708,9 +860,6 @@ public class AllowanceFxController implements Initializable {
     //  Helpers
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * 🆕 هل السطر وهمي (Subtotal / Info / Net)؟
-     */
     private boolean isVirtualLine(String code) {
         if (code == null) return false;
         return code.startsWith("SUBTOTAL_")
@@ -718,9 +867,6 @@ public class AllowanceFxController implements Initializable {
                 || CODE_NET.equals(code);
     }
 
-    /**
-     * 🆕 ستايل الاسم حسب نوع السطر.
-     */
     private String nameStyle(AllowanceResultDto.AllowanceLineDto line) {
         String code = line.code();
         if (code == null) return "";
@@ -740,9 +886,6 @@ public class AllowanceFxController implements Initializable {
         return "";
     }
 
-    /**
-     * 🆕 ستايل القيمة.
-     */
     private String valueStyle(AllowanceResultDto.AllowanceLineDto line) {
         String code = line.code();
 
@@ -837,18 +980,32 @@ public class AllowanceFxController implements Initializable {
     /**
      * يُستدعى من TabManager بعد ما التاب يفتح — لتمرير الرقم القومي
      * من أي تاب تاني.
-     *
-     * <p>لو التاب مفتوح بالفعل والرقم اتغيّر، الميثود بتعمل بحث جديد.
      */
     public void setInitialNationalId(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
-
-        // حطّ الرقم في الحقل
         if (txt_nationalId != null) {
             txt_nationalId.setText(nationalId.trim());
         }
-
-        // شغّل البحث
         handleSearch();
+    }
+
+    private void openSectorsDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/entitlements/allowance/SectorJobTitleDialog.fxml"
+            ));
+            Parent root = loader.load();
+
+            Stage dialog = new Stage();
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("إدارة القطاعات والوظائف");
+            dialog.setScene(new Scene(root));
+            dialog.setResizable(true);
+            dialog.showAndWait();
+
+
+        } catch (Exception ex) {
+            showError("خطأ في فتح شاشة القطاعات: " + ex.getMessage());
+        }
     }
 }

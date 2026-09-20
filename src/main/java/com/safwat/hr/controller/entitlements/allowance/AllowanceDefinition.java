@@ -15,8 +15,6 @@ import java.util.Map;
 @Getter
 public class AllowanceDefinition {
 
-    // Getters/Setters
-
     private Long id;
     private String code;
     private String nameAr;
@@ -27,23 +25,22 @@ public class AllowanceDefinition {
     private Behavior behavior;
     private CalcType calcType;
     private BaseSource baseSource;
-    private InsuranceBase insuranceBase;       // 🆕
+    private InsuranceBase insuranceBase;
     private Scope scope;
     private ElementType elementType;
-    private String eligibleSectorCod;          // 🆕
+
     private boolean subjectToInsurance;
     private boolean subjectToTaxAndStamp;
     private boolean inMinimumWageBase;
-    private boolean displayOnly;               // 🆕
-    private boolean appliesToNewHires = true;  // 🆕
+    private boolean displayOnly;
+    private boolean appliesToNewHires = true;
     private Map<String, BigDecimal> valuesMap;
     private List<String> excludedMonths;
     private List<String> eligibleLaws;
-    private List<String> eligibleLawCodes;
+    private List<String> eligibleSectorCodes;
+    private List<String> eligibleJobTitles;
     private TimelineAnchor timelineAnchor;
     private String notes;
-    private String eligibleSectorCode;   // 🆕
-
 
     // ══════════════════════════════════════════
     //  Enums
@@ -67,16 +64,12 @@ public class AllowanceDefinition {
         INSURANCE_RATE_EMPLOYEE,
         INSURANCE_RATE_EMPLOYER,
         PROMOTION_INCENTIVE,
-        PERCENT_BY_JOB,        // 🆕
-        PERCENT_ALL_JOB,       // 🆕
-        AMOUNT_BY_JOB          // 🆕
+        PERCENT_BY_JOB,
+        PERCENT_ALL_JOB,
+        AMOUNT_BY_JOB
     }
 
-    public enum InsuranceBase {          // 🆕
-        BASIC,
-        VARIABLE,
-        COMBINED
-    }
+    public enum InsuranceBase {BASIC, VARIABLE, COMBINED}
 
     public enum BaseSource {FROM_BASIC, FROM_STEP_SALARY, CURRENT_BASIC}
 

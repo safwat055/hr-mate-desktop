@@ -49,6 +49,20 @@ public class MultiSelectSearchDialog<T> {
     private MultiSelectSearchDialog() {
     }
 
+    private List<T> preSelected = List.of();
+
+    public MultiSelectSearchDialog<T> preSelected(List<T> v) {
+        this.preSelected = v == null ? List.of() : v;
+        return this;
+    }
+
+    public List<T> showAndWait() {
+        MultiSelectDialogController<T> controller =
+                new MultiSelectDialogController<>(title, columns, data, searchPlaceholder,
+                        width, height, preSelected);
+        return controller.showAndWait(owner);
+    }
+
     public static <T> MultiSelectSearchDialog<T> builder(Class<T> type) {
         return new MultiSelectSearchDialog<>();
     }
@@ -94,11 +108,7 @@ public class MultiSelectSearchDialog<T> {
      * بيعرض الـ Dialog ويرجع اللي تم اختيارهم (List)
      * لو المستخدم قفل من غير اختيار بيرجع List فاضية
      */
-    public List<T> showAndWait() {
-        MultiSelectDialogController<T> controller =
-                new MultiSelectDialogController<>(title, columns, data, searchPlaceholder, width, height);
-        return controller.showAndWait(owner);
-    }
+
 
     // ---------- Functional Interface ----------
     @FunctionalInterface
@@ -128,7 +138,7 @@ class MultiSelectDialogController<T> {
     private final List<T> data;
     private final String placeholder;
     private final double width, height;
-
+    private final List<T> preSelected;
     private final Set<T> selectedItems = new LinkedHashSet<>();
     private TableView<T> table;
     private TextField searchField;
@@ -145,9 +155,26 @@ class MultiSelectDialogController<T> {
         this.placeholder = placeholder;
         this.width = width;
         this.height = height;
+        this.preSelected = null;
+    }
+
+
+    MultiSelectDialogController(String title,
+                                List<MultiSelectSearchDialog.Column<T>> columns,
+                                List<T> data, String placeholder,
+                                double width, double height,
+                                List<T> preSelected) {
+        this.title = title;
+        this.columns = columns;
+        this.data = data;
+        this.placeholder = placeholder;
+        this.width = width;
+        this.height = height;
+        this.preSelected = preSelected != null ? preSelected : List.of();
     }
 
     List<T> showAndWait(Stage owner) {
+        selectedItems.addAll(preSelected);   // ⬅️ الجديد
         Stage stage = buildStage(owner);
         stage.showAndWait();
         return new ArrayList<>(selectedItems);

@@ -642,8 +642,8 @@ public class ScaleController implements Initializable {
             dto.setEmpName(txt_empName.getText().trim());
             dto.setQualitativeGroup(txt_group.getText().trim());
             dto.setLaw(parseInt(txt_law.getText()));
-            System.out.println(dto.getLaw());
-            dto.setLawCode(parseBigDecimal(txt_code.getText()));
+
+            dto.setLawCode((txt_code.getText()));
             dto.setStartDegree(parseInt(txt_startDegree.getText()));
             dto.setStartDate(parseDate(txt_startDate.getText()));
             dto.setRestartDate(parseDate(txt_backStart.getText()));
