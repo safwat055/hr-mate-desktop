@@ -1,13 +1,11 @@
 package com.safwat.hr.controller.scale.scale.dto;
 
-import java.math.BigDecimal;
-
 public record SearchScaleEmployee(
         String nationalId,
         String codeId,
         String empName,
         Integer law,
-        BigDecimal lawCode,
+        String lawCode,
         String qualitativeGroup
 
 ) {

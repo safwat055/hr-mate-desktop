@@ -312,6 +312,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
     private static String behaviorLabel(Behavior b) {
         return switch (b) {
+
             case REPLACE -> "استبدال (REPLACE)";
             case ADD -> "إضافة (ADD)";
         };
