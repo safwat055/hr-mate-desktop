@@ -200,7 +200,7 @@ public class TableColumnFactory {
 
     public TableColumn<ObservableList<String>, String> createStaticColumn(String title, int index, boolean editable) {
         TableColumn<ObservableList<String>, String> col = baseColumn(title, index);
-        col.setPrefWidth(120);
+        col.setPrefWidth(100);
         col.setEditable(editable);
         if (editable) {
             col.setCellFactory(c -> navigableTextCell());

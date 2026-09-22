@@ -89,7 +89,7 @@ public class RowManager {
     public void updateSerialNumbers() {
         for (int i = 0; i < tableView.getItems().size(); i++) {
             ObservableList<String> row = tableView.getItems().get(i);
-            if (row.size() > TableSchema.SERIAL_COL && row.get(TableSchema.SERIAL_COL).isBlank()) {
+            if (row.size() > TableSchema.SERIAL_COL) {
                 row.set(TableSchema.SERIAL_COL, String.valueOf(i + 1));
             }
         }

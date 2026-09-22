@@ -120,7 +120,7 @@ public class HeaderStatisticsTooltip {
         }
     }
 
-    private javafx.scene.Node getColumnHeader(TableColumn<ObservableList<String>, ?> column) {
+    private Node getColumnHeader(TableColumn<ObservableList<String>, ?> column) {
         try {
             return column.getTableView().lookup(".column-header[data-column=\"" + column.getId() + "\"]");
         } catch (Exception e) {
@@ -133,7 +133,7 @@ public class HeaderStatisticsTooltip {
                                            Tooltip tooltip) {
         javafx.application.Platform.runLater(() -> {
             try {
-                javafx.scene.Node header = getColumnHeader(column);
+                Node header = getColumnHeader(column);
                 if (header != null) {
                     header.setOnMouseEntered(event -> showStatisticalTooltip(column, table, tooltip));
                     header.setOnMouseExited(event -> tooltip.hide());
