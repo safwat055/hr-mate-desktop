@@ -122,7 +122,7 @@ public class DynamicHeaderManager {
         Label headerLabel = new Label(headerText);
         headerLabel.setWrapText(true);
         headerLabel.setMaxWidth(150);
-        headerLabel.setMaxHeight(90);
+        headerLabel.setMaxHeight(80);
         headerLabel.setStyle("-fx-alignment: center; -fx-font-weight: bold; -fx-text-alignment: center;");
 
         Text text = new Text(headerText);
@@ -135,7 +135,7 @@ public class DynamicHeaderManager {
 
         StackPane headerContainer = new StackPane(headerLabel);
         headerContainer.setPrefHeight(requiredHeight);
-        headerContainer.setMaxHeight(90);
+        headerContainer.setMaxHeight(80);
         column.setGraphic(headerContainer);
 
         // إصلاح الـ parent Label بعد ما يتضاف للـ scene

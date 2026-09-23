@@ -41,7 +41,7 @@ public class ColumnWidthAdjuster {
                     } else {
                         // الأعمدة الديناميكية - عرض متوازن
                         column.setPrefWidth(Math.max(90, Math.min(calculatedWidth, 90)));
-                        column.setMinWidth(90);
+                        column.setMinWidth(120);
                     }
 
                     //  column.setMaxWidth(200); // حد أقصى لجميع الأعمدة

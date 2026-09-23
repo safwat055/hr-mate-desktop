@@ -39,6 +39,18 @@ public class Icons {
 
     }
 
+    public void getExcelImage(Button button) {
+        ImageView imag = new ImageView();
+        imag.setImage(new Image(Objects.requireNonNull(getClass().getResource("/com/safwat/hr/icons/xls-file3.png")).toExternalForm()));
+
+        imag.setFitHeight(30);
+        imag.setFitHeight(30);
+        // Pdf.setPreserveRatio(true);
+        // button.getStyleClass().clear();
+        button.setGraphic(imag);
+
+    }
+
 
     /**
      *

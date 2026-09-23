@@ -35,10 +35,9 @@
             <padding>
                 <Insets bottom="8" left="12" right="12" top="8" />
             </padding>
-         <Button fx:id="btn_setting" layoutX="22.0" layoutY="26.0" onAction="#onFontSettingsClick" prefHeight="32" prefWidth="36" styleClass="btn-purple" text="-" />
             <Button fx:id="btn_Refresh" onAction="#refreshTable" prefHeight="32" prefWidth="36" styleClass="btn-purple" text="↻" />
-            <Button fx:id="btn_Excel" onAction="#exportToExcel" prefHeight="32" prefWidth="36" styleClass="btn-success" />
-            <Button fx:id="btn_Pdf" onAction="#exportToPDF" prefHeight="32" prefWidth="45.0" styleClass="btn-danger" text="📄" />
+            <Button fx:id="btn_Excel" onAction="#exportToExcel" prefHeight="32" prefWidth="36" styleClass="btn-iconFlat" />
+            <Button fx:id="btn_Pdf" onAction="#exportToPDF" prefHeight="32" prefWidth="45.0" styleClass="btn-iconFlat" />
             <Button fx:id="btn_clear" onAction="#clearTableView" prefHeight="32" prefWidth="70" styleClass="btn-secondary" text="مسح" />
             <Button fx:id="btn_insertRows" onAction="#add20Rows" prefHeight="32" prefWidth="90" styleClass="btn-primary" text="+ 20 صف" />
             <Button fx:id="btn_delete" onAction="#deleteEmptyRows" prefHeight="32" prefWidth="80" styleClass="btn-danger" text="حذف فارغ" />
@@ -57,13 +56,14 @@
                 <RadioButton fx:id="toRight" contentDisplay="RIGHT" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="22" text="زر الادخال للانتقال لليمين" toggleGroup="$group" />
             </VBox>
             <Separator layoutX="628.0" layoutY="19.0" orientation="VERTICAL" prefHeight="48.0" prefWidth="3.0" />
-            <VBox prefHeight="48.0" prefWidth="153.0" spacing="4.0">
+            <VBox prefHeight="52.0" prefWidth="130.0" spacing="4.0">
                 <CheckBox fx:id="chk_total" mnemonicParsing="false" prefHeight="20.0" prefWidth="149.0" text="اجماليات العمود" />
                 <CheckBox fx:id="chk_nationalId" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" prefHeight="20.0" prefWidth="149.0" text="بيانات الموظف" />
             </VBox>
             <Separator layoutX="806.0" layoutY="19.0" orientation="VERTICAL" prefHeight="48.0" prefWidth="3.0" />
-            <VBox spacing="4.0">
+            <VBox prefHeight="52.0" prefWidth="119.0" spacing="4.0">
                 <CheckBox fx:id="useVoices" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="24" text="الاجابة الصوتية" />
+                 <CheckBox fx:id="privateCheck" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="24" prefWidth="136.0" text="مجموعة خاصة" />
             </VBox>
 
             <Separator orientation="VERTICAL" />
@@ -80,59 +80,30 @@
 
             <Region HBox.hgrow="ALWAYS" />
         </HBox>
+           <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
+               <Label prefHeight="28" prefWidth="106.0" styleClass="text-dark" text="مجموعة التعيين" />
+               <Button fx:id="btnSearchPayrollGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
+               <TextField fx:id="fieldPayrollGroup" nodeOrientation="RIGHT_TO_LEFT" prefHeight="28.0" prefWidth="257.0" promptText="اكتب اسم جديد أو Enter للبحث" />
+         <Separator layoutX="784.0" layoutY="10.0" orientation="VERTICAL" />
+               <Label prefHeight="28" prefWidth="107.0" styleClass="text-dark" text="مجموعة العناصر" />
+               <Button fx:id="btnSearchElementGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
+               <TextField fx:id="fieldElementGroup" maxHeight="1.7976931348623157E308" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32.0" prefWidth="215.0" promptText="اكتب اسم جديد أو Enter للبحث" />
 
-        <!-- ════════════════════════════════════════════════════════
-                 CARD: إعدادات البيانات — حقول نصية + زر بحث (واجهة البحث)
-                 ════════════════════════════════════════════════════════ -->
-        <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
-            <padding>
-                <Insets bottom="10" left="12" right="12" top="10" />
-            </padding>
+                  <Separator orientation="VERTICAL" />
+               <Button fx:id="btnSearchStatic" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
+               <TextField fx:id="fieldStatic" nodeOrientation="RIGHT_TO_LEFT" prefHeight="28.0" prefWidth="200.0" promptText="اسم الصرفية المحفوظة" />
+              <Button fx:id="btn_saveStatic" onAction="#savePayrollTable" prefHeight="32" prefWidth="70" styleClass="btn-purple" text="حفظ" />
+              <Button fx:id="btn_clearStatic" onAction="#deleteFromPayrollTable" prefHeight="32" prefWidth="42" styleClass="btn-danger" text="🗑" />
 
-            <!-- المجموعات: كتابة مباشرة أو Enter/🔍 للبحث -->
-            <VBox prefHeight="72.0" prefWidth="423.0" spacing="8">
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
-                        <Label prefHeight="28" styleClass="text-dark" text="مجموعة التعيين" />
-                        <Button fx:id="btnSearchPayrollGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
-                        <TextField fx:id="fieldPayrollGroup" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="284.0" promptText="اكتب اسم جديد أو Enter للبحث" />
-                    </HBox>
-                </HBox>
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
-                        <Label prefHeight="28" styleClass="text-dark" text="مجموعة العناصر" />
-                        <Button fx:id="btnSearchElementGroup" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
-                        <TextField fx:id="fieldElementGroup" maxHeight="1.7976931348623157E308" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="283.0" promptText="اكتب اسم جديد أو Enter للبحث" />
-                    </HBox>
-                </HBox>
-            </VBox>
-
-            <Separator orientation="VERTICAL" />
-
-            <!-- الصرفيات الثابتة: حقل بحث + حفظ/حذف + خاصة/عامة -->
-            <VBox spacing="8">
-                <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="8">
-                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="6">
-                        <Button fx:id="btnSearchStatic" prefHeight="32" prefWidth="38" styleClass="btn-secondary" text="🔍" />
-                        <TextField fx:id="fieldStatic" nodeOrientation="RIGHT_TO_LEFT" prefHeight="32" prefWidth="170" promptText="اسم الصرفية المحفوظة" />
-                    </HBox>
-                    <Button fx:id="btn_saveStatic" onAction="#savePayrollTable" prefHeight="32" prefWidth="70" styleClass="btn-purple" text="حفظ" />
-                    <Button fx:id="btn_clearStatic" onAction="#deleteFromPayrollTable" prefHeight="32" prefWidth="42" styleClass="btn-danger" text="🗑" />
-                </HBox>
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <CheckBox fx:id="privateCheck" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" prefHeight="24" prefWidth="136.0" text="مجموعة خاصة" />
-                </HBox>
-            </VBox>
-
-            <Region HBox.hgrow="ALWAYS" />
-        </HBox>
+                  <Region prefHeight="6.0" prefWidth="5.0" HBox.hgrow="ALWAYS" />
+           </HBox>
 
         <!-- ════════════════════════════════════════════════════════
                  CARD: جدول البيانات
                  ════════════════════════════════════════════════════════ -->
         <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
-            <Label alignment="CENTER" maxWidth="Infinity" text="جدول الادحال" />
-            <TableView fx:id="rawTableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="600" VBox.vgrow="ALWAYS">
+            <Label alignment="CENTER" maxWidth="Infinity" styleClass="header-panel" text="جدول الادحال" />
+            <TableView fx:id="rawTableView" editable="true" maxHeight="1.7976931348623157E308" maxWidth="Infinity" nodeOrientation="RIGHT_TO_LEFT" prefHeight="1014.0" prefWidth="1242.0" VBox.vgrow="ALWAYS">
                 <padding>
                     <Insets bottom="8" left="8" right="8" top="8" />
                 </padding>
