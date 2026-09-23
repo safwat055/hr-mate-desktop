@@ -355,13 +355,13 @@
     "TABLE_VIEW": {
       "size": 12,
       "bold": false,
-      "family": "Cairo Light",
+      "family": "Arial",
       "italic": false
     },
     "LABEL": {
       "size": 13,
       "bold": false,
-      "family": "System",
+      "family": "Arial",
       "italic": false
     },
     "CHECK_BOX": {

@@ -10,6 +10,7 @@ import com.safwat.hr.notification.ui.HRNotificationBell;
 import com.safwat.hr.notification.ui.HRNotificationPanel;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.shared.file.TempFileCleaner;
+import com.safwat.hr.ui.SmartPanelAnimator;
 import com.safwat.hr.ui.icons.Icons;
 import com.safwat.hr.ui.theme.ThemeEventBus;
 import com.safwat.hr.ui.util.AlertUtil;
@@ -62,7 +63,7 @@ public class MainViewController implements Initializable {
     private VBox toolbar;
     @FXML
     private Label bellIcon, badge;
-
+    private SmartPanelAnimator panelAnimator;
     // ══════════════════════════════════════════════════════════════
     //  Refs — نحتفظ بها عشان نقدر نمرر النتوفيكشن للتاب
     // ══════════════════════════════════════════════════════════════
@@ -97,7 +98,14 @@ public class MainViewController implements Initializable {
                     AppLifecycle.shutdown();
                 }
             });
+            // ══════════════════════════════════════════════
+            //  تهيئة الـ Panel — نقر يفتح، خروج الماوس يقفل
+            // ══════════════════════════════════════════════
+            panelAnimator = new SmartPanelAnimator(rightPane, rightPanelContent, 200);
 
+            rightPane.setOnMouseClicked(e -> panelAnimator.showPanel());
+            rightPane.setOnMouseExited(e -> panelAnimator.hidePanel());
+            
             HRNotificationBell bell = new HRNotificationBell(stage, bellIcon, badge);
 
             // ✅ ربط الـ Bell بـ Panel + routing للإشعارات
@@ -506,4 +514,6 @@ public class MainViewController implements Initializable {
             Platform.exit();
         }
     }
+
+
 }

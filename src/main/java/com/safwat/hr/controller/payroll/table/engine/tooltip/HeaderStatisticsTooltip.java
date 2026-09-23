@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -176,9 +177,20 @@ public class HeaderStatisticsTooltip {
         }
         try {
             StatisticalInfo stats = calculateColumnStatistics(column, table);
-            String columnName = (column.getGraphic() instanceof Label lbl)
-                    ? lbl.getText()
-                    : column.getText();
+            String columnName = "";
+            if ((column.getGraphic() instanceof Label lbl)) {
+                columnName = lbl.getText();
+            } else if ((column.getGraphic() instanceof StackPane pane)) {
+                
+                if (pane.getChildren().getFirst() instanceof Label) {
+                    columnName = ((Label) pane.getChildren().getFirst()).getText();
+                }
+
+            } else {
+                columnName = column.getText();
+            }
+
+
             tooltip.setText(buildTooltipText(stats, columnName));
         } catch (Exception e) {
             tooltip.setText("❌ خطأ في حساب الإحصائيات");

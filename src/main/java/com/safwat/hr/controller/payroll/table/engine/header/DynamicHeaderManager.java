@@ -3,6 +3,7 @@ package com.safwat.hr.controller.payroll.table.engine.header;
 import com.safwat.hr.controller.payroll.table.engine.TableSchema;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -27,12 +28,22 @@ import java.util.Map;
  * منفصلة عن باقي الأعمدة الثابتة. الكلاس ده بيحتفظ بـ Label كل عمود
  * ديناميكي عشان يقدر يحدّث نصه من غير ما يعيد بناء العمود كله (وده
  * كان سبب كراش JavaFX الأصلي لو اتعمل بطريقة تانية).</p>
+ *
+ * <p>سبب تكرار النص: JavaFX بيحط الـ graphic بتاع العمود جوه Label
+ * داخلي في الـ TableColumnHeader — اللي بيرسم الـ text والـ graphic
+ * مع بعض. الحل: بعد ما الـ scene graph يتبنى، بنعمل setContentDisplay
+ * على الـ parent Label الداخلي ده عشان يرسم الـ graphic بس.</p>
  */
 public class DynamicHeaderManager {
 
     private final TableView<ObservableList<String>> tableView;
     private final ColumnWidthAdjuster columnWidthAdjuster;
     private final Map<Integer, Label> dynamicHeaderLabels = new HashMap<>();
+
+    /**
+     * flag عشان نعمل fixParentLabels مرة واحدة بس بعد أول تحديث
+     */
+    private boolean parentLabelsFixed = false;
 
     public DynamicHeaderManager(TableView<ObservableList<String>> tableView,
                                 ColumnWidthAdjuster columnWidthAdjuster) {
@@ -52,6 +63,7 @@ public class DynamicHeaderManager {
         if (headers == null || ObjectUtils.isEmpty(headers)) return;
 
         Platform.runLater(() -> {
+            // 1. حدّث نص كل Label
             for (int i = TableSchema.FIRST_DYNAMIC_COL; i < TableSchema.COLUMN_COUNT; i++) {
                 String headerValue = (i < headers.length) ? headers[i] : null;
                 if (headerValue == null || headerValue.isBlank() || headerValue.equals("ملاحظات")) {
@@ -59,11 +71,34 @@ public class DynamicHeaderManager {
                 }
                 Label label = dynamicHeaderLabels.get(i);
                 if (label != null) label.setText(headerValue);
-                // ملاحظة: مفيش col.setText(...) هنا خالص — العمود متعمد يفضل بدون نص
             }
+
+
+            // 2. إصلاح الـ parent Labels الداخلية بتاعة JavaFX
+            //    (بيتعمل مرة واحدة بس — بعدها الـ parent مش بيتغير)
+            if (!parentLabelsFixed) {
+                fixParentLabels();
+                parentLabelsFixed = true;
+            }
+
             columnWidthAdjuster.adjustColumnWidths();
             tableView.refresh();
         });
+    }
+
+    /**
+     * الـ TableColumnHeader في JavaFX بيحط الـ graphic جوه Label داخلي
+     * بيرسم الـ text والـ graphic مع بعض — ده سبب تكرار النص.
+     * الحل: نعمل GRAPHIC_ONLY على الـ parent Label ده.
+     */
+    private void fixParentLabels() {
+        for (int i = TableSchema.FIRST_DYNAMIC_COL; i < TableSchema.COLUMN_COUNT; i++) {
+            TableColumn<?, ?> col = tableView.getColumns().get(i);
+            javafx.scene.Node graphic = col.getGraphic();
+            if (graphic != null && graphic.getParent() instanceof Label parentLabel) {
+                parentLabel.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+            }
+        }
     }
 
     public List<String> getCurrentHeaders() {
@@ -102,6 +137,17 @@ public class DynamicHeaderManager {
         headerContainer.setPrefHeight(requiredHeight);
         headerContainer.setMaxHeight(90);
         column.setGraphic(headerContainer);
+
+        // إصلاح الـ parent Label بعد ما يتضاف للـ scene
+        column.graphicProperty().addListener((obs, oldG, newG) -> {
+            if (newG != null) {
+                Platform.runLater(() -> {
+                    if (newG.getParent() instanceof Label parentLabel) {
+                        parentLabel.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                    }
+                });
+            }
+        });
 
         column.setCellValueFactory(data -> {
             if (data.getValue().size() > columnIndex) {
