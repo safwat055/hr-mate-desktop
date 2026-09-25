@@ -420,8 +420,8 @@ public class AllowanceFxController implements Initializable {
     private void applyEmployeeDetails(ScaleDto dto) {
         txt_empName.setText(dto.getEmpName());
         txt_empNationalId.setText(dto.getNationalId());
-        txt_empLawCode.setText(dto.getLawCode() != null
-                ? dto.getLawCode() : "—");
+        txt_empLawCode.setText(dto.getJobTitleHistory() != null
+                ? dto.getJobTitleHistory().lastEntry().getValue() : "—");
         txt_empLaw.setText(dto.getLaw() != null ? dto.getLaw().toString() : "—");
         txt_empStartDate.setText(dto.getStartDate() != null
                 ? dto.getStartDate().format(DATE_FMT) : "—");

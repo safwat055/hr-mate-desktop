@@ -1,20 +1,19 @@
 package com.safwat.hr.controller.employee.dto;
 
 import com.safwat.hr.controller.employee.enums.TerminationReason;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
 /**
- * employeeNumber و sectorId غير قابلين للتعديل بعد إنشاء الموظف (افتراض - عدّله لو عندك سيناريو مختلف).
+ * employeeNumber غير قابل للتعديل بعد الإنشاء.
+ * sectorId اختياري — لو null، الباك مش هيغيّر القطاع.
+ * (يتخطاه عشان يسمح للموظفين المستوردين من النظام القديم بتعيين قطاع لاحقاً)
  */
 public record EmployeeUpdateRequest(
-        @NotBlank String fullName,
-        @NotBlank @Size(min = 14, max = 14) String nationalId,
-        @NotNull LocalDate hireDate,
+        String fullName,
+        String nationalId,
+        LocalDate hireDate,
         LocalDate terminationDate,
-        TerminationReason terminationReason
-) {
-}
+        TerminationReason terminationReason,
+        Long sectorId
+) {}

@@ -302,7 +302,10 @@ public class MainViewController implements Initializable {
     private void openPayrollReport() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
     }
-
+    @FXML
+    private void openEmployeeForm(){
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getEmployeeForm(), "بيانات موظف", true);
+    }
     /**
      * @deprecated استخدم {@link #openChatTab()} بدل دي.
      * موجودة للتوافق مع FXML القديم.

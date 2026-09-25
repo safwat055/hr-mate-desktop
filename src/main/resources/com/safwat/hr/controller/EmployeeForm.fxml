@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
@@ -11,81 +10,141 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
+<ScrollPane fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT"
+            prefHeight="860" prefWidth="1040"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.employee.ui.EmployeeFormController">
+    <content>
+        <VBox spacing="0" styleClass="employee-form-root">
 
-<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="722.0" prefWidth="1014.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.employee.ui.EmployeeFormController">
-   <content>
-      <VBox>
-         <children>
-            <HBox>
-               <children>
-                  <GridPane hgap="10" nodeOrientation="RIGHT_TO_LEFT" vgap="12">
-                      <padding>
-                          <Insets bottom="20" left="20" right="20" top="20" />
-                      </padding>
-                  
-                      <Label text="رقم الموظف" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                      <TextField fx:id="employeeNumberField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                  
-                      <Label text="الاسم بالكامل" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                      <TextField fx:id="fullNameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  
-                      <Label text="الرقم القومي" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                      <TextField fx:id="nationalIdField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  
-                      <Label text="القطاع" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                      <ComboBox fx:id="sectorCombo" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  
-                      <Label text="تاريخ التعيين" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                      <DatePicker fx:id="hireDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                  
-                      <Label text="تاريخ إنهاء الخدمة" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                      <DatePicker fx:id="terminationDatePicker" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  
-                      <Label text="سبب إنهاء الخدمة" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                      <ComboBox fx:id="terminationReasonCombo" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                  
-                      <Separator GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="7" />
-                  
-                      <Label text="الحالة الاجتماعية الحالية" GridPane.columnIndex="0" GridPane.rowIndex="8" />
-                      <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="8">
-                          <Label fx:id="currentSocialStatusLabel" text="—" />
-                          <Button fx:id="socialStatusHistoryButton" text="السجل الكامل" />
-                      </HBox>
-                  
-                      <Label text="الوظيفة الحالية" GridPane.columnIndex="0" GridPane.rowIndex="9" />
-                      <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="9">
-                          <Label fx:id="currentJobTitleLabel" text="—" />
-                          <Button fx:id="jobTitleHistoryButton" text="السجل الكامل" />
-                      </HBox>
-                  
-                      <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="10">
-                          <Button fx:id="saveButton" defaultButton="true" text="حفظ" />
-                          <Button fx:id="deleteButton" text="حذف الموظف" />
-                      </HBox>
-                     <columnConstraints>
-                        <ColumnConstraints />
-                        <ColumnConstraints />
-                     </columnConstraints>
-                     <rowConstraints>
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                     </rowConstraints>
-                  </GridPane>
-               </children>
+            <!-- ══════════════════════════════════════════════════════════
+                 ① شريط البحث + زر موظف جديد
+                 ══════════════════════════════════════════════════════════ -->
+            <VBox spacing="5" styleClass="form-section">
+                <padding><Insets bottom="14" left="16" right="16" top="14"/></padding>
+                <Label styleClass="section-title" text="بحث عن موظف"/>
+
+                <HBox alignment="CENTER_RIGHT" spacing="8">
+                    <Button fx:id="newEmployeeButton" styleClass="btn-primary" text="➕ موظف جديد"/>
+                </HBox>
+
+                <HBox alignment="CENTER_RIGHT" spacing="8">
+                    <TextField fx:id="searchField" maxWidth="Infinity"
+                               promptText="الاسم أو الرقم القومي أو رقم الموظف..."
+                               HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="searchButton" defaultButton="true"
+                            styleClass="btn-primary" text="🔍 بحث"/>
+                </HBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 ② البيانات الأساسية
+                 ══════════════════════════════════════════════════════════ -->
+            <VBox styleClass="form-section">
+                <padding><Insets bottom="14" left="16" right="16" top="14"/></padding>
+                <Label styleClass="section-title" text="البيانات الأساسية"/>
+
+                <GridPane hgap="14" vgap="10" nodeOrientation="RIGHT_TO_LEFT">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="105" prefWidth="129"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="178"/>
+                        <ColumnConstraints minWidth="99" prefWidth="99"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="250"/>
+                    </columnConstraints>
+
+                    <Label text="رقم الموظف" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="employeeNumberField" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                    <Label text="الاسم بالكامل" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+                    <TextField fx:id="fullNameField" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                    <Label text="الرقم القومي" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="nationalIdField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                    <Label text="القطاع" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    <ComboBox fx:id="sectorCombo" maxWidth="Infinity"
+                              GridPane.columnIndex="3" GridPane.rowIndex="1"
+                              GridPane.hgrow="ALWAYS"/>
+
+                    <Label text="تاريخ التعيين" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="hireDateField" maxWidth="Infinity"
+                               promptText="yyyy-MM-dd أو dd/MM/yyyy"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                    <Label text="تاريخ إنهاء الخدمة" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
+                    <TextField fx:id="terminationDateField" maxWidth="Infinity"
+                               promptText="yyyy-MM-dd أو dd/MM/yyyy"
+                               GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+
+                    <Label text="سبب إنهاء الخدمة" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <ComboBox fx:id="terminationReasonCombo" maxWidth="Infinity"
+                              GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                    <Label text="الحالة الاجتماعية الحالية"
+                           GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <Label fx:id="currentSocialStatusLabel" styleClass="current-value-label"
+                           text="—" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+                    <Label text="الوظيفة الحالية"
+                           GridPane.columnIndex="2" GridPane.rowIndex="4"/>
+                    <Label fx:id="currentJobTitleLabel" styleClass="current-value-label"
+                           text="—" GridPane.columnIndex="3" GridPane.rowIndex="4"/>
+
+                    <HBox spacing="8" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="5">
+                        <Button fx:id="saveBasicButton" styleClass="btn-primary"
+                                text="💾 حفظ البيانات الأساسية"/>
+                        <Button fx:id="deleteButton" styleClass="btn-danger"
+                                text="🗑 حذف الموظف"/>
+                    </HBox>
+                </GridPane>
+            </VBox>
+
+            <Separator/>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 ③ + ④ الحالة الاجتماعية والوظائف — في HBox واحد
+                 (المحتوى يُبنى ديناميكياً من الكنترولر)
+                 ══════════════════════════════════════════════════════════ -->
+            <HBox fx:id="historyRow1" spacing="0" managed="false" visible="false">
+                <VBox fx:id="socialStatusContainer" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                </VBox>
+
+                <Separator orientation="VERTICAL"/>
+
+                <VBox fx:id="jobTitleContainer" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                </VBox>
             </HBox>
-         </children>
-      </VBox>
-   </content>
+
+            <Separator fx:id="historyRow1Separator" managed="false" visible="false"/>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 ⑤ + ⑥ + ⑦ الترقيات والتشجيعيات والحوافز — في HBox واحد
+                 ══════════════════════════════════════════════════════════ -->
+            <HBox fx:id="historyRow2" spacing="0" managed="false" visible="false">
+                <VBox fx:id="promotionsContainer" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                </VBox>
+
+                <Separator orientation="VERTICAL"/>
+
+                <VBox fx:id="encouragementsContainer" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                </VBox>
+
+                <Separator orientation="VERTICAL"/>
+
+                <VBox fx:id="incentivesContainer" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                    <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                </VBox>
+            </HBox>
+
+        </VBox>
+    </content>
 </ScrollPane>
