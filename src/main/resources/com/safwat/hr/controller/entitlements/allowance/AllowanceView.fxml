@@ -140,7 +140,22 @@
                                             </VBox>
                                         </HBox>
                                     </VBox>
+                                    <!-- ═══════════════════════════════════════════════════════
+     جداول الحالة الاجتماعية والوظائف — HBox واحد
+     ═══════════════════════════════════════════════════════ -->
+                                    <HBox fx:id="historyRow" spacing="0" managed="false" visible="false">
+                                        <VBox fx:id="socialStatusContainer"
+                                              HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                                            <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                                        </VBox>
 
+                                        <Separator orientation="VERTICAL"/>
+
+                                        <VBox fx:id="jobTitleContainer"
+                                              HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+                                            <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                                        </VBox>
+                                    </HBox>
                                     <Label styleClass="text-muted fs-12" />
                                 </VBox>
                             </content>

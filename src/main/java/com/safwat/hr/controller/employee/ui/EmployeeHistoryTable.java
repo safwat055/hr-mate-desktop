@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -49,6 +50,11 @@ public class EmployeeHistoryTable<R> {
     private final List<R>           initialData;
     private final SaveHandler<R>    saveHandler;
 
+    /**
+     * -- GETTER --
+     *  يرجّع الجدول للـ controller لو محتاج يقرأ الـ items بره.
+     */
+    @Getter
     private TableView<R> table;
 
     public EmployeeHistoryTable(String sectionTitle,
@@ -149,13 +155,6 @@ public class EmployeeHistoryTable<R> {
      */
     protected boolean isNotEmpty(R row) {
         return row != null && !row.toString().isBlank();
-    }
-
-    /**
-     * يرجّع الجدول للـ controller لو محتاج يقرأ الـ items بره.
-     */
-    public TableView<R> getTable() {
-        return table;
     }
 
     /**

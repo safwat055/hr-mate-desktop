@@ -6,6 +6,7 @@ import com.safwat.hr.controller.employee.dto.*;
 import com.safwat.hr.controller.employee.enums.TerminationReason;
 import com.safwat.hr.controller.employee.ui.EmployeeRows.*;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import javafx.application.Platform;

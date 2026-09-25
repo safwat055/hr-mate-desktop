@@ -810,14 +810,15 @@ public class ScaleController implements Initializable {
         TabPane parentTab = findParentTabPane();   // شوف الدالة تحت
         if (parentTab == null) return;
 
-        TabManager.loadFXMLInTab(
-                parentTab,
+        TabManager.loadFXMLInMainTab(
+
                 "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml", // مسار الـ FXML
-                "المفردات",
+                "مفردات",
                 true,
                 controller -> {
                     if (controller instanceof AllowanceFxController c) {
                         c.setInitialNationalId(nationalId);
+
                     }
                 }
         );
