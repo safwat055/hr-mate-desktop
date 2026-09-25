@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.safwat.hr.controller.employee.ui.HistoryDialogController"
+      spacing="10" nodeOrientation="RIGHT_TO_LEFT" prefWidth="480">
+    <padding>
+        <Insets top="15" right="15" bottom="15" left="15"/>
+    </padding>
+
+    <Label fx:id="titleLabel" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="table" prefHeight="260">
+        <columns>
+            <TableColumn fx:id="dateColumn" text="تاريخ السريان" prefWidth="140"/>
+            <TableColumn fx:id="valueColumn" text="القيمة" prefWidth="180"/>
+            <TableColumn fx:id="actionsColumn" text="" prefWidth="140"/>
+        </columns>
+    </TableView>
+
+    <Separator/>
+
+    <Label text="إضافة سجل جديد" style="-fx-font-weight: bold;"/>
+    <HBox spacing="10">
+        <Label text="تاريخ السريان:"/>
+        <DatePicker fx:id="newDatePicker"/>
+        <Label text="القيمة:"/>
+        <HBox fx:id="newValueContainer"/>
+        <Button fx:id="addButton" text="إضافة"/>
+    </HBox>
+</VBox>
