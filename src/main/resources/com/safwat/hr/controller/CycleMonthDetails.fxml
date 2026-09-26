@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="12" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.wages.ui.CycleMonthDetailsController">
+    <padding>
+        <Insets bottom="15" left="15" right="15" top="15" />
+    </padding>
+
+    <GridPane hgap="10" vgap="6">
+        <Label text="الشهر:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <Label fx:id="monthLabel" style="-fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+        <Label text="المصدر:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+        <Label fx:id="sourceLabel" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+
+        <Label text="الإجمالي الخام:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <Label fx:id="rawTotalLabel" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+        <Label text="الحد الأقصى:" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+        <Label fx:id="ceilingLabel" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+
+        <Label text="الخاضع للمعاشات:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <Label fx:id="pensionableLabel" style="-fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+        <columnConstraints>
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+            <ColumnConstraints />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+            <RowConstraints />
+        </rowConstraints>
+    </GridPane>
+
+    <Separator />
+
+    <Label fx:id="breakdownTitleLabel" style="-fx-font-weight: bold;" text="تفاصيل البنود" />
+    <TableView fx:id="breakdownTable" prefHeight="220">
+        <columns>
+            <TableColumn fx:id="itemNameColumn" prefWidth="220" text="البند" />
+            <TableColumn fx:id="itemValueColumn" prefWidth="140" text="القيمة" />
+        </columns>
+    </TableView>
+
+    <VBox fx:id="notesBox" spacing="4">
+        <Label text="ملاحظات المستندات:" style="-fx-font-weight: bold;" />
+        <Label fx:id="notesLabel" wrapText="true" />
+    </VBox>
+</VBox>

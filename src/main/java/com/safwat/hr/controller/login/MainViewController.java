@@ -350,6 +350,10 @@ public class MainViewController implements Initializable {
     void openAllowancesView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getAllowanceView(), "مفردات", true);
     }
+    @FXML
+    void openWagesView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getWagesView(), "سجل الاجور", true);
+    }
     // ══════════════════════════════════════════════════════════════
     //  Themes
     // ══════════════════════════════════════════════════════════════

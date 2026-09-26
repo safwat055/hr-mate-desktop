@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="10" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.wages.ui.WageEngineCycleTableController">
+    <padding>
+        <Insets bottom="10" left="10" right="10" top="10" />
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label style="-fx-font-weight: bold;" text="نتيجة دورة الأجر المتغير" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="statusLabel" style="-fx-text-fill: #b00020;" />
+        <Button fx:id="calculateButton" disable="true" text="احسب / تحديث" />
+    </HBox>
+
+    <TableView fx:id="table" prefHeight="300" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="monthColumn" prefWidth="90" text="الشهر" />
+            <TableColumn fx:id="rawTotalColumn" prefWidth="100" text="الإجمالي الخام" />
+            <TableColumn fx:id="ceilingColumn" prefWidth="100" text="الحد الأقصى" />
+            <TableColumn fx:id="pensionableColumn" prefWidth="110" text="الخاضع للمعاشات" />
+            <TableColumn fx:id="ceilingAppliedColumn" prefWidth="80" text="مقطوع؟" />
+            <TableColumn fx:id="sourceColumn" prefWidth="120" text="المصدر" />
+            <TableColumn fx:id="allowanceDetailsColumn" prefWidth="110" text="" />
+            <TableColumn fx:id="documentDetailsColumn" prefWidth="120" text="" />
+        </columns>
+    </TableView>
+</VBox>

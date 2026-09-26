@@ -147,9 +147,9 @@
                                                 <padding>
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
+                                                <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة الاجور" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
                                     <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                             </VBox>

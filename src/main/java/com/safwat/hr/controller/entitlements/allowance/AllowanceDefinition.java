@@ -66,7 +66,8 @@ public class AllowanceDefinition {
         PROMOTION_INCENTIVE,
         PERCENT_BY_JOB,
         PERCENT_ALL_JOB,
-        AMOUNT_BY_JOB
+        AMOUNT_BY_JOB,
+        ANNUAL_BONUS
     }
 
     public enum InsuranceBase {BASIC, VARIABLE, COMBINED}
