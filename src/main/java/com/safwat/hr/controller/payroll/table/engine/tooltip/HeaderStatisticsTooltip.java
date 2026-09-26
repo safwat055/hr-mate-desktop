@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.StackPane;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,7 +121,7 @@ public class HeaderStatisticsTooltip {
         }
     }
 
-    private javafx.scene.Node getColumnHeader(TableColumn<ObservableList<String>, ?> column) {
+    private Node getColumnHeader(TableColumn<ObservableList<String>, ?> column) {
         try {
             return column.getTableView().lookup(".column-header[data-column=\"" + column.getId() + "\"]");
         } catch (Exception e) {
@@ -133,7 +134,7 @@ public class HeaderStatisticsTooltip {
                                            Tooltip tooltip) {
         javafx.application.Platform.runLater(() -> {
             try {
-                javafx.scene.Node header = getColumnHeader(column);
+                Node header = getColumnHeader(column);
                 if (header != null) {
                     header.setOnMouseEntered(event -> showStatisticalTooltip(column, table, tooltip));
                     header.setOnMouseExited(event -> tooltip.hide());
@@ -176,9 +177,20 @@ public class HeaderStatisticsTooltip {
         }
         try {
             StatisticalInfo stats = calculateColumnStatistics(column, table);
-            String columnName = (column.getGraphic() instanceof Label lbl)
-                    ? lbl.getText()
-                    : column.getText();
+            String columnName = "";
+            if ((column.getGraphic() instanceof Label lbl)) {
+                columnName = lbl.getText();
+            } else if ((column.getGraphic() instanceof StackPane pane)) {
+                
+                if (pane.getChildren().getFirst() instanceof Label) {
+                    columnName = ((Label) pane.getChildren().getFirst()).getText();
+                }
+
+            } else {
+                columnName = column.getText();
+            }
+
+
             tooltip.setText(buildTooltipText(stats, columnName));
         } catch (Exception e) {
             tooltip.setText("❌ خطأ في حساب الإحصائيات");

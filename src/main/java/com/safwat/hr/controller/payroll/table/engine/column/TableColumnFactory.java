@@ -8,10 +8,13 @@ import com.safwat.hr.controller.payroll.table.engine.rows.RowManager;
 import com.safwat.hr.controller.payroll.table.engine.tooltip.NationalIdTooltipService;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Callback;
 import javafx.util.converter.DefaultStringConverter;
 
@@ -95,7 +98,7 @@ public class TableColumnFactory {
                 if (navigationHandler.isMoveDown()) navigationHandler.moveTo(row + 1, col);
                 else navigationHandler.moveTo(row, col + 1);
             } else {
-                int nextCol = col + (ke.isShiftDown() ? -1 : 1);
+                /*int nextCol = col + (ke.isShiftDown() ? -1 : 1);
                 int nextRow = row;
                 if (nextCol < 0) {
                     nextCol = TableSchema.COLUMN_COUNT - 1;
@@ -105,7 +108,7 @@ public class TableColumnFactory {
                     nextRow = row + 1;
                 }
                 if (nextRow < 0) nextRow = 0;
-                navigationHandler.moveTo(nextRow, nextCol);
+                navigationHandler.moveTo(nextRow, nextCol);*/
             }
         });
     }
@@ -200,7 +203,7 @@ public class TableColumnFactory {
 
     public TableColumn<ObservableList<String>, String> createStaticColumn(String title, int index, boolean editable) {
         TableColumn<ObservableList<String>, String> col = baseColumn(title, index);
-        col.setPrefWidth(120);
+        col.setPrefWidth(100);
         col.setEditable(editable);
         if (editable) {
             col.setCellFactory(c -> navigableTextCell());
@@ -254,30 +257,51 @@ public class TableColumnFactory {
     }
 
     /**
-     * عمود ديناميكي — رأسه نص عادي (col.setText) + تولتيب إحصائي على
-     * الهيدر (اسم العمود / إجمالي الأرقام / متوسطها / إجمالي الصفوف /
-     * الفارغة / غير الفارغة).
+     * عمود ديناميكي — رأسه Label جوه StackPane بيدعم لف النص (wrap)
+     * لما اسم العمود يبقى أطول من عرضه، بدل ما يتقطع/يتاكل. + تولتيب
+     * إحصائي على الهيدر (اسم العمود / إجمالي الأرقام / متوسطها /
+     * إجمالي الصفوف / الفارغة / غير الفارغة).
      * <p>
-     * ⚠️ ملاحظة: كان هنا سابقاً هيدر مبني من Label(wrapText=true) جوه
-     * StackPane كـ Graphic، مع إعادة إنشاء العمود بالكامل عند تحديث
-     * الهيدرز. هذا التركيب هو سبب كراش JavaFX الداخلي
-     * (ArrayIndexOutOfBoundsException في PrismTextLayout). الحل هنا:
-     * هيدر نصي بسيط + Tooltip.install على Label شفاف صغير الحجم بدل
-     * ما يبقى graphic العمود نفسه — بدون wrapText وبدون أي إعادة
-     * إنشاء متكررة، فمفيش مخاطرة تعطل.
+     * ⚠️ ملاحظة تاريخية: كراش JavaFX الداخلي (ArrayIndexOutOfBoundsException
+     * في PrismTextLayout) اللي حصل قبل كده مع نفس التركيبة (Label
+     * wrapText جوه StackPane) كان مرتبط بإعادة إنشاء العمود بالكامل
+     * عند كل تحديث هيدر. هنا القاعدة اللي بتمنع تكرار المشكلة لسه
+     * قائمة: الـ StackPane والـ Label بيتعملوا مرة واحدة بس وقت
+     * إنشاء العمود، وأي تحديث بعد كده (في {@link DynamicHeaderManager#updateColumnHeaders})
+     * بيغيّر نص الـ Label الموجود فعلاً من غير ما يعيد بناء أي graphic
+     * أو عمود من الصفر.
      */
     public TableColumn<ObservableList<String>, String> createDynamicColumn(int index) {
         TableColumn<ObservableList<String>, String> col =
-                baseColumn("عنصر " + (index - TableSchema.FIRST_DYNAMIC_COL + 1), index);
-        col.setPrefWidth(100);
-        col.setMinWidth(70);
+                baseColumn("", index);  // ← فاضي من الأول
+        col.setCellValueFactory(data ->
+                new javafx.beans.property.SimpleStringProperty(
+                        data.getValue().size() > index ? data.getValue().get(index) : ""));
+        col.setEditable(true);
+        col.setSortable(true);
+        col.setReorderable(false);
 
-        Label headerLabel = new Label(col.getText());
-        headerLabel.setWrapText(false);
-        headerLabel.setMaxWidth(150);
-        headerLabel.setStyle("-fx-font-weight: bold; -fx-text-overrun: ellipsis;");
-        col.setGraphic(headerLabel);
-        col.setText(null); // ← امنع تكرار النص
+        String placeholder = "عنصر " + (index - TableSchema.FIRST_DYNAMIC_COL + 1);
+
+        Label headerLabel = new Label(placeholder); // ← النص من المتغير مش من col.getText()
+        headerLabel.setWrapText(true);
+        headerLabel.maxWidthProperty().bind(col.widthProperty());
+        headerLabel.setAlignment(Pos.CENTER);
+        headerLabel.setTextAlignment(TextAlignment.RIGHT);
+
+        StackPane headerContainer = new StackPane(headerLabel);
+        headerContainer.maxWidthProperty().bind(col.widthProperty());
+        headerContainer.prefWidthProperty().bind(col.widthProperty());
+        headerContainer.setMinWidth(0);
+
+        javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
+        clip.widthProperty().bind(headerContainer.widthProperty());
+        clip.heightProperty().bind(headerContainer.heightProperty());
+        headerContainer.setClip(clip);
+
+        col.setGraphic(headerContainer);
+        // col.setText("") ← مش محتاجها لأن العمود اتعمل بدون نص أصلاً
+
         dynamicHeaderManager.registerHeaderLabel(index, headerLabel);
 
         col.setCellFactory(c -> navigableTextCell());
@@ -285,6 +309,7 @@ public class TableColumnFactory {
             event.getRowValue().set(index, event.getNewValue());
             Platform.runLater(columnWidthAdjuster::adjustColumnWidths);
         });
+
 
         return col;
     }

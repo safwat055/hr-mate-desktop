@@ -40,16 +40,16 @@ public class ColumnWidthAdjuster {
                         column.setMinWidth(80);
                     } else {
                         // الأعمدة الديناميكية - عرض متوازن
-                        column.setPrefWidth(Math.max(90, Math.min(calculatedWidth, 150)));
-                        column.setMinWidth(70);
+                        column.setPrefWidth(Math.max(90, Math.min(calculatedWidth, 90)));
+                        column.setMinWidth(120);
                     }
 
-                    column.setMaxWidth(200); // حد أقصى لجميع الأعمدة
+                    //  column.setMaxWidth(200); // حد أقصى لجميع الأعمدة
                 }
 
                 // إجبار الجدول على إعادة حساب الأبعاد
                 tableView.layout();
-
+                tableView.refresh();
             } catch (Exception e) {
                 System.err.println("❌ خطأ في ضبط عرض الأعمدة: " + e.getMessage());
             }

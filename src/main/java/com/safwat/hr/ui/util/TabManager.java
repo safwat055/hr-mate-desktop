@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class TabManager {
-
+   private static TabPane mainTabPane;
     /**
      * نخزّن التاب + الـ Controller مع بعض عشان نقدر نعيد التهيئة لو التاب موجود.
      */
@@ -37,7 +37,42 @@ public class TabManager {
                                      String tabTitle, boolean closAble) {
         loadFXMLInTab(tabPane, fxmlPath, tabTitle, closAble, null);
     }
+    public static void loadFxmlInMainTabPane(String fxmlPath,
+                                             String tabTitle, boolean closAble){
+        // ── التاب موجود بالفعل ──
+        if (loadedTabs.containsKey(fxmlPath)) {
+            TabInfo info = loadedTabs.get(fxmlPath);
+            if (!mainTabPane.getTabs().contains(info.tab())) {
+                mainTabPane.getTabs().add(info.tab());
+            }
+            mainTabPane.getSelectionModel().select(info.tab());
 
+            return;
+        }
+
+        // ── التاب جديد ──
+        try {
+            FXMLLoader loader = new FXMLLoader(TabManager.class.getResource(fxmlPath));
+            Parent content = loader.load();
+            Object controller = loader.getController();
+
+            applyViewSettings(tabTitle, content);
+
+
+            Tab tab = new Tab(tabTitle, content);
+            tab.setClosable(closAble);
+            tab.setOnClosed(_ -> loadedTabs.remove(fxmlPath));
+
+            mainTabPane.getTabs().add(tab);
+            mainTabPane.getSelectionModel().select(tab);
+
+            loadedTabs.put(fxmlPath, new TabInfo(tab, controller));
+
+        } catch (IOException e) {
+            log.error("Failed to load FXML: {}", fxmlPath, e);
+            SAFNotification.error(e.getMessage());
+        }
+    }
     /**
      * نسخة جديدة — تقبل {@code controllerInitializer} يتنفّذ على الـ Controller
      * بعد التحميل. بيُستخدم لتمرير بيانات للتاب (زي الرقم القومي).
@@ -48,7 +83,9 @@ public class TabManager {
     public static void loadFXMLInTab(TabPane tabPane, String fxmlPath,
                                      String tabTitle, boolean closAble,
                                      Consumer<Object> controllerInitializer) {
-
+        if(mainTabPane == null){
+            mainTabPane = tabPane;
+        }
         // ── التاب موجود بالفعل ──
         if (loadedTabs.containsKey(fxmlPath)) {
             TabInfo info = loadedTabs.get(fxmlPath);
@@ -81,6 +118,51 @@ public class TabManager {
 
             tabPane.getTabs().add(tab);
             tabPane.getSelectionModel().select(tab);
+
+            loadedTabs.put(fxmlPath, new TabInfo(tab, controller));
+
+        } catch (IOException e) {
+            log.error("Failed to load FXML: {}", fxmlPath, e);
+            SAFNotification.error(e.getMessage());
+        }
+    }
+
+    public static void loadFXMLInMainTab(String fxmlPath,
+                                     String tabTitle, boolean closAble,
+                                     Consumer<Object> controllerInitializer) {
+
+        // ── التاب موجود بالفعل ──
+        if (loadedTabs.containsKey(fxmlPath)) {
+            TabInfo info = loadedTabs.get(fxmlPath);
+            if (!mainTabPane.getTabs().contains(info.tab())) {
+                mainTabPane.getTabs().add(info.tab());
+            }
+            mainTabPane.getSelectionModel().select(info.tab());
+
+            if (controllerInitializer != null && info.controller() != null) {
+                controllerInitializer.accept(info.controller());
+            }
+            return;
+        }
+
+        // ── التاب جديد ──
+        try {
+            FXMLLoader loader = new FXMLLoader(TabManager.class.getResource(fxmlPath));
+            Parent content = loader.load();
+            Object controller = loader.getController();
+
+            applyViewSettings(tabTitle, content);
+
+            if (controllerInitializer != null && controller != null) {
+                controllerInitializer.accept(controller);
+            }
+
+            Tab tab = new Tab(tabTitle, content);
+            tab.setClosable(closAble);
+            tab.setOnClosed(_ -> loadedTabs.remove(fxmlPath));
+
+            mainTabPane.getTabs().add(tab);
+            mainTabPane.getSelectionModel().select(tab);
 
             loadedTabs.put(fxmlPath, new TabInfo(tab, controller));
 

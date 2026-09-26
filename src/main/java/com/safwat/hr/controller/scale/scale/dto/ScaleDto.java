@@ -6,6 +6,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * الكلاس المجمع لشاشة السلم الوظيفي.
@@ -73,6 +75,8 @@ public class ScaleDto {
     // ══════════════════════════════════════════
     //  Inner DTO — النتيجة
     // ══════════════════════════════════════════
-
+    private String sectorCode;
+    private TreeMap<LocalDate, String> jobTitleHistory;
+    private Map<LocalDate, String> maritalStatusHistory;  // الحالة الجتماعية
 
 }

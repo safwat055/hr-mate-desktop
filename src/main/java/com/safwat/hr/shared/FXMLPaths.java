@@ -26,4 +26,8 @@ public class FXMLPaths {
     private final String allowanceView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml";
 
     private final String backupView = "/com/safwat/hr/controller/BackupView.fxml";
+
+    private final String employeeForm = "/com/safwat/hr/controller/EmployeeForm.fxml";
+    private final String historyDialog = "/com/safwat/hr/controller/HistoryDialog.fxml";
+    private final String wagesView = "/com/safwat/hr/controller/EmployeeWagesScreen.fxml";
 }

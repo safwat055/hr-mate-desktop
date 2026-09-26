@@ -121,6 +121,7 @@
                                                 <Button fx:id="btn_records" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجلات" />
                                                 <Button fx:id="btn_tableView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="شيت الادخال" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اضافة موظف" />
+                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button fx:id="btn_payManager" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاستحقاقات" />
                                             </VBox>
                                         </content>
@@ -133,11 +134,9 @@
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="البيانات الاساسية" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button fx:id="btn_scaleView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تدرج راتب" />
+                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير التسويات" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير التقارير" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -148,12 +147,11 @@
                                                 <padding>
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
+                                                <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة الاجور" />
+                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
+                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                             </VBox>
                                         </content>
                                     </TitledPane>
@@ -165,8 +163,7 @@
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
+                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاجازات" />
                                             </VBox>
                                         </content>
@@ -179,6 +176,7 @@
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
+                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="تقارير" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير م بشرية" />

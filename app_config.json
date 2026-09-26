@@ -216,7 +216,10 @@
     "PostgreSQL",
     "server setting",
     "اجر الاشتراك",
+    "اجور",
     "اعدادات التشغيل",
+    "المفردات",
+    "بيانات موظف",
     "تخصيص الواجهة",
     "تخصيص الواجهة - /com/safwat/hr/controller/report/PayrollReport.fxml",
     "تدرج راتب",
@@ -234,7 +237,7 @@
     "👥 إدارة المستخدمين",
     "📊 السجلات",
     "🔑 تغيير كلمة المرور",
-    "المفردات"
+    "سجل الاجور"
   ]},
   "fonts_تدرج راتب": {
     "COMBO_BOX": {
@@ -355,13 +358,13 @@
     "TABLE_VIEW": {
       "size": 12,
       "bold": false,
-      "family": "Cairo Light",
+      "family": "Arial",
       "italic": false
     },
     "LABEL": {
       "size": 13,
       "bold": false,
-      "family": "System",
+      "family": "Arial",
       "italic": false
     },
     "CHECK_BOX": {

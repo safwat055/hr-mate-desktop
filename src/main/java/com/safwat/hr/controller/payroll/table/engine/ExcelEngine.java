@@ -104,13 +104,14 @@ public class ExcelEngine {
         Platform.runLater(() -> {
             javafx.scene.Node headerBg = tableView.lookup(".column-header-background");
             if (headerBg != null) {
-                headerBg.setStyle("-fx-pref-height: 40px; -fx-min-height: 40px;");
+                headerBg.setStyle("-fx-pref-height: 60px; -fx-min-height: 60px;");
             }
             tableView.lookupAll(".column-header").forEach(header ->
-                    header.setStyle("-fx-pref-height: 40px; -fx-min-height: 40px;"));
+                    header.setStyle("-fx-pref-height: 60px; -fx-min-height: 60px;"));
         });
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tableView.getSelectionModel().setCellSelectionEnabled(true);
+
 
         for (int i = 0; i < TableSchema.COLUMN_COUNT; i++) {
             if (i == TableSchema.SEARCH_COL) {
@@ -129,7 +130,7 @@ public class ExcelEngine {
                 tableView.getColumns().add(columnFactory.createDynamicColumn(i));
             }
         }
-
+     
         navigationHandler.setupNavigation();
         contextMenuFactory.install(tableView, rowManager, clipboardHandler);
         rowManager.initializeDefaultRows();
@@ -139,8 +140,8 @@ public class ExcelEngine {
         Platform.runLater(() -> {
             adjustColumnWidths();
             javafx.scene.Node headerBg = tableView.lookup(".column-header-background");
-            if (headerBg != null) headerBg.setStyle("-fx-pref-height: 42px;");
-            tableView.lookupAll(".column-header").forEach(h -> h.setStyle("-fx-pref-height: 42px;"));
+            if (headerBg != null) headerBg.setStyle("-fx-pref-height: 60px;");
+            tableView.lookupAll(".column-header").forEach(h -> h.setStyle("-fx-pref-height: 60px;"));
         });
     }
 

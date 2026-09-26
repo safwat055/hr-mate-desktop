@@ -7,6 +7,7 @@ import com.safwat.hr.controller.payroll.table.engine.ExcelEngine;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.TextToSpeech;
+import com.safwat.hr.ui.icons.Icons;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -115,7 +116,8 @@ public class TableController implements Initializable {
         engine.setSearchHandler(this::handleSearch);
         engine.setNationalIdTooltipProvider(this::fetchPayrollIndexTooltip);
 
-
+        Icons.getInstance().getPDFImage(btn_Pdf);
+        Icons.getInstance().getExcelImage(btn_Excel);
         setupSearchFields();
         setupDirectionOptions();
         setupHighlights();

@@ -200,7 +200,7 @@
                                 styleClass="btn-secondary" text="اختيار..."/>
                     </HBox>
                     <Label fx:id="lbl_jobTitlesHint" styleClass="text-muted fs-11"
-                           text="اتركه فارغا لتطبيقه على كل الوظائف" wrapText="true"/>
+                           text="اتركه فارغا لتطبيقه على كل الوظائف"/>
                 </VBox>
 
                 <!-- valuesMap -->

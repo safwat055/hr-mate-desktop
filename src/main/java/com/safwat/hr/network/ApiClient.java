@@ -3,6 +3,7 @@ package com.safwat.hr.network;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -149,7 +150,10 @@ public final class ApiClient {
     // ─────────────────────────────────────────────
     //  DELETE
     // ─────────────────────────────────────────────
-
+    public static void delete(String path)
+            throws IOException, InterruptedException {
+        send(path, "DELETE", null, HttpCore.TIMEOUT, (Class<Void>) null);
+    }
     public static <T> ApiResponse<T> delete(String path,
                                             Class<T> responseType)
             throws IOException, InterruptedException {

@@ -37,7 +37,7 @@ public class TableNavigationHandler {
     }
 
     public void setupNavigation() {
-        tableView.setOnKeyPressed(this::handleKey);
+        tableView.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKey);
     }
 
     public void setMoveDown(boolean moveDown) {
@@ -49,6 +49,13 @@ public class TableNavigationHandler {
     }
 
     private void handleKey(KeyEvent event) {
+        // خلية بتتحرر دلوقتي (TextField ظاهر) — سيبها هي اللي تتصرف
+        // في الأسهم/Enter/Tab بنفسها، عشان الفلتر ده بقى بيشتغل في
+        // مرحلة الـ capturing وهيمنع الحدث يوصل للـ TextField أصلاً.
+        if (tableView.getEditingCell() != null) {
+            return;
+        }
+
         boolean ctrl = event.isControlDown();
         KeyCode code = event.getCode();
 
@@ -79,19 +86,19 @@ public class TableNavigationHandler {
             }
             case LEFT -> {
                 event.consume();
-                moveTo(pos.getRow(), Math.max(0, pos.getColumn() - 1));
+                moveFocus(pos.getRow(), Math.max(0, pos.getColumn() - 1));
             }
             case RIGHT -> {
                 event.consume();
-                moveTo(pos.getRow(), Math.min(TableSchema.COLUMN_COUNT - 1, pos.getColumn() + 1));
+                moveFocus(pos.getRow(), Math.min(TableSchema.COLUMN_COUNT - 1, pos.getColumn() + 1));
             }
             case UP -> {
                 event.consume();
-                moveTo(Math.max(0, pos.getRow() - 1), pos.getColumn());
+                moveFocus(Math.max(0, pos.getRow() - 1), pos.getColumn());
             }
             case DOWN -> {
                 event.consume();
-                moveTo(pos.getRow() + 1, pos.getColumn());
+                moveFocus(pos.getRow() + 1, pos.getColumn());
             }
             case DELETE -> {
                 event.consume();
@@ -105,9 +112,22 @@ public class TableNavigationHandler {
     /**
      * انتقال مع تمرير السكرول والدخول في وضع التحرير — مؤجّل بـ
      * Platform.runLater عشان يفتح التحرير فورًا وبثبات بدل ما يحتاج
-     * المستخدم يدوس بالماوس.
+     * المستخدم يدوس بالماوس. يُستخدم بعد Enter/Tab وبعد البحث، حيث
+     * المستخدم غالبًا هيكمل كتابة فورًا في الخلية الجديدة.
      */
     public void moveTo(int row, int col) {
+        moveTo(row, col, true);
+    }
+
+    /**
+     * انتقال بالأسهم — بيحرك الفوكس/التحديد بس من غير ما يفتح وضع
+     * التحرير، عشان الأسهم تتصرف بشكل طبيعي زي أي جدول.
+     */
+    public void moveFocus(int row, int col) {
+        moveTo(row, col, false);
+    }
+
+    private void moveTo(int row, int col, boolean openEdit) {
         if (row >= tableView.getItems().size()) {
             rowManager.addNewRow();
         }
@@ -123,7 +143,7 @@ public class TableNavigationHandler {
             tableView.getFocusModel().focus(r, column);
             tableView.getSelectionModel().clearSelection();
             tableView.getSelectionModel().select(r, column);
-            if (column.isEditable()) {
+            if (openEdit && column.isEditable()) {
                 tableView.edit(r, column);
             } else {
                 tableView.requestFocus();

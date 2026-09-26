@@ -215,7 +215,7 @@ public class UserReportsController implements Initializable {
 
         // اكتمل وفيه ملف → حمّل
         if (report.getOutput() != null && !report.getOutput().isBlank()
-                && (report.getOutput().endsWith(".pdf") || report.getOutput().endsWith(".xlsx"))) {
+                && (report.getOutput().endsWith(".pdf") || report.getOutput().endsWith(".xlsx")|| report.getOutput().endsWith(".dump"))) {
             downloadFile(report);
             return;
         }

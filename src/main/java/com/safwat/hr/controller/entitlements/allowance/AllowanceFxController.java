@@ -1,9 +1,17 @@
 package com.safwat.hr.controller.entitlements.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.safwat.hr.controller.employee.dto.EmployeeProfileDto;
+import com.safwat.hr.controller.employee.dto.JobTitleEntryRequest;
+import com.safwat.hr.controller.employee.dto.SocialStatusEntryRequest;
+import com.safwat.hr.controller.employee.ui.EmployeeHistoryTable;
+import com.safwat.hr.controller.employee.ui.EmployeeRows.JobTitleRow;
+import com.safwat.hr.controller.employee.ui.EmployeeRows.SocialStatusRow;
+import com.safwat.hr.controller.employee.ui.JobTitleOption;
 import com.safwat.hr.controller.entitlements.allowance.AllowanceDefinition.ElementType;
 import com.safwat.hr.controller.entitlements.statutory.StatutoryDialogController;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
+import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -17,6 +25,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -52,75 +61,63 @@ public class AllowanceFxController implements Initializable {
     private Button btn_manageDefinitions;
 
     // ── تاب بيانات الموظف ───────────────────────────────────────
-    @FXML
-    private TextField txt_empName;
-    @FXML
-    private TextField txt_empNationalId;
-    @FXML
-    private TextField txt_empLawCode;
-    @FXML
-    private TextField txt_empLaw;
-    @FXML
-    private TextField txt_empStartDate;
-    @FXML
-    private TextField txt_empDegree;
-    @FXML
-    private TextField txt_empBasic30;
-    @FXML
-    private TextField txt_empBasic30From;
-    @FXML
-    private TextField txt_empGroup;
+    @FXML private TextField txt_empName;
+    @FXML private TextField txt_empNationalId;
+    @FXML private TextField txt_empLawCode;
+    @FXML private TextField txt_empLaw;
+    @FXML private TextField txt_empStartDate;
+    @FXML private TextField txt_empDegree;
+    @FXML private TextField txt_empBasic30;
+    @FXML private TextField txt_empBasic30From;
+    @FXML private TextField txt_empGroup;
 
     // ── تاب البدلات ─────────────────────────────────────────────
-    @FXML
-    private TextField txt_calculationDate;          // 🆕 بدل DatePicker
-    @FXML
-    private Button btn_recalculate;
-    @FXML
-    private TextField txt_newAllowance;             // 🆕 بدل ComboBox
-    @FXML
-    private Button btn_showAllowances;              // 🆕 زر عرض كل البدلات
-    @FXML
-    private Button btn_addAllowance;
-    @FXML
-    private Label lbl_total;
+    @FXML private TextField txt_calculationDate;
+    @FXML private Button btn_recalculate;
+    @FXML private TextField txt_newAllowance;
+    @FXML private Button btn_showAllowances;
+    @FXML private Button btn_addAllowance;
+    @FXML private Label lbl_total;
 
     // ── جدول البدلات ────────────────────────────────────────────
-    @FXML
-    private TableView<AllowanceResultDto.AllowanceLineDto> table_allowances;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, String> col_nameAr;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, ElementType> col_elementType;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, BigDecimal> col_value;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, LocalDate> col_effectiveFrom;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, AllowanceResultDto.AllowanceLineDto.Source> col_source;
-    @FXML
-    private TableColumn<AllowanceResultDto.AllowanceLineDto, Void> col_actions;
-    @FXML
-    private Button btn_manageSectors;
+    @FXML private TableView<AllowanceResultDto.AllowanceLineDto> table_allowances;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, String> col_nameAr;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, ElementType> col_elementType;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, BigDecimal> col_value;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, LocalDate> col_effectiveFrom;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, AllowanceResultDto.AllowanceLineDto.Source> col_source;
+    @FXML private TableColumn<AllowanceResultDto.AllowanceLineDto, Void> col_actions;
+    @FXML private Button btn_manageSectors;
+
+    // ── جداول الحالة الاجتماعية والوظائف (جديد) ─────────────────
+    @FXML private HBox historyRow;
+    @FXML private VBox socialStatusContainer;
+    @FXML private VBox jobTitleContainer;
+
     // ── State ────────────────────────────────────────────────────
     private String currentNationalId;
     private AllowanceResultDto currentResult;
     private ScaleDto cachedScaleDto;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    // ★ جديد — id الموظف + الجداول القابلة للتعديل
+    private Long employeeId;
+    private EmployeeHistoryTable<SocialStatusRow> socialTbl;
+    private EmployeeHistoryTable<JobTitleRow>     jobTbl;
+
     /**
-     * 🆕 البدلات المتاحة للإضافة — تُملأ من loadDefinitions.
+     * البدلات المتاحة للإضافة — تُملأ من loadDefinitions.
      */
     private final ObservableList<AllowanceDefinition> availableAllowances =
             FXCollections.observableArrayList();
 
     /**
-     * 🆕 قائمة الاقتراحات المنسدلة.
+     * قائمة الاقتراحات المنسدلة.
      */
     private final ContextMenu suggestionsMenu = new ContextMenu();
 
     /**
-     * 🆕 كود البدل اللي المستخدم اختاره من الاقتراحات.
+     * كود البدل اللي المستخدم اختاره من الاقتراحات.
      */
     private String selectedAllowanceCode = null;
 
@@ -142,7 +139,6 @@ public class AllowanceFxController implements Initializable {
         setupDateField();
         setupAllowanceAutocomplete();
         btn_manageSectors.setOnAction(e -> openSectorsDialog());
-        // القيمة الافتراضية لتاريخ الاحتساب = اليوم
         txt_calculationDate.setText(LocalDate.now().format(DATE_FMT));
 
         btn_statutory.setOnAction(e -> openStatutoryDialog());
@@ -156,31 +152,30 @@ public class AllowanceFxController implements Initializable {
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(e -> openDefinitionsDialog());
         }
+
+        // في البداية جداول الـ history مخفية
+        setHistoryVisible(false);
     }
 
     // ════════════════════════════════════════════════════════════
-    //  🆕 Date Field — TextField + TextFieldSetupHelper
+    //  Date Field — TextField + TextFieldSetupHelper
     // ════════════════════════════════════════════════════════════
 
     private void setupDateField() {
         TextFieldSetupHelper.setupDateFields(txt_calculationDate);
     }
 
-    /**
-     * يقرأ التاريخ من الحقل، أو null لو فاضي/غير صحيح.
-     */
     private LocalDate getCalculationDate() {
         return TextFieldSetupHelper.parseDateInput(txt_calculationDate.getText());
     }
 
     // ════════════════════════════════════════════════════════════
-    //  🆕 Allowance Autocomplete
+    //  Allowance Autocomplete
     // ════════════════════════════════════════════════════════════
 
     private void setupAllowanceAutocomplete() {
-        // راقب الكتابة، اعرض اقتراحات
         txt_newAllowance.textProperty().addListener((obs, oldVal, newVal) -> {
-            selectedAllowanceCode = null; // أي كتابة تلغي الاختيار السابق
+            selectedAllowanceCode = null;
             if (newVal == null || newVal.isBlank()) {
                 suggestionsMenu.hide();
                 return;
@@ -188,10 +183,13 @@ public class AllowanceFxController implements Initializable {
             String q = newVal.trim().toLowerCase();
 
             List<AllowanceDefinition> matched = availableAllowances.stream()
-                    .filter(a -> a.getNameAr() != null
-                            && a.getNameAr().toLowerCase().contains(q)
-                            || (a.getCode() != null
-                            && a.getCode().toLowerCase().contains(q)))
+                    .filter(a -> {
+                        boolean nameMatch = a.getNameAr() != null
+                                && a.getNameAr().toLowerCase().contains(q);
+                        boolean codeMatch = a.getCode() != null
+                                && a.getCode().toLowerCase().contains(q);
+                        return nameMatch || codeMatch;
+                    })
                     .limit(12)
                     .toList();
 
@@ -206,7 +204,6 @@ public class AllowanceFxController implements Initializable {
                 item.setOnAction(e -> {
                     txt_newAllowance.setText(a.getNameAr());
                     selectedAllowanceCode = a.getCode();
-                    // حرّك المؤشر للآخر
                     Platform.runLater(() ->
                             txt_newAllowance.positionCaret(txt_newAllowance.getText().length()));
                     suggestionsMenu.hide();
@@ -219,14 +216,12 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // إخفاء القائمة عند فقدان التركيز (مع تأخير بسيط للسماح بالضغط)
         txt_newAllowance.focusedProperty().addListener((obs, was, isNow) -> {
             if (!isNow) {
                 Platform.runLater(suggestionsMenu::hide);
             }
         });
 
-        // ESC يقفل القائمة
         txt_newAllowance.setOnKeyPressed(e -> {
             switch (e.getCode()) {
                 case ESCAPE -> suggestionsMenu.hide();
@@ -240,9 +235,6 @@ public class AllowanceFxController implements Initializable {
         });
     }
 
-    /**
-     * 🆕 زر البحث: يعرض كل البدلات المتاحة (بدون فلترة).
-     */
     private void showAllAllowancesMenu() {
         if (availableAllowances.isEmpty()) {
             showError("لا توجد بدلات متاحة للإضافة");
@@ -265,17 +257,11 @@ public class AllowanceFxController implements Initializable {
         }
     }
 
-    /**
-     * 🆕 يحاول إيجاد البدل المُختار:
-     * 1) من selectedAllowanceCode (لو المستخدم اختار من القائمة)
-     * 2) من نص الحقل (مطابقة بالاسم أو الكود)
-     */
     private AllowanceDefinition resolveSelectedAllowance() {
         String typed = txt_newAllowance.getText();
         if (typed == null || typed.isBlank()) return null;
         typed = typed.trim();
 
-        // 1) من الاختيار المباشر
         if (selectedAllowanceCode != null) {
             final String code = selectedAllowanceCode;
             AllowanceDefinition byCode = availableAllowances.stream()
@@ -285,7 +271,6 @@ public class AllowanceFxController implements Initializable {
             if (byCode != null) return byCode;
         }
 
-        // 2) مطابقة دقيقة بالاسم أو الكود
         final String q = typed;
         return availableAllowances.stream()
                 .filter(a -> q.equals(a.getNameAr()) || q.equals(a.getCode()))
@@ -335,7 +320,14 @@ public class AllowanceFxController implements Initializable {
 
         if (!id.equals(currentNationalId)) {
             cachedScaleDto = null;
-            currentResult = null;
+            currentResult  = null;
+            // ★ مسح بيانات الموظف القديم
+            employeeId = null;
+            socialTbl  = null;
+            jobTbl     = null;
+            socialStatusContainer.getChildren().clear();
+            jobTitleContainer.getChildren().clear();
+            setHistoryVisible(false);
         }
         currentNationalId = id;
         loadAllowances();
@@ -344,7 +336,6 @@ public class AllowanceFxController implements Initializable {
     private void loadAllowances() {
         if (currentNationalId == null) return;
 
-        // 🆕 اقرأ التاريخ من الـ TextField
         LocalDate calcDate = getCalculationDate();
         String dateParam = calcDate != null
                 ? "?date=" + calcDate.format(DATE_FMT)
@@ -383,7 +374,6 @@ public class AllowanceFxController implements Initializable {
                             .map(AllowanceResultDto.AllowanceLineDto::code).toList()
                             : List.of();
 
-                    // 🆕 امتل الـ ObservableList بدل الـ ComboBox
                     availableAllowances.setAll(
                             defs.stream()
                                     .filter(d -> !existing.contains(d.getCode()))
@@ -403,6 +393,7 @@ public class AllowanceFxController implements Initializable {
     private void ensureEmployeeDetailsLoaded() {
         if (cachedScaleDto != null) {
             applyEmployeeDetails(cachedScaleDto);
+            loadEmployeeProfile();      // ★
             return;
         }
         FxApiSupport.get(
@@ -411,6 +402,7 @@ public class AllowanceFxController implements Initializable {
                 dto -> {
                     cachedScaleDto = dto;
                     applyEmployeeDetails(dto);
+                    loadEmployeeProfile();  // ★
                 },
                 err -> {
                 }
@@ -420,8 +412,9 @@ public class AllowanceFxController implements Initializable {
     private void applyEmployeeDetails(ScaleDto dto) {
         txt_empName.setText(dto.getEmpName());
         txt_empNationalId.setText(dto.getNationalId());
-        txt_empLawCode.setText(dto.getLawCode() != null
-                ? dto.getLawCode() : "—");
+        txt_empLawCode.setText(dto.getJobTitleHistory() != null
+                && !dto.getJobTitleHistory().isEmpty()
+                ? dto.getJobTitleHistory().lastEntry().getValue() : "—");
         txt_empLaw.setText(dto.getLaw() != null ? dto.getLaw().toString() : "—");
         txt_empStartDate.setText(dto.getStartDate() != null
                 ? dto.getStartDate().format(DATE_FMT) : "—");
@@ -434,6 +427,144 @@ public class AllowanceFxController implements Initializable {
         if (dto.getTimeline() != null && !dto.getTimeline().isEmpty()) {
             txt_empDegree.setText(dto.getTimeline().getLast().getDegreeLabel());
         }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  ★ جداول الحالة الاجتماعية والوظائف
+    // ════════════════════════════════════════════════════════════
+
+    private void loadEmployeeProfile() {
+        if (currentNationalId == null || currentNationalId.isBlank()) return;
+
+        FxApiSupport.get(
+                "/employees/by-national-id/" + currentNationalId,
+                EmployeeProfileDto.class,
+                profile -> {
+                    employeeId = profile.id();
+                    rebuildHistoryTables(profile);
+                    setHistoryVisible(true);
+                },
+                err -> {
+                    // الموظف مش موجود في employee — نخفي الجداول
+                    setHistoryVisible(false);
+                }
+        );
+    }
+
+    private void rebuildHistoryTables(EmployeeProfileDto profile) {
+
+        // ── ① الحالة الاجتماعية ──
+        List<SocialStatusRow> statusRows =
+                profile.socialStatusHistory() == null ? List.of() :
+                        profile.socialStatusHistory().stream()
+                                .map(SocialStatusRow::from)
+                                .toList();
+
+        socialTbl = new EmployeeHistoryTable<>(
+                "الحالة الاجتماعية",
+                SocialStatusRow::new,
+                SocialStatusRow.columns(),
+                statusRows,
+                this::saveSocialStatus
+        );
+        socialStatusContainer.getChildren().setAll(socialTbl.build());
+
+        // ── ② الوظائف — محتاجين قائمة وظائف القطاع ──
+        List<JobTitleOption> sectorJobTitles = List.of();
+        if (profile.sectorId() != null) {
+            sectorJobTitles = loadJobTitlesForSector(profile.sectorId());
+        }
+
+        List<JobTitleRow> jobRows =
+                profile.jobTitleHistory() == null ? List.of() :
+                        profile.jobTitleHistory().stream()
+                                .map(JobTitleRow::from)
+                                .toList();
+
+        jobTbl = new EmployeeHistoryTable<>(
+                "الوظائف",
+                JobTitleRow::new,
+                JobTitleRow.columns(sectorJobTitles),
+                jobRows,
+                this::saveJobTitles
+        );
+        jobTitleContainer.getChildren().setAll(jobTbl.build());
+    }
+
+    private List<JobTitleOption> loadJobTitlesForSector(Long sectorId) {
+        try {
+            JobTitleOption[] opts = ApiClient.get(
+                    "/job-titles?sectorId=" + sectorId + "&active=true",
+                    JobTitleOption[].class).getData();
+            return opts == null ? List.of() : List.of(opts);
+        } catch (Exception ex) {
+            return List.of();
+        }
+    }
+
+    private void setHistoryVisible(boolean visible) {
+        if (historyRow == null) return;
+        historyRow.setVisible(visible);
+        historyRow.setManaged(visible);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  ★ حفظ الحالة الاجتماعية
+    // ════════════════════════════════════════════════════════════
+
+    private void saveSocialStatus(List<SocialStatusRow> rows) throws Exception {
+        if (employeeId == null) {
+            throw new IllegalStateException("الموظف غير محمّل — أعد البحث أولاً");
+        }
+
+        List<SocialStatusEntryRequest> requests = rows.stream()
+                .map(SocialStatusRow::toRequest)
+                .toList();
+
+        EmployeeProfileDto updated = ApiClient.put(
+                "/employees/" + employeeId + "/social-status/bulk",
+                requests,
+                EmployeeProfileDto.class
+        ).getData();
+
+        if (socialTbl != null && updated.socialStatusHistory() != null) {
+            socialTbl.reload(
+                    updated.socialStatusHistory().stream()
+                            .map(SocialStatusRow::from)
+                            .toList());
+        }
+
+        // invalidate cache عشان البيانات الحالية تتحمّل من جديد
+        cachedScaleDto = null;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  ★ حفظ الوظائف
+    // ════════════════════════════════════════════════════════════
+
+    private void saveJobTitles(List<JobTitleRow> rows) throws Exception {
+        if (employeeId == null) {
+            throw new IllegalStateException("الموظف غير محمّل — أعد البحث أولاً");
+        }
+
+        List<JobTitleEntryRequest> requests = rows.stream()
+                .map(JobTitleRow::toRequest)
+                .toList();
+
+        EmployeeProfileDto updated = ApiClient.put(
+                "/employees/" + employeeId + "/job-title/bulk",
+                requests,
+                EmployeeProfileDto.class
+        ).getData();
+
+        if (jobTbl != null && updated.jobTitleHistory() != null) {
+            jobTbl.reload(
+                    updated.jobTitleHistory().stream()
+                            .map(JobTitleRow::from)
+                            .toList());
+        }
+
+        cachedScaleDto = null;
     }
 
     // ════════════════════════════════════════════════════════════
@@ -467,13 +598,13 @@ public class AllowanceFxController implements Initializable {
         BigDecimal combined = nvl(result.insurableCombined());
 
         if (basic.signum() > 0) {
-            displayLines.add(buildInfo(CODE_INFO_BASIC, "الأجر الأساسي", basic));
+            displayLines.add(buildInfo(CODE_INFO_BASIC, "الاجر الاساسى", basic));
         }
         if (variable.signum() > 0) {
-            displayLines.add(buildInfo(CODE_INFO_VARIABLE, "الأجر المتغير", variable));
+            displayLines.add(buildInfo(CODE_INFO_VARIABLE, "الاجر المتغير", variable));
         }
         if (combined.signum() > 0) {
-            displayLines.add(buildInfo(CODE_INFO_COMBINED, "الأجر الاشتراكي", combined));
+            displayLines.add(buildInfo(CODE_INFO_COMBINED, "اجر الاشتراك", combined));
         }
 
         // 4) الاستقطاعات
@@ -570,7 +701,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // عمود النوع
+        // ★ عمود النوع — نص عادي بدون badge
         col_elementType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
         col_elementType.setCellFactory(tc -> new TableCell<>() {
@@ -578,27 +709,23 @@ public class AllowanceFxController implements Initializable {
             protected void updateItem(ElementType et, boolean empty) {
                 super.updateItem(et, empty);
                 if (empty || et == null) {
-                    setGraphic(null);
                     setText(null);
+                    setStyle("");
                     return;
                 }
                 AllowanceResultDto.AllowanceLineDto item =
                         getTableView().getItems().get(getIndex());
                 if (isVirtualLine(item.code())) {
-                    setGraphic(null);
                     setText(null);
+                    setStyle("-fx-alignment: CENTER;");
                     return;
                 }
-                Label badge = new Label(elementTypeLabel(et));
-                badge.setStyle(elementTypeBadgeStyle(et));
-                badge.setPadding(new Insets(2, 8, 2, 8));
-                setGraphic(badge);
-                setText(null);
+                setText(elementTypeLabel(et));
                 setStyle("-fx-alignment: CENTER;");
             }
         });
 
-        // عمود القيمة
+        // ★ عمود القيمة — بدون تنسيق ألوان
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -610,11 +737,8 @@ public class AllowanceFxController implements Initializable {
                     setStyle("-fx-alignment: CENTER;");
                     return;
                 }
-                AllowanceResultDto.AllowanceLineDto line =
-                        getTableView().getItems().get(getIndex());
-
-                setText(val.abs().toPlainString() + " ج");
-                setStyle("-fx-alignment: CENTER; " + valueStyle(line));
+                setText(val.abs().toPlainString());
+                setStyle("-fx-alignment: CENTER;");
             }
         });
 
@@ -773,7 +897,6 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void handleAddAllowance() {
-        // 🆕 تحديد البدل من الـ TextField
         AllowanceDefinition selected = resolveSelectedAllowance();
         if (selected == null) {
             String typed = txt_newAllowance.getText();
@@ -785,7 +908,6 @@ public class AllowanceFxController implements Initializable {
             return;
         }
 
-        // 🆕 تحديد التاريخ من الـ TextField
         LocalDate fromDate = getCalculationDate();
         if (fromDate == null) {
             showError("اكتب تاريخ احتساب صحيح أولاً (سيُستخدم كتاريخ بداية البدل)");
@@ -1002,8 +1124,6 @@ public class AllowanceFxController implements Initializable {
             dialog.setScene(new Scene(root));
             dialog.setResizable(true);
             dialog.showAndWait();
-
-
         } catch (Exception ex) {
             showError("خطأ في فتح شاشة القطاعات: " + ex.getMessage());
         }
