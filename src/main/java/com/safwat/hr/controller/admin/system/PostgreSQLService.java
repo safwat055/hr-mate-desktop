@@ -17,7 +17,7 @@ public class PostgreSQLService {
     private Process currentProcess;
     private boolean isRunning = false;
 
-    private static final String PG_USER = "postgres";
+    private static final String PG_USER = "admin";
     private static final String ADMIN_USER = "admin";
     private static final String ADMIN_PASSWORD = "admin";
     private static final String DEFAULT_DB = "hr_db";

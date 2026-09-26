@@ -270,7 +270,7 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void createDatabase() {
-        TextInputDialog dialog = new TextInputDialog("archivemanager_db");
+        TextInputDialog dialog = new TextInputDialog("hr_db");
         dialog.setTitle("إنشاء قاعدة بيانات");
         dialog.setHeaderText("أدخل اسم قاعدة البيانات");
         dialog.setContentText("اسم القاعدة:");
