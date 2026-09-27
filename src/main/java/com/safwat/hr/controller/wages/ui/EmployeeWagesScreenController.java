@@ -2,75 +2,399 @@ package com.safwat.hr.controller.wages.ui;
 
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.controller.wages.dto.EmployeeProfileDto;
+import com.safwat.hr.controller.wages.dto.VariableWageDocumentDto;
+import com.safwat.hr.controller.wages.dto.WageCardExportRequest;
+import com.safwat.hr.controller.wages.dto.WageMonthResultDto;
+import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.icons.Icons;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 /**
- * الشاشة الأم لكل ما يخص الأجور المتغيرة لموظف واحد.
+ * كنترولر موحَّد لشاشة الأجور المتغيرة بالكامل.
  *
- * <p>بتملك شريط البحث + بيانات الموظف مرة واحدة، وبتوزّع الرقم القومي
- * على تبويبين مستقلين بعد كل بحث ناجح:
+ * <p>يدمج منطق 4 كنترولرز سابقة في ملف واحد:
  * <ul>
- *   <li>{@code documentsTabController} — سجلات مستندات الأجور المتغيرة (CRUD)</li>
- *   <li>{@code engineTabController} — نتيجة محرك الأجور (عرض فقط)</li>
+ *   <li>البحث عن الموظف وعرض بياناته</li>
+ *   <li>جدول مستندات الأجور المتغيرة (CRUD)</li>
+ *   <li>جدول نتيجة محرك الأجور + التصدير</li>
  * </ul>
+ *
+ * <p><b>تحسين التصدير:</b> لو المستخدم احتسب الدورة الأول، النتيجة
+ * ({@code lastCycleResult}) بتتبعت مع طلب التصدير مباشرة بدون ما الباك
+ * يحسب تاني — لو مش محتسبة يحسب الباك من جديد تلقائيًا. نفس المنطق
+ * بيتطبق على تصدير بطاقة الأجور وتصدير نموذج (5) — الاتنين بيستخدموا
+ * نفس {@link WageCardExportRequest} ونفس {@code lastCycleResult}.
+ *
+ * <h2>لازم تضيف في الـ FXML:</h2>
+ * زرار جديد بجانب {@code exportButton} في نفس شريط التصدير، بنفس
+ * الأسلوب، بـ:
+ * <pre>{@code
+ * <Button fx:id="exportForm5Button" disable="true" text="تصدير نموذج (5)"
+ *         style="-fx-font-weight: bold;"/>
+ * }</pre>
  */
 public class EmployeeWagesScreenController {
 
+    private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    // ══ بيانات الموظف ══
     @FXML private TextField searchField;
-    @FXML private Button searchButton;
-    @FXML private Label searchStatusLabel;
+    @FXML private Button    searchButton, clearButton;
+    @FXML private Label     searchStatusLabel;
+    @FXML private Label     employeeNameLabel;
+    @FXML private Label     employeeNumberLabel;
+    @FXML private Label     employeeNationalIdLabel;
 
-    @FXML private Label employeeNameLabel;
-    @FXML private Label employeeNumberLabel;
-    @FXML private Label employeeNationalIdLabel;
+    // ══ تبويب المستندات ══
+    @FXML private Button                                    addButton;
+    @FXML private TableView<VariableWageDocumentDto>        documentsTable;
+    @FXML private TableColumn<VariableWageDocumentDto, String> monthColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, String> nameColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, String> numberColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, String> totalColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, String> pensionColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, String> taxColumn;
+    @FXML private TableColumn<VariableWageDocumentDto, Void>   actionsColumn;
 
-    // أسماء الحقول دي لازم تطابق fx:id + "Controller" بتاع كل fx:include في الـ FXML
-    @FXML private VariableWageDocumentsTableController documentsTabController;
-    @FXML private WageEngineCycleTableController engineTabController;
+    // ══ تبويب المحرك ══
+    @FXML private Button                                    calculateButton;
+    @FXML private Label                                     cycleStatusLabel;
+    @FXML private TableView<WageMonthResultDto>             cycleTable;
+    @FXML private TableColumn<WageMonthResultDto, String>   cycleMonthColumn;
+    @FXML private TableColumn<WageMonthResultDto, String>   rawTotalColumn;
+    @FXML private TableColumn<WageMonthResultDto, String>   ceilingColumn;
+    @FXML private TableColumn<WageMonthResultDto, String>   pensionableColumn;
+    @FXML private TableColumn<WageMonthResultDto, String>   ceilingAppliedColumn;
+    @FXML private TableColumn<WageMonthResultDto, String>   sourceColumn;
+    @FXML private TableColumn<WageMonthResultDto, Void>     allowanceDetailsColumn;
+    @FXML private TableColumn<WageMonthResultDto, Void>     documentDetailsColumn;
+
+    // ══ شريط التصدير ══
+    @FXML private TextField fromField;
+    @FXML private TextField toField;
+    @FXML private Button    exportButton;
+    @FXML private Button    exportForm5Button;
+    @FXML private Label     exportStatusLabel;
+
+    // ── State ──
+    private String currentNationalId;
+
+    /**
+     * آخر نتيجة احتساب — تُبعَت مع طلب التصدير مباشرة إن وُجدت،
+     * تُصفَّر عند البحث عن موظف جديد.
+     */
+    private List<WageMonthResultDto> lastCycleResult;
+
+    // ══════════════════════════════════════════════════════
+    //  Initialize
+    // ══════════════════════════════════════════════════════
 
     @FXML
     public void initialize() {
+        // ── البحث ──
         searchButton.setOnAction(e -> onSearch());
         searchField.setOnAction(e -> onSearch());
+        clearButton.setOnAction(_->{clearEmployee("");});
+        Icons.getInstance().getPDFImage(exportButton);
+        Icons.getInstance().getPDFImage(exportForm5Button);
+        TextFieldSetupHelper.setupDateFields(fromField, toField);
+        // ── جدول المستندات ──
+        monthColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().periodMonth().toString()));
+        nameColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().documentName()));
+        numberColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().documentNumber()));
+        totalColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().totalAmount().toPlainString()));
+        pensionColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().subjectToPension() ? "خاضع" : "غير خاضع"));
+        taxColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().subjectToTax() ? "خاضع" : "غير خاضع"));
+        addDocumentActionButtons();
+        addButton.setOnAction(e -> onAddDocument());
+        addButton.setDisable(true);
+
+        // ── جدول المحرك ──
+        cycleMonthColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().monthLabel()));
+        rawTotalColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().rawTotal().toPlainString()));
+        ceilingColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().pensionCeiling() == null
+                        ? "—" : c.getValue().pensionCeiling().toPlainString()));
+        pensionableColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().totalPensionableWage().toPlainString()));
+        ceilingAppliedColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().ceilingApplied() ? "مقطوع" : "—"));
+        sourceColumn.setCellValueFactory(c ->
+                new SimpleStringProperty(c.getValue().sourceLabel()));
+        addCycleActionButtons();
+        calculateButton.setOnAction(e -> onCalculate());
+        calculateButton.setDisable(true);
+
+        // ── التصدير ──
+        exportButton.setOnAction(e -> onExport());
+        exportButton.setDisable(true);
+       // exportForm5Button.setOnAction(e ->));
+        exportForm5Button.setDisable(true);
     }
 
+    // ══════════════════════════════════════════════════════
+    //  البحث عن الموظف
+    // ══════════════════════════════════════════════════════
+
     private void onSearch() {
-        String query = searchField.getText() == null ? "" : searchField.getText().trim();
-        if (query.isEmpty()) {
+        String q = searchField.getText() == null ? "" : searchField.getText().trim();
+        if (q.isEmpty()) {
             searchStatusLabel.setText("اكتب الرقم القومي أو رقم الموظف الأول");
             return;
         }
         try {
-            var response = ApiClient.get("/wages/employees/search?query=" + query, EmployeeProfileDto.class);
-            if (!response.isSuccess()) {
-                searchStatusLabel.setText("مفيش موظف بهذا الرقم");
-                clearEmployee();
-                return;
-            }
+            var res = ApiClient.get("/wages/employees/search?query=" + q, EmployeeProfileDto.class);
+            if (!res.isSuccess()) { clearEmployee("مفيش موظف بهذا الرقم"); return; }
             searchStatusLabel.setText("");
-            bindEmployee(response.getData());
+            bindEmployee(res.getData());
         } catch (Exception ex) {
-            searchStatusLabel.setText("مفيش موظف بهذا الرقم");
-            clearEmployee();
+            clearEmployee("مفيش موظف بهذا الرقم");
         }
     }
 
-    private void bindEmployee(EmployeeProfileDto profile) {
-        employeeNameLabel.setText(profile.fullName());
-        employeeNumberLabel.setText(profile.employeeNumber());
-        employeeNationalIdLabel.setText(profile.nationalId());
-        documentsTabController.setNationalId(profile.nationalId());
-        engineTabController.setNationalId(profile.nationalId());
+    private void bindEmployee(EmployeeProfileDto p) {
+        currentNationalId = p.nationalId();
+        lastCycleResult   = null;   // نتيجة قديمة لموظف سابق — تُصفَّر
+        employeeNameLabel.setText(p.fullName());
+        employeeNumberLabel.setText(p.employeeNumber());
+        employeeNationalIdLabel.setText(p.nationalId());
+        addButton.setDisable(false);
+        calculateButton.setDisable(false);
+        exportButton.setDisable(false);
+        exportForm5Button.setDisable(false);
+        cycleStatusLabel.setText("");
+        exportStatusLabel.setText("");
+        cycleTable.setItems(FXCollections.observableArrayList());
+        refreshDocuments();
     }
 
-    private void clearEmployee() {
+    private void clearEmployee(String msg) {
+        currentNationalId = null;
+        lastCycleResult   = null;
+        searchStatusLabel.setText(msg);
         employeeNameLabel.setText("—");
         employeeNumberLabel.setText("—");
         employeeNationalIdLabel.setText("—");
-        documentsTabController.setNationalId(null);
-        engineTabController.setNationalId(null);
+        addButton.setDisable(true);
+        calculateButton.setDisable(true);
+        exportButton.setDisable(true);
+        exportForm5Button.setDisable(true);
+        documentsTable.setItems(FXCollections.observableArrayList());
+        cycleTable.setItems(FXCollections.observableArrayList());
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  مستندات الأجور
+    // ══════════════════════════════════════════════════════
+
+    private void refreshDocuments() {
+        if (currentNationalId == null) return;
+        try {
+            var res = ApiClient.get(
+                    "/wages/documents?nationalId=" + currentNationalId,
+                    VariableWageDocumentDto[].class);
+            if (!res.isSuccess()) {
+                alert(Alert.AlertType.ERROR, "تعذر تحميل المستندات: " + res.getMessage());
+                return;
+            }
+            documentsTable.setItems(FXCollections.observableArrayList(List.of(res.getData())));
+        } catch (Exception ex) {
+            alert(Alert.AlertType.ERROR, "تعذر تحميل المستندات: " + ex.getMessage());
+        }
+    }
+
+    private void onAddDocument() {
+        if (currentNationalId == null) return;
+        AddVariableWageDocumentController.open(currentNationalId)
+                .ifPresent(created -> refreshDocuments());
+    }
+
+    private void onDeleteDocument(VariableWageDocumentDto row) {
+        if (row == null) return;
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "حذف مستند \"" + row.documentName() + "\" برقم شطب " + row.documentNumber() + "؟",
+                ButtonType.YES, ButtonType.NO);
+        confirm.showAndWait()
+                .filter(bt -> bt == ButtonType.YES)
+                .ifPresent(bt -> {
+                    try {
+                        ApiClient.delete("/wages/documents/" + row.id());
+                        refreshDocuments();
+                    } catch (Exception ex) {
+                        alert(Alert.AlertType.ERROR, "تعذر الحذف: " + ex.getMessage());
+                    }
+                });
+    }
+
+    private void addDocumentActionButtons() {
+        actionsColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button del = new Button("حذف");
+            { del.setOnAction(e -> onDeleteDocument(getTableRow().getItem())); }
+            @Override protected void updateItem(Void v, boolean empty) {
+                super.updateItem(v, empty);
+                setGraphic(empty ? null : new HBox(del));
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  محرك الأجور
+    // ══════════════════════════════════════════════════════
+
+    private void onCalculate() {
+        if (currentNationalId == null) return;
+        try {
+            var res = ApiClient.get(
+                    "/wages/engine/cycle?nationalId=" + currentNationalId,
+                    WageMonthResultDto[].class);
+            if (!res.isSuccess()) {
+                cycleStatusLabel.setText("تعذر حساب الدورة: " + res.getMessage());
+                return;
+            }
+            lastCycleResult = List.of(res.getData());
+            cycleStatusLabel.setText("");
+            cycleTable.setItems(FXCollections.observableArrayList(lastCycleResult));
+        } catch (Exception ex) {
+            cycleStatusLabel.setText("تعذر حساب الدورة: " + ex.getMessage());
+        }
+    }
+
+    private void addCycleActionButtons() {
+        allowanceDetailsColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("تفاصيل البدلات");
+            { btn.setOnAction(e -> {
+                WageMonthResultDto row = getTableRow().getItem();
+                if (row != null) CycleMonthDetailsController.openAllowances(row);
+            }); }
+            @Override protected void updateItem(Void v, boolean empty) {
+                super.updateItem(v, empty);
+                setGraphic(empty ? null : new HBox(btn));
+            }
+        });
+
+        documentDetailsColumn.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("تفاصيل المستندات");
+            { btn.setOnAction(e -> {
+                WageMonthResultDto row = getTableRow().getItem();
+                if (row != null) CycleMonthDetailsController.openDocuments(row);
+            }); }
+            @Override protected void updateItem(Void v, boolean empty) {
+                super.updateItem(v, empty);
+                WageMonthResultDto row = empty ? null : getTableRow().getItem();
+                boolean hasDocs = row != null && !row.documentNotes().isEmpty();
+                setGraphic(hasDocs ? new HBox(btn) : null);
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  تصدير بطاقة الأجور
+    //  — لو lastCycleResult موجودة تتبعت مع الطلب (POST)
+    //  — لو مش موجودة الباك يحسب تلقائيًا (POST بـ precomputedMonths = null)
+    // ══════════════════════════════════════════════════════
+
+    private void onExport() {
+        exportPdf("/wages/card/export", "wage_card_", exportButton);
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  تصدير نموذج (5) — نفس منطق تصدير البطاقة بالظبط، إند بوينت مختلف
+    // ══════════════════════════════════════════════════════
+
+    private void onExportForm5() {
+        exportPdf("/wages/form5/export", "insurance_form5_", exportForm5Button);
+    }
+
+    /**
+     * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
+     * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
+     * لو موجودة عشان الباك ميحسبش الدورة تاني.
+     */
+    private void exportPdf(String endpoint, String fileNamePrefix, Button triggerButton) {
+        if (currentNationalId == null) return;
+
+        String fromText = fromField.getText() == null ? "" : fromField.getText().trim();
+        String toText   = toField.getText()   == null ? "" : toField.getText().trim();
+
+        if (!fromText.isEmpty() && !isValidDate(fromText)) {
+            setExportMsg("صيغة تاريخ «من» غير صحيحة (yyyy-MM-dd)", "#b00020"); return;
+        }
+        if (!toText.isEmpty() && !isValidDate(toText)) {
+            setExportMsg("صيغة تاريخ «إلى» غير صحيحة (yyyy-MM-dd)", "#b00020"); return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("حفظ الملف");
+        chooser.setInitialFileName(fileNamePrefix + currentNationalId + ".pdf");
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        File dest = chooser.showSaveDialog(triggerButton.getScene().getWindow());
+        if (dest == null) return;
+
+        WageCardExportRequest req = new WageCardExportRequest(
+                currentNationalId,
+                fromText.isEmpty() ? null : LocalDate.parse(fromText, ISO),
+                toText.isEmpty()   ? null : LocalDate.parse(toText,   ISO),
+                lastCycleResult           // null = الباك يحسب من جديد
+        );
+
+        setExportMsg("جاري التصدير...", "#555555");
+        triggerButton.setDisable(true);
+
+        new Thread(() -> {
+            try {
+                byte[] pdf = ApiClient.downloadBinaryPost(endpoint, req, Duration.ofMinutes(3));
+                Files.write(dest.toPath(), pdf);
+                javafx.application.Platform.runLater(() -> {
+                    setExportMsg("تم الحفظ: " + dest.getName(), "#1a7a1a");
+                    triggerButton.setDisable(false);
+                });
+            } catch (Exception ex) {
+                javafx.application.Platform.runLater(() -> {
+                    setExportMsg("فشل التصدير: " + ex.getMessage(), "#b00020");
+                    triggerButton.setDisable(false);
+                });
+            }
+        }, "PdfExport-" + fileNamePrefix).start();
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  Helpers
+    // ══════════════════════════════════════════════════════
+
+    private boolean isValidDate(String s) {
+        try { LocalDate.parse(s, ISO); return true; }
+        catch (DateTimeParseException e) { return false; }
+    }
+
+    private void setExportMsg(String msg, String color) {
+        exportStatusLabel.setStyle("-fx-text-fill: " + color + ";");
+        exportStatusLabel.setText(msg);
+    }
+
+    private void alert(Alert.AlertType type, String msg) {
+        new Alert(type, msg).showAndWait();
     }
 }

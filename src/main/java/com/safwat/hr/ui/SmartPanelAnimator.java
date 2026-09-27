@@ -28,7 +28,7 @@ public class SmartPanelAnimator {
     private final Pane contentPane;        // الـ Panel اللي جواه العناصر
     private final int animationDuration;   // مدة الـ animation بالمللي ثانية
 
-    private double expandedWidth = 200.00;  // العرض عند التمدد
+    private double expandedWidth = 220;  // العرض عند التمدد
     private double collapsedWidth = 60.00;  // العرض عند الانكماش
 
     private boolean isPanelVisible = false; // حالة الـ Panel الحالية
@@ -204,16 +204,14 @@ public class SmartPanelAnimator {
      * event يتم استدعاؤه عند توسيع الـ Panel بالكامل
      */
     private void onPanelExpanded() {
-        System.out.println("✅ الـ Panel تم توسيعه بالكامل");
-        // يمكنك إضافة أي logic إضافي هنا
+
     }
 
     /**
      * event يتم استدعاؤه عند انكماش الـ Panel بالكامل
      */
     private void onPanelCollapsed() {
-        System.out.println("✅ الـ Panel تم انكماشه بالكامل");
-        // يمكنك إضافة أي logic إضافي هنا
+
     }
 
     // ================== PUBLIC METHODS ================== //

@@ -417,4 +417,41 @@ public final class ApiClient {
             }
         });
     }
+    /**
+     * POST يرسل body JSON وينزّل binary response (PDF).
+     * يُستخدم لتصدير بطاقة الأجور مع إرسال precomputedMonths.
+     */
+    public static byte[] downloadBinaryPost(String path, Object body, Duration timeout)
+            throws IOException, InterruptedException {
+        HttpCore c = core();
+
+        HttpRequest request = c.addAuthHeader(
+                HttpRequest.newBuilder()
+                        .uri(java.net.URI.create(c.getBaseUrl() + path))
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/pdf, application/octet-stream, */*")
+                        .timeout(timeout)
+                        .POST(HttpRequest.BodyPublishers.ofString(
+                                c.mapper.writeValueAsString(body),
+                                java.nio.charset.StandardCharsets.UTF_8))
+        ).build();
+
+        HttpResponse<byte[]> response = c.httpClient.send(
+                request, HttpResponse.BodyHandlers.ofByteArray());
+
+        if (response.statusCode() >= 400)
+            throw new IOException("فشل التصدير — HTTP " + response.statusCode());
+
+        byte[] bytes = response.body();
+        if (bytes == null || bytes.length == 0) throw new IOException("الملف فارغ");
+        return bytes;
+    }
+
+    public static CompletableFuture<byte[]> downloadBinaryPostAsync(
+            String path, Object body, Duration timeout) {
+        return CompletableFuture.supplyAsync(() -> {
+            try { return downloadBinaryPost(path, body, timeout); }
+            catch (Exception e) { throw new java.util.concurrent.CompletionException(e); }
+        });
+    }
 }

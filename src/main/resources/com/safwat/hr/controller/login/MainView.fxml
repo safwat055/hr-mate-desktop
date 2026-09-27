@@ -35,6 +35,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
@@ -105,7 +106,7 @@
                 <ScrollPane fitToHeight="true" fitToWidth="true" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
                     <content>
                         <VBox fx:id="rightPanelContent" alignment="TOP_CENTER">
-                            <Label fx:id="lblParts" alignment="CENTER" prefHeight="38" prefWidth="176" text="الاقسام" />
+                            <Label fx:id="lblParts" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="40.0" prefWidth="202.0" styleClass="title" text="الاقسام" />
                             <Accordion>
                                 <panes>
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="استحقاقات">
@@ -141,40 +142,14 @@
                                         </content>
                                     </TitledPane>
 
-                                    <TitledPane alignment="CENTER" animated="false" expanded="false" text="اجور متغيرة">
-                                        <content>
-                                            <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding>
-                                                    <Insets bottom="8" left="5" right="5" top="8" />
-                                                </padding>
-                                                <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة الاجور" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="استمارة التغطية" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجر الاشتراك" />
-                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
-                                            </VBox>
-                                        </content>
-                                    </TitledPane>
-
-                                    <TitledPane alignment="CENTER" animated="false" expanded="false" text="اجازات">
-                                        <content>
-                                            <VBox alignment="TOP_CENTER" spacing="8">
-                                                <padding>
-                                                    <Insets bottom="8" left="5" right="5" top="8" />
-                                                </padding>
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجل موظف" />
-                                    <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاجازات" />
-                                            </VBox>
-                                        </content>
-                                    </TitledPane>
-
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="موارد بشرية">
                                         <content>
                                             <VBox alignment="TOP_CENTER" spacing="8">
                                                 <padding>
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
+                                    <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجور متغيرة" />
+                                    <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجازات" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
                                     <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />
@@ -185,6 +160,16 @@
                                     </TitledPane>
                                 </panes>
                             </Accordion>
+                     <VBox prefHeight="737.0" prefWidth="218.0">
+                        <children>
+                           <Region prefHeight="744.0" prefWidth="218.0" />
+                           <ImageView fitHeight="96.0" fitWidth="213.0" pickOnBounds="true" preserveRatio="true">
+                              <image>
+                                 <Image url="@../../icons/sign.png" />
+                              </image>
+                           </ImageView>
+                        </children>
+                     </VBox>
                         </VBox>
                     </content>
                 </ScrollPane>
@@ -204,7 +189,7 @@
                                 </left>
                                 <center>
                                     <StackPane fx:id="mainImageCenter" BorderPane.alignment="CENTER">
-                                        <ImageView fitHeight="528.0" fitWidth="979.0" pickOnBounds="true" preserveRatio="true">
+                                        <ImageView fitHeight="528.0" fitWidth="1089.0" pickOnBounds="true" preserveRatio="true">
                                             <image>
                                                 <Image url="@dashboard2.png" />
                                             </image>

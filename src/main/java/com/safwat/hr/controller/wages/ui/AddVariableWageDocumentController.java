@@ -80,8 +80,9 @@ public class AddVariableWageDocumentController {
                 notesArea.getText()
         );
 
+
         try {
-            var response = ApiClient.post("/variable-wage-documents", req, VariableWageDocumentDto.class);
+            var response = ApiClient.post("/wages/documents", req, VariableWageDocumentDto.class);
             if (!response.isSuccess()) {
 
                 new Alert(Alert.AlertType.ERROR, "تعذر حفظ المستند: " + response.getMessage()).showAndWait();
