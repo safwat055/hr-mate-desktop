@@ -26,6 +26,7 @@ public class AppLogBus {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static AppLogBus instance;
 
+
     // قائمة كل السجلات (للعرض عند التسجيل الجديد)
     private final List<String> allLogs = new ArrayList<>();
 

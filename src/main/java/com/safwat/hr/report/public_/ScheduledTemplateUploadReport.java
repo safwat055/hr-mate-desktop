@@ -1,0 +1,83 @@
+package com.safwat.hr.report.public_;
+
+import com.safwat.hr.controller.report.PayrollReportController;
+import com.safwat.hr.report.core.PayrollReport;
+import com.safwat.hr.report.core.ReportContext;
+import com.safwat.hr.report.core.ValidationException;
+import com.safwat.hr.report.core.strategies.ReportStrategy;
+import com.safwat.hr.report.core.ui.UiConfiguration;
+import com.safwat.hr.report.core.ui.UiField;
+import com.safwat.hr.shared.PayrollRequest;
+
+@PayrollReport(
+        code = "SCHEDULED_TEMPLATE_UPLOAD",
+        displayName =  "تحميل مجدول للنماذج",
+        category = "main_direct",
+        mainReport = "main_direct"
+)
+public class ScheduledTemplateUploadReport implements ReportStrategy {
+    @Override
+    public String getCode() {
+        return "SCHEDULED_TEMPLATE_UPLOAD";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "تحميل مجدول للنماذج";
+    }
+
+    @Override
+    public String getCategory() {
+        return "main_direct";
+    }
+
+    @Override
+    public String getMainReport() {
+        return "main_direct";
+    }
+
+    @Override
+    public UiConfiguration getUiConfig() {
+        return UiConfiguration.builder()
+                .requiredField(UiField.H_FILES)
+                .visibleField(UiField.H_FILES)
+                .build();
+
+
+    }
+
+    @Override
+    public void onApply(PayrollReportController controller) {
+        ReportStrategy.super.onApply(controller);
+    }
+
+
+    @Override
+    public PayrollRequest buildRequest(ReportContext context) {
+        return PayrollRequest.builder()
+                .reportName(context.getReportName())
+                .report(getCode())
+                .build();
+    }
+
+    @Override
+    public void validate(ReportContext context) {
+        if (context.getFiles() == null || context.getFiles().isEmpty()) {
+            throw new ValidationException("يجب اختيار ملف واحد على الأقل!");
+        }
+
+        // التحقق من أن الملفات موجودة فعلاً على الديسك
+        for (java.nio.file.Path file : context.getFiles()) {
+            if (!java.nio.file.Files.exists(file)) {
+                throw new ValidationException(
+                        "الملف غير موجود: " + file.getFileName());
+            }
+        }
+    }
+
+    @Override
+    public boolean requiresFiles() {
+        return true;
+    }
+
+}

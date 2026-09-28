@@ -150,7 +150,7 @@ public class EmployeeWagesScreenController {
         // ── التصدير ──
         exportButton.setOnAction(e -> onExport());
         exportButton.setDisable(true);
-       // exportForm5Button.setOnAction(e ->));
+       exportForm5Button.setOnAction(e ->onExportForm5());
         exportForm5Button.setDisable(true);
     }
 

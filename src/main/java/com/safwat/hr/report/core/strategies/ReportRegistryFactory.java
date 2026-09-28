@@ -43,6 +43,7 @@ import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordManagement;
 import com.safwat.hr.report.payroll.sub.records.short_.ShortRecordPayGroup;
 import com.safwat.hr.report.payroll.sub.upload.*;
 import com.safwat.hr.report.public_.FullBackupReport;
+import com.safwat.hr.report.public_.ScheduledTemplateUploadReport;
 import com.safwat.hr.report.public_.StartTransferData;
 
 /**
@@ -82,7 +83,7 @@ public class ReportRegistryFactory {
         registry.register(new UploadPayrollReport());
         registry.register(new SupplementaryIncentiveReport());
         registry.register(new FullBackupReport());
-
+        registry.register(new ScheduledTemplateUploadReport());
         // ══════════════════════════════════════════
         //  Direct — lazy
         // ══════════════════════════════════════════
