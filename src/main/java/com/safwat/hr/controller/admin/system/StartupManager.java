@@ -15,7 +15,7 @@ public class StartupManager {
     /**
      * إضافة التطبيق للتشغيل التلقائي عند تسجيل الدخول
      *
-     * @param appPath المسار الكامل لتطبيق الواجهة (Archive_Rest.exe)
+     * @param appPath المسار الكامل لتطبيق الواجهة (HR_MATE.exe)
      * @return true إذا نجحت العملية
      */
     public static boolean addToStartup(String appPath) {
@@ -32,7 +32,7 @@ public class StartupManager {
             }
 
             // ✅ 1. إنشاء ملف .bat بجوار التطبيق
-            String batPath = appFile.getParent() + File.separator + "Archive_Rest.bat";
+            String batPath = appFile.getParent() + File.separator + "HR_MATE.bat";
             String batContent = createBatContent(appPath);
 
             try (FileWriter fw = new FileWriter(batPath)) {
@@ -111,8 +111,8 @@ public class StartupManager {
                     
                     :START_APP
                     cd /d "%~dp0"
-                    echo Starting ArchiveManager...
-                    start "" "Archive_Rest.exe"
+                    echo Starting HR_MATE...
+                    start "" "HR_MATE.exe"
                     """;
         } else {
             // ✅ Linux/Mac
@@ -140,7 +140,7 @@ public class StartupManager {
                     
                     cd "$(dirname "$0")"
                     echo "Starting ArchiveManager..."
-                    ./Archive_Rest
+                    ./HR_MATE
                     """;
         }
     }
