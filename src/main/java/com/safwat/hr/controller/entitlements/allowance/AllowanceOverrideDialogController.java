@@ -1,5 +1,6 @@
 package com.safwat.hr.controller.entitlements.allowance;
 
+import com.safwat.hr.ui.TextFieldSetupHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -19,7 +20,10 @@ import java.util.ResourceBundle;
 /**
  * Controller لـ Dialog تعديل فترات البدل اليدوية.
  *
- * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport}.
+ * <p>نداءات الشبكة كلها عن طريق {@link FxApiSupport}.</p>
+ *
+ * <p><b>ملاحظة:</b> الحقول النصية للتواريخ مُعدّة عبر
+ * {@link TextFieldSetupHelper} — نفس نمط {@code AllowanceFxController}.</p>
  */
 public class AllowanceOverrideDialogController implements Initializable {
 
@@ -45,15 +49,15 @@ public class AllowanceOverrideDialogController implements Initializable {
     @FXML
     private TableColumn<OverrideEntry, Void> col_entry_actions;
 
-    // ── فورم الفترة ──────────────────────────────────────────────
+    // ── فورم الفترة — TextFields بدل DatePicker ─────────────────
     @FXML
     private VBox pane_entry_form;
     @FXML
     private Label lbl_form_title;
     @FXML
-    private DatePicker date_entry_from;
+    private TextField txt_entry_from;      // ⭐ كان DatePicker
     @FXML
-    private DatePicker date_entry_to;
+    private TextField txt_entry_to;        // ⭐ كان DatePicker
     @FXML
     private TextField txt_entry_value;
     @FXML
@@ -85,6 +89,7 @@ public class AllowanceOverrideDialogController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        setupDateFields();   // ⭐ جديد
         setupTable();
         btn_add_entry.setOnAction(e -> showForm(null));
         btn_save_entry.setOnAction(e -> handleSaveEntry());
@@ -92,6 +97,14 @@ public class AllowanceOverrideDialogController implements Initializable {
         btn_save_all.setOnAction(e -> handleSaveAll());
         btn_close.setOnAction(e -> closeDialog());
         btn_revert_auto.setOnAction(e -> handleRevertAuto());
+    }
+
+    /**
+     * ⭐ يهيّئ حقول التواريخ النصية بنفس نمط {@code AllowanceFxController}.
+     */
+    private void setupDateFields() {
+        TextFieldSetupHelper.setupDateFields(txt_entry_from);
+        TextFieldSetupHelper.setupDateFields(txt_entry_to);
     }
 
     public void init(AllowanceResultDto.AllowanceLineDto line, String nationalId, Runnable onSaved) {
@@ -114,7 +127,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Setup
+    //  Setup Table
     // ════════════════════════════════════════════════════════════
 
     private void setupTable() {
@@ -188,15 +201,17 @@ public class AllowanceOverrideDialogController implements Initializable {
         editingEntry = entry;
         lbl_form_title.setText(entry == null ? "إضافة فترة جديدة" : "تعديل فترة");
         lbl_form_error.setVisible(false);
+
         if (entry != null) {
-            date_entry_from.setValue(entry.from());
-            date_entry_to.setValue(entry.to());
+            txt_entry_from.setText(entry.from() != null ? entry.from().format(DATE_FMT) : "");
+            txt_entry_to.setText(entry.to() != null ? entry.to().format(DATE_FMT) : "");
             txt_entry_value.setText(entry.value() != null ? entry.value().toPlainString() : "");
         } else {
-            date_entry_from.setValue(null);
-            date_entry_to.setValue(null);
+            txt_entry_from.clear();
+            txt_entry_to.clear();
             txt_entry_value.clear();
         }
+
         pane_entry_form.setVisible(true);
         pane_entry_form.setManaged(true);
     }
@@ -208,18 +223,37 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     private void handleSaveEntry() {
-        LocalDate from = date_entry_from.getValue();
-        LocalDate to = date_entry_to.getValue();
-        String valueStr = txt_entry_value.getText().trim();
+        // ⭐ نقرأ التواريخ من الحقول النصية عبر TextFieldSetupHelper
+        LocalDate from = TextFieldSetupHelper.parseDateInput(txt_entry_from.getText());
+        LocalDate to = TextFieldSetupHelper.parseDateInput(txt_entry_to.getText());
 
-        if (from == null) {
+        String valueStr = txt_entry_value.getText().trim();
+        String fromText = txt_entry_from.getText() != null ? txt_entry_from.getText().trim() : "";
+        String toText = txt_entry_to.getText() != null ? txt_entry_to.getText().trim() : "";
+
+        // ── تحقق من from ──
+        if (fromText.isEmpty()) {
             showFormError("تاريخ البداية مطلوب");
             return;
         }
+        if (from == null) {
+            showFormError("صيغة تاريخ البداية غير صحيحة (yyyy-MM-dd)");
+            return;
+        }
+
+        // ── تحقق من to (اختياري) ──
+        if (!toText.isEmpty() && to == null) {
+            showFormError("صيغة تاريخ النهاية غير صحيحة (yyyy-MM-dd)");
+            return;
+        }
+
+        // ── تحقق من القيمة ──
         if (valueStr.isBlank()) {
             showFormError("القيمة مطلوبة");
             return;
         }
+
+        // ── to بعد from ──
         if (to != null && !to.isAfter(from)) {
             showFormError("تاريخ النهاية يجب أن يكون بعد تاريخ البداية");
             return;
@@ -238,6 +272,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         }
 
         OverrideEntry newEntry = new OverrideEntry(from, to, value);
+
         if (hasOverlap(newEntry, editingEntry)) {
             showFormError("هذه الفترة تتداخل مع فترة موجودة");
             return;
@@ -254,7 +289,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     /**
-     * 🆕 بنستخدم reference equality بدل equals عشان نتجنب مشكلة
+     * بنستخدم reference equality بدل equals عشان نتجنب مشكلة
      * الفترات المتطابقة تماماً.
      */
     private boolean hasOverlap(OverrideEntry newEntry, OverrideEntry excluding) {
@@ -268,7 +303,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Save All — 🆕 path محدّث
+    //  Save All
     // ════════════════════════════════════════════════════════════
 
     private void handleSaveAll() {
@@ -285,7 +320,7 @@ public class AllowanceOverrideDialogController implements Initializable {
         btn_save_all.setDisable(true);
 
         FxApiSupport.put(
-                "/entitlements/allowances/employee/" + nationalId + "/override",   // 🆕
+                "/entitlements/allowances/employee/" + nationalId + "/override",
                 request,
                 Boolean.class,
                 saved -> {
@@ -301,7 +336,7 @@ public class AllowanceOverrideDialogController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Revert Auto — 🆕 path محدّث
+    //  Revert Auto
     // ════════════════════════════════════════════════════════════
 
     private void handleRevertAuto() {
@@ -314,7 +349,7 @@ public class AllowanceOverrideDialogController implements Initializable {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
                         "/entitlements/allowances/employee/" + nationalId
-                                + "/override/" + currentLine.code(),   // 🆕
+                                + "/override/" + currentLine.code(),
                         () -> {
                             if (onSaved != null) onSaved.run();
                             closeDialog();

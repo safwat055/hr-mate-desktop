@@ -9,6 +9,9 @@
       - جدول الفترات اليدوية (from / to / value)
       - إضافة / تعديل / حذف فترة
       - زر "إرجاع لأوتوماتيك" لو كان يدوي
+
+    ملاحظة: حقول التواريخ نصية (TextField) وليست DatePicker
+             — تُهيَّأ عبر TextFieldSetupHelper.
 -->
 
 <?import javafx.geometry.*?>
@@ -111,20 +114,22 @@
 
         <HBox spacing="18" alignment="CENTER_RIGHT">
 
-            <!-- من تاريخ -->
+            <!-- من تاريخ — TextField -->
             <VBox spacing="6">
                 <Label styleClass="bold fs-12" text="من تاريخ *"/>
-                <DatePicker fx:id="date_entry_from"
-                            prefHeight="36" prefWidth="170"
-                            promptText="yyyy-MM-dd"/>
+                <TextField fx:id="txt_entry_from"
+                           alignment="CENTER"
+                           prefHeight="36" prefWidth="170"
+                           promptText="yyyy-MM-dd"/>
             </VBox>
 
-            <!-- إلى تاريخ -->
+            <!-- إلى تاريخ — TextField -->
             <VBox spacing="6">
                 <Label styleClass="bold fs-12" text="إلى تاريخ (فارغ = مفتوح)"/>
-                <DatePicker fx:id="date_entry_to"
-                            prefHeight="36" prefWidth="170"
-                            promptText="yyyy-MM-dd"/>
+                <TextField fx:id="txt_entry_to"
+                           alignment="CENTER"
+                           prefHeight="36" prefWidth="170"
+                           promptText="yyyy-MM-dd"/>
             </VBox>
 
             <!-- القيمة -->

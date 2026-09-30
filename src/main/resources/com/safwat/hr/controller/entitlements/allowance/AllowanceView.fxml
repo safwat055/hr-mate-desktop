@@ -59,7 +59,6 @@
                 <Button fx:id="btn_statutory" prefHeight="38" prefWidth="160" styleClass="btn-purple" text="⚙ تامينات وضرايب" />
 
                 <Button fx:id="btn_manageDefinitions" prefHeight="38" prefWidth="150" styleClass="btn-purple" text="⚙ قواعد البدلات" />
-                <Button fx:id="btn_supplementaryPdf" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" text="تكميلي" />
             <Button fx:id="btn_manageSectors" mnemonicParsing="false" prefHeight="33.0" prefWidth="77.0" text="القطاعات" />
 
                 <Button fx:id="btn_reset" prefHeight="38" prefWidth="130" styleClass="btn-danger" text="🔄 إعادة الضبط" visible="false" />
@@ -143,17 +142,15 @@
                                     <!-- ═══════════════════════════════════════════════════════
      جداول الحالة الاجتماعية والوظائف — HBox واحد
      ═══════════════════════════════════════════════════════ -->
-                                    <HBox fx:id="historyRow" spacing="0" managed="false" visible="false">
-                                        <VBox fx:id="socialStatusContainer"
-                                              HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
-                                            <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                                    <HBox fx:id="historyRow" managed="false" spacing="0" visible="false">
+                                        <VBox fx:id="socialStatusContainer" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                                            <padding><Insets bottom="10" left="16" right="16" top="10" /></padding>
                                         </VBox>
 
-                                        <Separator orientation="VERTICAL"/>
+                                        <Separator orientation="VERTICAL" />
 
-                                        <VBox fx:id="jobTitleContainer"
-                                              HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
-                                            <padding><Insets bottom="10" left="16" right="16" top="10"/></padding>
+                                        <VBox fx:id="jobTitleContainer" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+                                            <padding><Insets bottom="10" left="16" right="16" top="10" /></padding>
                                         </VBox>
                                     </HBox>
                                     <Label styleClass="text-muted fs-12" />
@@ -182,6 +179,7 @@
                                 <TextField fx:id="txt_calculationDate" prefHeight="38" prefWidth="150" promptText="2024-07-01" />
 
                                 <Button fx:id="btn_recalculate" prefHeight="38" prefWidth="110" styleClass="btn-purple" text="⚙ احتساب" />
+                        <Button fx:id="btn_exportPDF" layoutX="284.0" layoutY="24.0" prefHeight="28.0" prefWidth="57.0" styleClass="btn-danger" text="PDF" />
 
                                 <Separator orientation="VERTICAL" />
 
@@ -193,16 +191,27 @@
                                 <Button fx:id="btn_addAllowance" prefHeight="38" prefWidth="95" styleClass="btn-success" text="+ إضافة" />
 
                                 <Region HBox.hgrow="ALWAYS" />
-
-                                <Label styleClass="bold text-navy fs-14" text="الصافي:" />
-                                <Label fx:id="lbl_total" styleClass="bold fs-14 text-success" text="0.00 ج" />
                             </HBox>
+                     <HBox alignment="CENTER_RIGHT" layoutX="28.0" layoutY="28.0" prefHeight="26.0" prefWidth="1193.0" spacing="10.0" styleClass="card">
+                        <padding>
+                           <Insets bottom="5.0" left="16.0" right="16.0" top="5.0" />
+                        </padding>
+                        <children>
+                           <Separator orientation="VERTICAL" />
+                           <Label styleClass="bold text-navy fs-14" text="الصافي:" />
+                           <Label fx:id="lbl_total" styleClass="bold fs-14 text-success" text="0.00 ج" />
+                           <Separator layoutX="26.0" layoutY="15.0" orientation="VERTICAL" prefHeight="18.0" prefWidth="1.0" />
+                           <Region HBox.hgrow="ALWAYS" />
+                           <Button fx:id="btn_openWage" mnemonicParsing="false" prefHeight="26.0" prefWidth="83.0" styleClass="btn-secondary" text="اجور متغيرة" />
+                               <Button fx:id="btn_supplementaryPdf" mnemonicParsing="false" prefHeight="33.0" prefWidth="105.0" styleClass="btn-secondary" text="تكميلي" />
+                        </children>
+                     </HBox>
                             <!-- جدول البدلات الرئيسي -->
                             <TableView fx:id="table_allowances" nodeOrientation="RIGHT_TO_LEFT" prefHeight="440" styleClass="bold" VBox.vgrow="ALWAYS">
                                 <columns>
                                     <TableColumn fx:id="col_nameAr" prefWidth="230" text="اسم البدل" />
                                     <TableColumn fx:id="col_elementType" prefWidth="110" text="النوع" />
-                                    <TableColumn fx:id="col_value" prefWidth="140" text="القيمة (ج)" />
+                                    <TableColumn fx:id="col_value" prefWidth="140" text="القيمة" />
                                     <TableColumn fx:id="col_effectiveFrom" prefWidth="120" text="من تاريخ" />
                                     <TableColumn fx:id="col_source" prefWidth="110" text="المصدر" />
                                     <TableColumn fx:id="col_actions" prefWidth="170" text="إجراءات" />

@@ -5,19 +5,16 @@ import com.safwat.hr.controller.wages.dto.EmployeeProfileDto;
 import com.safwat.hr.controller.wages.dto.VariableWageDocumentDto;
 import com.safwat.hr.controller.wages.dto.WageCardExportRequest;
 import com.safwat.hr.controller.wages.dto.WageMonthResultDto;
+import com.safwat.hr.network.DownloadWithNotification;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.icons.Icons;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.stage.FileChooser;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -316,7 +313,8 @@ public class EmployeeWagesScreenController {
     // ══════════════════════════════════════════════════════
 
     private void onExport() {
-        exportPdf("/wages/card/export", "wage_card_", exportButton);
+        exportPdf("/wages/card/export", "wage_card_",
+                exportButton, "بطاقة الأجور");
     }
 
     // ══════════════════════════════════════════════════════
@@ -324,7 +322,8 @@ public class EmployeeWagesScreenController {
     // ══════════════════════════════════════════════════════
 
     private void onExportForm5() {
-        exportPdf("/wages/form5/export", "insurance_form5_", exportForm5Button);
+        exportPdf("/wages/form5/export", "insurance_form5_",
+                exportForm5Button, "نموذج (5) - التأمينات");
     }
 
     /**
@@ -332,27 +331,36 @@ public class EmployeeWagesScreenController {
      * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
      * لو موجودة عشان الباك ميحسبش الدورة تاني.
      */
-    private void exportPdf(String endpoint, String fileNamePrefix, Button triggerButton) {
+    /**
+     * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
+     * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
+     * لو موجودة عشان الباك ميحسبش الدورة تاني.
+     *
+     * <p><b>تنزيل + إشعار:</b> الملف يُحفظ في {@code temp_downloads/}
+     * بدون فتح نافذة اختيار — والمستخدم يستلم إشعار فيه رابط الملف.</p>
+     */
+    private void exportPdf(String endpoint,
+                           String fileNamePrefix,
+                           Button triggerButton,
+                           String notificationTitle) {
+
         if (currentNationalId == null) return;
 
+        // ── 1. قراءة التواريخ ──
         String fromText = fromField.getText() == null ? "" : fromField.getText().trim();
         String toText   = toField.getText()   == null ? "" : toField.getText().trim();
 
+        // ── 2. تحقق من الصيغة ──
         if (!fromText.isEmpty() && !isValidDate(fromText)) {
-            setExportMsg("صيغة تاريخ «من» غير صحيحة (yyyy-MM-dd)", "#b00020"); return;
+            setExportMsg("صيغة تاريخ «من» غير صحيحة (yyyy-MM-dd)", "#b00020");
+            return;
         }
         if (!toText.isEmpty() && !isValidDate(toText)) {
-            setExportMsg("صيغة تاريخ «إلى» غير صحيحة (yyyy-MM-dd)", "#b00020"); return;
+            setExportMsg("صيغة تاريخ «إلى» غير صحيحة (yyyy-MM-dd)", "#b00020");
+            return;
         }
 
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("حفظ الملف");
-        chooser.setInitialFileName(fileNamePrefix + currentNationalId + ".pdf");
-        chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-        File dest = chooser.showSaveDialog(triggerButton.getScene().getWindow());
-        if (dest == null) return;
-
+        // ── 3. بناء الطلب ──
         WageCardExportRequest req = new WageCardExportRequest(
                 currentNationalId,
                 fromText.isEmpty() ? null : LocalDate.parse(fromText, ISO),
@@ -360,24 +368,40 @@ public class EmployeeWagesScreenController {
                 lastCycleResult           // null = الباك يحسب من جديد
         );
 
+        // ── 4. اسم الموظف للعرض في الإشعار ──
+        String empName = employeeNameLabel.getText() != null
+                ? employeeNameLabel.getText()
+                : currentNationalId;
+
+        // ── 5. فترة التصدير (للإشعار) ──
+        String period = (!fromText.isEmpty() || !toText.isEmpty())
+                ? " (" + (fromText.isEmpty() ? "..." : fromText)
+                + " → " + (toText.isEmpty() ? "..." : toText) + ")"
+                : "";
+
+        // ── 6. حالة الواجهة ──
         setExportMsg("جاري التصدير...", "#555555");
         triggerButton.setDisable(true);
 
-        new Thread(() -> {
-            try {
-                byte[] pdf = ApiClient.downloadBinaryPost(endpoint, req, Duration.ofMinutes(3));
-                Files.write(dest.toPath(), pdf);
-                javafx.application.Platform.runLater(() -> {
-                    setExportMsg("تم الحفظ: " + dest.getName(), "#1a7a1a");
+        // ── 7. التنزيل + الإشعار ──
+        DownloadWithNotification.downloadPdfToTempAndNotifyPost(
+                endpoint,
+                req,
+                fileNamePrefix + currentNationalId,
+                empName + period,
+                notificationTitle,
+                () -> {
                     triggerButton.setDisable(false);
-                });
-            } catch (Exception ex) {
-                javafx.application.Platform.runLater(() -> {
-                    setExportMsg("فشل التصدير: " + ex.getMessage(), "#b00020");
-                    triggerButton.setDisable(false);
-                });
-            }
-        }, "PdfExport-" + fileNamePrefix).start();
+                    setExportMsg("تم حفظ التقرير — راجع الإشعارات", "#1a7a1a");
+                }
+        );
+    }
+    public void setInitialNationalId(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) return;
+        if (searchField != null) {
+            searchField.setText(nationalId.trim());
+        }
+        onSearch();
     }
 
     // ══════════════════════════════════════════════════════

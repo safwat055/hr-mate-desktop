@@ -126,7 +126,7 @@ public class PayrollChangeService {
                 HRNotification.builder()
                         .type(HRNotification.NotificationType.SYSTEM)
                         .priority(HRNotification.Priority.HIGH)
-                        .title("تقرير مراجعه")
+                        .title("بطاقة اجر الاشتراك")
                         .message(name)
                         .file(targetPath.toString())
                         .sender("system")

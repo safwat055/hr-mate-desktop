@@ -10,6 +10,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -51,6 +52,8 @@ public class HR_Client extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         this.primaryStage = stage;
+        stage.initStyle(StageStyle.UNDECORATED);
+
         stage.getIcons().add(
                 new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/safwat/hr/icons/logo.png")))
         );
