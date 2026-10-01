@@ -1,16 +1,15 @@
 package com.safwat.hr.controller.wages.ui;
 
-import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.controller.wages.dto.EmployeeProfileDto;
 import com.safwat.hr.controller.wages.dto.VariableWageDocumentDto;
 import com.safwat.hr.controller.wages.dto.WageCardExportRequest;
 import com.safwat.hr.controller.wages.dto.WageMonthResultDto;
+import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.DownloadWithNotification;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.icons.Icons;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -49,44 +48,76 @@ public class EmployeeWagesScreenController {
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
     // ══ بيانات الموظف ══
-    @FXML private TextField searchField;
-    @FXML private Button    searchButton, clearButton;
-    @FXML private Label     searchStatusLabel;
-    @FXML private Label     employeeNameLabel;
-    @FXML private Label     employeeNumberLabel;
-    @FXML private Label     employeeNationalIdLabel;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private Button searchButton, clearButton;
+    @FXML
+    private Label searchStatusLabel;
+    @FXML
+    private Label employeeNameLabel;
+    @FXML
+    private Label employeeNumberLabel;
+    @FXML
+    private Label employeeNationalIdLabel;
 
     // ══ تبويب المستندات ══
-    @FXML private Button                                    addButton;
-    @FXML private TableView<VariableWageDocumentDto>        documentsTable;
-    @FXML private TableColumn<VariableWageDocumentDto, String> monthColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, String> nameColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, String> numberColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, String> totalColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, String> pensionColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, String> taxColumn;
-    @FXML private TableColumn<VariableWageDocumentDto, Void>   actionsColumn;
+    @FXML
+    private Button addButton;
+    @FXML
+    private TableView<VariableWageDocumentDto> documentsTable;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> monthColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> nameColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> numberColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> totalColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> pensionColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, String> taxColumn;
+    @FXML
+    private TableColumn<VariableWageDocumentDto, Void> actionsColumn;
 
     // ══ تبويب المحرك ══
-    @FXML private Button                                    calculateButton;
-    @FXML private Label                                     cycleStatusLabel;
-    @FXML private TableView<WageMonthResultDto>             cycleTable;
-    @FXML private TableColumn<WageMonthResultDto, String>   cycleMonthColumn;
-    @FXML private TableColumn<WageMonthResultDto, String>   rawTotalColumn;
-    @FXML private TableColumn<WageMonthResultDto, String>   ceilingColumn;
-    @FXML private TableColumn<WageMonthResultDto, String>   pensionableColumn;
-    @FXML private TableColumn<WageMonthResultDto, String>   ceilingAppliedColumn;
-    @FXML private TableColumn<WageMonthResultDto, String>   sourceColumn;
-    @FXML private TableColumn<WageMonthResultDto, Void>     allowanceDetailsColumn;
-    @FXML private TableColumn<WageMonthResultDto, Void>     documentDetailsColumn;
+    @FXML
+    private Button calculateButton;
+    @FXML
+    private Label cycleStatusLabel;
+    @FXML
+    private TableView<WageMonthResultDto> cycleTable;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> cycleMonthColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> rawTotalColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> ceilingColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> pensionableColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> ceilingAppliedColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, String> sourceColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, Void> allowanceDetailsColumn;
+    @FXML
+    private TableColumn<WageMonthResultDto, Void> documentDetailsColumn;
 
     // ══ شريط التصدير ══
-    @FXML private TextField fromField;
-    @FXML private TextField toField;
-    @FXML private Button    exportButton;
-    @FXML private Button    exportForm5Button;
-    @FXML private Label     exportStatusLabel;
-
+    @FXML
+    private TextField fromField;
+    @FXML
+    private TextField toField;
+    @FXML
+    private Button exportButton;
+    @FXML
+    private Button exportForm5Button;
+    @FXML
+    private Label exportStatusLabel;
+    @FXML
+    private Button exportBreakdownButton;
     // ── State ──
     private String currentNationalId;
 
@@ -105,9 +136,13 @@ public class EmployeeWagesScreenController {
         // ── البحث ──
         searchButton.setOnAction(e -> onSearch());
         searchField.setOnAction(e -> onSearch());
-        clearButton.setOnAction(_->{clearEmployee("");});
+        clearButton.setOnAction(_ -> {
+            clearEmployee("");
+        });
         Icons.getInstance().getPDFImage(exportButton);
         Icons.getInstance().getPDFImage(exportForm5Button);
+        Icons.getInstance().getPDFImage(exportBreakdownButton);
+
         TextFieldSetupHelper.setupDateFields(fromField, toField);
         // ── جدول المستندات ──
         monthColumn.setCellValueFactory(c ->
@@ -147,8 +182,10 @@ public class EmployeeWagesScreenController {
         // ── التصدير ──
         exportButton.setOnAction(e -> onExport());
         exportButton.setDisable(true);
-       exportForm5Button.setOnAction(e ->onExportForm5());
+        exportForm5Button.setOnAction(e -> onExportForm5());
         exportForm5Button.setDisable(true);
+        exportBreakdownButton.setOnAction(e -> onExportBreakdown());
+        exportBreakdownButton.setDisable(true);
     }
 
     // ══════════════════════════════════════════════════════
@@ -163,7 +200,10 @@ public class EmployeeWagesScreenController {
         }
         try {
             var res = ApiClient.get("/wages/employees/search?query=" + q, EmployeeProfileDto.class);
-            if (!res.isSuccess()) { clearEmployee("مفيش موظف بهذا الرقم"); return; }
+            if (!res.isSuccess()) {
+                clearEmployee("مفيش موظف بهذا الرقم");
+                return;
+            }
             searchStatusLabel.setText("");
             bindEmployee(res.getData());
         } catch (Exception ex) {
@@ -173,13 +213,14 @@ public class EmployeeWagesScreenController {
 
     private void bindEmployee(EmployeeProfileDto p) {
         currentNationalId = p.nationalId();
-        lastCycleResult   = null;   // نتيجة قديمة لموظف سابق — تُصفَّر
+        lastCycleResult = null;   // نتيجة قديمة لموظف سابق — تُصفَّر
         employeeNameLabel.setText(p.fullName());
         employeeNumberLabel.setText(p.employeeNumber());
         employeeNationalIdLabel.setText(p.nationalId());
         addButton.setDisable(false);
         calculateButton.setDisable(false);
         exportButton.setDisable(false);
+        exportBreakdownButton.setDisable(false);
         exportForm5Button.setDisable(false);
         cycleStatusLabel.setText("");
         exportStatusLabel.setText("");
@@ -189,7 +230,7 @@ public class EmployeeWagesScreenController {
 
     private void clearEmployee(String msg) {
         currentNationalId = null;
-        lastCycleResult   = null;
+        lastCycleResult = null;
         searchStatusLabel.setText(msg);
         employeeNameLabel.setText("—");
         employeeNumberLabel.setText("—");
@@ -198,6 +239,7 @@ public class EmployeeWagesScreenController {
         calculateButton.setDisable(true);
         exportButton.setDisable(true);
         exportForm5Button.setDisable(true);
+        exportBreakdownButton.setDisable(true);
         documentsTable.setItems(FXCollections.observableArrayList());
         cycleTable.setItems(FXCollections.observableArrayList());
     }
@@ -248,8 +290,13 @@ public class EmployeeWagesScreenController {
     private void addDocumentActionButtons() {
         actionsColumn.setCellFactory(col -> new TableCell<>() {
             private final Button del = new Button("حذف");
-            { del.setOnAction(e -> onDeleteDocument(getTableRow().getItem())); }
-            @Override protected void updateItem(Void v, boolean empty) {
+
+            {
+                del.setOnAction(e -> onDeleteDocument(getTableRow().getItem()));
+            }
+
+            @Override
+            protected void updateItem(Void v, boolean empty) {
                 super.updateItem(v, empty);
                 setGraphic(empty ? null : new HBox(del));
             }
@@ -281,11 +328,16 @@ public class EmployeeWagesScreenController {
     private void addCycleActionButtons() {
         allowanceDetailsColumn.setCellFactory(col -> new TableCell<>() {
             private final Button btn = new Button("تفاصيل البدلات");
-            { btn.setOnAction(e -> {
-                WageMonthResultDto row = getTableRow().getItem();
-                if (row != null) CycleMonthDetailsController.openAllowances(row);
-            }); }
-            @Override protected void updateItem(Void v, boolean empty) {
+
+            {
+                btn.setOnAction(e -> {
+                    WageMonthResultDto row = getTableRow().getItem();
+                    if (row != null) CycleMonthDetailsController.openAllowances(row);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void v, boolean empty) {
                 super.updateItem(v, empty);
                 setGraphic(empty ? null : new HBox(btn));
             }
@@ -293,11 +345,16 @@ public class EmployeeWagesScreenController {
 
         documentDetailsColumn.setCellFactory(col -> new TableCell<>() {
             private final Button btn = new Button("تفاصيل المستندات");
-            { btn.setOnAction(e -> {
-                WageMonthResultDto row = getTableRow().getItem();
-                if (row != null) CycleMonthDetailsController.openDocuments(row);
-            }); }
-            @Override protected void updateItem(Void v, boolean empty) {
+
+            {
+                btn.setOnAction(e -> {
+                    WageMonthResultDto row = getTableRow().getItem();
+                    if (row != null) CycleMonthDetailsController.openDocuments(row);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void v, boolean empty) {
                 super.updateItem(v, empty);
                 WageMonthResultDto row = empty ? null : getTableRow().getItem();
                 boolean hasDocs = row != null && !row.documentNotes().isEmpty();
@@ -325,7 +382,15 @@ public class EmployeeWagesScreenController {
         exportPdf("/wages/form5/export", "insurance_form5_",
                 exportForm5Button, "نموذج (5) - التأمينات");
     }
+// ══════════════════════════════════════════════════════
+//  تصدير بنود الأجر المتغير شهر بشهر (جدول منفصل لكل شهر)
+//  — نفس منطق التصدير المشترك، إند بوينت مختلف
+// ══════════════════════════════════════════════════════
 
+    private void onExportBreakdown() {
+        exportPdf("/wages/breakdown/export", "wage_breakdown_",
+                exportBreakdownButton, "بنود الأجر المتغير");
+    }
     /**
      * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
      * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
@@ -348,7 +413,7 @@ public class EmployeeWagesScreenController {
 
         // ── 1. قراءة التواريخ ──
         String fromText = fromField.getText() == null ? "" : fromField.getText().trim();
-        String toText   = toField.getText()   == null ? "" : toField.getText().trim();
+        String toText = toField.getText() == null ? "" : toField.getText().trim();
 
         // ── 2. تحقق من الصيغة ──
         if (!fromText.isEmpty() && !isValidDate(fromText)) {
@@ -364,7 +429,7 @@ public class EmployeeWagesScreenController {
         WageCardExportRequest req = new WageCardExportRequest(
                 currentNationalId,
                 fromText.isEmpty() ? null : LocalDate.parse(fromText, ISO),
-                toText.isEmpty()   ? null : LocalDate.parse(toText,   ISO),
+                toText.isEmpty() ? null : LocalDate.parse(toText, ISO),
                 lastCycleResult           // null = الباك يحسب من جديد
         );
 
@@ -396,6 +461,7 @@ public class EmployeeWagesScreenController {
                 }
         );
     }
+
     public void setInitialNationalId(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
         if (searchField != null) {
@@ -409,8 +475,12 @@ public class EmployeeWagesScreenController {
     // ══════════════════════════════════════════════════════
 
     private boolean isValidDate(String s) {
-        try { LocalDate.parse(s, ISO); return true; }
-        catch (DateTimeParseException e) { return false; }
+        try {
+            LocalDate.parse(s, ISO);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 
     private void setExportMsg(String msg, String color) {

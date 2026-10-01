@@ -12,6 +12,7 @@ public class Config {
     private Properties properties;
     private String configPath;
 
+    
     // إعدادات المسارات
     private String pgFolder = "";
     private String pgBinPath = "";
@@ -92,7 +93,7 @@ public class Config {
             configFile.getParentFile().mkdirs();
 
             try (FileOutputStream fos = new FileOutputStream(configFile)) {
-                properties.store(fos, "ArchiveManager Configuration");
+                properties.store(fos, "hr-mate-system Configuration");
             }
 
 

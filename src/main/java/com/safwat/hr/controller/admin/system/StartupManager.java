@@ -1,5 +1,6 @@
 package com.safwat.hr.controller.admin.system;
 
+import com.safwat.hr.controller.login.Config;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -10,12 +11,96 @@ import java.io.IOException;
 public class StartupManager {
 
     private static final String REG_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-    private static final String APP_NAME = "ArchiveManager";
+    private static final String APP_NAME = "hr-mate-system";
+    private static final String LEGACY_APP_NAME = "HR_MATE";
+    private static final String LEGACY_BAT_NAME = LEGACY_APP_NAME + ".bat";
+
+    /**
+     * إضافة التطبيق للتشغيل التلقائي باستخدام المسار المحفوظ في ملف الإعدادات
+     *
+     * @return true إذا نجحت العملية
+     */
+    public static boolean addToStartup() {
+        String path = Config.getInstance().getBackendPath();
+        if (path == null || path.isBlank()) {
+            log.error("❌ مسار التطبيق غير محفوظ في ملف الإعدادات");
+            return false;
+        }
+        String exePath = resolveExePath(path);
+        if (exePath == null) {
+            log.error("❌ لم يتم العثور على الملف التنفيذي انطلاقاً من المسار المحفوظ: " + path);
+            return false;
+        }
+        return addToStartup(exePath);
+    }
+
+    /**
+     * تحديد مسار الملف التنفيذي من القيمة المحفوظة في الإعدادات، وتغطي الحالات دي:
+     * <ul>
+     *   <li>القيمة هي الملف التنفيذي نفسه (بامتداد أو من غيره على ويندوز)</li>
+     *   <li>القيمة هي فولدر الملف التنفيذي (جذر الصورة على ويندوز / bin على لينكس)</li>
+     *   <li>القيمة هي جذر الصورة على لينكس (الملف داخل bin)</li>
+     *   <li>القيمة هي الفولدر الأب اللي جواه فولدر hr-mate-system</li>
+     *   <li>الملف التنفيذي لسه بالاسم القديم HR_MATE</li>
+     * </ul>
+     *
+     * @return مسار الملف التنفيذي، أو null لو مش موجود
+     */
+    private static String resolveExePath(String path) {
+        if (path == null) {
+            return null;
+        }
+        // تنظيف: مسافات وعلامات تنصيص
+        path = path.trim().replace("\"", "");
+        if (path.isEmpty()) {
+            return null;
+        }
+
+        boolean win = System.getProperty("os.name").toLowerCase().contains("win");
+        File f = new File(path);
+
+        // 1) القيمة هي ملف
+        if (f.isFile()) {
+            return f.getPath();
+        }
+        // ويندوز: اتحفظ الاسم من غير .exe
+        if (win && !f.exists()) {
+            File withExt = new File(path + ".exe");
+            if (withExt.isFile()) {
+                return withExt.getPath();
+            }
+        }
+
+        // 2) القيمة هي فولدر: نجرب الأماكن المحتملة بالاسم الجديد ثم القديم
+        if (f.isDirectory()) {
+            String[] names = win
+                    ? new String[]{APP_NAME + ".exe", LEGACY_APP_NAME + ".exe"}
+                    : new String[]{APP_NAME, LEGACY_APP_NAME};
+
+            File[] bases = {
+                    f,                                              // فولدر الملف التنفيذي نفسه
+                    new File(f, "bin"),                             // جذر الصورة على لينكس
+                    new File(f, APP_NAME),                          // الفولدر الأب
+                    new File(new File(f, APP_NAME), "bin")          // الفولدر الأب على لينكس
+            };
+
+            for (File base : bases) {
+                for (String name : names) {
+                    File candidate = new File(base, name);
+                    if (candidate.isFile()) {
+                        return candidate.getPath();
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 
     /**
      * إضافة التطبيق للتشغيل التلقائي عند تسجيل الدخول
      *
-     * @param appPath المسار الكامل لتطبيق الواجهة (HR_MATE.exe)
+     * @param appPath المسار الكامل لتطبيق الواجهة (hr-mate-system.exe)
      * @return true إذا نجحت العملية
      */
     public static boolean addToStartup(String appPath) {
@@ -31,9 +116,13 @@ public class StartupManager {
                 return false;
             }
 
-            // ✅ 1. إنشاء ملف .bat بجوار التطبيق
-            String batPath = appFile.getParent() + File.separator + "HR_MATE.bat";
-            String batContent = createBatContent(appPath);
+            // ✅ 0. حذف ملف .bat القديم (HR_MATE.bat) لو موجود من نسخة سابقة
+            new File(appFile.getParent(), LEGACY_BAT_NAME).delete();
+
+            // ✅ 1. إنشاء ملف .bat بجوار التطبيق (اسم الملف التنفيذي مأخوذ من المسار نفسه)
+            String exeName = appFile.getName();
+            String batPath = appFile.getParent() + File.separator + APP_NAME + ".bat";
+            String batContent = createBatContent(exeName);
 
             try (FileWriter fw = new FileWriter(batPath)) {
                 fw.write(batContent);
@@ -76,8 +165,10 @@ public class StartupManager {
 
     /**
      * إنشاء محتوى ملف .bat مع التحقق من PostgreSQL
+     *
+     * @param exeName اسم الملف التنفيذي (hr-mate-system.exe أو hr-mate-system)
      */
-    private static String createBatContent(String appPath) {
+    private static String createBatContent(String exeName) {
         String os = System.getProperty("os.name").toLowerCase();
         boolean isWindows = os.contains("win");
 
@@ -111,9 +202,9 @@ public class StartupManager {
                     
                     :START_APP
                     cd /d "%~dp0"
-                    echo Starting HR_MATE...
-                    start "" "HR_MATE.exe"
-                    """;
+                    echo Starting __APP__...
+                    start "" "__EXE__"
+                    """.replace("__APP__", APP_NAME).replace("__EXE__", exeName);
         } else {
             // ✅ Linux/Mac
             return """
@@ -139,9 +230,9 @@ public class StartupManager {
                     fi
                     
                     cd "$(dirname "$0")"
-                    echo "Starting ArchiveManager..."
-                    ./HR_MATE
-                    """;
+                    echo "Starting __APP__..."
+                    ./__EXE__
+                    """.replace("__APP__", APP_NAME).replace("__EXE__", exeName);
         }
     }
 
@@ -212,7 +303,7 @@ public class StartupManager {
             try (java.util.Scanner scanner = new java.util.Scanner(process.getInputStream())) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    // تنسيق الـ Registry: "    ArchiveManager    REG_SZ    C:\path\to\app.exe"
+                    // تنسيق الـ Registry: "    hr-mate-system    REG_SZ    C:\path\to\hr-mate-system.bat"
                     if (line.contains("REG_SZ")) {
                         String[] parts = line.split("REG_SZ");
                         if (parts.length > 1) {
