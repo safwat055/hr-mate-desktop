@@ -35,6 +35,11 @@ public class AllowanceDefinition {
     private boolean displayOnly;
     private boolean appliesToNewHires = true;
     private Map<String, BigDecimal> valuesMap;
+    // ══════════════════════════════════════════
+//  الحد الأدنى / الأقصى (اختياريان)
+// ══════════════════════════════════════════
+    private BigDecimal minValue;
+    private BigDecimal maxValue;
     private List<String> excludedMonths;
     private List<String> eligibleLaws;
     private List<String> eligibleSectorCodes;

@@ -33,10 +33,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.safwat.hr.network.DownloadWithNotification.downloadPdfToTempAndNotify;
@@ -80,7 +77,12 @@ public class AllowanceFxController implements Initializable {
     private TextField txt_empBasic30From;
     @FXML
     private TextField txt_empGroup;
-
+    @FXML
+    private TextField txt_basic30Date;
+    @FXML
+    private TextField txt_basic30From;
+    @FXML
+    private Button btn_saveBasic30;
     // ── تاب البدلات ─────────────────────────────────────────────
     @FXML
     private TextField txt_calculationDate;
@@ -184,6 +186,10 @@ public class AllowanceFxController implements Initializable {
         // في البداية جداول الـ history مخفية
         setHistoryVisible(false);
         btn_openWage.setOnAction(_ -> openWageView());
+        // حقول تعديل basic_30
+        TextFieldSetupHelper.setupDateFields(txt_basic30Date);
+        TextFieldSetupHelper.setupDateFields(txt_basic30From);
+        btn_saveBasic30.setOnAction(_ -> handleSaveBasic30());
     }
 
 
@@ -1230,5 +1236,66 @@ public class AllowanceFxController implements Initializable {
                 true,
                 null
         );
+    }
+
+    // ════════════════════════════════════════════════════════════
+//  حفظ basic_30_date و basic_30_from
+// ════════════════════════════════════════════════════════════
+
+    private void handleSaveBasic30() {
+
+        // ── 1. لازم يكون فيه موظف محمّل ──
+        if (currentNationalId == null || currentNationalId.isBlank()) {
+            showError("ابحث عن موظف أولاً");
+            return;
+        }
+
+        // ── 2. قراءة الحقلين ──
+        LocalDate basic30Date = TextFieldSetupHelper.parseDateInput(txt_basic30Date.getText());
+        LocalDate basic30From = TextFieldSetupHelper.parseDateInput(txt_basic30From.getText());
+
+        // ── 3. تحقق محلي سريع (الباك إند هيتحقق كمان) ──
+        if (basic30Date == null) {
+            showError("أدخل تاريخ 30/6 بصيغة صحيحة (yyyy-MM-dd)");
+            return;
+        }
+
+        // ── 4. تعطيل الزر ──
+        btn_saveBasic30.setDisable(true);
+        clearError();
+
+        // ── 5. بناء جسم الطلب ──
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("basic30Date", basic30Date.toString());
+        body.put("basic30From", basic30From != null ? basic30From.toString() : null);
+
+        // ── 6. إرسال الطلب ──
+        try {
+            ApiClient.put(
+                    "/salary-scale/" + currentNationalId + "/basic-30",
+                    body,
+                    Void.class
+            );
+
+            // ── 7. نجاح → أعد تحميل بيانات الموظف والبدلات ──
+            cachedScaleDto = null;
+            ensureEmployeeDetailsLoaded();
+            loadAllowances();
+            showInfo("تم حفظ بيانات 30/6 بنجاح");
+
+        } catch (Exception ex) {
+            // لو الباك رجّع خطأ validation هيوصلك في الرسالة
+            showError("تعذر الحفظ: " + extractMessage(ex));
+        } finally {
+            btn_saveBasic30.setDisable(false);
+        }
+    }
+
+    /**
+     * استخراج رسالة الخطأ القادمة من الباك إند (لو موجودة).
+     */
+    private String extractMessage(Exception ex) {
+        String msg = ex.getMessage();
+        return (msg == null || msg.isBlank()) ? "حدث خطأ غير متوقع" : msg;
     }
 }

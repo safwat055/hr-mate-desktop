@@ -26,6 +26,9 @@ public record AllowanceDefinitionRequest(
         boolean displayOnly,
         boolean appliesToNewHires,
         Map<String, BigDecimal> valuesMap,
+        // ⬇️ جديد
+        BigDecimal minValue,
+        BigDecimal maxValue,
         List<String> eligibleSectorCodes,      // 🆕 multi
         List<String> eligibleJobTitles,        // 🆕 بديل eligibleLawCodes
         List<String> excludedMonths,
