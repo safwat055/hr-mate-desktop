@@ -158,6 +158,20 @@
                                             </VBox>
                                         </content>
                                     </TitledPane>
+                           <TitledPane alignment="CENTER" animated="false" expanded="false" layoutX="10.0" layoutY="70.0" text="عام">
+                              <content>
+                                 <VBox alignment="TOP_CENTER" spacing="8">
+                                    <padding>
+                                       <Insets bottom="8" left="5" right="5" top="8" />
+                                    </padding>
+                                    <children>
+                                       <Button onAction="#openAllowanceDefinitionDialogView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="قواعد البدلات" />
+                                       <Button onAction="#openStatutoryDialogView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="معاشات-ضرايب" />
+                                       <Button onAction="#openSectorView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="قطاع-وظيفة" />
+                                    </children>
+                                 </VBox>
+                              </content>
+                           </TitledPane>
                                 </panes>
                             </Accordion>
                      <VBox prefHeight="737.0" prefWidth="218.0">

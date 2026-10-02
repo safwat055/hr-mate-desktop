@@ -1182,7 +1182,7 @@ public class AllowanceFxController implements Initializable {
      */
     private void openDefinitionsDialog() {
         ViewManager.openIndependentView(
-                "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml",
+                new FXMLPaths().getAllowanceDefinitionDialog(),
                 "إدارة قواعد البدلات",
                 null,
                 Modality.APPLICATION_MODAL,
@@ -1213,7 +1213,7 @@ public class AllowanceFxController implements Initializable {
      */
     private void openStatutoryDialog() {
         ViewManager.openIndependentView(
-                "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml",
+                new FXMLPaths().getStatutoryDialogView(),
                 "إدارة الاستقطاعات القانونية",
                 null,
                 Modality.APPLICATION_MODAL,

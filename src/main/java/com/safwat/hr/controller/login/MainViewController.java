@@ -105,7 +105,7 @@ public class MainViewController implements Initializable {
 
             rightPane.setOnMouseClicked(e -> panelAnimator.showPanel());
             rightPane.setOnMouseExited(e -> panelAnimator.hidePanel());
-            
+
             HRNotificationBell bell = new HRNotificationBell(stage, bellIcon, badge);
 
             // ✅ ربط الـ Bell بـ Panel + routing للإشعارات
@@ -302,10 +302,12 @@ public class MainViewController implements Initializable {
     private void openPayrollReport() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getReportManager(), "مدير التقارير", false);
     }
+
     @FXML
-    private void openEmployeeForm(){
+    private void openEmployeeForm() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getEmployeeForm(), "بيانات موظف", true);
     }
+
     /**
      * @deprecated استخدم {@link #openChatTab()} بدل دي.
      * موجودة للتوافق مع FXML القديم.
@@ -343,16 +345,32 @@ public class MainViewController implements Initializable {
 
     @FXML
     void openBackupView() {
-        ViewManager.openNoIndependentView(new FXMLPaths().getBackupView(), "نسخ احتياطي");
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getBackupView(), "نسخ احتياطي", true);
     }
 
     @FXML
     void openAllowancesView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getAllowanceView(), "مفردات", true);
     }
+
     @FXML
     void openWagesView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getWagesView(), "سجل الاجور", true);
+    }
+
+    @FXML
+    void openSectorView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getSectorView(), "إدارة القطاعات والوظائف", true);
+    }
+
+    @FXML
+    void openStatutoryDialogView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getStatutoryDialogView(), "إدارة الاستقطاعات القانونية", true);
+    }
+
+    @FXML
+    void openAllowanceDefinitionDialogView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getAllowanceDefinitionDialog(), "إدارة قواعد البدلات", true);
     }
     // ══════════════════════════════════════════════════════════════
     //  Themes

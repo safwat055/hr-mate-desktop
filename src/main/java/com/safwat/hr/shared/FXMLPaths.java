@@ -32,4 +32,7 @@ public class FXMLPaths {
     private final String wagesView = "/com/safwat/hr/controller/EmployeeWagesScreen.fxml";
     private final String sectorView = "/com/safwat/hr/controller/entitlements/allowance/SectorJobTitleDialog.fxml";
     private final String OverrideDialogView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml";
+    private final String statutoryDialogView = "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml";
+    private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml";
+
 }

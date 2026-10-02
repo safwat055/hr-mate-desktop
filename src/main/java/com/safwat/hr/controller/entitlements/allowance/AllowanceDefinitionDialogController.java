@@ -223,6 +223,22 @@ public class AllowanceDefinitionDialogController implements Initializable {
         }
     }
 
+    private void hideDesignTimeNodes() {
+        setShown(pane_referenceDate, false);
+        setShown(pane_insuranceBase, false);
+        setShown(lbl_excludedMonthsHint, false);
+        setShown(lbl_form_error, false);
+        lbl_form_error.setText("");
+        lbl_excludedMonthsHint.setText("");
+        setValuesMapVisible(false);
+        hideForm();
+    }
+
+    private static void setShown(javafx.scene.Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
     // ══════════════════════════════════════════════════════════════
     //  Map Keys — per CalcType
     // ══════════════════════════════════════════════════════════════
@@ -448,7 +464,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         loadAllSectorsOnce();
         loadAllJobTitlesOnce();
 
-        hideForm();
+        hideDesignTimeNodes();
         loadDefinitions();
     }
 
