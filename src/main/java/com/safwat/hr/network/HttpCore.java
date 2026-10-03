@@ -10,44 +10,62 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.safwat.hr.shared.AppConfig;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ══════════════════════════════════════════════════════════════════
  * HttpCore — نواة شبكة التطبيق (Singleton)
  * ══════════════════════════════════════════════════════════════════
  * <p>
- * ⭐ ملاحظة عن الـ Timeout:
- * {@link #TIMEOUT} هو الـ timeout الافتراضي المستخدم في كل نداءات
- * التطبيق العادية (45 ثانية) — ولسه هو نفسه المستخدم في كل مكان في
- * البرنامج ما عدا الباك أب.
+ * ⭐ Timeouts:
+ * <ul>
+ *   <li>{@link #TIMEOUT} (45s): الافتراضي لكل النداءات العادية.</li>
+ *   <li>{@link #SEARCH_TIMEOUT} (15s): للبحث والـ lookups السريعة —
+ *       المستخدم مش المفروض يستنى 45 ثانية.</li>
+ *   <li>{@link #CONNECT_TIMEOUT} (5s): فتح اتصال TCP. لو أخد أكتر من كده
+ *       فالسيرفر غالبًا مش متاح أصلًا.</li>
+ * </ul>
  * <p>
- * العمليات الطويلة (نسخ احتياطي / استعادة / تنفيذ سكريبتات SQL) بتحتاج
- * timeout أطول بكتير، فبدل ما نغيّر القيمة العامة (وده هيأثر على كل
- * endpoint في التطبيق)، أضفنا overloads في {@code baseBuilder} تقبل
- * {@link Duration} مخصص. كل الاستخدامات القديمة فضلت شغالة زي ما هي
- * بالـ 45 ثانية الافتراضية — التغيير ده backward-compatible 100%.
- * <p>
- * ⭐ ملاحظة عن الـ Thread Pool:
- * {@link #HTTP_EXECUTOR} هو thread pool مخصص للشبكة — منفصل تمامًا عن
- * {@code ForkJoinPool.commonPool()} الافتراضي. ده بيمنع thread starvation
- * لما الـ HTTP requests تتأخر، ويحمي الـ JavaFX UI thread من أي تأثير.
- * الـ pool حجمه {@link #HTTP_THREADS} وكل threads فيه daemon threads
- * (تنتهي تلقائيًا مع إغلاق التطبيق).
+ * ⭐ Thread Pools (فصل مهم):
+ * <ul>
+ *   <li>{@link #HTTP_EXECUTOR}: للـ internals بتاعة الـ HttpClient بس
+ *       (callbacks / تجميع الـ response). متستخدمهوش لتشغيل نداءات blocking.</li>
+ *   <li>{@link #ASYNC_EXECUTOR}: لتشغيل أي نداء blocking
+ *       ({@code ApiClient.*Async} / {@code UiAsync} / SmartSearchHelper).</li>
+ * </ul>
+ * ليه الفصل؟ {@code HttpClient.send()} بيستنى callbacks بتتنفذ على الـ
+ * executor بتاع الـ client. لو شغّلنا نداءات blocking على نفس الـ pool
+ * وكلها استنت، الـ callbacks مش هتلاقي thread فاضي → الـ pool يتسد
+ * لحد ما الـ timeout يخلص.
  */
 public final class HttpCore {
+
+    static {
+        // الـ JDK HttpClient بيحتفظ بالاتصالات الخاملة 20 دقيقة افتراضيًا.
+        // أي firewall / router / سيرفر بيقفل الاتصال الخامل بدون ما يبلّغ
+        // بيخلي أول طلب بعد فترة سكون يعلّق لحد الـ timeout (شائع على ويندوز).
+        // لازم تتحط قبل أول استخدام للـ HttpClient.
+        if (System.getProperty("jdk.httpclient.keepalive.timeout") == null) {
+            System.setProperty("jdk.httpclient.keepalive.timeout", "30");
+        }
+    }
 
     // ─────────────────────────────────────────────
     //  Constants
@@ -56,34 +74,35 @@ public final class HttpCore {
     private static final DateTimeFormatter SERVER_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    /**
-     * الـ timeout الافتراضي لكل نداءات التطبيق العادية.
-     */
+    /** الـ timeout الافتراضي لكل نداءات التطبيق العادية. */
     public static final Duration TIMEOUT = Duration.ofSeconds(45);
 
-    /**
-     * عدد الـ threads في الـ HTTP Pool.
-     * 6 threads = كافية لـ HR desktop app بدون إسراف في الموارد.
-     * لو الاستخدام راح لـ concurrent requests أكتر، رفّع لـ 10.
-     */
-    private static final int HTTP_THREADS = 6;
+    /** timeout للبحث والـ lookups السريعة. */
+    public static final Duration SEARCH_TIMEOUT = Duration.ofSeconds(45);
 
-    /**
-     * Thread pool مخصص للشبكة — بديل عن ForkJoinPool.commonPool().
-     * <p>
-     * السبب: ForkJoinPool مشترك مع كل حاجة تانية في الـ JVM،
-     * فلو HTTP request اتأخر بيحصل thread starvation وبيتعكس على الـ UI.
-     * Pool منفصل بيعزل الشبكة تمامًا عن باقي التطبيق.
-     */
-    public static final ExecutorService HTTP_EXECUTOR = Executors.newFixedThreadPool(
-            HTTP_THREADS,
-            r -> {
-                Thread t = new Thread(r, "hr-http-" + Thread.currentThread().threadId());
-                t.setDaemon(true);   // يموت مع التطبيق تلقائيًا
-                t.setPriority(Thread.NORM_PRIORITY);
-                return t;
-            }
-    );
+    /** timeout فتح الاتصال (TCP). */
+    public static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+
+    private static final int HTTP_THREADS = 6;
+    private static final int ASYNC_THREADS = 12;
+
+    private static ThreadFactory daemonFactory(String prefix) {
+        AtomicInteger counter = new AtomicInteger(1);
+        return r -> {
+            Thread t = new Thread(r, prefix + counter.getAndIncrement());
+            t.setDaemon(true);
+            t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        };
+    }
+
+    /** pool الـ internals بتاعة HttpClient فقط. */
+    public static final ExecutorService HTTP_EXECUTOR =
+            Executors.newFixedThreadPool(HTTP_THREADS, daemonFactory("hr-http-"));
+
+    /** pool تشغيل النداءات الـ blocking بعيدًا عن الـ UI thread. */
+    public static final ExecutorService ASYNC_EXECUTOR =
+            Executors.newFixedThreadPool(ASYNC_THREADS, daemonFactory("hr-async-"));
 
     // ─────────────────────────────────────────────
     //  Singleton
@@ -101,22 +120,14 @@ public final class HttpCore {
     }
 
     // ─────────────────────────────────────────────
-    //  Shared Infrastructure (بنيّة تحتية مشتركة)
+    //  Shared Infrastructure
     // ─────────────────────────────────────────────
 
     public final ObjectMapper mapper;
     public final HttpClient httpClient;
 
-    // ─────────────────────────────────────────────
-    //  Connection Config (مقروءة من AppConfig مرة واحدة)
-    // ─────────────────────────────────────────────
-
     private final String baseUrl;    // http://host:port/api
     private final String baseWsUrl;  // ws://host:port/ws
-
-    // ─────────────────────────────────────────────
-    //  Auth State
-    // ─────────────────────────────────────────────
 
     private volatile String authToken;
 
@@ -132,19 +143,13 @@ public final class HttpCore {
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        // ⭐ ملاحظة: الـ connectTimeout بتاع الـ HttpClient نفسه (زمن فتح
-        // الاتصال TCP) بيفضل ثابت على TIMEOUT العادي — ده منطقي لأن فتح
-        // الاتصال المفروض يكون سريع دايمًا حتى لو الطلب نفسه هياخد وقت
-        // طويل بعد كده. الـ per-request timeout (اللي بيتغير) هو اللي بيتحكم
-        // في مدة انتظار الاستجابة الكاملة.
-        //
-        // ⭐ executor(HTTP_EXECUTOR): بيخلي الـ HttpClient يشتغل على
-        // pool منفصل بدل ForkJoinPool.commonPool() — ده الحل الجذري
-        // لمشكلة تعليق الـ UI لما الـ HTTP requests تتأخر.
+        // HTTP/1.1: الاتصال هنا cleartext (http://) فمفيش فايدة من HTTP/2،
+        // ومحاولة upgrade لـ h2c ممكن تعمل تأخير مع بعض السيرفرات/البروكسيات.
+        // لو الباك إند ورا proxy بيدعم h2 على https رجّعها HTTP_2.
         this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_2)
+                .version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(TIMEOUT)
+                .connectTimeout(CONNECT_TIMEOUT)
                 .executor(HTTP_EXECUTOR)
                 .build();
 
@@ -193,17 +198,10 @@ public final class HttpCore {
     //  Request Building
     // ─────────────────────────────────────────────
 
-    /**
-     * يبني Builder أساسي بـ Content-Type و Accept و Timeout الافتراضي.
-     */
     public HttpRequest.Builder baseBuilder(String path) {
         return baseBuilder(path, TIMEOUT);
     }
 
-    /**
-     * ⭐ نفس الأساسي، لكن بـ timeout مخصص — مستخدم في العمليات الطويلة
-     * زي الباك أب والاستعادة وتنفيذ سكريبتات SQL.
-     */
     public HttpRequest.Builder baseBuilder(String path, Duration timeout) {
         return HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + path))
@@ -347,23 +345,19 @@ public final class HttpCore {
     // ─────────────────────────────────────────────
 
     /**
-     * يُغلق الـ HTTP_EXECUTOR بشكل نظيف.
-     * <p>
-     * استدعيه مرة واحدة فقط عند إغلاق التطبيق —
-     * مثلًا في {@code Application.stop()} أو shutdown hook:
-     * <pre>
-     *   Runtime.getRuntime().addShutdownHook(
-     *       new Thread(HttpCore::shutdown));
-     * </pre>
-     * الـ daemon threads بتموت تلقائيًا لو ما استدعيتش الـ shutdown،
-     * لكن الاستدعاء اليدوي أنظف ويضمن إنهاء الـ in-flight requests.
+     * يُغلق الـ pools بشكل نظيف. استدعيه مرة واحدة عند إغلاق التطبيق
+     * (Application.stop() أو shutdown hook).
      */
     public static void shutdown() {
+        ASYNC_EXECUTOR.shutdown();
         HTTP_EXECUTOR.shutdown();
         try {
-            if (!HTTP_EXECUTOR.awaitTermination(5, TimeUnit.SECONDS))
+            if (!ASYNC_EXECUTOR.awaitTermination(3, TimeUnit.SECONDS))
+                ASYNC_EXECUTOR.shutdownNow();
+            if (!HTTP_EXECUTOR.awaitTermination(3, TimeUnit.SECONDS))
                 HTTP_EXECUTOR.shutdownNow();
         } catch (InterruptedException ex) {
+            ASYNC_EXECUTOR.shutdownNow();
             HTTP_EXECUTOR.shutdownNow();
             Thread.currentThread().interrupt();
         }
@@ -374,9 +368,23 @@ public final class HttpCore {
     // ─────────────────────────────────────────────
 
     public <T> ApiResponse<T> createErrorResponse(Exception e) {
+        Throwable root = (e instanceof CompletionException && e.getCause() != null)
+                ? e.getCause() : e;
+
+        String message;
+        if (root instanceof HttpTimeoutException) {
+            message = "انتهت مهلة الاتصال بالسيرفر";
+        } else if (root instanceof ConnectException) {
+            message = "تعذر الاتصال بالسيرفر";
+        } else if (root.getMessage() != null) {
+            message = root.getMessage();
+        } else {
+            message = root.getClass().getSimpleName();
+        }
+
         ApiResponse<T> error = new ApiResponse<>();
         error.setSuccess(false);
-        error.setMessage(e.getMessage());
+        error.setMessage(message);
         error.setTimestamp(LocalDateTime.now().toString());
         return error;
     }

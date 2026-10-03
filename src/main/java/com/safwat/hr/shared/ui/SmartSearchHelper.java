@@ -1,12 +1,18 @@
 package com.safwat.hr.shared.ui;
 
-import com.safwat.hr.shared.util.DateUtils;
+import com.safwat.hr.network.HttpCore;
 import com.safwat.hr.ui.controls.SAFNotification;
+import javafx.application.Platform;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 
+import java.net.http.HttpTimeoutException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -22,13 +28,17 @@ import java.util.function.Supplier;
  * 2. Generic Object + حقل واحد
  * 3. Generic Object + تحديث متعدد الحقول (Multi-Field Bind)
  * <p>
- * المشغلات: Enter  |  Double-Click على الحقل الفارغ/المملوء
+ * المشغلات: Enter  |  Double-Click  |  زرار (في النسخة اللي بتاخد Button)
  * <p>
- * ملاحظة مهمة: المطابقة الفورية (single-match) بتتم عن طريق
- * {@link SearchDialog#matches(Object, String)} — يعني على نفس القيمة
- * الخام المعروضة/المفلترة داخل الجدول (columns) — وليس عن طريق
- * extractors الخاصة بـ FieldBind، لأن دي مسؤوليتها الوحيدة هي
- * تنسيق القيمة بعد الاختيار وكتابتها في الحقول، مش المطابقة.
+ * ⭐ threading:
+ * الـ {@code dataSupplier} بيتنفذ على {@link HttpCore#ASYNC_EXECUTOR}
+ * (مش على الـ FX thread)، فمسموح يعمل نداء شبكة blocking. الـ Dialog
+ * وتحديث الحقول بيرجعوا على الـ FX thread. القائمة بتتجاب مرة واحدة
+ * بس لكل ضغطة (مرة واحدة للمطابقة الفورية + عرض الـ Dialog).
+ * <p>
+ * ملاحظة: المطابقة الفورية (single-match) بتتم عن طريق
+ * {@link SearchDialog#matches(Object, String)} على القيمة الخام المعروضة
+ * في الجدول — مش عن طريق extractors بتاعة FieldBind.
  * ────────────────────────────────────────────────────────────
  */
 public final class SmartSearchHelper {
@@ -37,16 +47,9 @@ public final class SmartSearchHelper {
     } // utility class
 
     // ═══════════════════════════════════════════════════════════
-    //  1. STRING-ONLY  (النسخة القديمة — backward compatible)
+    //  1. STRING-ONLY  (backward compatible)
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * ربط TextField بقائمة نصية.
-     *
-     * @param triggerField الحقل اللي يفتح البحث
-     * @param dataSupplier Supplier بيرجع List<String> في اللحظة
-     * @param onSelect     callback لما يتم الاختيار (يمكن null)
-     */
     public static void bind(
             TextField triggerField,
             Supplier<List<String>> dataSupplier,
@@ -60,15 +63,6 @@ public final class SmartSearchHelper {
     //  2. GENERIC — حقل واحد
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * ربط TextField بـ Object واحد — يتحدث حقل واحد فقط.
-     *
-     * @param triggerField  الحقل اللي يفتح البحث
-     * @param dataSupplier  Supplier بيرجع List<T>
-     * @param displayMapper T → String (النص اللي يتعرض)
-     * @param onSelect      callback لما يتم الاختيار
-     * @param dialogConfig  SearchDialog<T> جاهز (من builder/forStrings/...)
-     */
     public static <T> void bind(
             TextField triggerField,
             Supplier<List<T>> dataSupplier,
@@ -81,18 +75,9 @@ public final class SmartSearchHelper {
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  3. GENERIC — Multi-Field Bind  (الجديد)
+    //  3. GENERIC — Multi-Field Bind  (Enter + Double Click)
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * ربط TextField بـ Object — يتحدث أكتر من حقل دفعة واحدة.
-     *
-     * @param triggerField الحقل اللي يفتح البحث (Enter / Double Click)
-     * @param dataSupplier Supplier بيرجع List<T>
-     * @param dialogConfig SearchDialog<T> جاهز (من builder/forStrings/...)
-     * @param onSelect     callback إضافي بعد الاختيار (يمكن null)
-     * @param bindings     FieldBind[] — كل حقل + قيمته من الـ Object
-     */
     @SafeVarargs
     public static <T> void bind(
             TextField triggerField,
@@ -101,51 +86,12 @@ public final class SmartSearchHelper {
             Consumer<T> onSelect,
             FieldBind<T>... bindings) {
 
-        if (bindings.length == 0) {
-            throw new IllegalArgumentException("يجب تمرير FieldBind واحد على الأقل");
-        }
-
-        // ── دالة تحديث كل الحقول ──
-        Consumer<T> updateAll = obj -> {
-            for (FieldBind<T> b : bindings) {
-                String val = b.extractor().apply(obj);
-                b.field().setText(val != null ? val : "");
-            }
-            if (onSelect != null) onSelect.accept(obj);
-        };
-
-        // ── فتح الـ Dialog ──
-        Runnable openSearch = () -> {
-            List<T> dataList = dataSupplier.get();
-            if (dataList == null || dataList.isEmpty()) {
-                SAFNotification.warning("لا توجد بيانات متاحة");
-                return;
-            }
-            dialogConfig.data(dataList).show().ifPresent(updateAll);
-        };
-
-        // ── Enter ──
-        triggerField.setOnAction(_ -> {
-            if (isBlank(triggerField)) {
-                openSearch.run();
-                return;
-            }
-            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
-        });
-
-        // ── Double Click ──
-        triggerField.setOnMouseClicked((MouseEvent event) -> {
-            if (event.getClickCount() == 2) {
-                if (isBlank(triggerField)) {
-                    openSearch.run();
-                    return;
-                }
-                handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
-            }
-        });
+        wire(triggerField, null, true, dataSupplier, dialogConfig, onSelect, bindings);
     }
 
-
+    // ═══════════════════════════════════════════════════════════
+    //  4. Multi-Field + زرار  (Enter + Button)
+    // ═══════════════════════════════════════════════════════════
 
     @SafeVarargs
     public static <T> void bind(
@@ -155,52 +101,13 @@ public final class SmartSearchHelper {
             Consumer<T> onSelect,
             FieldBind<T>... bindings) {
 
-        if (bindings.length == 0) {
-            throw new IllegalArgumentException("يجب تمرير FieldBind واحد على الأقل");
-        }
-
-        // ── دالة تحديث كل الحقول ──
-        Consumer<T> updateAll = obj -> {
-            for (FieldBind<T> b : bindings) {
-                String val = b.extractor().apply(obj);
-                b.field().setText(val != null ? val : "");
-            }
-            if (onSelect != null) onSelect.accept(obj);
-        };
-
-        // ── فتح الـ Dialog ──
-        Runnable openSearch = () -> {
-            List<T> dataList = dataSupplier.get();
-            if (dataList == null || dataList.isEmpty()) {
-                SAFNotification.warning("لا توجد بيانات متاحة");
-                return;
-            }
-            dialogConfig.data(dataList).show().ifPresent(updateAll);
-        };
-
-        // ── Enter ──
-        triggerField.setOnAction(_ -> {
-            if (isBlank(triggerField)) {
-                openSearch.run();
-                return;
-            }
-            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
-        });
-
-        actionButton.setOnAction(_ -> {
-            if (isBlank(triggerField)) {
-                openSearch.run();
-                return;
-            }
-            handleInput(triggerField, dataSupplier, dialogConfig, updateAll, openSearch);
-        });
-
-
+        wire(triggerField, actionButton, false, dataSupplier, dialogConfig, onSelect, bindings);
     }
 
-    /**
-     * overload من غير onSelect
-     */
+    // ═══════════════════════════════════════════════════════════
+    //  5. overload من غير onSelect
+    // ═══════════════════════════════════════════════════════════
+
     @SafeVarargs
     public static <T> void bind(
             TextField triggerField,
@@ -211,64 +118,116 @@ public final class SmartSearchHelper {
     }
 
     // ═══════════════════════════════════════════════════════════
+    //  Core
+    // ═══════════════════════════════════════════════════════════
+
+    private static <T> void wire(
+            TextField triggerField,
+            Button actionButton,              // nullable
+            boolean doubleClick,
+            Supplier<List<T>> dataSupplier,
+            SearchDialog<T> dialogConfig,
+            Consumer<T> onSelect,
+            FieldBind<T>[] bindings) {
+
+        if (bindings.length == 0) {
+            throw new IllegalArgumentException("يجب تمرير FieldBind واحد على الأقل");
+        }
+
+        // ── دالة تحديث كل الحقول ──
+        Consumer<T> updateAll = obj -> {
+            for (FieldBind<T> b : bindings) {
+                String val = b.extractor().apply(obj);
+                b.field().setText(val != null ? val : "");
+            }
+            if (onSelect != null) onSelect.accept(obj);
+        };
+
+        Node[] busyNodes = actionButton == null
+                ? new Node[]{triggerField}
+                : new Node[]{triggerField, actionButton};
+
+        AtomicBoolean busy = new AtomicBoolean(false);
+
+        // ── التنفيذ: fetch مرة واحدة → (مطابقة فورية | Dialog) ──
+        Runnable run = () -> {
+            if (!busy.compareAndSet(false, true)) return;   // فيه طلب شغال بالفعل
+
+            final String input = triggerField.getText();    // اقرأه على الـ FX thread
+            setBusy(busyNodes, true);
+
+            CompletableFuture
+                    .supplyAsync(dataSupplier::get, HttpCore.ASYNC_EXECUTOR)
+                    .whenComplete((list, ex) -> Platform.runLater(() -> {
+                        busy.set(false);
+                        setBusy(busyNodes, false);
+
+                        if (ex != null) {
+                            notifyError(ex);
+                            return;
+                        }
+                        if (list == null || list.isEmpty()) {
+                            SAFNotification.warning("لا توجد بيانات متاحة");
+                            return;
+                        }
+
+                        // مطابقة فورية لو فيه نص مكتوب وعنصر واحد بس بيطابقه
+                        if (input != null && !input.isBlank()) {
+                            List<T> matches = list.stream()
+                                    .filter(t -> dialogConfig.matches(t, input))
+                                    .toList();
+                            if (matches.size() == 1) {
+                                updateAll.accept(matches.get(0));
+                                return;
+                            }
+                        }
+
+                        dialogConfig.data(list).show().ifPresent(updateAll);
+                    }));
+        };
+
+        // ── Enter ──
+        triggerField.setOnAction(_ -> run.run());
+
+        // ── Button ──
+        if (actionButton != null) {
+            actionButton.setOnAction(_ -> run.run());
+        }
+
+        // ── Double Click ──
+        if (doubleClick) {
+            triggerField.setOnMouseClicked((MouseEvent event) -> {
+                if (event.getClickCount() == 2) run.run();
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
     //  Helpers
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * تحاول مطابقة نص الحقل مع عنصر واحد فقط من البيانات.
-     * <p>
-     * المطابقة تتم عبر {@link SearchDialog#(Object, String)} —
-     * أي بنفس منطق الفلترة الحية المستخدم داخل جدول الـ Dialog نفسه —
-     * بمعزل تام عن أي تنسيق خاص بـ FieldBind (زي تحويل تاريخ إلى
-     * "اسم شهر / سنة" بالعربي، مثلاً)، عشان القيمة المكتوبة في الحقل
-     * تتقارن مع نفس القيمة الخام المعروضة في الجدول، مش مع نسخة منسّقة
-     * منها كانت هتمنع أي تطابق.
-     */
-    private static <T> void handleInput(
-            TextField triggerField,
-            Supplier<List<T>> dataSupplier,
-            SearchDialog<T> dialogConfig,
-            Consumer<T> onSingleMatch,
-            Runnable openSearch) {
-
-        List<T> dataList = dataSupplier.get();
-        if (dataList == null || dataList.isEmpty()) {
-            openSearch.run();
-            return;
+    private static void setBusy(Node[] nodes, boolean busy) {
+        for (Node n : nodes) {
+            n.setCursor(busy ? Cursor.WAIT : Cursor.DEFAULT);
+            if (n instanceof Button b) b.setDisable(busy);
         }
+    }
 
-        String input = triggerField.getText();
-        List<T> matches = dataList.stream()
-                .filter(t -> dialogConfig.matches(t, input))
-                .toList();
+    private static void notifyError(Throwable ex) {
+        Throwable root = ex;
+        while (root.getCause() != null && root.getCause() != root) root = root.getCause();
 
-        if (matches.size() == 1) {
-            onSingleMatch.accept(matches.get(0));
+        if (root instanceof HttpTimeoutException) {
+            SAFNotification.error("انتهت مهلة الاتصال بالسيرفر، حاول مرة أخرى");
         } else {
-            openSearch.run();
+            SAFNotification.error("تعذر الاتصال بالسيرفر: " + root.getMessage());
         }
-    }
-
-    private static boolean isBlank(TextField tf) {
-        String t = tf.getText();
-        return t == null || t.isBlank();
-    }
-
-    private static String normalize(String text) {
-        if (text == null) return "";
-        return DateUtils.normalizeArabicText(text);
     }
 
     // ═══════════════════════════════════════════════════════════
     //  FieldBind — Record بيربط حقل بقيمة من Object
     // ═══════════════════════════════════════════════════════════
 
-    /**
-     * ربط بين TextField وقيمة من Object من نوع T.
-     *
-     * @param field     الـ TextField اللي هيتحدث
-     * @param extractor Function<T, String> بتستخرج القيمة
-     */
     public record FieldBind<T>(TextField field, Function<T, String> extractor) {
         public static <T> FieldBind<T> of(TextField f, Function<T, String> e) {
             return new FieldBind<>(f, e);

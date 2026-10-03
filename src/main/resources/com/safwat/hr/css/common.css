@@ -38,6 +38,21 @@
     -fx-padding: 8;
 }
 
+/* ⭐ كل النصوص جوه الـ panel-header تبقى أبيض — لأن الـ text-fill
+   مش بيتورّث لأبناء الحاوية في JavaFX CSS، لازم نحددها صراحةً. */
+.panel-header .label,
+.panel-header > .label,
+.panel-header Text,
+.panel-header .text {
+    -fx-text-fill: -on-brand;
+    -fx-fill: -on-brand;
+}
+
+/* الأزرار جوه الـ header (لو موجودة) */
+.panel-header .button {
+    -fx-text-fill: -on-brand;
+}
+
 .panel-header.compact {
     -fx-padding: 6;
 }
@@ -107,8 +122,10 @@
 /* الكلاس الصريح .btn (لما تحب تتحكم في اللون بنفسك) */
 .btn {
     -fx-text-fill: -on-brand;
-    -fx-background-radius: 5;
-    -fx-border-radius: 5;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-font-size: 13px;
+    -fx-padding: 6 16 6 16;
     -fx-cursor: hand;
     -fx-background-color: -color-secondary-btn;
     -fx-border-color: derive(-color-secondary-btn, -25%);
@@ -205,8 +222,7 @@
     -fx-scale-y: 1.0;
 }
 
-/* الشكل التاني: زرار بحدود بس (Outline) بدل التعبئة الكاملة —
-   استخدمه زي: styleClass="btn-outline primary" أو "btn-outline danger" ... */
+/* الشكل التاني: زرار بحدود بس (Outline) بدل التعبئة الكاملة — */
 .btn-outline {
     -fx-background-color: transparent;
     -fx-border-width: 1.5;
@@ -264,9 +280,7 @@
     -fx-background-color: derive(-color-purple, 88%);
 }
 
-/* زرار أيقونة شفاف (بدون خلفية)
-   ملحوظة: الاسم .icon-btn مش .btn-icon عشان ميتعارضش مع كلاس
-   .btn-icon الخاص بشاشة الشات (له تنسيق مختلف داخل chat-styles.css) */
+/* زرار أيقونة شفاف (بدون خلفية) */
 .icon-btn {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
@@ -394,10 +408,7 @@
     -fx-padding: 15;
 }
 
-/* ── تنسيق عام لعناصر التحكّم الافتراضية (توحيد الشكل) ─────────
-   بيخلي أي TextField / TableView / Label ... تتماشى مع الثيم
-   المُحمّل بدل ما تفضل بألوان Modena الافتراضية.
-──────────────────────────────────────────────────────────────── */
+/* ── تنسيق عام لعناصر التحكّم الافتراضية (توحيد الشكل) ───────── */
 
 .root {
     -fx-font-family: "Cairo", "Segoe UI", "Tahoma", system;
@@ -464,8 +475,7 @@
     -fx-text-fill: -on-brand;
 }
 
-/* التايتيلد بين (الأقسام القابلة للفتح) — حواف دائرية + عنوان ملوّن
-   بدل الشكل الرمادي الحاد الافتراضي */
+/* التايتيلد بين */
 .titled-pane > .title {
     -fx-background-color: -brand-navy;
     -fx-background-radius: 6 6 0 0;
@@ -479,7 +489,6 @@
     -fx-background-radius: 6 6 0 0;
 }
 
-/* لما يكون مقفول (مش متوسّع) خلي كل الحواف دائرية */
 .titled-pane:collapsed > .title {
     -fx-background-radius: 6;
 }
@@ -540,13 +549,7 @@
 }
 
 .menu-bar > .container > .menu-button .label {
-    -fx-text-fill: -text-primary; /* ← النص العادي للـ Menu */
-}
-
-.menu-bar > .container > .menu-button:hover .label,
-.menu-bar > .container > .menu-button:focused .label,
-.menu-bar > .container > .menu-button:showing .label {
-    -fx-text-fill: -on-brand; /* ← عند فتح القائمة أو التمرير */
+    -fx-text-fill: -text-primary;
 }
 
 .menu-item {
@@ -556,7 +559,7 @@
 }
 
 .menu-item .label {
-    -fx-text-fill: -text-primary; /* ← دا اللون اللي بيظهر في القائمة */
+    -fx-text-fill: -text-primary;
 }
 
 .menu-item:focused {
@@ -565,13 +568,8 @@
 }
 
 .menu-item:focused .label {
-    -fx-text-fill: -on-brand; /* ← دا اللون اللي بيظهر عند التمرير */
+    -fx-text-fill: -on-brand;
 }
-
-/* شكل القوائم المنسدلة / ComboBox / Tooltip اتنقل لكل ملف theme
-   لوحده بقيم صريحة (مش متغيرات) — راجع نهاية theme-*.css.
-   السبب: الـ popup ده نافذة منفصلة، وبعض إصدارات JavaFX مش
-   بتوصّل صح للمتغيرات هناك، فكتبناها صراحةً هناك لضمان النتيجة. */
 
 /* ── ScrollBar ────────────────────────────────────────────────── */
 
@@ -640,10 +638,7 @@
     -fx-background-color: -border-color;
 }
 
-/* ComboBox popup / Tooltip: الشكل بتاعهم اتنقل لكل ملف theme لوحده
-   بقيم صريحة — راجع نهاية theme-*.css (نفس سبب القوائم فوق). */
-
-/* ── CheckBox / RadioButton (لو استُخدموا لاحقًا) ───────────────── */
+/* ── CheckBox / RadioButton ───────────────────────────────────── */
 
 .check-box, .radio-button {
     -fx-text-fill: -text-primary;
@@ -684,83 +679,8 @@
     -fx-background-color: -color-primary;
 }
 
-
 /* ── mono-log: TextArea للسجلات بخط Monospace ──────────────────── */
 .mono-log {
     -fx-font-family: "Consolas", "Courier New", monospace;
     -fx-font-size: 12px;
-}
-
-/* ── btn variants ─────────────────────────────────────────────────── */
-.btn {
-    -fx-background-radius: 6;
-    -fx-border-radius: 6;
-    -fx-font-size: 13px;
-    -fx-padding: 6 16 6 16;
-    -fx-cursor: hand;
-}
-
-.btn-primary {
-    -fx-background-color: #003399;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-
-.btn-success {
-    -fx-background-color: #4caf50;
-    -fx-text-fill: white;
-}
-
-.btn-danger {
-    -fx-background-color: #f44336;
-    -fx-text-fill: white;
-}
-
-.btn-purple {
-    -fx-background-color: #7b1fa2;
-    -fx-text-fill: white;
-}
-
-.btn-secondary {
-    -fx-background-color: #607d8b;
-    -fx-text-fill: white;
-}
-
-/* ── icon-btn ────────────────────────────────────────────────────── */
-.icon-btn {
-    -fx-background-color: #2196f3;
-    -fx-text-fill: white;
-    -fx-background-radius: 4;
-    -fx-padding: 4 10 4 10;
-    -fx-cursor: hand;
-}
-
-/* ── typography helpers ───────────────────────────────────────────── */
-.fs-18 {
-    -fx-font-size: 18px;
-}
-
-.bold {
-    -fx-font-weight: bold;
-}
-
-.text-navy {
-    -fx-text-fill: #2c3e50;
-}
-
-.text-success {
-    -fx-text-fill: #4caf50;
-}
-
-.text-danger {
-    -fx-text-fill: #d32f2f;
-}
-
-.text-muted {
-    -fx-text-fill: #757575;
-}
-
-/* ── app-bg ──────────────────────────────────────────────────────── */
-.app-bg {
-    -fx-background-color: white;
 }

@@ -2,21 +2,27 @@ package com.safwat.hr.controller.payroll.payrollApi;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
-
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewMainRecordForRangeDate;
 import com.safwat.hr.controller.payroll.payrollApi.dto.ViewNonPrimaryRangeDate;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiEndpoints;
 import com.safwat.hr.network.FileTransferClient;
+import com.safwat.hr.network.HttpCore;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.ui.controls.SAFNotification;
-import lombok.SneakyThrows;
+import javafx.application.Platform;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * ⭐ ملاحظة threading: كل دوال الكلاس ده blocking — لازم تتنادّى من
+ * background thread (SmartSearchHelper / UiAsync / ASYNC_EXECUTOR).
+ * أي إشعار UI بيتعمل عبر {@link #fxError(String)} عشان يشتغل صح
+ * سواء اتنادى من الـ FX thread أو من thread خلفي.
+ */
 @Slf4j
 public class PayrollReviewApi {
     private static PayrollReviewApi instance;
@@ -24,11 +30,20 @@ public class PayrollReviewApi {
     private PayrollReviewApi() {
     }
 
-    public static PayrollReviewApi getInstance() {
+    public static synchronized PayrollReviewApi getInstance() {
         if (instance == null) {
             instance = new PayrollReviewApi();
         }
         return instance;
+    }
+
+    /** يعرض إشعار خطأ على الـ FX thread بغض النظر عن الـ thread المنادي. */
+    private static void fxError(String message) {
+        if (Platform.isFxApplicationThread()) {
+            SAFNotification.error(message);
+        } else {
+            Platform.runLater(() -> SAFNotification.error(message));
+        }
     }
 
     public List<String> getAllMonthForReview() {
@@ -40,120 +55,176 @@ public class PayrollReviewApi {
                     }
             ).getData();
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("getAllMonthForReview failed", e);
             return null;
-
         }
     }
 
-
-    @SneakyThrows
     public List<String> getAllKeys() {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.ALL_GROUP_KEYS,
-                null,
-                new TypeReference<List<String>>() {
-                }
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.ALL_GROUP_KEYS,
+                    null,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("getAllKeys failed", e);
+            return null;
+        }
     }
 
-    @SneakyThrows
     public List<String> getAllKeysForMonth(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.MONTH_GROUP_KEYS,
-                request,
-                new TypeReference<List<String>>() {
-                }
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.MONTH_GROUP_KEYS,
+                    request,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("getAllKeysForMonth failed", e);
+            return null;
+        }
     }
 
-    @SneakyThrows
     public List<String> getEmployeeMonthKeys(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.EMPLOYEE_MONTH_GROUP_KEYS,
-                request,
-                new TypeReference<List<String>>() {
-                }
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.EMPLOYEE_MONTH_GROUP_KEYS,
+                    request,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("getEmployeeMonthKeys failed", e);
+            return null;
+        }
     }
 
-    @SneakyThrows
     public List<String> getEmployeeMonthsReview(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.EMPLOYEE_MONTHS,
-                request,
-                new TypeReference<List<String>>() {
-                }
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.EMPLOYEE_MONTHS,
+                    request,
+                    new TypeReference<List<String>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("getEmployeeMonthsReview failed", e);
+            return null;
+        }
     }
 
-    @SneakyThrows
+    /** ⭐ البحث بـ SEARCH_TIMEOUT. */
     public List<EmployeeSearchResult> searchInEmployee(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.SEARCH2,
-                request,
-                new TypeReference<List<EmployeeSearchResult>>() {
-                }
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.SEARCH2,
+                    request,
+                    HttpCore.SEARCH_TIMEOUT,
+                    new TypeReference<List<EmployeeSearchResult>>() {
+                    }
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("searchInEmployee failed", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public Integer deleteFullMonthReview(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.DELETE_MONTH_ALL,
-                request,
-                Integer.class
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.DELETE_MONTH_ALL,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("deleteFullMonthReview failed", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public Integer deletePayGroupReview(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.DELETE_GROUP_ALL,
-                request,
-                Integer.class
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.DELETE_GROUP_ALL,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("deletePayGroupReview failed", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public Integer deleteEmployeeMonthReview(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_MONTH,
-                request,
-                Integer.class
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_MONTH,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("deleteEmployeeMonthReview failed", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
     public Integer deleteEmployeePayGroup(PayrollRequest request) {
-        return ApiClient.post(
-                ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_GROUP_MONTH,
-                request,
-                Integer.class
-        ).getData();
+        try {
+            return ApiClient.post(
+                    ApiEndpoints.PayrollReview.DELETE_EMPLOYEE_GROUP_MONTH,
+                    request,
+                    Integer.class
+            ).getData();
+        } catch (IOException | InterruptedException e) {
+            fxError(e.getMessage());
+            log.error("deleteEmployeePayGroup failed", e);
+            throw new RuntimeException(e);
+        }
     }
 
-    @SneakyThrows
+    /** fire-and-forget — بيشتغل على ASYNC_EXECUTOR. */
     public void updateKeysReviewAll() {
         ApiClient.postAsync(
                 ApiEndpoints.PayrollReview.UPDATE_REVIEW_KEYS_ALL,
                 null,
                 Integer.class
-        );
+        ).whenComplete((resp, ex) -> {
+            if (ex != null) {
+                log.error("updateKeysReviewAll failed", ex);
+            } else if (resp != null && !resp.isSuccess()) {
+                log.warn("updateKeysReviewAll returned failure: {}", resp.getMessage());
+            }
+        });
     }
 
-    @SneakyThrows
+    /** fire-and-forget — بيشتغل على ASYNC_EXECUTOR. */
     public void updateKeysReviewMonth(PayrollRequest request) {
         ApiClient.postAsync(
                 ApiEndpoints.PayrollReview.UPDATE_REVIEW_KEYS_MONTH,
                 request,
                 Integer.class
-        );
+        ).whenComplete((resp, ex) -> {
+            if (ex != null) {
+                log.error("updateKeysReviewMonth failed", ex);
+            } else if (resp != null && !resp.isSuccess()) {
+                log.warn("updateKeysReviewMonth returned failure: {}", resp.getMessage());
+            }
+        });
     }
 
-
     public ViewMainRecordForRangeDate getMainMonthRecords(PayrollRequest request) {
-
         try {
             return ApiClient.post(
                     ApiEndpoints.PayrollReview.MAIN_MONTH_RECORDS,
@@ -161,7 +232,8 @@ public class PayrollReviewApi {
                     ViewMainRecordForRangeDate.class
             ).getData();
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("getMainMonthRecords failed", e);
             throw new RuntimeException(e);
         }
     }
@@ -174,10 +246,10 @@ public class PayrollReviewApi {
                     ViewNonPrimaryRangeDate.class
             ).getData();
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("getNonPrimaryMonthRecords failed", e);
             throw new RuntimeException(e);
         }
-
     }
 
     public boolean downloadMainReviewReport(PayrollRequest request, Path filePath) {
@@ -186,10 +258,11 @@ public class PayrollReviewApi {
                     ApiEndpoints.PayrollReview.downloadReview,
                     request,
                     filePath
-
             );
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            fxError(e.getMessage());
+            log.error("downloadMainReviewReport failed", e);
+            return false;
         }
     }
 
@@ -201,8 +274,8 @@ public class PayrollReviewApi {
                     targetPath
             );
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
-            log.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("downloadComparePDF failed", e);
             return false;
         }
     }
@@ -215,8 +288,8 @@ public class PayrollReviewApi {
                     targetPath
             );
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
-            log.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("downloadCustomReviewPDF failed", e);
             return false;
         }
     }
@@ -229,7 +302,8 @@ public class PayrollReviewApi {
                     Long.class
             ).getData();
         } catch (IOException | InterruptedException e) {
-            SAFNotification.error(e.getMessage());
+            fxError(e.getMessage());
+            log.error("downloadRecord_129 failed", e);
             throw new RuntimeException(e);
         }
     }

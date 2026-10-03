@@ -14,13 +14,15 @@ import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.DangerConfirmDialog;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
-import lombok.SneakyThrows;
+import javafx.application.Platform;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.*;
 
 import static com.safwat.hr.shared.util.DateUtils.getFirstDayOfMonth;
 
+@Slf4j
 public class PayrollManagerService {
 
     private final PayrollManagerController managerController;
@@ -28,24 +30,47 @@ public class PayrollManagerService {
     private final PayrollChangeCardApi payrollChangeCardApi = PayrollChangeCardApi.getInstance();
     private final PayrollReviewApi payrollReviewApi = PayrollReviewApi.getInstance();
 
-    public List<String> customList = new ArrayList<>();
+    private final List<String> customList = new ArrayList<>();
 
     public PayrollManagerService(PayrollManagerController payrollManagerController) {
         this.managerController = payrollManagerController;
-
-
         setAllMonthsList();
     }
 
-
-    public void setAllMonthsList() {
-
-
+    /** يعرض إشعار خطأ على الـ FX thread بغض النظر عن الـ thread المنادي. */
+    private static void fxError(String message) {
+        if (Platform.isFxApplicationThread()) {
+            SAFNotification.error(message);
+        } else {
+            Platform.runLater(() -> SAFNotification.error(message));
+        }
     }
 
-    @SneakyThrows
+    /** يعرض إشعار info على الـ FX thread بغض النظر عن الـ thread المنادي. */
+    private static void fxInfo(String message) {
+        if (Platform.isFxApplicationThread()) {
+            SAFNotification.info(message);
+        } else {
+            Platform.runLater(() -> SAFNotification.info(message));
+        }
+    }
+
+    public void setAllMonthsList() {
+        // TODO: املأ القائمة لو محتاج، أو احذف الدالة
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  Read-only helpers (بتتنادى من SmartSearchHelper على ASYNC_EXECUTOR)
+    // ═══════════════════════════════════════════════════════════
+
     public List<String> getAllMonthsYearly() {
-        return payrollYearlyApi.getAllMonthsForYearly();
+        try {
+            return payrollYearlyApi.getAllMonthsForYearly();
+        } catch (Exception e) {
+            fxError(e.getMessage());
+            log.error("getAllMonthsYearly failed", e);
+            return Collections.emptyList();
+        }
     }
 
     public List<String> getAllMonthsReview() {
@@ -54,37 +79,6 @@ public class PayrollManagerService {
 
     public List<String> getAllMonthsChangeCard() {
         return payrollChangeCardApi.getAllMonthForChangeCard();
-    }
-
-    // ===============================================================================
-    // القسم الخاص بتقرير الصرفيات السنوى
-    // ===============================================================================
-    public void deleteOneMonthYearly() {
-        boolean ok = DangerConfirmDialog.show("تأكيد الحذف", "سيتم حذف بيانات الشهر كاملة من تقرير الصرفيات السنوى", "حذف شهر " + managerController.getTxtAllMonthsYearly().getText());
-        if (ok) {
-            LocalDate date = getFirstDayOfMonth(managerController.getTxtAllMonthsYearly().getText());
-            Integer deletedRows = payrollYearlyApi.deleteFullMonthYearly(date);
-
-            managerController.getTxtAllMonthsYearly().clear();
-            SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
-        } else {
-            SAFNotification.info("تم إلغاء عملية الحذف");
-        }
-    }
-
-    public void deleteTargetPayGroup() {
-        boolean ok = DangerConfirmDialog.show("تأكيد الحذف", "سيتم حذف بيانات المجموعة كاملة من تقرير الصرفيات السنوى" + managerController.getTxtGroupAnnual().getText(), "حذف شهر " + managerController.getTxtMonthGroupY().getText());
-        if (ok) {
-            LocalDate date = getFirstDayOfMonth(managerController.getTxtMonthGroupY().getText());
-            String payGroup = managerController.getTxtGroupAnnual().getText();
-            Integer deletedRows = payrollYearlyApi.deleteTargetGroupByMonth(date, payGroup);
-            managerController.getTxtGroupAnnual().clear();
-            managerController.getTxtMonthGroupY().clear();
-
-            SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
-        } else {
-            SAFNotification.info("تم إلغاء عملية الحذف");
-        }
     }
 
     public List<String> getAvailablePayGroupForMonth() {
@@ -102,11 +96,10 @@ public class PayrollManagerService {
     }
 
     public List<EmployeeSearchResult> getEmployeeInYearly() {
-        LocalDate date = getFirstDayOfMonth(managerController.getTxtMonthForEmpAnnual().getText());
+        String searchValue = (managerController.getTxtEmpIdAnnual().getText());
         PayrollRequest request = PayrollRequest.builder()
-                .startDate(date)
+                .searchValue(searchValue)
                 .build();
-
         return payrollYearlyApi.searchInEmployee(request);
     }
 
@@ -117,22 +110,6 @@ public class PayrollManagerService {
         return payrollYearlyApi.getEmployeeMonths(request);
     }
 
-    public void deleteEmployeeMonth() {
-
-        boolean ok = DangerConfirmDialog.show("تاكيد الحذف", "سيتم حذف شهر " + managerController.getTxtMonthForEmpAnnual().getText() + " للموظف " + managerController.getTxtEmpNameAnnual().getText(), "");
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .nationalId(managerController.getTxtEmpIdAnnual().getText())
-                    .startDate(getFirstDayOfMonth(managerController.getTxtMonthForEmpAnnual().getText()))
-                    .build();
-            Integer deletedRows = payrollYearlyApi.deleteMonthForEmployee(request);
-
-            SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
-        } else {
-            SAFNotification.info("تم إلغاء عملية الحذف");
-        }
-    }
-
     public List<String> getPayGroupForEmployeeInMonth(String nationalId, String strDate) {
         PayrollRequest request = PayrollRequest.builder()
                 .nationalId(nationalId)
@@ -141,41 +118,8 @@ public class PayrollManagerService {
         return payrollYearlyApi.getPayGroupForEmployeeInMonth(request);
     }
 
-    public void deletePayGroupInTargetMonthAndEmployee(String nationalId, String strDate, String payGroup) {
-        boolean ok = DangerConfirmDialog.show("تاكيد الحذف", "سيتم حذف شهر " + managerController.getTxtMonthForPaymentAnnual().getText() + " للموظف " + managerController.getTxtEmpNameAnnual2().getText(), "");
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .nationalId(nationalId)
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .payGroup(payGroup)
-                    .build();
-            Integer deletedRows = payrollYearlyApi.deletePayGroupInTargetMonthAndEmployee(request);
-
-            SAFNotification.info("تم حذف عدد " + deletedRows + " صف ");
-        } else {
-            SAFNotification.info("تم إلغاء عملية الحذف");
-        }
-    }
-
     public List<String> getPayGroup() {
         return payrollYearlyApi.getPayGroup();
-    }
-
-    public void updatePayGroupName(String oldName, String newName) {
-
-        PayrollRequest request = PayrollRequest.builder()
-                .payGroup(oldName)
-                .description(newName)
-                .build();
-        try {
-            Integer updatedRows = payrollYearlyApi.updatePayGroupName(request);
-            managerController.getTxtOldPaymentName().clear();
-            managerController.getTxtNewPaymentName().clear();
-            SAFNotification.info("تم تحديث عدد " + updatedRows + " صف");
-        } catch (Exception e) {
-            SAFNotification.error(e.getMessage());
-        }
-
     }
 
     public List<PayrollManagerController.GroupDescription> getDescriptions(String strDate) {
@@ -183,51 +127,7 @@ public class PayrollManagerService {
                 .startDate(getFirstDayOfMonth(strDate))
                 .build();
         return payrollYearlyApi.getDescriptions(request);
-
     }
-
-    boolean saveDescriptions(String month,
-                             List<PayrollManagerController.GroupDescription> descriptions) {
-
-        // 1. تحويل الـ DTO لـ List<Map> (الـ payload العام)
-        List<Map<String, String>> payload = descriptions.stream()
-                .map(d -> {
-                    Map<String, String> map = new HashMap<>();
-
-                    map.put("payGroup", d.getPayGroup());
-                    map.put("description", d.getDescription());
-                    return map;
-                })
-                .toList();
-
-        // 2. بناء الـ Request مع الـ payload
-        PayrollRequest request = PayrollRequest.builder()
-                .startDate(DateUtils.getFirstDayOfMonth(month))
-                .payload(payload)   // ← الحقل العام
-                .build();
-
-        // 3. إرسال للـ Backend
-        try {
-            ApiResponse<Integer> response = ApiClient.post(
-                    "/payrollYearly/update-descriptions-list",
-                    request,
-                    new TypeReference<>() {
-                    }
-            );
-            SAFNotification.info("تم تحديث الوصف لعدد " + response.getData() + " صف");
-            return response != null
-                    && response.getData() != null
-                    && response.getData() > 0;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    // ===========================================================
-    // =============== تقارير المراجعة ===========================
-    // ===========================================================
-
 
     public List<String> getAllKeysForMonthReview(String strDate) {
         PayrollRequest request = PayrollRequest.builder()
@@ -252,109 +152,10 @@ public class PayrollManagerService {
     }
 
     public List<EmployeeSearchResult> getEmployeeInReview(String searchValue) {
-
         PayrollRequest request = PayrollRequest.builder()
                 .searchValue(searchValue)
                 .build();
-
         return payrollReviewApi.searchInEmployee(request);
-    }
-
-    public void deleteFullMonthReview(String strDate) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف الشهر بالكامل في حالة الاستمرار", "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .build();
-            Integer deletedRows = payrollReviewApi.deleteFullMonthReview(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
-
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
-        }
-    }
-
-    public void deletePayGroupReview(String strDate, String payGroup) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف المجموعة بالكامل في حالة الاستمرار  " + payGroup, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .payGroup(payGroup)
-                    .build();
-            Integer deletedRows = payrollReviewApi.deletePayGroupReview(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
-
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
-        }
-    }
-
-    public void deleteEployeeMonthReviewُ(String nationalId, String strDate) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار  " + nationalId, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .nationalId(nationalId)
-                    .startDate(getFirstDayOfMonth(strDate))
-
-                    .build();
-            Integer deletedRows = payrollReviewApi.deleteEmployeeMonthReview(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
-
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
-        }
-    }
-
-    public void deleteEployeeMonthReviewُ(String nationalId, String strDate, String payGroup) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف مجوعة من الموظف في حالة الاستمرار  " + nationalId + "\n " + payGroup, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .nationalId(nationalId)
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .payGroup(payGroup)
-                    .build();
-            Integer deletedRows = payrollReviewApi.deleteEmployeePayGroup(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
-
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
-        }
-    }
-
-    public void updateKeysReviewAllReport() {
-
-        ReportContext ctx = ReportContext.builder()
-
-                .user(SessionManager.getInstance().getUsername())
-                .build();
-
-        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_ALL", ctx,
-                reportId -> {
-                    // على UI Thread already (شغال جوه Platform.runLater)
-                    SAFNotification.success("تم إرسال الطلب رقم: " + reportId);
-                },
-                error -> {
-                    SAFNotification.error("فشل الإرسال: " + error.getMessage());
-                }
-        );
-
-    }
-
-    public void updateKeysReviewMonth(String strDate) {
-
-        ReportContext ctx = ReportContext.builder()
-                .user(SessionManager.getInstance().getUsername())
-                .startDate(strDate)
-                .build();
-        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_MONTH", ctx,
-                reportId -> {
-                    // على UI Thread already (شغال جوه Platform.runLater)
-                    SAFNotification.success("تم إرسال الطلب رقم: " + reportId);
-                },
-                error -> {
-                    SAFNotification.error("فشل الإرسال: " + error.getMessage());
-                }
-        );
     }
 
     public List<EmployeeSearchResult> getEmployeeInSub(String searchValue) {
@@ -371,32 +172,172 @@ public class PayrollManagerService {
         return payrollChangeCardApi.getEmployeeMonthsChangeCard(request);
     }
 
-    public void deleteEmployeeMonthSub(String nationalId, String strDate) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار  " + nationalId, "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .nationalId(nationalId)
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .build();
-            Integer deletedRows = payrollChangeCardApi.deleteEmployeeMonthChangeCard(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+    // ═══════════════════════════════════════════════════════════
+    //  Delete operations
+    //  ⚠️ كل الدوال دي blocking — لازم تتنادى من UiAsync.run(...)
+    //     عشان متجمّدش الشاشة. الـ DangerConfirmDialog بيتنادى
+    //     *قبلها* على الـ FX thread (في الـ Controller).
+    // ═══════════════════════════════════════════════════════════
 
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
+    /** تنفيذ الحذف الفعلي بعد موافقة المستخدم — blocking. */
+    public void deleteOneMonthYearly() {
+        LocalDate date = getFirstDayOfMonth(managerController.getTxtAllMonthsYearly().getText());
+        Integer deletedRows = payrollYearlyApi.deleteFullMonthYearly(date);
+        managerController.getTxtAllMonthsYearly().clear();
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteTargetPayGroup() {
+        LocalDate date = getFirstDayOfMonth(managerController.getTxtMonthGroupY().getText());
+        String payGroup = managerController.getTxtGroupAnnual().getText();
+        Integer deletedRows = payrollYearlyApi.deleteTargetGroupByMonth(date, payGroup);
+        managerController.getTxtGroupAnnual().clear();
+        managerController.getTxtMonthGroupY().clear();
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteEmployeeMonth() {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(managerController.getTxtEmpIdAnnual().getText())
+                .startDate(getFirstDayOfMonth(managerController.getTxtMonthForEmpAnnual().getText()))
+                .build();
+        Integer deletedRows = payrollYearlyApi.deleteMonthForEmployee(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deletePayGroupInTargetMonthAndEmployee(String nationalId, String strDate, String payGroup) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .startDate(getFirstDayOfMonth(strDate))
+                .payGroup(payGroup)
+                .build();
+        Integer deletedRows = payrollYearlyApi.deletePayGroupInTargetMonthAndEmployee(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void updatePayGroupName(String oldName, String newName) {
+        PayrollRequest request = PayrollRequest.builder()
+                .payGroup(oldName)
+                .description(newName)
+                .build();
+        Integer updatedRows = payrollYearlyApi.updatePayGroupName(request);
+        managerController.getTxtOldPaymentName().clear();
+        managerController.getTxtNewPaymentName().clear();
+        fxInfo("تم تحديث عدد " + updatedRows + " صف");
+    }
+
+    public boolean saveDescriptions(String month,
+                                    List<PayrollManagerController.GroupDescription> descriptions) {
+        List<Map<String, String>> payload = descriptions.stream()
+                .map(d -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("payGroup", d.getPayGroup());
+                    map.put("description", d.getDescription());
+                    return map;
+                })
+                .toList();
+
+        PayrollRequest request = PayrollRequest.builder()
+                .startDate(DateUtils.getFirstDayOfMonth(month))
+                .payload(payload)
+                .build();
+
+        try {
+            ApiResponse<Integer> response = ApiClient.post(
+                    "/payrollYearly/update-descriptions-list",
+                    request,
+                    new TypeReference<>() {
+                    }
+            );
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                fxInfo("تم تحديث الوصف لعدد " + response.getData() + " صف");
+                return response.getData() > 0;
+            }
+            fxError("فشل حفظ الأوصاف: " + (response != null ? response.getMessage() : "لا يوجد رد"));
+            return false;
+        } catch (Exception e) {
+            log.error("saveDescriptions failed", e);
+            fxError("فشل حفظ الأوصاف: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deleteFullMonthSub(String strDate) {
-        boolean ok = DangerConfirmDialog.show("تأكيد حذف", "سيتم حذف الشهر بالكامل في حالة الاستمرار", "شهر " + DateUtils.toArabicMonthYear(getFirstDayOfMonth(strDate)));
-        if (ok) {
-            PayrollRequest request = PayrollRequest.builder()
-                    .startDate(getFirstDayOfMonth(strDate))
-                    .build();
-            Integer deletedRows = payrollChangeCardApi.deleteFullMonthChangeCard(request);
-            SAFNotification.info("تم حذف عدد" + deletedRows + " صف");
+    public void deleteFullMonthReview(String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        Integer deletedRows = payrollReviewApi.deleteFullMonthReview(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
 
-        } else {
-            SAFNotification.info("تم إلغاء العملية");
-        }
+    public void deletePayGroupReview(String strDate, String payGroup) {
+        PayrollRequest request = PayrollRequest.builder()
+                .startDate(getFirstDayOfMonth(strDate))
+                .payGroup(payGroup)
+                .build();
+        Integer deletedRows = payrollReviewApi.deletePayGroupReview(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteEmployeeMonthReview(String nationalId, String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        Integer deletedRows = payrollReviewApi.deleteEmployeeMonthReview(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteEmployeePayGroupReview(String nationalId, String strDate, String payGroup) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .startDate(getFirstDayOfMonth(strDate))
+                .payGroup(payGroup)
+                .build();
+        Integer deletedRows = payrollReviewApi.deleteEmployeePayGroup(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteEmployeeMonthSub(String nationalId, String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .nationalId(nationalId)
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        Integer deletedRows = payrollChangeCardApi.deleteEmployeeMonthChangeCard(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    public void deleteFullMonthSub(String strDate) {
+        PayrollRequest request = PayrollRequest.builder()
+                .startDate(getFirstDayOfMonth(strDate))
+                .build();
+        Integer deletedRows = payrollChangeCardApi.deleteFullMonthChangeCard(request);
+        fxInfo("تم حذف عدد " + deletedRows + " صف");
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  Key Update — ReportExternalSubmitter async بالفعل
+    // ═══════════════════════════════════════════════════════════
+
+    public void updateKeysReviewAllReport() {
+        ReportContext ctx = ReportContext.builder()
+                .user(SessionManager.getInstance().getUsername())
+                .build();
+
+        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_ALL", ctx,
+                reportId -> SAFNotification.success("تم إرسال الطلب رقم: " + reportId),
+                error -> SAFNotification.error("فشل الإرسال: " + error.getMessage())
+        );
+    }
+
+    public void updateKeysReviewMonth(String strDate) {
+        ReportContext ctx = ReportContext.builder()
+                .user(SessionManager.getInstance().getUsername())
+                .startDate(strDate)
+                .build();
+        ReportExternalSubmitter.getInstance().submit("UPDATE_REVIEW_KEYS_MONTH", ctx,
+                reportId -> SAFNotification.success("تم إرسال الطلب رقم: " + reportId),
+                error -> SAFNotification.error("فشل الإرسال: " + error.getMessage())
+        );
     }
 }

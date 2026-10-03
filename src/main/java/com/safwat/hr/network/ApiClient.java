@@ -3,25 +3,26 @@ package com.safwat.hr.network;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * ══════════════════════════════════════════════════════════════════
  * ApiClient — بوابة HTTP الرئيسية للتطبيق
  * ══════════════════════════════════════════════════════════════════
  * <p>
- * ⭐ كل الدوال القديمة (بدون Duration) فضلت زي ما هي بالظبط، وبتستخدم
- * {@link HttpCore#TIMEOUT} الافتراضي (45 ثانية) — مفيش أي تغيير في سلوك
- * أي endpoint تاني في التطبيق.
+ * ⭐ كل الدوال القديمة (بدون Duration) بتستخدم {@link HttpCore#TIMEOUT}
+ * الافتراضي (45 ثانية).
  * <p>
- * أُضيفت overloads جديدة بتقبل {@link Duration} مخصص لاستخدامها في
- * العمليات الطويلة (زي {@code BackupService}).
+ * ⭐ الدوال الـ blocking (get/post/put/delete) لازم ما تتنادّاش من
+ * JavaFX Application Thread. من الـ UI استخدم نسخ {@code *Async}
+ * (أو {@code UiAsync.run}) — كلها بتشتغل على {@link HttpCore#ASYNC_EXECUTOR}.
  */
 public final class ApiClient {
 
@@ -89,9 +90,7 @@ public final class ApiClient {
         return sendRef(core().appendQueryParams(path, queryParams), "GET", null, responseType);
     }
 
-    /**
-     * ⭐ جديد: GET بـ timeout مخصص + TypeReference.
-     */
+    /** GET بـ timeout مخصص + TypeReference. */
     public static <T> ApiResponse<T> getWithTypeRef(String path,
                                                     Duration timeout,
                                                     TypeReference<T> responseType)
@@ -125,15 +124,22 @@ public final class ApiClient {
         return sendRef(path, "POST", body, responseType);
     }
 
-    /**
-     * ⭐ جديد: POST بـ timeout مخصص.
-     */
+    /** POST بـ timeout مخصص. */
     public static <T> ApiResponse<T> post(String path,
                                           Object body,
                                           Duration timeout,
                                           Class<T> responseType)
             throws IOException, InterruptedException {
         return send(path, "POST", body, timeout, responseType);
+    }
+
+    /** ⭐ جديد: POST بـ timeout مخصص + TypeReference (للبحث وقوائم النتائج). */
+    public static <T> ApiResponse<T> post(String path,
+                                          Object body,
+                                          Duration timeout,
+                                          TypeReference<T> responseType)
+            throws IOException, InterruptedException {
+        return sendRef(path, "POST", body, timeout, responseType);
     }
 
     // ─────────────────────────────────────────────
@@ -150,10 +156,12 @@ public final class ApiClient {
     // ─────────────────────────────────────────────
     //  DELETE
     // ─────────────────────────────────────────────
+
     public static void delete(String path)
             throws IOException, InterruptedException {
         send(path, "DELETE", null, HttpCore.TIMEOUT, (Class<Void>) null);
     }
+
     public static <T> ApiResponse<T> delete(String path,
                                             Class<T> responseType)
             throws IOException, InterruptedException {
@@ -199,97 +207,83 @@ public final class ApiClient {
     }
 
     // ─────────────────────────────────────────────
-    //  Async Wrappers
+    //  Async Wrappers  (كلها على HttpCore.ASYNC_EXECUTOR)
     // ─────────────────────────────────────────────
+
+    /**
+     * ⭐ نقطة التشغيل الوحيدة لكل الـ async wrappers:
+     * بتشغّل النداء على ASYNC_EXECUTOR (مش ForkJoinPool.commonPool())
+     * وبتحوّل أي exception لـ ApiResponse فاشل.
+     */
+    private static <R> CompletableFuture<ApiResponse<R>> async(Callable<ApiResponse<R>> call) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return call.call();
+            } catch (Exception e) {
+                return core().<R>createErrorResponse(e);
+            }
+        }, HttpCore.ASYNC_EXECUTOR);
+    }
+
+    // ── GET ──
 
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
                                                                  Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return get(path, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> get(path, responseType));
     }
 
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
                                                                  Map<String, String> queryParams,
                                                                  Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return get(path, queryParams, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> get(path, queryParams, responseType));
     }
 
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
                                                                  Map<String, String> queryParams,
                                                                  TypeReference<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return getWithTypeRef(path, queryParams, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> getWithTypeRef(path, queryParams, responseType));
     }
 
-    /**
-     * ⭐ جديد: نسخة async من GET+TypeReference بـ timeout مخصص.
-     */
     public static <T> CompletableFuture<ApiResponse<T>> getAsync(String path,
                                                                  Duration timeout,
                                                                  TypeReference<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return getWithTypeRef(path, timeout, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> getWithTypeRef(path, timeout, responseType));
     }
+
+    // ── POST ──
 
     public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
                                                                   Object body,
                                                                   Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return post(path, body, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> post(path, body, responseType));
     }
 
-    /**
-     * ⭐ جديد: نسخة async من POST بـ timeout مخصص.
-     */
     public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
                                                                   Object body,
                                                                   Duration timeout,
                                                                   Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return post(path, body, timeout, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> post(path, body, timeout, responseType));
+    }
+
+    /** ⭐ جديد: postAsync + TypeReference. */
+    public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
+                                                                  Object body,
+                                                                  TypeReference<T> responseType) {
+        return async(() -> post(path, body, responseType));
+    }
+
+    /** ⭐ جديد: postAsync + TypeReference + timeout مخصص. */
+    public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
+                                                                  Object body,
+                                                                  Duration timeout,
+                                                                  TypeReference<T> responseType) {
+        return async(() -> post(path, body, timeout, responseType));
     }
 
     public static <T> CompletableFuture<ApiResponse<T>> postFormAsync(String path,
                                                                       Map<String, String> formData,
                                                                       Class<T> responseType) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return postForm(path, formData, responseType);
-            } catch (Exception e) {
-                return core().createErrorResponse(e);
-            }
-        });
+        return async(() -> postForm(path, formData, responseType));
     }
 
     // ─────────────────────────────────────────────
@@ -304,9 +298,6 @@ public final class ApiClient {
         return send(path, method, body, HttpCore.TIMEOUT, responseType);
     }
 
-    /**
-     * ⭐ جديد: نفس المنطق، بـ timeout قابل للتخصيص.
-     */
     private static <T> ApiResponse<T> send(String path,
                                            String method,
                                            Object body,
@@ -330,9 +321,6 @@ public final class ApiClient {
         return sendRef(path, method, body, HttpCore.TIMEOUT, responseType);
     }
 
-    /**
-     * ⭐ جديد: نفس المنطق، بـ timeout قابل للتخصيص.
-     */
     private static <T> ApiResponse<T> sendRef(String path,
                                               String method,
                                               Object body,
@@ -349,14 +337,11 @@ public final class ApiClient {
     }
 
     // ─────────────────────────────────────────────
-//  Binary Download
-// ─────────────────────────────────────────────
+    //  Binary Download
+    // ─────────────────────────────────────────────
 
     /**
      * ينزّل ملف binary (PDF / XLSX / ...) من الـ endpoint.
-     *
-     * <p>بيستخدم نفس {@link HttpCore} — نفس BASE_URL، نفس Auth header،
-     * نفس الـ timeout الافتراضي.
      *
      * @param path المسار النسبي (بدون /api)
      * @return محتوى الملف كـ byte[]
@@ -366,10 +351,7 @@ public final class ApiClient {
         return downloadBinary(path, HttpCore.TIMEOUT);
     }
 
-    /**
-     * نفس {@link #downloadBinary(String)} لكن بـ timeout مخصص —
-     * مفيد للتقارير الطويلة (Excel لكل الموظفين).
-     */
+    /** نفس {@link #downloadBinary(String)} لكن بـ timeout مخصص (تقارير طويلة). */
     public static byte[] downloadBinary(String path, Duration timeout)
             throws IOException, InterruptedException {
         HttpCore c = core();
@@ -398,25 +380,20 @@ public final class ApiClient {
         return body;
     }
 
-    /**
-     * نسخة async من {@link #downloadBinary(String)}.
-     */
     public static CompletableFuture<byte[]> downloadBinaryAsync(String path) {
         return downloadBinaryAsync(path, HttpCore.TIMEOUT);
     }
 
-    /**
-     * نسخة async من {@link #downloadBinary(String, Duration)}.
-     */
     public static CompletableFuture<byte[]> downloadBinaryAsync(String path, Duration timeout) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 return downloadBinary(path, timeout);
             } catch (Exception e) {
-                throw new java.util.concurrent.CompletionException(e);
+                throw new CompletionException(e);
             }
-        });
+        }, HttpCore.ASYNC_EXECUTOR);
     }
+
     /**
      * POST يرسل body JSON وينزّل binary response (PDF).
      * يُستخدم لتصدير بطاقة الأجور مع إرسال precomputedMonths.
@@ -433,7 +410,7 @@ public final class ApiClient {
                         .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(
                                 c.mapper.writeValueAsString(body),
-                                java.nio.charset.StandardCharsets.UTF_8))
+                                StandardCharsets.UTF_8))
         ).build();
 
         HttpResponse<byte[]> response = c.httpClient.send(
@@ -450,8 +427,11 @@ public final class ApiClient {
     public static CompletableFuture<byte[]> downloadBinaryPostAsync(
             String path, Object body, Duration timeout) {
         return CompletableFuture.supplyAsync(() -> {
-            try { return downloadBinaryPost(path, body, timeout); }
-            catch (Exception e) { throw new java.util.concurrent.CompletionException(e); }
-        });
+            try {
+                return downloadBinaryPost(path, body, timeout);
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        }, HttpCore.ASYNC_EXECUTOR);
     }
 }

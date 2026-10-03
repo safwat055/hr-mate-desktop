@@ -1,9 +1,11 @@
 package com.safwat.hr.controller.payroll.payrollManager;
 
 import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
+import com.safwat.hr.shared.ui.DangerConfirmDialog;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.shared.util.DateUtils;
+import com.safwat.hr.ui.UiAsync;
 import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -25,16 +27,19 @@ import java.util.ResourceBundle;
 public class PayrollManagerController implements Initializable {
 
     private final ObservableList<GroupDescription> groupDescriptionList = FXCollections.observableArrayList();
+
     @FXML
     TextField txtMonthReview;
+
     private PayrollManagerService managerService;
+
     // ── Header ──
     @FXML
     private Label lblStatus;
+
     // ── Annual Report ──
     @FXML
     private Button btnRefreshAnnual;
-    // Deletion
     @FXML
     private Button btnDeleteAllAnnual;
     @FXML
@@ -57,6 +62,7 @@ public class PayrollManagerController implements Initializable {
     private TextField txtEmpNameAnnual2, txtEmpCodeAnnual2;
     @FXML
     private Button btnDeletePaymentAnnual;
+
     // Edit
     @FXML
     private TextField txtOldPaymentName;
@@ -76,6 +82,7 @@ public class PayrollManagerController implements Initializable {
     private TableColumn<GroupDescription, String> colGroupDesc;
     @FXML
     private Button btnSaveDescriptions;
+
     // ── Review Report ──
     @FXML
     private Button btnRefreshReview;
@@ -85,24 +92,18 @@ public class PayrollManagerController implements Initializable {
     private Button btnDeleteMonthReview;
     @FXML
     private TextField txtMonthForGroupReview, txtGroupReview;
-
     @FXML
     private Button btnDeleteGroupReview;
     @FXML
     private TextField txtMonthForEmpReview, txtEmpIdReview, txtEmpNameReview, txtEmpCodeReview;
-
     @FXML
     private Button btnDeleteEmpMonthReview;
-
     @FXML
     private TextField txtMonthForPaymentReview, txtEmpIdPaymentReview, txtPaymentNameReview, txtEmpNamePaymentReview, txtEmpCodePaymentReview;
-
     @FXML
     private Button btnDeletePaymentReview;
 
     // Key Update
-
-
     @FXML
     private TextField txtKeyMonthReview;
     @FXML
@@ -117,7 +118,6 @@ public class PayrollManagerController implements Initializable {
     private TextField txtMonthSub;
     @FXML
     private Button btnDeleteMonthSub;
-
     @FXML
     private TextField txtMonthForEmpSub, txtEmpIdSub, txtEmpNameSub, txtEmpCodeSub;
     @FXML
@@ -137,18 +137,11 @@ public class PayrollManagerController implements Initializable {
         setButtonsActionsSub();
     }
 
-    /**
-     * ── ربط أعمدة الجدول + تفعيل التعديل على عمود الوصف ──
-     */
     private void setupTableColumns() {
-        // عمود اسم المجموعة — للعرض فقط
-        colGroupName.setCellValueFactory(cell ->
-                cell.getValue().payGroupProperty());
+        colGroupName.setCellValueFactory(cell -> cell.getValue().payGroupProperty());
         colGroupName.setEditable(false);
 
-        // عمود الوصف — قابل للتعديل
-        colGroupDesc.setCellValueFactory(cell ->
-                cell.getValue().descriptionProperty());
+        colGroupDesc.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         colGroupDesc.setCellFactory(TextFieldTableCell.forTableColumn(new DefaultStringConverter()));
         colGroupDesc.setOnEditCommit(event -> {
             GroupDescription row = event.getRowValue();
@@ -163,65 +156,125 @@ public class PayrollManagerController implements Initializable {
         managerService.setAllMonthsList();
     }
 
+    // ═══════════════════════════════════════════════════════════
+    //  Buttons — Annual Report
+    // ═══════════════════════════════════════════════════════════
+
     void setButtonsActionsYearly() {
-        btnDeleteMonthAnnual.setOnAction(_ -> managerService.deleteOneMonthYearly());
-        btnDeleteGroupAnnual.setOnAction(_ -> managerService.deleteTargetPayGroup());
-        btnDeleteEmpMonthAnnual.setOnAction(_ -> managerService.deleteEmployeeMonth());
-        btnDeletePaymentAnnual.setOnAction(_ -> managerService.deletePayGroupInTargetMonthAndEmployee(
-                txtEmpIdPaymentAnnual.getText(), txtMonthForPaymentAnnual.getText(), txtPaymentNameAnnual.getText()
-        ));
-        btnUpdatePaymentName.setOnAction(_ -> managerService.updatePayGroupName(
-                txtOldPaymentName.getText(), txtNewPaymentName.getText()));
-        btnLoadGroupsForDesc.setOnAction(_ -> updateDescriptionList());
 
-        // ── حفظ الأوصاف المعدلة ──
-        btnSaveDescriptions.setOnAction(_ -> saveDescriptions());
+        // ── حذف شهر كامل ──
+        btnDeleteMonthAnnual.setOnAction(_ -> {
+            String monthText = txtAllMonthsYearly.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد الحذف",
+                    "سيتم حذف بيانات الشهر كاملة من تقرير الصرفيات السنوى",
+                    "حذف شهر " + monthText);
+            if (!ok) {
+                SAFNotification.info("تم إلغاء عملية الحذف");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteOneMonthYearly());
+        });
+
+        // ── حذف مجموعة كاملة ──
+        btnDeleteGroupAnnual.setOnAction(_ -> {
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد الحذف",
+                    "سيتم حذف بيانات المجموعة كاملة من تقرير الصرفيات السنوى " + txtGroupAnnual.getText(),
+                    "حذف شهر " + txtMonthGroupY.getText());
+            if (!ok) {
+                SAFNotification.info("تم إلغاء عملية الحذف");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteTargetPayGroup());
+        });
+
+        // ── حذف شهر موظف ──
+        btnDeleteEmpMonthAnnual.setOnAction(_ -> {
+            boolean ok = DangerConfirmDialog.show(
+                    "تاكيد الحذف",
+                    "سيتم حذف شهر " + txtMonthForEmpAnnual.getText() + " للموظف " + txtEmpNameAnnual.getText(),
+                    "");
+            if (!ok) {
+                SAFNotification.info("تم إلغاء عملية الحذف");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteEmployeeMonth());
+        });
+
+        // ── حذف مجموعة من موظف ──
+        btnDeletePaymentAnnual.setOnAction(_ -> {
+            boolean ok = DangerConfirmDialog.show(
+                    "تاكيد الحذف",
+                    "سيتم حذف شهر " + txtMonthForPaymentAnnual.getText() + " للموظف " + txtEmpNameAnnual2.getText(),
+                    "");
+            if (!ok) {
+                SAFNotification.info("تم إلغاء عملية الحذف");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deletePayGroupInTargetMonthAndEmployee(
+                    txtEmpIdPaymentAnnual.getText(),
+                    txtMonthForPaymentAnnual.getText(),
+                    txtPaymentNameAnnual.getText()));
+        });
+
+        // ── تحديث اسم المجموعة ──
+        btnUpdatePaymentName.setOnAction(_ ->
+                UiAsync.runVoid(() -> managerService.updatePayGroupName(
+                        txtOldPaymentName.getText(),
+                        txtNewPaymentName.getText())));
+
+        // ── تحميل الأوصاف ──
+        btnLoadGroupsForDesc.setOnAction(_ -> loadDescriptionsAsync());
+
+        // ── حفظ الأوصاف ──
+        btnSaveDescriptions.setOnAction(_ -> saveDescriptionsAsync());
     }
 
-    /**
-     * ── تحميل الأوصاف من الـ Backend وملء الجدول ──
-     */
-    void updateDescriptionList() {
-        groupDescriptionList.clear();
-        List<GroupDescription> fetched = managerService.getDescriptions(txtDescMonthAnnual.getText());
-        groupDescriptionList.addAll(fetched);
-    }
-
-    /**
-     * ── حفظ الأوصاف المعدلة ──
-     */
-    private void saveDescriptions() {
+    /** تحميل الأوصاف من الـ Backend — async. */
+    private void loadDescriptionsAsync() {
         String month = txtDescMonthAnnual.getText();
         if (month == null || month.isBlank()) {
             SAFNotification.warning("اختر الشهر أولاً");
             return;
         }
-
-        List<GroupDescription> modified = new ArrayList<>(groupDescriptionList);
-        boolean success = managerService.saveDescriptions(month, modified);
-
-        if (!success) {
-            SAFNotification.error("فشل حفظ الأوصاف");
-        }
+        groupDescriptionList.clear();
+        UiAsync.run(
+                () -> managerService.getDescriptions(month),
+                fetched -> {
+                    if (fetched != null) groupDescriptionList.addAll(fetched);
+                }
+        );
     }
 
+    /** حفظ الأوصاف المعدلة — async. */
+    /** حفظ الأوصاف المعدلة — async. */
+    private void saveDescriptionsAsync() {
+        String month = txtDescMonthAnnual.getText();
+        if (month == null || month.isBlank()) {
+            SAFNotification.warning("اختر الشهر أولاً");
+            return;
+        }
+        List<GroupDescription> modified = new ArrayList<>(groupDescriptionList);
+        UiAsync.runVoid(() -> managerService.saveDescriptions(month, modified));
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  SmartSearch bindings — Annual
+    // ═══════════════════════════════════════════════════════════
+
     void setTxtMonthSearchYearly() {
-        // ── String simple binds ──
         SmartSearchHelper.bind(txtAllMonthsYearly, () -> managerService.getAllMonthsYearly(),
                 val -> txtAllMonthsYearly.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                ));
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
 
         SmartSearchHelper.bind(txtMonthGroupY, () -> managerService.getAllMonthsYearly(),
                 val -> txtMonthGroupY.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                ));
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
 
         SmartSearchHelper.bind(txtGroupAnnual, () -> managerService.getAvailablePayGroupForMonth(),
-                val -> txtGroupAnnual.setText(val)
-        );
+                txtGroupAnnual::setText);
 
-        // ── Multi-field: Employee (Annual deletion) ──
         SmartSearchHelper.bind(
                 txtEmpIdAnnual,
                 () -> managerService.getEmployeeInYearly(),
@@ -239,7 +292,6 @@ public class PayrollManagerController implements Initializable {
                 SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual, EmployeeSearchResult::getPay_id)
         );
 
-        // ── Multi-field: Employee (Payment deletion) ──
         SmartSearchHelper.bind(
                 txtEmpIdPaymentAnnual,
                 () -> managerService.getEmployeeInYearly(),
@@ -258,59 +310,49 @@ public class PayrollManagerController implements Initializable {
                 SmartSearchHelper.FieldBind.of(txtEmpCodeAnnual2, EmployeeSearchResult::getPay_id)
         );
 
-        // ── Month binds ──
         SmartSearchHelper.bind(txtMonthForEmpAnnual,
                 () -> managerService.getEmployeeMonths(txtEmpIdAnnual.getText()),
                 val -> txtMonthForEmpAnnual.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
 
         SmartSearchHelper.bind(txtMonthForPaymentAnnual,
                 () -> managerService.getEmployeeMonths(txtEmpIdPaymentAnnual.getText()),
                 val -> txtMonthForPaymentAnnual.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
 
         SmartSearchHelper.bind(txtPaymentNameAnnual,
                 () -> managerService.getPayGroupForEmployeeInMonth(
                         txtEmpIdPaymentAnnual.getText(), txtMonthForPaymentAnnual.getText()),
-                val -> txtPaymentNameAnnual.setText(val)
-        );
+                txtPaymentNameAnnual::setText);
 
         SmartSearchHelper.bind(txtOldPaymentName,
                 () -> managerService.getPayGroup(),
-                val -> txtOldPaymentName.setText(val)
-        );
+                txtOldPaymentName::setText);
 
         SmartSearchHelper.bind(txtDescMonthAnnual,
                 () -> managerService.getAllMonthsYearly(),
                 val -> txtDescMonthAnnual.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
     }
+
+    // ═══════════════════════════════════════════════════════════
+    //  SmartSearch bindings — Review
+    // ═══════════════════════════════════════════════════════════
 
     void setTxtMonthSearchReview() {
         SmartSearchHelper.bind(txtMonthReview,
                 () -> managerService.getAllMonthsReview(),
                 val -> txtMonthReview.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
+
         SmartSearchHelper.bind(txtMonthForGroupReview,
                 () -> managerService.getAllMonthsReview(),
                 val -> txtMonthForGroupReview.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
+
         SmartSearchHelper.bind(txtGroupReview,
                 () -> managerService.getAllKeysForMonthReview(txtMonthForGroupReview.getText()),
-                val -> txtGroupReview.setText(
-                        val
-                )
-        );
+                txtGroupReview::setText);
 
         SmartSearchHelper.bind(
                 txtEmpIdReview,
@@ -329,12 +371,12 @@ public class PayrollManagerController implements Initializable {
                 SmartSearchHelper.FieldBind.of(txtEmpNameReview, EmployeeSearchResult::getEmp_name),
                 SmartSearchHelper.FieldBind.of(txtEmpCodeReview, EmployeeSearchResult::getPay_id)
         );
+
         SmartSearchHelper.bind(txtMonthForEmpReview,
                 () -> managerService.getEmployeeMonthsReview(txtEmpIdReview.getText()),
                 val -> txtMonthForEmpReview.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
+
         SmartSearchHelper.bind(
                 txtEmpIdPaymentReview,
                 () -> managerService.getEmployeeInReview(txtEmpIdPaymentReview.getText()),
@@ -352,44 +394,99 @@ public class PayrollManagerController implements Initializable {
                 SmartSearchHelper.FieldBind.of(txtEmpNamePaymentReview, EmployeeSearchResult::getEmp_name),
                 SmartSearchHelper.FieldBind.of(txtEmpCodePaymentReview, EmployeeSearchResult::getPay_id)
         );
+
         SmartSearchHelper.bind(txtMonthForPaymentReview,
                 () -> managerService.getEmployeeMonthsReview(txtEmpIdPaymentReview.getText()),
                 val -> txtMonthForPaymentReview.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
+
         SmartSearchHelper.bind(txtPaymentNameReview,
                 () -> managerService.getEmployeeMonthKeys(txtEmpIdPaymentReview.getText(), txtMonthForPaymentReview.getText()),
-                val -> txtPaymentNameReview.setText(
-                        val
-                )
-        );
+                txtPaymentNameReview::setText);
 
         SmartSearchHelper.bind(txtKeyMonthReview,
                 () -> managerService.getAllMonthsReview(),
                 val -> txtKeyMonthReview.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
     }
 
-    void setButtonsActionsReview() {
-        btnDeleteMonthReview.setOnAction(_ -> managerService.deleteFullMonthReview(txtMonthReview.getText()));
-        btnDeleteGroupReview.setOnAction(_ -> managerService.deletePayGroupReview(txtMonthForGroupReview.getText(), txtGroupReview.getText()));
-        btnDeleteEmpMonthReview.setOnAction(_ -> managerService.deleteEployeeMonthReviewُ(txtEmpIdReview.getText(), txtMonthForEmpReview.getText()));
-        btnDeletePaymentReview.setOnAction(_ -> managerService.deleteEployeeMonthReviewُ(txtEmpIdPaymentReview.getText(), txtMonthForPaymentReview.getText(), txtPaymentNameReview.getText()));
+    // ═══════════════════════════════════════════════════════════
+    //  Buttons — Review
+    // ═══════════════════════════════════════════════════════════
 
+    void setButtonsActionsReview() {
+
+        btnDeleteMonthReview.setOnAction(_ -> {
+            String monthText = txtMonthReview.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف الشهر بالكامل في حالة الاستمرار",
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteFullMonthReview(monthText));
+        });
+
+        btnDeleteGroupReview.setOnAction(_ -> {
+            String monthText = txtMonthForGroupReview.getText();
+            String payGroup = txtGroupReview.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف المجموعة بالكامل في حالة الاستمرار " + payGroup,
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deletePayGroupReview(monthText, payGroup));
+        });
+
+        btnDeleteEmpMonthReview.setOnAction(_ -> {
+            String nationalId = txtEmpIdReview.getText();
+            String monthText = txtMonthForEmpReview.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار " + nationalId,
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteEmployeeMonthReview(nationalId, monthText));
+        });
+
+        btnDeletePaymentReview.setOnAction(_ -> {
+            String nationalId = txtEmpIdPaymentReview.getText();
+            String monthText = txtMonthForPaymentReview.getText();
+            String payGroup = txtPaymentNameReview.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف مجموعة من الموظف في حالة الاستمرار " + nationalId + "\n " + payGroup,
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteEmployeePayGroupReview(nationalId, monthText, payGroup));
+        });
+
+        // ReportExternalSubmitter async بالفعل — مش محتاج UiAsync
         btnUpdateAllKeysReview.setOnAction(_ -> managerService.updateKeysReviewAllReport());
         btnUpdateKeysReview.setOnAction(_ -> managerService.updateKeysReviewMonth(txtKeyMonthReview.getText()));
     }
+
+    // ═══════════════════════════════════════════════════════════
+    //  SmartSearch bindings — Subscription
+    // ═══════════════════════════════════════════════════════════
 
     void setTxtMonthSearchSub() {
         SmartSearchHelper.bind(txtMonthSub,
                 () -> managerService.getAllMonthsChangeCard(),
                 val -> txtMonthSub.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
+
         SmartSearchHelper.bind(
                 txtEmpIdSub,
                 () -> managerService.getEmployeeInSub(txtEmpIdSub.getText()),
@@ -407,23 +504,49 @@ public class PayrollManagerController implements Initializable {
                 SmartSearchHelper.FieldBind.of(txtEmpNameSub, EmployeeSearchResult::getEmp_name),
                 SmartSearchHelper.FieldBind.of(txtEmpCodeSub, EmployeeSearchResult::getPay_id)
         );
+
         SmartSearchHelper.bind(txtMonthForEmpSub,
                 () -> managerService.getEmployeeMonthsSub(txtEmpIdSub.getText()),
                 val -> txtMonthForEmpSub.setText(
-                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))
-                )
-        );
+                        DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(val))));
     }
+
+    // ═══════════════════════════════════════════════════════════
+    //  Buttons — Subscription
+    // ═══════════════════════════════════════════════════════════
 
     void setButtonsActionsSub() {
-        btnDeleteMonthSub.setOnAction(_ -> managerService.deleteFullMonthSub(txtMonthSub.getText()));
-        btnDeleteEmpSub.setOnAction(_ -> managerService.deleteEmployeeMonthSub(txtEmpIdSub.getText(), txtMonthForEmpSub.getText()));
+        btnDeleteMonthSub.setOnAction(_ -> {
+            String monthText = txtMonthSub.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف الشهر بالكامل في حالة الاستمرار",
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteFullMonthSub(monthText));
+        });
+
+        btnDeleteEmpSub.setOnAction(_ -> {
+            String nationalId = txtEmpIdSub.getText();
+            String monthText = txtMonthForEmpSub.getText();
+            boolean ok = DangerConfirmDialog.show(
+                    "تأكيد حذف",
+                    "سيتم حذف سجل الموظف للشهر بالكامل في حالة الاستمرار " + nationalId,
+                    "شهر " + DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(monthText)));
+            if (!ok) {
+                SAFNotification.info("تم إلغاء العملية");
+                return;
+            }
+            UiAsync.runVoid(() -> managerService.deleteEmployeeMonthSub(nationalId, monthText));
+        });
     }
-
-
     // ═══════════════════════════════════════════════════════════
-    //  DTO — Class مع Property (عشان التعديل في الجدول)
+    //  DTO
     // ═══════════════════════════════════════════════════════════
+
     public static class GroupDescription {
         private final StringProperty payGroup = new SimpleStringProperty();
         private final StringProperty description = new SimpleStringProperty();

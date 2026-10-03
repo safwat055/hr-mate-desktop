@@ -1,7 +1,8 @@
 {
-  "ui": {"theme": "theme-blue.css"},
+  "ui": {"theme": "theme-indigo.css"},
   "meta": {"registeredViews": [
     "/com/safwat/hr/controller/report/PayrollReport.fxml",
+    "server setting",
     "إدارة الاستقطاعات القانونية",
     "إدارة القطاعات والوظائف",
     "إدارة قواعد البدلات",
@@ -12,12 +13,14 @@
     "تعديل فترات البدل",
     "تقارير صرف",
     "سجل الاجور",
+    "سجلات",
     "مدير استحقاقات",
     "مدير التقارير",
     "مفردات",
     "مفردات بيرول",
     "نسخ احتياطي",
-    "server setting"
+    "👥 إدارة المستخدمين",
+    "واجهة الإدخال"
   ]},
   "connection": {
     "alone": false,

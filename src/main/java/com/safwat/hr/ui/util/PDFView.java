@@ -89,9 +89,7 @@ public class PDFView {
 
 
     public static void showIN(String pdfPath, WebView webView) {
-
         try {
-            // المسارات المحتملة لـ viewer.html
             String[] possiblePaths = {
                     "subresource/pdfjs/web/viewer.html",
                     "app/pdfjs/web/viewer.html",
@@ -101,36 +99,33 @@ public class PDFView {
 
             File viewerFile = null;
             for (String path : possiblePaths) {
-                viewerFile = new File(path);
-                if (viewerFile.exists()) {
+                File f = new File(path);
+                if (f.exists()) {
+                    viewerFile = f;
                     break;
                 }
             }
 
-            if (!viewerFile.exists()) {
+            if (viewerFile == null || !viewerFile.exists()) {
                 throw new RuntimeException("viewer.html not found in known locations");
             }
 
-            // تأكد من وجود ملف PDF
             File pdfFile = new File(pdfPath);
             if (!pdfFile.exists()) {
                 throw new RuntimeException("PDF file not found: " + pdfPath);
             }
 
-            // استخدم URI للتأكد من الترميز الصحيح
-            String pdfUrl = pdfFile.toString();
+            // ⭐ نفس الطريقة المستخدمة في createViewer (شغالة على ويندوز)
+            String pdfUrl = pdfFile.toURI().toURL().toString();
             String viewerUrl = viewerFile.toURI().toURL().toString();
 
-            // URL النهائي للعرض
-            String finalUrl = viewerUrl + "?file=" + pdfUrl;
+            String finalUrl = viewerUrl + "?file="
+                    + URLEncoder.encode(pdfUrl, StandardCharsets.UTF_8);
 
             webView.getEngine().load(finalUrl);
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
-            // عرض رسالة خطأ في الـ WebView نفسه
             webView.getEngine().loadContent(
                     "<html><body style='text-align: center; padding: 50px;'>"
                             + "<h2>❌ خطأ في تحميل الملف</h2>"
@@ -139,6 +134,5 @@ public class PDFView {
                             + "</body></html>"
             );
         }
-
     }
 }
