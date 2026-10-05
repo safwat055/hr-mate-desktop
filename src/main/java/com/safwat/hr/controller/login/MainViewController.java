@@ -372,6 +372,11 @@ public class MainViewController implements Initializable {
     void openAllowanceDefinitionDialogView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getAllowanceDefinitionDialog(), "إدارة قواعد البدلات", true);
     }
+
+    @FXML
+    void openLeavesView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getLeavesView(), "الإجازات", true);
+    }
     // ══════════════════════════════════════════════════════════════
     //  Themes
     // ══════════════════════════════════════════════════════════════

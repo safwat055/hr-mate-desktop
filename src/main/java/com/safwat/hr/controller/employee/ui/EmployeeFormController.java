@@ -6,7 +6,6 @@ import com.safwat.hr.controller.employee.dto.*;
 import com.safwat.hr.controller.employee.enums.TerminationReason;
 import com.safwat.hr.controller.employee.ui.EmployeeRows.*;
 import com.safwat.hr.network.ApiClient;
-import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import javafx.application.Platform;
@@ -20,53 +19,85 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class EmployeeFormController {
-
+    // ضمن الـ FXML fields
+    @FXML
+    private CheckBox disabilityCheck;
+    @FXML
+    private HBox disabilityFieldsBox;
+    @FXML
+    private TextField disabilityStartDateField;
+    @FXML
+    private TextField disabilityDecisionNoField;
+    @FXML
+    private CheckBox remoteGovernorateCheck;
     // ─────────────────────────────────────────────────────────────
     //  FXML — شريط البحث
     // ─────────────────────────────────────────────────────────────
 
-    @FXML private Button    newEmployeeButton;
-    @FXML private TextField searchField;
-    @FXML private Button    searchButton;
+    @FXML
+    private Button newEmployeeButton;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private Button searchButton;
 
     // ─────────────────────────────────────────────────────────────
     //  FXML — البيانات الأساسية
     // ─────────────────────────────────────────────────────────────
 
-    @FXML private TextField employeeNumberField;
-    @FXML private TextField fullNameField;
-    @FXML private TextField nationalIdField;
-    @FXML private TextField hireDateField;
-    @FXML private TextField terminationDateField;
-    @FXML private ComboBox<TerminationReason> terminationReasonCombo;
-    @FXML private ComboBox<SectorOption>      sectorCombo;
-    @FXML private Label    currentSocialStatusLabel;
-    @FXML private Label    currentJobTitleLabel;
-    @FXML private Button   saveBasicButton;
-    @FXML private Button   deleteButton;
+    @FXML
+    private TextField employeeNumberField;
+    @FXML
+    private TextField fullNameField;
+    @FXML
+    private TextField nationalIdField;
+    @FXML
+    private TextField hireDateField;
+    @FXML
+    private TextField terminationDateField;
+    @FXML
+    private ComboBox<TerminationReason> terminationReasonCombo;
+    @FXML
+    private ComboBox<SectorOption> sectorCombo;
+    @FXML
+    private Label currentSocialStatusLabel;
+    @FXML
+    private Label currentJobTitleLabel;
+    @FXML
+    private Button saveBasicButton;
+    @FXML
+    private Button deleteButton;
 
     // ─────────────────────────────────────────────────────────────
     //  FXML — containers (٣ + ٤ في HBox، ٥ + ٦ + ٧ في HBox)
     // ─────────────────────────────────────────────────────────────
 
-    @FXML private HBox      historyRow1;
-    @FXML private Separator historyRow1Separator;
-    @FXML private HBox      historyRow2;
+    @FXML
+    private HBox historyRow1;
+    @FXML
+    private Separator historyRow1Separator;
+    @FXML
+    private HBox historyRow2;
 
-    @FXML private VBox socialStatusContainer;
-    @FXML private VBox jobTitleContainer;
-    @FXML private VBox promotionsContainer;
-    @FXML private VBox encouragementsContainer;
-    @FXML private VBox incentivesContainer;
+    @FXML
+    private VBox socialStatusContainer;
+    @FXML
+    private VBox jobTitleContainer;
+    @FXML
+    private VBox promotionsContainer;
+    @FXML
+    private VBox encouragementsContainer;
+    @FXML
+    private VBox incentivesContainer;
 
     // ─────────────────────────────────────────────────────────────
     //  State
     // ─────────────────────────────────────────────────────────────
 
-    private Long               employeeId;
+    private Long employeeId;
     private EmployeeProfileDto current;
     private EmployeeHistoryTable<SocialStatusRow> socialTbl;
-    private EmployeeHistoryTable<JobTitleRow>     jobTbl;
+    private EmployeeHistoryTable<JobTitleRow> jobTbl;
 
     // ─────────────────────────────────────────────────────────────
     //  Initialize
@@ -77,7 +108,11 @@ public class EmployeeFormController {
         terminationReasonCombo.getItems().setAll(TerminationReason.values());
         terminationReasonCombo.setCellFactory(cb -> reasonCell());
         terminationReasonCombo.setButtonCell(reasonCell());
+        TextFieldSetupHelper.setupDateFields(
+                "yyyy-MM-dd أو dd/MM/yyyy",
+                hireDateField, terminationDateField, disabilityStartDateField);
 
+        disabilityCheck.selectedProperty().addListener((obs, o, n) -> toggleDisabilityFields(n));
         // حقول التاريخ — TextField مع TextFieldSetupHelper
         TextFieldSetupHelper.setupDateFields(
                 "yyyy-MM-dd أو dd/MM/yyyy",
@@ -96,6 +131,14 @@ public class EmployeeFormController {
         setHistorySectionsVisible(false);
     }
 
+    private void toggleDisabilityFields(boolean show) {
+        disabilityFieldsBox.setVisible(show);
+        disabilityFieldsBox.setManaged(show);
+        if (!show) {
+            disabilityStartDateField.clear();
+            disabilityDecisionNoField.clear();
+        }
+    }
     // ─────────────────────────────────────────────────────────────
     //  تحميل القطاعات
     // ─────────────────────────────────────────────────────────────
@@ -125,7 +168,8 @@ public class EmployeeFormController {
         try {
             List<EmployeeSearchResult> results = ApiClient.getWithTypeRef(
                     "/employees/search?q=" + q,
-                    new TypeReference<List<EmployeeSearchResult>>() {}
+                    new TypeReference<List<EmployeeSearchResult>>() {
+                    }
             ).getData();
 
             if (results == null || results.isEmpty()) {
@@ -141,8 +185,8 @@ public class EmployeeFormController {
             Stage owner = (Stage) searchField.getScene().getWindow();
             SearchDialog.builder(EmployeeSearchResult.class)
                     .title("نتائج البحث")
-                    .column("رقم الموظف",  EmployeeSearchResult::employeeNumber)
-                    .column("الاسم",       EmployeeSearchResult::fullName)
+                    .column("رقم الموظف", EmployeeSearchResult::employeeNumber)
+                    .column("الاسم", EmployeeSearchResult::fullName)
                     .column("الرقم القومي", EmployeeSearchResult::nationalId)
                     .data(results)
                     .owner(owner)
@@ -173,7 +217,7 @@ public class EmployeeFormController {
 
     public void newEmployee() {
         this.employeeId = null;
-        this.current    = null;
+        this.current = null;
         clearBasicForm();
         rebuildTables(null);
         setFormEnabled(true);
@@ -206,7 +250,18 @@ public class EmployeeFormController {
         terminationDateField.setText(TextFieldSetupHelper.formatDateOutput(dto.terminationDate()));
 
         terminationReasonCombo.setValue(dto.terminationReason());
+// ═══ الإعاقة ═══
+        boolean hasDisability = dto.disabilityStartDate() != null;
+        disabilityCheck.setSelected(hasDisability);
+        toggleDisabilityFields(hasDisability);
+        disabilityStartDateField.setText(
+                TextFieldSetupHelper.formatDateOutput(dto.disabilityStartDate()));
+        disabilityDecisionNoField.setText(
+                dto.disabilityDecisionNo() == null ? "" : dto.disabilityDecisionNo());
 
+// ═══ المحافظة النائية ═══
+        remoteGovernorateCheck.setSelected(
+                Boolean.TRUE.equals(dto.worksInRemoteGovernorate()));
         // ★ القطاع:
         //  - لو معروف → اختاره + اقفله (مايتغيرش)
         //  - لو null (موظف مستورد) → افتحه عشان المستخدم يعيّن قطاع
@@ -336,20 +391,54 @@ public class EmployeeFormController {
             if (employeeId == null) {
                 String empNum = employeeNumberField.getText().trim();
                 String fullNm = fullNameField.getText().trim();
-                String natId  = nationalIdField.getText().trim();
+                String natId = nationalIdField.getText().trim();
                 LocalDate hire = TextFieldSetupHelper.parseDateInput(hireDateField.getText());
                 SectorOption sector = sectorCombo.getValue();
 
-                if (empNum.isBlank())          { showWarn("رقم الموظف مطلوب"); return; }
-                if (fullNm.isBlank())          { showWarn("الاسم مطلوب"); return; }
-                if (!natId.matches("\\d{14}")) { showWarn("الرقم القومي لازم 14 رقم"); return; }
-                if (hire == null)              { showWarn("تاريخ التعيين مطلوب أو صيغته غير صحيحة"); return; }
-                if (sector == null)            { showWarn("اختر القطاع"); return; }
+                if (empNum.isBlank()) {
+                    showWarn("رقم الموظف مطلوب");
+                    return;
+                }
+                if (fullNm.isBlank()) {
+                    showWarn("الاسم مطلوب");
+                    return;
+                }
+                if (!natId.matches("\\d{14}")) {
+                    showWarn("الرقم القومي لازم 14 رقم");
+                    return;
+                }
+                if (hire == null) {
+                    showWarn("تاريخ التعيين مطلوب أو صيغته غير صحيحة");
+                    return;
+                }
+                if (sector == null) {
+                    showWarn("اختر القطاع");
+                    return;
+                }
+// استخرج القيم الجديدة قبل الإنشاء
+                LocalDate disabilityStart = null;
+                String disabilityNo = null;
+                if (disabilityCheck.isSelected()) {
+                    disabilityStart = TextFieldSetupHelper.parseDateInput(disabilityStartDateField.getText());
+                    if (disabilityStart == null) {
+                        showWarn("تاريخ قرار الإعاقة مطلوب أو صيغته غير صحيحة");
+                        return;
+                    }
+                    disabilityNo = disabilityDecisionNoField.getText().trim();
+                    if (disabilityNo.isBlank()) {
+                        showWarn("رقم قرار الإعاقة مطلوب");
+                        return;
+                    }
+                }
 
                 EmployeeCreateRequest req = new EmployeeCreateRequest(
-                        empNum, fullNm, natId, hire, sector.id());
+                        empNum, fullNm, natId, hire, sector.id(),
+                        disabilityStart,
+                        disabilityNo,
+                        remoteGovernorateCheck.isSelected()
+                );
 
-                current    = ApiClient.post("/employees", req, EmployeeProfileDto.class).getData();
+                current = ApiClient.post("/employees", req, EmployeeProfileDto.class).getData();
                 employeeId = current.id();
 
                 bindAll(current);
@@ -359,14 +448,30 @@ public class EmployeeFormController {
                 Long sectorId = sectorCombo.getValue() != null
                         ? sectorCombo.getValue().id()
                         : null;
-
+                LocalDate disabilityStart = null;
+                String disabilityNo = null;
+                if (disabilityCheck.isSelected()) {
+                    disabilityStart = TextFieldSetupHelper.parseDateInput(disabilityStartDateField.getText());
+                    if (disabilityStart == null) {
+                        showWarn("تاريخ قرار الإعاقة مطلوب");
+                        return;
+                    }
+                    disabilityNo = disabilityDecisionNoField.getText().trim();
+                    if (disabilityNo.isBlank()) {
+                        showWarn("رقم قرار الإعاقة مطلوب");
+                        return;
+                    }
+                }
                 EmployeeUpdateRequest req = new EmployeeUpdateRequest(
                         fullNameField.getText(),
                         nationalIdField.getText(),
                         TextFieldSetupHelper.parseDateInput(hireDateField.getText()),
                         TextFieldSetupHelper.parseDateInput(terminationDateField.getText()),
                         terminationReasonCombo.getValue(),
-                        sectorId
+                        sectorId,
+                        disabilityStart,
+                        disabilityNo,
+                        remoteGovernorateCheck.isSelected()
                 );
                 current = ApiClient.put("/employees/" + employeeId, req,
                         EmployeeProfileDto.class).getData();
@@ -465,6 +570,11 @@ public class EmployeeFormController {
         sectorCombo.setDisable(false);
         currentSocialStatusLabel.setText("—");
         currentJobTitleLabel.setText("—");
+        disabilityCheck.setSelected(false);
+        toggleDisabilityFields(false);
+        disabilityStartDateField.clear();
+        disabilityDecisionNoField.clear();
+        remoteGovernorateCheck.setSelected(false);
     }
 
     private void setFormEnabled(boolean enabled) {
@@ -474,8 +584,8 @@ public class EmployeeFormController {
 
     /**
      * يظهر/يخفي قسمي السجلات:
-     *  - historyRow1: الحالة الاجتماعية + الوظائف
-     *  - historyRow2: الترقيات + التشجيعيات + الحوافز
+     * - historyRow1: الحالة الاجتماعية + الوظائف
+     * - historyRow2: الترقيات + التشجيعيات + الحوافز
      * مع الفاصل الأفقي بينهم.
      */
     private void setHistorySectionsVisible(boolean visible) {
@@ -491,19 +601,22 @@ public class EmployeeFormController {
 
     private ListCell<TerminationReason> reasonCell() {
         return new ListCell<>() {
-            @Override protected void updateItem(TerminationReason item, boolean empty) {
+            @Override
+            protected void updateItem(TerminationReason item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getLabelAr());
             }
         };
     }
 
-    private void showInfo(String msg)  {
+    private void showInfo(String msg) {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK).showAndWait();
     }
-    private void showWarn(String msg)  {
-        new Alert(Alert.AlertType.WARNING,     msg, ButtonType.OK).showAndWait();
+
+    private void showWarn(String msg) {
+        new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK).showAndWait();
     }
+
     private void showError(String msg, Exception ex) {
         new Alert(Alert.AlertType.ERROR, msg + "\n" + ex.getMessage(), ButtonType.OK).showAndWait();
     }
@@ -514,6 +627,9 @@ public class EmployeeFormController {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record SectorOption(Long id, String nameAr) {
-        @Override public String toString() { return nameAr; }
+        @Override
+        public String toString() {
+            return nameAr;
+        }
     }
 }

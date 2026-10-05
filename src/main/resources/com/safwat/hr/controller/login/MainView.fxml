@@ -149,7 +149,7 @@
                                                     <Insets bottom="8" left="5" right="5" top="8" />
                                                 </padding>
                                     <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجور متغيرة" />
-                                    <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجازات" />
+                                    <Button onAction="#openLeavesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجازات" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
                                     <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />

@@ -1,5 +1,5 @@
 {
-  "ui": {"theme": "theme-indigo.css"},
+  "ui": {"theme": "theme-gray.css"},
   "meta": {"registeredViews": [
     "/com/safwat/hr/controller/report/PayrollReport.fxml",
     "server setting",
@@ -19,8 +19,9 @@
     "مفردات",
     "مفردات بيرول",
     "نسخ احتياطي",
+    "واجهة الإدخال",
     "👥 إدارة المستخدمين",
-    "واجهة الإدخال"
+    "الإجازات"
   ]},
   "connection": {
     "alone": false,

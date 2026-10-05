@@ -35,4 +35,8 @@ public class FXMLPaths {
     private final String statutoryDialogView = "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml";
     private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml";
 
+    
+    public String getLeavesView() {
+        return "/com/safwat/hr/controller/leave/LeaveManagementView.fxml";
+    }
 }

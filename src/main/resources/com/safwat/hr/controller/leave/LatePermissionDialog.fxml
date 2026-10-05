@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.safwat.hr.controller.leave.LatePermissionDialogController"
+      spacing="12">
+
+    <padding>
+        <Insets top="16" right="18" bottom="16" left="18"/>
+    </padding>
+
+    <Label fx:id="employeeLabel" styleClass="bold fs-14"/>
+    <Separator/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="100" prefWidth="100"/>
+            <ColumnConstraints hgrow="ALWAYS" minWidth="280"/>
+        </columnConstraints>
+
+        <Label text="التاريخ:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="dateField" promptText="yyyy-MM-dd"
+                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="عدد الساعات:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="hoursField" promptText="مثال: 1.5"
+                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="ملاحظات:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Label text="ملاحظة: كل 6 ساعات في نفس الشهر = يوم واحد يخصم من الاعتيادي"
+           styleClass="text-muted fs-12" wrapText="true"/>
+
+    <Region VBox.vgrow="ALWAYS"/>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="cancelButton" text="إلغاء" styleClass="btn-secondary"/>
+        <Button fx:id="saveButton" text="حفظ" styleClass="btn-primary"/>
+    </HBox>
+</VBox>

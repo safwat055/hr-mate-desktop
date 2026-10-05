@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.safwat.hr.controller.leave.LeaveManagementController"
+            styleClass="app-bg">
+
+    <!-- ═══════════ TOP ═══════════ -->
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="14" right="18" bottom="10" left="18"/>
+            </padding>
+
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="بحث الموظف:"/>
+                <TextField fx:id="employeeSearchField"
+                           promptText="اسم / رقم قومي / رقم وظيفي — Enter"
+                           prefWidth="360"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="سنة الرصيد:"/>
+                <ComboBox fx:id="yearComboBox" prefWidth="140"/>
+                <Button fx:id="resetBalanceButton" text="♻️ إعادة بناء الرصيد" styleClass="btn-secondary"/>
+                <Button fx:id="refreshButton" text="🔄 تحديث" styleClass="btn-secondary"/>
+            </HBox>
+
+            <HBox fx:id="employeeInfoBar" spacing="14" alignment="CENTER_LEFT"
+                  visible="false" managed="false" styleClass="soft-box">
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
+                <Label fx:id="employeeNameLabel" styleClass="bold fs-14"/>
+                <Label fx:id="employeeNationalIdLabel" styleClass="text-muted fs-12"/>
+                <Label fx:id="employeeNumberLabel" styleClass="text-muted fs-12"/>
+                <Label fx:id="employeeGenderBadge" styleClass="bold text-navy fs-13"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- ═══════════ CENTER ═══════════ -->
+    <center>
+        <VBox spacing="12">
+            <padding>
+                <Insets top="6" right="18" bottom="14" left="18"/>
+            </padding>
+
+            <!-- بطاقات الرصيد -->
+            <HBox spacing="12">
+
+                <VBox fx:id="annualCard" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="card">
+                    <HBox styleClass="panel-header compact" alignment="CENTER_LEFT">
+                        <Label text="اعتيادي"/>
+                    </HBox>
+                    <VBox spacing="4">
+                        <padding>
+                            <Insets top="8" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label fx:id="annualAvailableLabel" text="—" styleClass="fs-18 bold"/>
+                        <Label text="متاح" styleClass="text-muted fs-12"/>
+                        <Separator/>
+                        <GridPane hgap="8" vgap="3">
+                            <Label text="مستحق:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                                   styleClass="text-muted fs-12"/>
+                            <Label fx:id="annualEntitledLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   styleClass="fs-13"/>
+                            <Label text="مرحّل:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                                   styleClass="text-muted fs-12"/>
+                            <Label fx:id="annualCarriedLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                   styleClass="fs-13"/>
+                            <Label text="مستخدم:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                                   styleClass="text-muted fs-12"/>
+                            <Label fx:id="annualUsedLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                   styleClass="fs-13"/>
+                            <Label text="تأخير:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+                                   styleClass="text-muted fs-12"/>
+                            <Label fx:id="annualLateLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                                   styleClass="fs-13"/>
+                        </GridPane>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="casualCard" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="card">
+                    <HBox styleClass="panel-header compact success" alignment="CENTER_LEFT">
+                        <Label text="عارضة"/>
+                    </HBox>
+                    <VBox spacing="6">
+                        <padding>
+                            <Insets top="8" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label fx:id="casualValueLabel" text="— / —" styleClass="fs-18 bold"/>
+                        <Label text="مستخدم / الحد السنوي" styleClass="text-muted fs-12"/>
+                        <ProgressBar fx:id="casualProgress" progress="0" maxWidth="Infinity"/>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="maternityCard" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="card">
+                    <HBox styleClass="panel-header compact danger" alignment="CENTER_LEFT">
+                        <Label text="وضع"/>
+                    </HBox>
+                    <VBox spacing="6">
+                        <padding>
+                            <Insets top="8" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label fx:id="maternityValueLabel" text="— / —" styleClass="fs-18 bold"/>
+                        <Label text="مرات مستخدمة" styleClass="text-muted fs-12"/>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="childCareCard" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="card">
+                    <HBox styleClass="panel-header compact purple" alignment="CENTER_LEFT">
+                        <Label text="رعاية طفل"/>
+                    </HBox>
+                    <VBox spacing="6">
+                        <padding>
+                            <Insets top="8" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label fx:id="childCareValueLabel" text="—" styleClass="fs-18 bold"/>
+                        <Label fx:id="childCareMaxLabel" text="من 6 سنوات" styleClass="text-muted fs-12"/>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="openEndedCard" HBox.hgrow="ALWAYS" maxWidth="Infinity" styleClass="card">
+                    <HBox styleClass="panel-header compact alt" alignment="CENTER_LEFT">
+                        <Label text="إجازات مفتوحة"/>
+                    </HBox>
+                    <VBox spacing="6">
+                        <padding>
+                            <Insets top="8" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <Label fx:id="openEndedCountLabel" text="0" styleClass="fs-18 bold"/>
+                        <Label text="تجنيد / استدعاء / عجز" styleClass="text-muted fs-12"/>
+                        <Button fx:id="showOpenEndedButton" text="عرض" styleClass="btn-outline primary"/>
+                    </VBox>
+                </VBox>
+            </HBox>
+
+            <!-- التابات -->
+            <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+
+                <!-- ═══ التاب 1: سجل الإجازات ═══ -->
+                <Tab fx:id="recordsTab" text="سجل الإجازات">
+                    <VBox spacing="8">
+                        <padding>
+                            <Insets top="10"/>
+                        </padding>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="النوع:"/>
+                            <ComboBox fx:id="recordsTypeFilter" prefWidth="160"/>
+                            <Separator orientation="VERTICAL"/>
+                            <Label text="السنة:"/>
+                            <ComboBox fx:id="recordsYearFilter" prefWidth="140"/>
+                            <Separator orientation="VERTICAL"/>
+                            <Label text="الحالة:"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <fx:define>
+                                    <ToggleGroup fx:id="statusToggle"/>
+                                </fx:define>
+                                <RadioButton fx:id="statusAllRadio" text="الكل" selected="true"
+                                             toggleGroup="$statusToggle"/>
+                                <RadioButton fx:id="statusActiveRadio" text="النشطة" toggleGroup="$statusToggle"/>
+                                <RadioButton fx:id="statusCancelledRadio" text="الملغاة" toggleGroup="$statusToggle"/>
+                            </HBox>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="addRecordButton" text="➕ إضافة" styleClass="btn-primary"/>
+                            <Button fx:id="editRecordButton" text="✏️ تعديل" styleClass="btn-secondary" disable="true"/>
+                            <Button fx:id="closeRecordButton" text="🔒 إغلاق" styleClass="btn-secondary" disable="true"/>
+                            <Button fx:id="deleteRecordButton" text="🗑️ حذف" styleClass="btn-danger" disable="true"/>
+                        </HBox>
+
+                        <TableView fx:id="recordsTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colType" text="النوع" prefWidth="160"/>
+                                <TableColumn fx:id="colFrom" text="من" prefWidth="110"/>
+                                <TableColumn fx:id="colTo" text="إلى" prefWidth="110"/>
+                                <TableColumn fx:id="colDays" text="الأيام" prefWidth="70"/>
+                                <TableColumn fx:id="colYear" text="سنة الرصيد" prefWidth="110"/>
+                                <TableColumn fx:id="colStatus" text="الحالة" prefWidth="90"/>
+                                <TableColumn fx:id="colNotes" text="ملاحظات" prefWidth="260"/>
+                            </columns>
+                            <placeholder>
+                                <Label text="لا توجد سجلات"/>
+                            </placeholder>
+                        </TableView>
+
+                        <HBox spacing="10" alignment="CENTER_RIGHT">
+                            <Label fx:id="recordsPageLabel" text="—" styleClass="text-muted fs-12"/>
+                            <Button fx:id="recordsPrevButton" text="السابق" styleClass="btn-secondary"/>
+                            <Button fx:id="recordsNextButton" text="التالي" styleClass="btn-secondary"/>
+                        </HBox>
+                    </VBox>
+                </Tab>
+
+                <!-- ═══ التاب 2: أذونات التأخير ═══ -->
+                <Tab fx:id="lateTab" text="أذونات التأخير">
+                    <VBox spacing="8">
+                        <padding>
+                            <Insets top="10"/>
+                        </padding>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="addLateButton" text="➕ إضافة" styleClass="btn-primary"/>
+                            <Button fx:id="editLateButton" text="✏️ تعديل" styleClass="btn-secondary" disable="true"/>
+                            <Button fx:id="deleteLateButton" text="🗑️ حذف" styleClass="btn-danger" disable="true"/>
+                        </HBox>
+
+                        <SplitPane orientation="VERTICAL" dividerPositions="0.55" VBox.vgrow="ALWAYS">
+                            <VBox spacing="4">
+                                <HBox styleClass="panel-header compact" alignment="CENTER_LEFT">
+                                    <Label text="تفاصيل الأذونات"/>
+                                </HBox>
+                                <TableView fx:id="lateTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colLateDate" text="التاريخ" prefWidth="140"/>
+                                        <TableColumn fx:id="colLateHours" text="الساعات" prefWidth="100"/>
+                                        <TableColumn fx:id="colLateNotes" text="ملاحظات" prefWidth="400"/>
+                                    </columns>
+                                </TableView>
+                            </VBox>
+
+                            <VBox spacing="4">
+                                <HBox styleClass="panel-header compact" alignment="CENTER_LEFT">
+                                    <Label text="الملخص الشهري — الخصم floor(ساعات الشهر ÷ 6)"/>
+                                </HBox>
+                                <TableView fx:id="lateMonthTable" VBox.vgrow="ALWAYS">
+                                    <columns>
+                                        <TableColumn fx:id="colMonth" text="الشهر" prefWidth="120"/>
+                                        <TableColumn fx:id="colMonthHours" text="مجموع الساعات" prefWidth="140"/>
+                                        <TableColumn fx:id="colMonthDeducted" text="أيام مخصومة" prefWidth="120"/>
+                                        <TableColumn fx:id="colMonthLeftover" text="ساعات متبقية (لا تُرحَّل)"
+                                                     prefWidth="220"/>
+                                    </columns>
+                                </TableView>
+                                <Label fx:id="lateTotalLabel" text="إجمالي الأيام المخصومة: —"
+                                       styleClass="text-muted fs-12"/>
+                            </VBox>
+                        </SplitPane>
+                    </VBox>
+                </Tab>
+
+                <!-- ═══ التاب 3: تفاصيل الرصيد ═══ -->
+                <Tab fx:id="balanceTab" text="تفاصيل الرصيد">
+                    <VBox spacing="8">
+                        <padding>
+                            <Insets top="10"/>
+                        </padding>
+                        <HBox styleClass="panel-header compact" alignment="CENTER_LEFT">
+                            <Label text="تفصيل كل السنوات من تاريخ التعيين"/>
+                        </HBox>
+
+                        <TableView fx:id="balanceTable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colBalanceYear" text="السنة" prefWidth="130"/>
+                                <TableColumn fx:id="colBalanceEntitled" text="المستحق" prefWidth="110"/>
+                                <TableColumn fx:id="colBalanceUsed" text="المستخدم" prefWidth="110"/>
+                                <TableColumn fx:id="colBalanceRemaining" text="المتبقي" prefWidth="110"/>
+                                <TableColumn fx:id="colBalanceExpired" text="منتهي؟" prefWidth="100"/>
+                            </columns>
+                            <placeholder>
+                                <Label text="لا توجد بيانات"/>
+                            </placeholder>
+                        </TableView>
+
+                        <!-- ملخص السنة الحالية -->
+                        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="soft-box">
+                            <padding>
+                                <Insets top="8" right="12" bottom="8" left="12"/>
+                            </padding>
+                            <Label text="السنة الحالية:" styleClass="text-muted fs-12"/>
+                            <Label fx:id="balanceCurrentYearLabel" text="—" styleClass="bold fs-14"/>
+                            <Separator orientation="VERTICAL"/>
+                            <Label text="الشريحة:" styleClass="text-muted fs-12"/>
+                            <Label fx:id="balanceTierLabel" text="—" styleClass="bold text-navy fs-14"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="الرصيد المتاح (الحالي + آخر سنتين بحد أقصى 60):"
+                                   styleClass="text-muted fs-12"/>
+                            <Label fx:id="balanceTotalAvailableLabel" text="—" styleClass="fs-16 bold text-navy"/>
+                        </HBox>
+                    </VBox>
+                </Tab>
+            </TabPane>
+        </VBox>
+    </center>
+</BorderPane>
