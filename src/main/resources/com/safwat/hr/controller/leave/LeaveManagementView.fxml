@@ -58,26 +58,32 @@
                         <padding>
                             <Insets top="8" right="10" bottom="10" left="10"/>
                         </padding>
+
                         <Label fx:id="annualAvailableLabel" text="—" styleClass="fs-18 bold"/>
-                        <Label text="متاح" styleClass="text-muted fs-12"/>
+                        <Label text="الإجمالي المتاح" styleClass="text-muted fs-12"/>
+
                         <Separator/>
+
                         <GridPane hgap="8" vgap="3">
-                            <Label text="مستحق:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                            <Label text="مستحق السنة:" GridPane.columnIndex="0" GridPane.rowIndex="0"
                                    styleClass="text-muted fs-12"/>
-                            <Label fx:id="annualEntitledLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                                   styleClass="fs-13"/>
-                            <Label text="مرحّل:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                            <Label fx:id="annualEntitledLabel" text="—"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="fs-13"/>
+
+                            <Label text="مستخدم:" GridPane.columnIndex="0" GridPane.rowIndex="1"
                                    styleClass="text-muted fs-12"/>
-                            <Label fx:id="annualCarriedLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                                   styleClass="fs-13"/>
-                            <Label text="مستخدم:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                            <Label fx:id="annualUsedLabel" text="—"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="fs-13"/>
+
+                            <Label text="تأخير:" GridPane.columnIndex="0" GridPane.rowIndex="2"
                                    styleClass="text-muted fs-12"/>
-                            <Label fx:id="annualUsedLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                                   styleClass="fs-13"/>
-                            <Label text="تأخير:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+                            <Label fx:id="annualLateLabel" text="—"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="fs-13"/>
+
+                            <Label text="باقي:" GridPane.columnIndex="0" GridPane.rowIndex="3"
                                    styleClass="text-muted fs-12"/>
-                            <Label fx:id="annualLateLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                                   styleClass="fs-13"/>
+                            <Label fx:id="annualRemainingLabel" text="—"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="fs-13 bold"/>
                         </GridPane>
                     </VBox>
                 </VBox>

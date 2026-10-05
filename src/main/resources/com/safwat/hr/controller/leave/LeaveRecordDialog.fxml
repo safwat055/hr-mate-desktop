@@ -22,29 +22,48 @@
             <ColumnConstraints hgrow="ALWAYS" minWidth="280"/>
         </columnConstraints>
 
+        <!-- ═══ النوع ═══ -->
         <Label text="النوع:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
         <ComboBox fx:id="leaveTypeCombo" maxWidth="Infinity"
                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
+        <!-- ═══ من تاريخ ═══ -->
         <Label text="من تاريخ:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="fromDateField" promptText="yyyy-MM-dd"
                    GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <Label fx:id="toDateLabel" text="إلى تاريخ:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <!-- ═══ إلى تاريخ ═══ -->
+        <Label fx:id="toDateLabel" text="إلى تاريخ:"
+               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="toDateField" promptText="yyyy-MM-dd"
                    GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <Label fx:id="openEndedHint" text="النهاية تُضاف عند العودة"
-               GridPane.rowIndex="2" GridPane.columnIndex="1"
-               visible="false" managed="false" styleClass="text-muted fs-12"/>
+        <!-- ═══ النص الإرشادي — صف منفصل تحت الحقل ═══ -->
+        <Label fx:id="openEndedHint" text=""
+               GridPane.rowIndex="3" GridPane.columnIndex="0"
+               GridPane.columnSpan="2"
+               visible="false" managed="false"
+               styleClass="text-muted fs-12" wrapText="true"/>
 
-        <Label text="عدد الأيام:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Label fx:id="daysPreviewLabel" text="—" GridPane.rowIndex="3" GridPane.columnIndex="1"
+        <!-- ═══ عدد الأيام ═══ -->
+        <Label text="عدد الأيام:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <Label fx:id="daysPreviewLabel" text="—"
+               GridPane.rowIndex="4" GridPane.columnIndex="1"
                styleClass="fs-16 bold text-navy"/>
 
-        <Label text="ملاحظات:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <!-- ═══ ملاحظات ═══ -->
+        <Label text="ملاحظات:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
         <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true"
-                  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+                  GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <rowConstraints>
+            <RowConstraints/>
+            <RowConstraints/>
+            <RowConstraints/>
+            <RowConstraints/>
+            <RowConstraints/>
+            <RowConstraints/>
+        </rowConstraints>
     </GridPane>
 
     <Label fx:id="warningLabel" text="" visible="false" managed="false"

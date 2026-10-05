@@ -57,8 +57,9 @@ public class LeaveManagementController implements Initializable {
     @FXML
     private VBox annualCard, casualCard, maternityCard, childCareCard, openEndedCard;
     @FXML
-    private Label annualAvailableLabel, annualEntitledLabel, annualCarriedLabel,
-            annualUsedLabel, annualLateLabel;
+    private Label annualAvailableLabel, annualEntitledLabel,
+            annualUsedLabel, annualLateLabel,
+            annualRemainingLabel;
     @FXML
     private Label casualValueLabel;
     @FXML
@@ -146,6 +147,13 @@ public class LeaveManagementController implements Initializable {
     private int totalPages = 1;
     private static final int PAGE_SIZE = 20;
 
+    // أرقام الطلبات: أي رد متأخر من طلب قديم (موظف/سنة سابقة) يُتجاهل
+    private long summarySeq = 0;
+    private long recordsSeq = 0;
+    private long lateSeq = 0;
+    // يمنع إعادة التحميل المتكررة لما نعيد بناء عناصر الكومبو برمجيًا
+    private boolean updatingFilters = false;
+
     // ═══════════════════════════════════════════════════════════
     //  Init
     // ═══════════════════════════════════════════════════════════
@@ -195,7 +203,7 @@ public class LeaveManagementController implements Initializable {
         yearComboBox.setButtonCell(factory.call(null));
 
         yearComboBox.valueProperty().addListener((obs, o, n) -> {
-            if (n != null && currentEmployee != null) {
+            if (n != null && currentEmployee != null && !updatingFilters) {
                 currentPage = 0;
                 reloadAll();
             }
@@ -212,18 +220,23 @@ public class LeaveManagementController implements Initializable {
                     ? hireDate.getYear() + 1
                     : hireDate.getYear();
         }
-        if (startYear > current + 1) startYear = current;
+        if (startYear > current) startYear = current;
 
+        // من السنة الحالية نزولًا لسنة التعيين — لا سنوات مستقبلية
         List<Integer> items = new ArrayList<>();
-        for (int y = current + 1; y >= startYear; y--) items.add(y);
+        for (int y = current; y >= startYear; y--) items.add(y);
 
         Integer previous = yearComboBox.getValue();
-        yearComboBox.setItems(FXCollections.observableArrayList(items));
-
-        if (previous != null && items.contains(previous)) {
-            yearComboBox.setValue(previous);
-        } else {
-            yearComboBox.setValue(current);
+        updatingFilters = true;
+        try {
+            yearComboBox.setItems(FXCollections.observableArrayList(items));
+            if (previous != null && items.contains(previous)) {
+                yearComboBox.setValue(previous);
+            } else {
+                yearComboBox.setValue(current);
+            }
+        } finally {
+            updatingFilters = false;
         }
     }
 
@@ -265,100 +278,17 @@ public class LeaveManagementController implements Initializable {
     }
 
     private void onEmployeeSelected(EmployeeSearchResult emp) {
-        // ★ 1) نظّف كل البيانات القديمة أولاً
-        clearAllData();
-
-        // ★ 2) حط الموظف الجديد
         this.currentEmployee = emp;
         this.currentPage = 0;
-
-        // ★ 3) املأ شريط المعلومات
         employeeNameLabel.setText(emp.fullName());
         employeeNationalIdLabel.setText(emp.nationalId());
         employeeNumberLabel.setText(emp.employeeNumber());
-        employeeGenderBadge.setText("");     // ← يتحدد بعد ما summary يجي
-
         employeeInfoBar.setVisible(true);
         employeeInfoBar.setManaged(true);
         showAllCards();
-
-        // ★ 4) ابدأ التحميل
+        clearViews();              // ← امسح أي بيانات قديمة
         rebuildYearCombo(null);
         reloadAll();
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    //  تنظيف البيانات عند تغيير الموظف
-    // ═══════════════════════════════════════════════════════════
-
-    /**
-     * يمسح كل البيانات المعروضة (جداول + بطاقات + فلاتر + state)
-     * قبل تحميل بيانات الموظف الجديد.
-     *
-     * <p>لا يُنادي أي API — تنظيف UI فقط.
-     */
-    private void clearAllData() {
-        // ═══ State ═══
-        currentSummary = null;
-        leaveTypes = List.of();
-        currentPage = 0;
-        totalPages = 1;
-
-        // ═══ الجداول — امسح العناصر ═══
-        recordsTable.setItems(FXCollections.observableArrayList());
-        lateTable.setItems(FXCollections.observableArrayList());
-        lateMonthTable.setItems(FXCollections.observableArrayList());
-        balanceTable.setItems(FXCollections.observableArrayList());
-
-        // ═══ الفلاتر — رجّعها للحالة الافتراضية ═══
-        recordsTypeFilter.setItems(FXCollections.observableArrayList());
-        recordsTypeFilter.setValue(null);
-
-        recordsYearFilter.setItems(FXCollections.observableArrayList());
-        recordsYearFilter.setValue(null);
-
-        if (statusAllRadio != null) statusAllRadio.setSelected(true);
-
-        // ═══ البطاقات — صفّرها ═══
-        annualAvailableLabel.setText("—");
-        annualEntitledLabel.setText("—");
-        annualCarriedLabel.setText("—");
-        annualUsedLabel.setText("—");
-        annualLateLabel.setText("—");
-
-        casualValueLabel.setText("— / —");
-        casualProgress.setProgress(0);
-
-        maternityValueLabel.setText("— / —");
-        childCareValueLabel.setText("—");
-        childCareMaxLabel.setText("من 6 سنوات");
-
-        openEndedCountLabel.setText("0");
-        showOpenEndedButton.setDisable(true);
-
-        // ═══ بطاقات الوضع/رعاية الطفل — اخفيها ═══
-        toggleCard(maternityCard, false);
-        toggleCard(childCareCard, false);
-
-        // ═══ تفاصيل الرصيد ═══
-        balanceCurrentYearLabel.setText("—");
-        balanceTierLabel.setText("—");
-        balanceTotalAvailableLabel.setText("—");
-
-        // ═══ Pagination ═══
-        recordsPageLabel.setText("—");
-        recordsPrevButton.setDisable(true);
-        recordsNextButton.setDisable(true);
-
-        // ═══ أزرار CRUD — عطّلها ═══
-        editRecordButton.setDisable(true);
-        deleteRecordButton.setDisable(true);
-        closeRecordButton.setDisable(true);
-        editLateButton.setDisable(true);
-        deleteLateButton.setDisable(true);
-
-        // ═══ إجمالي التأخير ═══
-        lateTotalLabel.setText("إجمالي الأيام المخصومة: —");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -367,9 +297,71 @@ public class LeaveManagementController implements Initializable {
 
     private void reloadAll() {
         if (currentEmployee == null || yearComboBox.getValue() == null) return;
+        clearViews();
         loadLeaveTypes();
         loadSummary();           // ← بينادي loadRecords() جوّه بعد ملء الفلتر
         loadLatePermissions();
+    }
+
+    /**
+     * ★ مسح شامل لكل ما هو معروض.
+     * يُنادى:
+     * <ul>
+     *   <li>عند اختيار موظف جديد</li>
+     *   <li>قبل كل إعادة تحميل (لسنة مختلفة مثلاً)</li>
+     * </ul>
+     * <p>يبطل أي طلب HTTP لسه في الطريق عبر زيادة أرقام الـ seq.
+     * <p>لا يمسح: اسم الموظف المعروض، السنة المختارة، فلاتر النوع.
+     */
+    private void clearViews() {
+        // إبطال أي طلب لسه شغّال
+        summarySeq++;
+        recordsSeq++;
+        lateSeq++;
+
+        // State
+        currentSummary = null;
+        currentPage = 0;
+        totalPages = 1;
+
+        // الجداول
+        recordsTable.setItems(FXCollections.observableArrayList());
+        lateTable.setItems(FXCollections.observableArrayList());
+        lateMonthTable.setItems(FXCollections.observableArrayList());
+        balanceTable.setItems(FXCollections.observableArrayList());
+
+        // البطاقات — كل الـ Labels ترجع "—"
+        for (Label l : List.of(
+                annualAvailableLabel, annualEntitledLabel,
+                annualUsedLabel, annualLateLabel, annualRemainingLabel,
+                casualValueLabel,
+                maternityValueLabel,
+                childCareValueLabel, childCareMaxLabel,
+                openEndedCountLabel,
+                balanceCurrentYearLabel, balanceTierLabel,
+                balanceTotalAvailableLabel,
+                lateTotalLabel)) {
+            if (l != null) l.setText("—");
+        }
+        childCareMaxLabel.setText("من 6 سنوات");
+        casualProgress.setProgress(0);
+        showOpenEndedButton.setDisable(true);
+
+        // Pagination
+        recordsPageLabel.setText("—");
+        recordsPrevButton.setDisable(true);
+        recordsNextButton.setDisable(true);
+
+        // بطاقات الوضع / رعاية طفل — إخفاء مؤقت (هيتحدد من summary الجديد)
+        toggleCard(maternityCard, false);
+        toggleCard(childCareCard, false);
+
+        // أزرار CRUD — عطّلها
+        editRecordButton.setDisable(true);
+        deleteRecordButton.setDisable(true);
+        closeRecordButton.setDisable(true);
+        editLateButton.setDisable(true);
+        deleteLateButton.setDisable(true);
     }
 
     private void loadLeaveTypes() {
@@ -381,32 +373,42 @@ public class LeaveManagementController implements Initializable {
             all.setNameAr("كل الأنواع");
             withPlaceholder.add(all);
             withPlaceholder.addAll(list);
-            recordsTypeFilter.setItems(FXCollections.observableArrayList(withPlaceholder));
-            recordsTypeFilter.getSelectionModel().selectFirst();
+            updatingFilters = true;
+            try {
+                recordsTypeFilter.setItems(FXCollections.observableArrayList(withPlaceholder));
+                recordsTypeFilter.getSelectionModel().selectFirst();
+            } finally {
+                updatingFilters = false;
+            }
         });
     }
 
     private void loadSummary() {
         String nid = currentEmployee.nationalId();
         int year = yearComboBox.getValue();
+        final long seq = ++summarySeq;
         UiAsync.run(() -> api.getSummary(nid, year), summary -> {
+            if (seq != summarySeq) return;
             currentSummary = summary;
-            // ★ أعد بناء الكومبو بناءً على تاريخ التعيين الفعلي
             rebuildYearCombo(summary.getHireDate());
             renderCards(summary);
             renderBalanceTab(summary.getAnnual());
             populateRecordsYearFilter(summary.getHireDate());
+            renderLateMonthly();
             loadRecords();
         });
     }
 
     private void loadRecords() {
         String nid = currentEmployee.nationalId();
-        Integer year = recordsYearFilter.getValue();   // ← من الفلتر الجديد
+        Integer year = recordsYearFilter.getValue();
         LeaveTypeDto selectedType = recordsTypeFilter.getValue();
         String typeCode = (selectedType == null) ? null : selectedType.getCode();
 
+        final long seq = ++recordsSeq;
+        recordsTable.setItems(FXCollections.observableArrayList());
         UiAsync.run(() -> api.getRecords(nid, typeCode, year, currentPage, PAGE_SIZE), page -> {
+            if (seq != recordsSeq) return;
             recordsTable.setItems(FXCollections.observableArrayList(page.items()));
             totalPages = (page.pagination() != null) ? page.pagination().getTotalPages() : 1;
             updateRecordsPagination(page.pagination());
@@ -416,14 +418,21 @@ public class LeaveManagementController implements Initializable {
     private void loadLatePermissions() {
         String nid = currentEmployee.nationalId();
         Integer year = yearComboBox.getValue();
+        final long seq = ++lateSeq;
+        lateTable.setItems(FXCollections.observableArrayList());
         UiAsync.run(() -> api.getLatePermissions(nid, year), list -> {
+            if (seq != lateSeq) return;
             lateTable.setItems(FXCollections.observableArrayList(list));
             renderLateMonthly();
         });
     }
 
     private void renderLateMonthly() {
-        if (currentSummary == null || currentSummary.getLateByMonth() == null) return;
+        if (currentSummary == null || currentSummary.getLateByMonth() == null) {
+            lateMonthTable.setItems(FXCollections.observableArrayList());
+            lateTotalLabel.setText("—");
+            return;
+        }
         lateMonthTable.setItems(FXCollections.observableArrayList(
                 currentSummary.getLateByMonth()));
         int total = currentSummary.getLateByMonth().stream()
@@ -445,7 +454,7 @@ public class LeaveManagementController implements Initializable {
                     ? hireDate.getYear() + 1
                     : hireDate.getYear();
         }
-        if (startYear > current + 1) startYear = current;
+        if (startYear > current) startYear = current;
 
         List<Integer> items = new ArrayList<>();
         items.add(null);   // "الكل"
@@ -454,26 +463,27 @@ public class LeaveManagementController implements Initializable {
         }
 
         Integer previous = recordsYearFilter.getValue();
-        recordsYearFilter.setItems(FXCollections.observableArrayList(items));
+        updatingFilters = true;
+        try {
+            recordsYearFilter.setItems(FXCollections.observableArrayList(items));
 
-        Callback<ListView<Integer>, ListCell<Integer>> factory = lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(Integer item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setText(null);
-                    return;
+            Callback<ListView<Integer>, ListCell<Integer>> factory = lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Integer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText(null);
+                        return;
+                    }
+                    setText(item == null ? "الكل" : formatLeaveYear(item));
                 }
-                setText(item == null ? "الكل" : formatLeaveYear(item));
-            }
-        };
-        recordsYearFilter.setCellFactory(factory);
-        recordsYearFilter.setButtonCell(factory.call(null));
+            };
+            recordsYearFilter.setCellFactory(factory);
+            recordsYearFilter.setButtonCell(factory.call(null));
 
-        // استرجاع أو "الكل"
-        recordsYearFilter.setValue(previous);
-        if (recordsYearFilter.getValue() == null) {
-            recordsYearFilter.setValue(null);
+            recordsYearFilter.setValue(items.contains(previous) ? previous : null);
+        } finally {
+            updatingFilters = false;
         }
     }
 
@@ -489,9 +499,9 @@ public class LeaveManagementController implements Initializable {
         if (a != null) {
             annualAvailableLabel.setText(String.valueOf(a.getAvailable()));
             annualEntitledLabel.setText(String.valueOf(a.getEntitledThisYear()));
-            annualCarriedLabel.setText(String.valueOf(a.getCarriedFromPrevious()));
             annualUsedLabel.setText(String.valueOf(a.getUsed()));
             annualLateLabel.setText(String.valueOf(a.getUsedViaLate()));
+            annualRemainingLabel.setText(String.valueOf(a.getCurrentYearRemaining()));
         }
 
         CasualSummaryDto c = s.getCasual();
@@ -537,6 +547,7 @@ public class LeaveManagementController implements Initializable {
     private void renderBalanceTab(AnnualBalanceSummaryDto a) {
         if (a == null) return;
 
+        // كل السنين من التعيين (الباك بيبعتهم كلهم)
         balanceTable.setItems(FXCollections.observableArrayList(a.getSlices()));
         balanceTotalAvailableLabel.setText(String.valueOf(a.getAvailable()));
         balanceCurrentYearLabel.setText(formatLeaveYear(a.getLeaveYear()));
@@ -585,8 +596,7 @@ public class LeaveManagementController implements Initializable {
                     setStyle("");
                     return;
                 }
-                setStyle("CANCELLED".equals(r.getStatus())
-                        ? "-fx-opacity: 0.5;" : "");
+                setStyle("CANCELLED".equals(r.getStatus()) ? "-fx-opacity: 0.5;" : "");
             }
         });
     }
@@ -704,10 +714,12 @@ public class LeaveManagementController implements Initializable {
         });
 
         recordsTypeFilter.valueProperty().addListener((obs, o, n) -> {
+            if (updatingFilters) return;
             currentPage = 0;
             if (currentEmployee != null) loadRecords();
         });
         recordsYearFilter.valueProperty().addListener((obs, o, n) -> {
+            if (updatingFilters) return;
             currentPage = 0;
             if (currentEmployee != null && recordsTypeFilter.getValue() != null) loadRecords();
         });

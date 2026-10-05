@@ -72,9 +72,6 @@ public class LeaveRecordDialogController implements Initializable {
 
         employeeLabel.setText(emp.fullName() + " — " + emp.nationalId());
 
-        // فلترة الأنواع حسب الجنس — لكن من غير ما نعرف الجنس هنا
-        // (الجنس بييجي من summary بعد اختيار الموظف)
-        // الحل: نمرر الأنواع كاملة، والباك يرفض لو مش مناسب
         List<LeaveTypeDto> filtered = new ArrayList<>(allTypes);
         leaveTypeCombo.setItems(FXCollections.observableArrayList(filtered));
 
@@ -92,37 +89,51 @@ public class LeaveRecordDialogController implements Initializable {
         }
     }
 
+    // ═══════════════════════════════════════════════════════════
+    //  عند تغيير النوع
+    // ═══════════════════════════════════════════════════════════
+
     private void onTypeChanged(LeaveTypeDto type) {
         this.selectedType = type;
         if (type == null) return;
 
         boolean openEnded = type.isOpenEnded();
-        // إخفاء حقول النهاية للنوع المفتوح
-        toDateField.setVisible(!openEnded);
-        toDateField.setManaged(!openEnded);
-        toDateLabel.setVisible(!openEnded);
-        toDateLabel.setManaged(!openEnded);
+
+        toDateLabel.setVisible(true);
+        toDateLabel.setManaged(true);
+        toDateField.setVisible(true);
+        toDateField.setManaged(true);
+
+        toDateLabel.setText(openEnded ? "إلى تاريخ (اختياري):" : "إلى تاريخ:");
+
         openEndedHint.setVisible(openEnded);
         openEndedHint.setManaged(openEnded);
-
-        if (openEnded) toDateField.setText("");
+        openEndedHint.setText(openEnded
+                ? "اتركه فارغًا إذا كانت الخدمة مستمرة — يمكن إضافة تاريخ النهاية لاحقًا عند العودة"
+                : "");
 
         updatePreview();
     }
+
+    // ═══════════════════════════════════════════════════════════
+    //  معاينة الأيام
+    // ═══════════════════════════════════════════════════════════
 
     private void updatePreview() {
         String fromText = fromDateField.getText();
         String toText = toDateField.getText();
 
         LocalDate from = TextFieldSetupHelper.parseDateInput(fromText);
-        LocalDate to = TextFieldSetupHelper.parseDateInput(toText);
+        LocalDate to = (toText == null || toText.isBlank())
+                ? null
+                : TextFieldSetupHelper.parseDateInput(toText);
 
         // عدد الأيام
         if (from != null && to != null && !to.isBefore(from)) {
             long days = to.toEpochDay() - from.toEpochDay() + 1;
             daysPreviewLabel.setText(days + " يوم");
         } else if (from != null && selectedType != null && selectedType.isOpenEnded()) {
-            daysPreviewLabel.setText("مفتوح");
+            daysPreviewLabel.setText("مفتوح (بدون تاريخ نهاية)");
         } else {
             daysPreviewLabel.setText("—");
         }
@@ -153,6 +164,10 @@ public class LeaveRecordDialogController implements Initializable {
         warningLabel.setManaged(false);
     }
 
+    // ═══════════════════════════════════════════════════════════
+    //  الحفظ
+    // ═══════════════════════════════════════════════════════════
+
     private void onSave() {
         if (selectedType == null) {
             SAFNotification.error("اختر نوع الإجازة");
@@ -165,8 +180,24 @@ public class LeaveRecordDialogController implements Initializable {
         }
 
         LocalDate to = null;
-        if (!selectedType.isOpenEnded()) {
-            to = TextFieldSetupHelper.parseDateInput(toDateField.getText());
+        String toText = toDateField.getText();
+
+        if (selectedType.isOpenEnded()) {
+            // ═══ اختياري: لو مليان يبقى مغلق، لو فاضي يبقى مفتوح ═══
+            if (toText != null && !toText.isBlank()) {
+                to = TextFieldSetupHelper.parseDateInput(toText);
+                if (to == null) {
+                    SAFNotification.error("تاريخ النهاية غير صالح");
+                    return;
+                }
+                if (to.isBefore(from)) {
+                    SAFNotification.error("تاريخ النهاية قبل البداية");
+                    return;
+                }
+            }
+        } else {
+            // ═══ إلزامي ═══
+            to = TextFieldSetupHelper.parseDateInput(toText);
             if (to == null) {
                 SAFNotification.error("تاريخ النهاية غير صالح");
                 return;
@@ -181,10 +212,9 @@ public class LeaveRecordDialogController implements Initializable {
         req.setNationalId(employee.nationalId());
         req.setLeaveTypeCode(selectedType.getCode());
         req.setFromDate(from);
-        req.setToDate(to);
+        req.setToDate(to);          // ← null لو مفتوح
         req.setNotes(notesArea.getText());
 
-        final LocalDate finalTo = to;
         saveButton.setDisable(true);
 
         UiAsync.runVoid(() -> {
