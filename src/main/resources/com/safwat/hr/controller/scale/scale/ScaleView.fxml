@@ -97,6 +97,8 @@
                 <Label prefHeight="18.0" prefWidth="114.0" styleClass="bold" text="المجموعة النوعية" />
 
                 <TextField fx:id="txt_group" alignment="CENTER" prefHeight="28.0" prefWidth="196.0" promptText="المجموعة النوعية" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btn_delete" layoutX="364.0" layoutY="18.0" prefHeight="32" prefWidth="100" styleClass="btn-danger" text="حذف" />
+            <Button fx:id="btn_updateIdentity" layoutX="1526.0" layoutY="18.0" prefHeight="32" prefWidth="100" styleClass="btn-success" text="تعديل" />
             </HBox>
             <HBox prefHeight="422.0" prefWidth="1628.0" spacing="5.0">
                 <children>

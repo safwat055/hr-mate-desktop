@@ -90,7 +90,9 @@ public final class ApiClient {
         return sendRef(core().appendQueryParams(path, queryParams), "GET", null, responseType);
     }
 
-    /** GET بـ timeout مخصص + TypeReference. */
+    /**
+     * GET بـ timeout مخصص + TypeReference.
+     */
     public static <T> ApiResponse<T> getWithTypeRef(String path,
                                                     Duration timeout,
                                                     TypeReference<T> responseType)
@@ -124,7 +126,9 @@ public final class ApiClient {
         return sendRef(path, "POST", body, responseType);
     }
 
-    /** POST بـ timeout مخصص. */
+    /**
+     * POST بـ timeout مخصص.
+     */
     public static <T> ApiResponse<T> post(String path,
                                           Object body,
                                           Duration timeout,
@@ -133,7 +137,9 @@ public final class ApiClient {
         return send(path, "POST", body, timeout, responseType);
     }
 
-    /** ⭐ جديد: POST بـ timeout مخصص + TypeReference (للبحث وقوائم النتائج). */
+    /**
+     * ⭐ جديد: POST بـ timeout مخصص + TypeReference (للبحث وقوائم النتائج).
+     */
     public static <T> ApiResponse<T> post(String path,
                                           Object body,
                                           Duration timeout,
@@ -252,6 +258,7 @@ public final class ApiClient {
 
     // ── POST ──
 
+    // ── POST ──
     public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
                                                                   Object body,
                                                                   Class<T> responseType) {
@@ -265,14 +272,12 @@ public final class ApiClient {
         return async(() -> post(path, body, timeout, responseType));
     }
 
-    /** ⭐ جديد: postAsync + TypeReference. */
     public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
                                                                   Object body,
                                                                   TypeReference<T> responseType) {
         return async(() -> post(path, body, responseType));
     }
 
-    /** ⭐ جديد: postAsync + TypeReference + timeout مخصص. */
     public static <T> CompletableFuture<ApiResponse<T>> postAsync(String path,
                                                                   Object body,
                                                                   Duration timeout,
@@ -284,6 +289,27 @@ public final class ApiClient {
                                                                       Map<String, String> formData,
                                                                       Class<T> responseType) {
         return async(() -> postForm(path, formData, responseType));
+    }
+
+    // ── PUT ★ جديد ──
+
+    public static <T> CompletableFuture<ApiResponse<T>> putAsync(String path,
+                                                                 Object body,
+                                                                 Class<T> responseType) {
+        return async(() -> put(path, body, responseType));
+    }
+
+    // ── DELETE ★ جديد ──
+
+    public static <T> CompletableFuture<ApiResponse<T>> deleteAsync(String path,
+                                                                    Class<T> responseType) {
+        return async(() -> delete(path, responseType));
+    }
+
+    public static <T> CompletableFuture<ApiResponse<T>> deleteAsync(String path,
+                                                                    Object body,
+                                                                    Class<T> responseType) {
+        return async(() -> delete(path, body, responseType));
     }
 
     // ─────────────────────────────────────────────
@@ -351,7 +377,9 @@ public final class ApiClient {
         return downloadBinary(path, HttpCore.TIMEOUT);
     }
 
-    /** نفس {@link #downloadBinary(String)} لكن بـ timeout مخصص (تقارير طويلة). */
+    /**
+     * نفس {@link #downloadBinary(String)} لكن بـ timeout مخصص (تقارير طويلة).
+     */
     public static byte[] downloadBinary(String path, Duration timeout)
             throws IOException, InterruptedException {
         HttpCore c = core();
@@ -434,4 +462,5 @@ public final class ApiClient {
             }
         }, HttpCore.ASYNC_EXECUTOR);
     }
+
 }

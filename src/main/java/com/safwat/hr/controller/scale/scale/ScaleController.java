@@ -127,7 +127,7 @@ public class ScaleController implements Initializable {
     private TableView<StopPeriodic> table_stopPeriodic;
 
     @FXML
-    private Button btn_search;
+    private Button btn_search, btn_delete, btn_updateIdentity;
     @FXML
     private Button btn_calculate;
     @FXML
@@ -159,7 +159,9 @@ public class ScaleController implements Initializable {
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
         btn_clear.setOnAction(_ -> doClear());
-
+// في initialize()
+        if (btn_delete != null) btn_delete.setOnAction(_ -> doDelete());
+        if (btn_updateIdentity != null) btn_updateIdentity.setOnAction(_ -> doUpdateIdentity());
         if (btn_addUpgrade != null) btn_addUpgrade.setOnAction(_ -> addEmptyUpgradeRow());
         if (btn_addEncouragement != null) btn_addEncouragement.setOnAction(_ -> addEmptyEncouragementRow());
         if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
@@ -179,6 +181,57 @@ public class ScaleController implements Initializable {
         setupAdjustmentTable(table_bonusRival);
     }
 
+    private void doDelete() {
+        String id = txt_nationalId.getText().trim();
+        if (id.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setHeaderText(null);
+        confirm.setContentText("هل تريد حذف سجل السلم الوظيفي للموظف؟");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        setButtonsDisabled(true);
+        try {
+            apiService.delete(id);
+            doClear();
+            showInfo("تم الحذف بنجاح ✓");
+        } catch (Exception e) {
+            showError("فشل الحذف: " + e.getMessage());
+        } finally {
+            setButtonsDisabled(false);
+        }
+    }
+
+
+    private void doUpdateIdentity() {
+        String oldId = txt_nationalId.getText().trim();
+        if (oldId.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+
+        UpdateEmployeeIdentityRequest req = new UpdateEmployeeIdentityRequest();
+        req.setNewNationalId(txt_nationalId.getText().trim());
+        req.setNewCodeId(txt_empCode.getText().trim());
+        req.setNewEmpName(txt_empName.getText().trim());
+
+        setButtonsDisabled(true);
+        apiService.updateIdentity(oldId, req)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل التعديل:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                    showInfo("تم التعديل بنجاح ✓");
+                }));
+    }
     // ═════════════════════════════════════════════
     //  Search  ← بعد التعديل
     // ═════════════════════════════════════════════
