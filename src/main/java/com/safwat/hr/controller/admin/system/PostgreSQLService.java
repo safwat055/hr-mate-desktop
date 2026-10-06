@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.controller.login.Config;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,7 +14,6 @@ public class PostgreSQLService {
 
     private static PostgreSQLService instance;
     private StringBuilder logs = new StringBuilder();
-    private Config config;
     private Process currentProcess;
     private boolean isRunning = false;
 
@@ -23,7 +23,6 @@ public class PostgreSQLService {
     private static final String DEFAULT_DB = "hr_db";
 
     private PostgreSQLService() {
-        config = Config.getInstance();
     }
 
     public static PostgreSQLService getInstance() {
@@ -31,6 +30,37 @@ public class PostgreSQLService {
             instance = new PostgreSQLService();
         }
         return instance;
+    }
+
+    // ══════════════════ Config Helpers ══════════════════
+
+    /**
+     * منفذ PostgreSQL — من AppConfig مع افتراضي 5432.
+     */
+    private String pgPort() {
+        return AppConfig.getString("connection", "pgPort", "5432");
+    }
+
+    /**
+     * مسار bin — من AppConfig، مع fallback لكشف بنية التوزيع.
+     */
+    private String pgBinPath() {
+        String v = AppConfig.getString("paths", "pgBin", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgBin().toString())
+                .orElse("");
+    }
+
+    /**
+     * مسار data — من AppConfig، مع fallback لكشف بنية التوزيع.
+     */
+    private String pgDataPath() {
+        String v = AppConfig.getString("paths", "pgData", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgData().toString())
+                .orElse("");
     }
 
     // ==================== التهيئة ====================
@@ -135,10 +165,10 @@ public class PostgreSQLService {
             log("   👤 المستخدم: " + username + " (SUPERUSER)");
             log("   🔑 كلمة المرور: " + (password != null && !password.isEmpty() ? "********" : "بدون"));
             log("   📁 قاعدة البيانات: " + DEFAULT_DB);
-            log("   🔑 المنفذ: " + config.getPgPort());
+            log("   🔑 المنفذ: " + pgPort());
             log("");
             log("📌 معلومات الاتصال للتطبيق:");
-            log("   URL: jdbc:postgresql://localhost:" + config.getPgPort() + "/" + DEFAULT_DB);
+            log("   URL: jdbc:postgresql://localhost:" + pgPort() + "/" + DEFAULT_DB);
             log("   Username: " + username);
             log("   Password: " + (password != null && !password.isEmpty() ? "********" : "بدون"));
             return true;
@@ -153,7 +183,7 @@ public class PostgreSQLService {
     private boolean checkUserExists(String binPath, String username) {
         try {
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> cmd = Arrays.asList(
                     binPath + File.separator + "psql" + ext,
@@ -173,7 +203,7 @@ public class PostgreSQLService {
     private boolean testAdminConnection(String binPath, String dbName, String username, String password) {
         try {
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             ProcessBuilder pb = new ProcessBuilder(
                     binPath + File.separator + "psql" + ext,
@@ -221,7 +251,7 @@ public class PostgreSQLService {
                 if (trimmed.startsWith("listen_addresses") && !trimmed.startsWith("#")) {
                     newLines.add("listen_addresses = '*'");
                 } else if (trimmed.startsWith("port") && !trimmed.startsWith("#")) {
-                    newLines.add("port = " + config.getPgPort());
+                    newLines.add("port = " + pgPort());
                 } else if (trimmed.startsWith("max_connections") && !trimmed.startsWith("#")) {
                     newLines.add("max_connections = 100");
                 } else if (trimmed.startsWith("shared_buffers") && !trimmed.startsWith("#")) {
@@ -265,7 +295,7 @@ public class PostgreSQLService {
 
         try {
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> dropCmd = Arrays.asList(
                     binPath + File.separator + "psql" + ext,
@@ -315,7 +345,7 @@ public class PostgreSQLService {
 
         try {
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> dropCmd = Arrays.asList(
                     binPath + File.separator + "dropdb" + ext,
@@ -355,7 +385,7 @@ public class PostgreSQLService {
 
         try {
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> grantCmd = Arrays.asList(
                     binPath + File.separator + "psql" + ext,
@@ -484,8 +514,8 @@ public class PostgreSQLService {
     private boolean stopNormal() {
         try {
             String ext = getOsExt();
-            String binPath = config.getPgBinPath();
-            String dataPath = config.getPgDataPath();
+            String binPath = pgBinPath();
+            String dataPath = pgDataPath();
 
             if (!binPath.isEmpty() && !dataPath.isEmpty()) {
                 List<String> stopCmd = Arrays.asList(
@@ -597,9 +627,9 @@ public class PostgreSQLService {
         log("🔄 إنشاء قاعدة بيانات: " + dbName);
 
         try {
-            String binPath = config.getPgBinPath();
+            String binPath = pgBinPath();
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> cmd = Arrays.asList(
                     binPath + File.separator + "createdb" + ext,
@@ -628,9 +658,9 @@ public class PostgreSQLService {
         log("🔄 حذف قاعدة بيانات: " + dbName);
 
         try {
-            String binPath = config.getPgBinPath();
+            String binPath = pgBinPath();
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             List<String> cmd = Arrays.asList(
                     binPath + File.separator + "dropdb" + ext,
@@ -655,9 +685,9 @@ public class PostgreSQLService {
 
     public String listDatabases() {
         try {
-            String binPath = config.getPgBinPath();
+            String binPath = pgBinPath();
             String ext = getOsExt();
-            String port = config.getPgPort();
+            String port = pgPort();
 
             ProcessBuilder pb = new ProcessBuilder(
                     binPath + File.separator + "psql" + ext,
@@ -738,7 +768,6 @@ public class PostgreSQLService {
     // ==================== أدوات مساعدة ====================
 
     private String getOsExt() {
-
         return System.getProperty("os.name").toLowerCase().contains("win") ? ".exe" : "";
     }
 

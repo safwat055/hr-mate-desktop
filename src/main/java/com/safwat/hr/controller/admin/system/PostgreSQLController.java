@@ -1,9 +1,10 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.controller.login.Config;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.FileTransferClient;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 import com.safwat.hr.ui.util.AlertUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -34,7 +35,6 @@ public class PostgreSQLController implements Initializable {
     @FXML
     private Label lblInitStatus;
     @FXML
-
     private TextArea txtPgLogs;
 
     @FXML
@@ -67,57 +67,80 @@ public class PostgreSQLController implements Initializable {
     private Label lblBackupStatus;
 
     private PostgreSQLService pgService;
-    private Config config;
-    private StringBuilder logs = new StringBuilder();
+
+    // ══════════════════ Config Helpers ══════════════════
+
+    /**
+     * منفذ PostgreSQL — من AppConfig مع افتراضي 5432.
+     */
+    private String pgPort() {
+        return AppConfig.getString("connection", "pgPort", "5432");
+    }
+
+    /**
+     * مسار bin — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String pgBinPath() {
+        String v = AppConfig.getString("paths", "pgBin", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgBin().toString())
+                .orElse("");
+    }
+
+    /**
+     * مسار data — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String pgDataPath() {
+        String v = AppConfig.getString("paths", "pgData", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgData().toString())
+                .orElse("");
+    }
+
+    // ══════════════════ Init ══════════════════
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        config = Config.getInstance();
         pgService = PostgreSQLService.getInstance();
 
         updateInfo();
         setupButtons();
         disableServiceControlsOnLinux();
 
-        // تحديث كل 5 ثواني
-        new Thread(() -> {
-            while (true) {
+        Thread t = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
                     Platform.runLater(this::updateInfo);
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     break;
                 }
             }
-        }).start();
+        }, "pg-status-ticker");
+        t.setDaemon(true);
+        t.start();
     }
 
     private void updateInfo() {
-        String binPath = config.getPgBinPath();
-        String dataPath = config.getPgDataPath();
+        String binPath = pgBinPath();
+        String dataPath = pgDataPath();
         boolean running = pgService.isRunning();
         boolean initialized = pgService.isInitialized(dataPath);
 
         lblPgPath.setText(binPath.isEmpty() ? "غير محدد" : binPath);
-
         lblPgData.setText(dataPath.isEmpty() ? "غير محدد" : dataPath);
         lblPgRunningStatus.setText(running ? "🟢 يعمل" : (initialized ? "⏹ جاهز" : "❌ غير مهيأ"));
         lblPgStatus.setText(running ? "🟢 يعمل" : (initialized ? "⏹ متوقف" : "❌ غير مهيأ"));
-        lblPgPort.setText(config.getPgPort() != null ? config.getPgPort() : "5432");
+        lblPgPort.setText(pgPort());
         lblPgUser.setText("admin");
         lblPgDatabase.setText("hr_db");
-
-        updateLogs();
-    }
-
-    private void updateLogs() {
-        // مش محتاجة — AppLogBus هو المصدر
     }
 
     private void addLog(String message) {
-        // ✅ AppLogBus الموحّد
         AppLogBus.getInstance().log("[PostgreSQL] " + message);
-        // عرض في الـ TextArea المحلي أيضًا
         Platform.runLater(() -> {
             if (txtPgLogs != null) {
                 txtPgLogs.appendText(message + "\n");
@@ -138,16 +161,18 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void initializeDatabase() {
-        String binPath = config.getPgBinPath();
-        String dataPath = config.getPgDataPath();
+        String binPath = pgBinPath();
+        String dataPath = pgDataPath();
 
         if (binPath.isEmpty() || dataPath.isEmpty()) {
             showAlert("خطأ", "يرجى تحديد مسار PostgreSQL أولاً");
             return;
         }
         if (new File(dataPath).exists()) {
-            if (!AlertUtil.showConfirmation("تحذير", "فولدر داتا موجود بالفعل في حال الاستمرار ستفقد كل قواعد البيانات " + "\n" + "للاستمرار اضغط موافق")) {
-
+            if (!AlertUtil.showConfirmation("تحذير",
+                    "فولدر داتا موجود بالفعل في حال الاستمرار ستفقد كل قواعد البيانات "
+                            + "\n" + "للاستمرار اضغط موافق")) {
+                return;
             }
         }
         btnInit.setDisable(true);
@@ -173,8 +198,8 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void startPostgreSQL() {
-        String binPath = config.getPgBinPath();
-        String dataPath = config.getPgDataPath();
+        String binPath = pgBinPath();
+        String dataPath = pgDataPath();
         boolean asService = chkServiceMode.isSelected();
 
         addLog("▶ تشغيل PostgreSQL...");
@@ -212,8 +237,8 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void restartPostgreSQL() {
-        String binPath = config.getPgBinPath();
-        String dataPath = config.getPgDataPath();
+        String binPath = pgBinPath();
+        String dataPath = pgDataPath();
         boolean asService = chkServiceMode.isSelected();
 
         addLog("🔄 إعادة تشغيل PostgreSQL...");
@@ -233,8 +258,8 @@ public class PostgreSQLController implements Initializable {
     }
 
     private void installService() {
-        String binPath = config.getPgBinPath();
-        String dataPath = config.getPgDataPath();
+        String binPath = pgBinPath();
+        String dataPath = pgDataPath();
 
         addLog("📦 تثبيت خدمة PostgreSQL...");
         new Thread(() -> {
@@ -339,12 +364,9 @@ public class PostgreSQLController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  النسخ الاحتياطي (2.7) — يستهلك Backend API مباشرة
+    //  النسخ الاحتياطي — يستهلك Backend API مباشرة
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * نسخة احتياطية فورية — POST /api/payroll/backupFull
-     */
     @FXML
     private void handleBackupNow() {
         addLog("💾 طلب نسخة احتياطية...");
@@ -353,7 +375,6 @@ public class PostgreSQLController implements Initializable {
 
         new Thread(() -> {
             try {
-                // PayrollRequest فارغ — الباك اند بيتعامل مع القيم الافتراضية
                 ApiResponse<Object> response = ApiClient.post(
                         "/payroll/backupFull",
                         new java.util.HashMap<>(),
@@ -383,12 +404,8 @@ public class PostgreSQLController implements Initializable {
         }).start();
     }
 
-    /**
-     * استعادة من ملف — FileChooser + POST /api/payroll/restore (multipart)
-     */
     @FXML
     private void handleRestoreFromFile() {
-        // تأكيد إضافي — عملية خطيرة
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("تأكيد الاستعادة");
         confirm.setHeaderText("⚠️ تحذير: سيتم مسح قاعدة البيانات الحالية بالكامل!");
@@ -400,7 +417,6 @@ public class PostgreSQLController implements Initializable {
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
 
-        // اختيار الملف
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("اختر ملف النسخة الاحتياطية");
         fileChooser.getExtensionFilters().addAll(
@@ -420,10 +436,8 @@ public class PostgreSQLController implements Initializable {
 
         new Thread(() -> {
             try {
-                // ملاحظة: الـ part "data" بيحتوي على PayrollRequest — نبعته كـ JSON فارغ
-                // والباك اند بيستخدم hr_db Hardcoded في PayrollController.restore()
                 java.util.Map<String, Object> formData = new java.util.HashMap<>();
-                formData.put("data", "{}");   // PayrollRequest فارغ كـ JSON string
+                formData.put("data", "{}");
                 formData.put("file", filePath);
 
                 ApiResponse<Object> response = FileTransferClient.uploadFile(
@@ -461,7 +475,6 @@ public class PostgreSQLController implements Initializable {
 
     /**
      * على Linux: تعطيل أزرار الخدمة (Windows-only).
-     * Init/Start/Stop/Restart وقواعد البيانات تفضل متاحة.
      */
     private void disableServiceControlsOnLinux() {
         if (!System.getProperty("os.name", "").toLowerCase().contains("windows")) {
@@ -473,14 +486,15 @@ public class PostgreSQLController implements Initializable {
                 chkServiceMode.setSelected(false);
                 chkServiceMode.setDisable(true);
                 chkServiceMode.setVisible(false);
-                com.safwat.hr.shared.AppConfig.setValue("connection", "pgAsService", "false");
+                AppConfig.setValue("connection", "pgAsService", "false");
                 addLog("ℹ️ Linux: تم تعطيل أزرار خدمة PostgreSQL — التشغيل المباشر فقط");
             });
         }
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(title.contains("خطأ") ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(title.contains("خطأ")
+                ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setContentText(message);
         alert.showAndWait();

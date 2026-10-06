@@ -1,7 +1,7 @@
 package com.safwat.hr.controller.admin.system;
 
-
-import com.safwat.hr.controller.login.Config;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class BackendController implements Initializable {
+
     @FXML
     private Button btnFixServices;
 
@@ -46,52 +47,67 @@ public class BackendController implements Initializable {
     private CheckBox chkServiceMode;
 
     private BackendService backendService;
-    private Config config;
-    private StringBuilder logs = new StringBuilder();
+
+    // ══════════════════ Config Helpers ══════════════════
+
+    /**
+     * مسار ملف الباك إند التنفيذي — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String backendPath() {
+        String v = AppConfig.getString("paths", "backend", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.backendExe().toString())
+                .orElse("");
+    }
+
+    /**
+     * منفذ الباك إند — من AppConfig، افتراضي 8080.
+     */
+    private String backendPort() {
+        return AppConfig.getString("connection", "port", "8080");
+    }
+
+    // ══════════════════ Init ══════════════════
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        config = Config.getInstance();
         backendService = BackendService.getInstance();
 
         updateInfo();
         setupButtons();
         setBtnAutoStart();
         disableServiceControlsOnLinux();
-        new Thread(() -> {
-            while (true) {
+
+        Thread t = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
                     Platform.runLater(this::updateInfo);
                 } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     break;
                 }
             }
-        }).start();
+        }, "backend-status-ticker");
+        t.setDaemon(true);
+        t.start();
     }
 
     private void updateInfo() {
-        String backendPath = config.getBackendPath();
+        String backendPath = backendPath();
         boolean running = backendService.isRunning();
         Long pid = backendService.getPid();
 
         lblBackendPath.setText(backendPath.isEmpty() ? "غير محدد" : backendPath);
         lblBackendRunningStatus.setText(running ? "🟢 يعمل" : "❌ غير مشغول");
         lblBackendStatus.setText(running ? "🟢 يعمل" : "⏹ متوقف");
-        lblBackendPort.setText("8080");
+        lblBackendPort.setText(backendPort());
         lblBackendPid.setText(pid != null ? pid.toString() : "-");
-
-        updateLogs();
-    }
-
-    private void updateLogs() {
-        // مش محتاجة — AppLogBus هو المصدر
     }
 
     private void addLog(String message) {
-        // ✅ AppLogBus الموحّد
         AppLogBus.getInstance().log("[Backend] " + message);
-        // عرض في الـ TextArea المحلي أيضًا
         Platform.runLater(() -> {
             if (txtBackendLogs != null) {
                 txtBackendLogs.appendText(message + "\n");
@@ -119,18 +135,17 @@ public class BackendController implements Initializable {
             addLog("🔧 بدء إصلاح خدمات Backend...");
 
             new Thread(() -> {
-                // 1. حذف جميع الخدمات
                 boolean fixed = backendService.fixAllServices();
 
                 Platform.runLater(() -> {
                     if (fixed) {
                         addLog("✅ تم حذف جميع خدمات Backend القديمة");
 
-                        // 2. تثبيت خدمة جديدة إذا كان المسار موجوداً
-                        String backendPath = config.getBackendPath();
+                        String backendPath = backendPath();
                         if (!backendPath.isEmpty() && new File(backendPath).exists()) {
                             addLog("📦 تثبيت خدمة Backend جديدة...");
-                            boolean installed = backendService.installService(backendPath, "ArchiveManager_Backend");
+                            boolean installed = backendService.installService(
+                                    backendPath, "ArchiveManager_Backend");
                             if (installed) {
                                 addLog("✅ تم تثبيت خدمة Backend جديدة");
                                 showAlert("نجاح", "تم إصلاح خدمات Backend بنجاح");
@@ -153,7 +168,7 @@ public class BackendController implements Initializable {
     }
 
     private void startBackend() {
-        String backendPath = config.getBackendPath();
+        String backendPath = backendPath();
         if (backendPath.isEmpty()) {
             showAlert("خطأ", "يرجى تحديد مسار Backend أولاً");
             return;
@@ -197,7 +212,7 @@ public class BackendController implements Initializable {
     }
 
     private void restartBackend() {
-        String backendPath = config.getBackendPath();
+        String backendPath = backendPath();
         boolean asService = chkServiceMode.isSelected();
 
         addLog("🔄 إعادة تشغيل Backend...");
@@ -217,7 +232,7 @@ public class BackendController implements Initializable {
     }
 
     private void installService() {
-        String backendPath = config.getBackendPath();
+        String backendPath = backendPath();
         if (backendPath.isEmpty()) {
             showAlert("خطأ", "يرجى تحديد مسار Backend أولاً");
             return;
@@ -225,7 +240,8 @@ public class BackendController implements Initializable {
 
         addLog("📦 تثبيت خدمة Backend...");
         new Thread(() -> {
-            boolean success = backendService.installService(backendPath, "ArchiveManager_Backend");
+            boolean success = backendService.installService(
+                    backendPath, "ArchiveManager_Backend");
             Platform.runLater(() -> {
                 if (success) {
                     addLog("✅ تم تثبيت خدمة Backend");
@@ -257,7 +273,7 @@ public class BackendController implements Initializable {
     }
 
     private void startPortable() {
-        String backendPath = config.getBackendPath();
+        String backendPath = backendPath();
         if (backendPath.isEmpty()) {
             showAlert("خطأ", "يرجى تحديد مسار Backend أولاً");
             return;
@@ -281,10 +297,9 @@ public class BackendController implements Initializable {
 
     @FXML
     private void handleAutoStart() {
-        String appPath = config.getBackendPath(); // قراءة المسار من الإعدادات
+        String appPath = backendPath();
 
         if (StartupManager.isInStartup()) {
-            // إذا كان موجوداً، اسأل المستخدم إذا كان يريد إزالته
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("التشغيل التلقائي");
             confirm.setHeaderText("التطبيق مسجل بالفعل للتشغيل التلقائي");
@@ -300,7 +315,6 @@ public class BackendController implements Initializable {
                 }
             }
         } else {
-            // إذا لم يكن موجوداً، أضفه
             boolean added = StartupManager.addToStartup(appPath);
             if (added) {
                 showAlert("نجاح", "تم إضافة التطبيق للتشغيل التلقائي");
@@ -319,7 +333,6 @@ public class BackendController implements Initializable {
                 btnAutoStart.setText("تفعيل التشغيل التلقائي");
             }
         });
-
     }
 
     /**
@@ -342,15 +355,15 @@ public class BackendController implements Initializable {
                 chkServiceMode.setSelected(false);
                 chkServiceMode.setDisable(true);
                 chkServiceMode.setVisible(false);
-                // حفظ قيمة false في AppConfig
-                com.safwat.hr.shared.AppConfig.setValue("connection", "backendAsService", "false");
+                AppConfig.setValue("connection", "backendAsService", "false");
                 addLog("ℹ️ Linux: تم تعطيل أزرار الخدمة — التشغيل المباشر فقط متاح");
             });
         }
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(title.contains("خطأ") ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(title.contains("خطأ")
+                ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setContentText(message);
         alert.showAndWait();

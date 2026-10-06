@@ -489,7 +489,7 @@ public class MainViewController implements Initializable {
     @FXML
     void openBasicSetting() {
         ViewManager.openIndependentView(
-                "/com/safwat/hr/controller/admin/system/main.fxml",
+                "/com/safwat/hr/controller/admin/system/AdminConsole.fxml",
                 "اعدادات التشغيل");
     }
 

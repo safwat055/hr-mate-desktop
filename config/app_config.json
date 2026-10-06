@@ -1,0 +1,23 @@
+{
+  "ui": {"theme": "theme-light.css"},
+  "paths": {
+    "pgRoot": "",
+    "backendDir": "",
+    "pgBin": "",
+    "backend": "",
+    "pgData": "",
+    "frontend": ""
+  },
+  "connection": {
+    "alone": true,
+    "pgAsService": "false",
+    "url2": "ws://",
+    "port": "8080",
+    "pgPort": "5432",
+    "masterPC": "localhost",
+    "user": "admin",
+    "url": "http://",
+    "backendAsService": "false"
+  },
+  "notifications": {"reportsEnabled": true}
+}

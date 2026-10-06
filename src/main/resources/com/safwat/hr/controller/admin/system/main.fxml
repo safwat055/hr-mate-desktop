@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <VBox nodeOrientation="RIGHT_TO_LEFT"
-      prefHeight="828.0" prefWidth="969.0" spacing="14.0"
+      spacing="14.0"
       styleClass="stg-app-bg"
       xmlns="http://javafx.com/javafx/26"
       xmlns:fx="http://javafx.com/fxml/1"
@@ -13,12 +13,12 @@
         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
     </padding>
 
-    <!-- ═══ Header ═══ -->
+    <!-- ═══════════ Header ═══════════ -->
     <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-page-header">
-        <Label styleClass="stg-header-icon" text="🔧"/>
+        <Label styleClass="stg-header-icon" text="🏠"/>
         <VBox spacing="2">
-            <Label styleClass="stg-page-title" text="إدارة خدمات التطبيق"/>
-            <Label styleClass="stg-page-subtitle" text="التحكم الكامل في الخدمات والمسارات"/>
+            <Label styleClass="stg-page-title" text="الرئيسية"/>
+            <Label styleClass="stg-page-subtitle" text="بيانات الماستر والمسارات"/>
         </VBox>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblStatus" styleClass="stg-status-badge,stg-status-badge-ok" text="✅ جاهز"/>
@@ -26,148 +26,163 @@
                            styleClass="stg-progress-indicator-dark" visible="false"/>
     </HBox>
 
-    <!-- ═══ TabPane ═══ -->
-    <TabPane fx:id="mainTabPane" styleClass="stg-tab-pane-dark"
-             tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+    <!-- ═══════════ Body ═══════════ -->
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="stg-main-scroll"
+                VBox.vgrow="ALWAYS">
+        <VBox spacing="14">
+            <padding>
+                <Insets bottom="14" left="14" right="14" top="14"/>
+            </padding>
 
-        <Tab closable="false" text="🏠 الرئيسية">
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="stg-main-scroll">
-                <VBox spacing="14">
-                    <padding>
-                        <Insets bottom="14" left="14" right="14" top="14"/>
-                    </padding>
+            <!-- ─── شريط التنقل السريع ─── -->
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-toolbar-dark">
+                <Button fx:id="btnOpenPgTab" styleClass="stg-btn-primary"
+                        text="📦 إدارة PostgreSQL"/>
+                <Button fx:id="btnOpenBackendTab" styleClass="stg-btn-primary"
+                        text="🚀 إدارة Backend"/>
+                <Button fx:id="btnOpenBackendPropsTab" styleClass="stg-btn-primary"
+                        text="⚙ إعدادات الباك إند"/>
+                <Button fx:id="btnOpenBackendJsonTab" styleClass="stg-btn-primary"
+                        text="🔧 إعدادات النظام (JSON)"/>
+                <Button fx:id="btnFixServices" styleClass="stg-btn-secondary"
+                        text="🔧 إصلاح الخدمات"/>
+                <Button fx:id="btnOpenLogsTab" styleClass="stg-btn-primary"
+                        text="📊 السجلات"/>
+            </HBox>
 
-                    <!-- ─── شريط التنقل ─── -->
-                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-toolbar-dark">
-                        <Button fx:id="btnOpenPgTab" styleClass="stg-btn-primary" text="📦 إدارة PostgreSQL"/>
-                        <Button fx:id="btnOpenBackendTab" styleClass="stg-btn-primary" text="🚀 إدارة Backend"/>
-                        <Button fx:id="btnFixServices" styleClass="stg-btn-secondary" text="🔧 إصلاح الخدمات"/>
-                        <Button fx:id="btnOpenLogsTab" styleClass="stg-btn-primary" text="📊 السجلات"/>
+            <!-- ─── Card: بيانات جهاز الماستر ─── -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="🖥"/>
+                    <Label styleClass="stg-card-title" text="بيانات جهاز الماستر"/>
+                </HBox>
+                <VBox spacing="12" styleClass="stg-card-body">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label minWidth="120" styleClass="stg-field-label"
+                               text="اسم جهاز الماستر:"/>
+                        <TextField fx:id="txtAdminPC" prefWidth="180"
+                                   styleClass="stg-field-dark"/>
+                        <Label minWidth="80" styleClass="stg-field-label"
+                               text="رقم البورت:"/>
+                        <TextField fx:id="txtAdminPort" prefWidth="120"
+                                   styleClass="stg-field-dark"/>
+                        <Button fx:id="btnSaveAdminSet" styleClass="stg-btn-primary"
+                                text="💾 حفظ"/>
+                        <CheckBox fx:id="chk_alone" styleClass="stg-checkbox-dark"
+                                  text="تشغيل فردي"/>
                     </HBox>
-
-                    <!-- ─── Card: بيانات جهاز الماستر ─── -->
-                    <VBox spacing="0" styleClass="stg-card">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                            <Label styleClass="stg-card-icon" text="🖥"/>
-                            <Label styleClass="stg-card-title" text="بيانات جهاز الماستر"/>
-                        </HBox>
-                        <VBox spacing="12" styleClass="stg-card-body">
-                            <HBox alignment="CENTER_LEFT" spacing="10">
-                                <Label minWidth="120" styleClass="stg-field-label" text="اسم جهاز الماستر:"/>
-                                <TextField fx:id="txtAdminPC" prefWidth="180" styleClass="stg-field-dark"/>
-                                <Label minWidth="80" styleClass="stg-field-label" text="رقم البورت:"/>
-                                <TextField fx:id="txtAdminPort" prefWidth="120" styleClass="stg-field-dark"/>
-                                <Button fx:id="btnSaveAdminSet" styleClass="stg-btn-primary" text="💾 حفظ"/>
-                                <CheckBox fx:id="chk_alone" styleClass="stg-checkbox-dark" text="تشغيل فردي"/>
-                            </HBox>
-                        </VBox>
-                    </VBox>
-
-                    <!-- ─── Card: مسارات التطبيق ─── -->
-                    <VBox spacing="0" styleClass="stg-card">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                            <Label styleClass="stg-card-icon" text="📂"/>
-                            <Label styleClass="stg-card-title" text="مسارات التطبيق"/>
-                        </HBox>
-                        <VBox spacing="12" styleClass="stg-card-body">
-
-                            <!-- PostgreSQL Folder -->
-                            <VBox spacing="6">
-                                <Label styleClass="stg-field-label" text="PostgreSQL Folder"/>
-                                <HBox alignment="CENTER_LEFT" spacing="8">
-                                    <TextField fx:id="txtPgFolder"
-                                               promptText="اختر المجلد الرئيسي لـ PostgreSQL"
-                                               styleClass="stg-field-dark"
-                                               HBox.hgrow="ALWAYS"/>
-                                    <Button fx:id="btnBrowsePgFolder"
-                                            styleClass="stg-icon-btn,stg-icon-btn-accent" text="📁"/>
-                                </HBox>
-                            </VBox>
-
-                            <!-- المسارات التلقائية -->
-                            <GridPane hgap="10" vgap="6" style="-fx-padding: 0 0 0 20;">
-                                <columnConstraints>
-                                    <ColumnConstraints minWidth="50"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints minWidth="30"/>
-                                </columnConstraints>
-                                <rowConstraints>
-                                    <RowConstraints/>
-                                    <RowConstraints/>
-                                </rowConstraints>
-
-                                <Label styleClass="stg-field-value-muted" text="├─ bin:"
-                                       GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                                <TextField fx:id="txtPgBinPath" editable="false"
-                                           styleClass="stg-field-dark"
-                                           GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                                <Label fx:id="lblPgBinStatus" styleClass="stg-status-msg-error" text="❌"
-                                       GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-
-                                <Label styleClass="stg-field-value-muted" text="└─ data:"
-                                       GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                                <TextField fx:id="txtPgDataPath" editable="false"
-                                           styleClass="stg-field-dark"
-                                           GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                <Label fx:id="lblPgDataStatus" styleClass="stg-status-msg-error" text="❌"
-                                       GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-                            </GridPane>
-
-                            <Separator styleClass="stg-separator-dark"/>
-
-                            <!-- Backend EXE -->
-                            <VBox spacing="6">
-                                <Label styleClass="stg-field-label" text="Backend Executable"/>
-                                <HBox alignment="CENTER_LEFT" spacing="8">
-                                    <TextField fx:id="txtBackendPath"
-                                               promptText="اختر ملف Backend Executable"
-                                               styleClass="stg-field-dark"
-                                               HBox.hgrow="ALWAYS"/>
-                                    <Button fx:id="btnBrowseBackend"
-                                            styleClass="stg-icon-btn,stg-icon-btn-accent" text="📁"/>
-                                </HBox>
-                            </VBox>
-
-                            <HBox alignment="CENTER_RIGHT" spacing="10">
-                                <Button fx:id="btnSavePaths" styleClass="stg-btn-primary"
-                                        text="💾 حفظ المسارات"/>
-                            </HBox>
-                        </VBox>
-                    </VBox>
-
-                    <!-- ─── Card: معلومات سريعة ─── -->
-                    <VBox spacing="0" styleClass="stg-card">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                            <Label styleClass="stg-card-icon" text="ℹ️"/>
-                            <Label styleClass="stg-card-title" text="معلومات سريعة"/>
-                        </HBox>
-                        <VBox spacing="6" styleClass="stg-card-body">
-                            <Label fx:id="lblPgInfo" styleClass="stg-field-value"
-                                   text="PostgreSQL: غير محدد"/>
-                            <Label fx:id="lblBackendInfo" styleClass="stg-field-value"
-                                   text="Backend: غير محدد"/>
-                            <Label fx:id="lblStatusInfo" styleClass="stg-field-value"
-                                   text="الحالة: جاهز"/>
-                            <Label fx:id="lblLastUpdate" styleClass="stg-field-value-muted"
-                                   text="آخر تحديث: الآن"/>
-                        </VBox>
-                    </VBox>
-
-                    <!-- ─── Card: سجلات ─── -->
-                    <VBox spacing="0" styleClass="stg-card">
-                        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                            <Label styleClass="stg-card-icon" text="📋"/>
-                            <Label styleClass="stg-card-title" text="سجلات"/>
-                        </HBox>
-                        <TextArea fx:id="txtPgLogs" editable="false" prefHeight="180"
-                                  styleClass="stg-textarea-dark,stg-textarea-in-card"
-                                  wrapText="true"/>
-                    </VBox>
-
                 </VBox>
-            </ScrollPane>
-        </Tab>
+            </VBox>
 
-    </TabPane>
+            <!-- ─── Card: مسارات التطبيق ─── -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="📂"/>
+                    <Label styleClass="stg-card-title" text="مسارات التطبيق"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="btnDetectPaths" styleClass="stg-btn-secondary"
+                            text="🔍 كشف تلقائي"/>
+                </HBox>
+                <VBox spacing="12" styleClass="stg-card-body">
 
+                    <!-- PostgreSQL Folder -->
+                    <VBox spacing="6">
+                        <Label styleClass="stg-field-label" text="PostgreSQL Folder"/>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <TextField fx:id="txtPgFolder"
+                                       promptText="اختر المجلد الرئيسي لـ PostgreSQL"
+                                       styleClass="stg-field-dark"
+                                       HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="btnBrowsePgFolder"
+                                    styleClass="stg-icon-btn,stg-icon-btn-accent"
+                                    text="📁"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- المسارات التلقائية -->
+                    <GridPane hgap="10" vgap="6" style="-fx-padding: 0 0 0 20;">
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="50"/>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                            <ColumnConstraints minWidth="30"/>
+                        </columnConstraints>
+                        <rowConstraints>
+                            <RowConstraints/>
+                            <RowConstraints/>
+                        </rowConstraints>
+
+                        <Label styleClass="stg-field-value-muted" text="├─ bin:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="txtPgBinPath" editable="false"
+                                   styleClass="stg-field-dark"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                        <Label fx:id="lblPgBinStatus" styleClass="stg-status-msg-error"
+                               text="❌"
+                               GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+
+                        <Label styleClass="stg-field-value-muted" text="└─ data:"
+                               GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="txtPgDataPath" editable="false"
+                                   styleClass="stg-field-dark"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                        <Label fx:id="lblPgDataStatus" styleClass="stg-status-msg-error"
+                               text="❌"
+                               GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                    </GridPane>
+
+                    <Separator styleClass="stg-separator-dark"/>
+
+                    <!-- Backend EXE -->
+                    <VBox spacing="6">
+                        <Label styleClass="stg-field-label" text="Backend Executable"/>
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <TextField fx:id="txtBackendPath"
+                                       promptText="اختر ملف Backend Executable"
+                                       styleClass="stg-field-dark"
+                                       HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="btnBrowseBackend"
+                                    styleClass="stg-icon-btn,stg-icon-btn-accent"
+                                    text="📁"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Footer الأزرار -->
+                    <HBox alignment="CENTER_RIGHT" spacing="10">
+                        <Button fx:id="btnSavePaths" styleClass="stg-btn-primary"
+                                text="💾 حفظ المسارات"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <!-- ─── Card: معلومات سريعة ─── -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="ℹ️"/>
+                    <Label styleClass="stg-card-title" text="معلومات سريعة"/>
+                </HBox>
+                <VBox spacing="6" styleClass="stg-card-body">
+                    <Label fx:id="lblPgInfo" styleClass="stg-field-value"
+                           text="PostgreSQL: غير محدد"/>
+                    <Label fx:id="lblBackendInfo" styleClass="stg-field-value"
+                           text="Backend: غير محدد"/>
+                    <Label fx:id="lblStatusInfo" styleClass="stg-field-value"
+                           text="الحالة: جاهز"/>
+                    <Label fx:id="lblLastUpdate" styleClass="stg-field-value-muted"
+                           text="آخر تحديث: الآن"/>
+                </VBox>
+            </VBox>
+
+            <!-- ─── Card: سجلات ─── -->
+            <VBox spacing="0" styleClass="stg-card">
+                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                    <Label styleClass="stg-card-icon" text="📋"/>
+                    <Label styleClass="stg-card-title" text="سجلات"/>
+                </HBox>
+                <TextArea fx:id="txtPgLogs" editable="false" prefHeight="180"
+                          styleClass="stg-textarea-dark,stg-textarea-in-card"
+                          wrapText="true"/>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
 </VBox>

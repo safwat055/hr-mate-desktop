@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane nodeOrientation="RIGHT_TO_LEFT"
+            styleClass="stg-app-bg"
+            xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.backendSetting.BackendPropertiesController">
+
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-category-bar">
+            <padding>
+                <Insets bottom="10" left="16" right="16" top="10"/>
+            </padding>
+            <Label fx:id="currentCategoryLabel" styleClass="stg-category-bar-title"
+                   text="اختر مجموعة"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchField" onKeyReleased="#onSearch"
+                       prefWidth="260"
+                       promptText="🔍  ابحث عن مفتاح..."
+                       styleClass="stg-search-field"/>
+            <Label fx:id="entryCountLabel" styleClass="stg-entry-count-badge" text=""/>
+        </HBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.22" styleClass="stg-main-split">
+
+            <VBox maxWidth="240" minWidth="180" styleClass="stg-sidebar">
+                <padding>
+                    <Insets bottom="10" left="0" right="0" top="10"/>
+                </padding>
+                <Label styleClass="stg-sidebar-section-label" text="المجموعات">
+                    <VBox.margin>
+                        <Insets bottom="6" left="14"/>
+                    </VBox.margin>
+                </Label>
+                <ListView fx:id="categoryList" styleClass="stg-category-list"
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <VBox styleClass="stg-entries-area" VBox.vgrow="ALWAYS">
+                <ScrollPane fx:id="entriesScroll" fitToWidth="true"
+                            styleClass="stg-entries-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="entriesContainer" spacing="6"
+                          styleClass="stg-entries-container">
+                        <padding>
+                            <Insets bottom="10" left="14" right="14" top="10"/>
+                        </padding>
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-footer">
+            <padding>
+                <Insets bottom="10" left="20" right="20" top="10"/>
+            </padding>
+            <Label fx:id="statusLabel" styleClass="stg-status-label" text="جاهز"/>
+            <ProgressIndicator fx:id="progressIndicator" prefHeight="16" prefWidth="16"
+                               styleClass="stg-footer-spinner" visible="false"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="pendingBadge" styleClass="stg-pending-badge"
+                   text="" visible="false"/>
+            <Button fx:id="btnDiscard" onAction="#onDiscard"
+                    styleClass="stg-btn-danger-outline"
+                    text="↩  تجاهل" visible="false"/>
+            <Button fx:id="btnSaveAll" disable="true" onAction="#onSaveAll"
+                    styleClass="stg-btn-primary" text="💾  حفظ الكل"/>
+            <Button fx:id="btnRestartBackend" onAction="#onRestartBackend"
+                    styleClass="stg-btn-secondary" text="🔄  إعادة تشغيل الباك إند"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

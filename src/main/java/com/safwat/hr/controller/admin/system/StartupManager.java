@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.controller.login.Config;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -16,16 +17,26 @@ public class StartupManager {
     private static final String LEGACY_BAT_NAME = LEGACY_APP_NAME + ".bat";
 
     /**
-     * إضافة التطبيق للتشغيل التلقائي باستخدام المسار المحفوظ في ملف الإعدادات
+     * إضافة التطبيق للتشغيل التلقائي باستخدام المسار المحفوظ في AppConfig
+     * (مع fallback للكشف التلقائي من بنية التوزيع).
      *
      * @return true إذا نجحت العملية
      */
     public static boolean addToStartup() {
-        String path = Config.getInstance().getBackendPath();
+        String path = AppConfig.getString("paths", "backend", "");
+
+        // Fallback: كشف تلقائي من بنية التوزيع
         if (path == null || path.isBlank()) {
-            log.error("❌ مسار التطبيق غير محفوظ في ملف الإعدادات");
+            path = PathResolver.detect()
+                    .map(d -> d.backendExe().toString())
+                    .orElse("");
+        }
+
+        if (path.isBlank()) {
+            log.error("❌ مسار التطبيق غير محفوظ في ملف الإعدادات ولم يتم العثور عليه تلقائياً");
             return false;
         }
+
         String exePath = resolveExePath(path);
         if (exePath == null) {
             log.error("❌ لم يتم العثور على الملف التنفيذي انطلاقاً من المسار المحفوظ: " + path);

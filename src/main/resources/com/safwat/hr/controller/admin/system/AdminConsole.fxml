@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane nodeOrientation="RIGHT_TO_LEFT"
+            prefHeight="820" prefWidth="1180"
+            styleClass="stg-root"
+            xmlns="http://javafx.com/javafx/26"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.admin.system.AdminConsoleController">
+
+    <!-- ═══ HEADER ═══ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-header">
+            <padding>
+                <Insets bottom="14" left="20" right="20" top="14"/>
+            </padding>
+
+            <Label styleClass="stg-header-icon" text="⚙"/>
+            <VBox spacing="2">
+                <Label styleClass="stg-header-title" text="لوحة تحكم النظام"/>
+                <Label fx:id="headerSubtitle" styleClass="stg-header-subtitle"
+                       text="إدارة الخدمات والإعدادات"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label fx:id="globalStatus" styleClass="stg-status-badge,stg-status-badge-ok"
+                   text="🟢 جاهز"/>
+            <ProgressIndicator fx:id="headerProgress" prefHeight="22" prefWidth="22"
+                               styleClass="stg-footer-spinner" visible="false"/>
+        </HBox>
+    </top>
+
+    <!-- ═══ BODY ═══ -->
+    <center>
+        <SplitPane fx:id="mainSplit" dividerPositions="0.17"
+                   styleClass="stg-main-split">
+
+            <VBox maxWidth="240" minWidth="180" styleClass="stg-sidebar">
+                <padding>
+                    <Insets bottom="10" left="0" right="0" top="10"/>
+                </padding>
+
+                <Label styleClass="stg-sidebar-section-label" text="الأقسام">
+                    <VBox.margin>
+                        <Insets bottom="6" left="14"/>
+                    </VBox.margin>
+                </Label>
+
+                <ListView fx:id="navList" styleClass="stg-category-list"
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <StackPane fx:id="contentStack" styleClass="stg-app-bg"/>
+        </SplitPane>
+    </center>
+
+    <!-- ═══ FOOTER ═══ -->
+    <bottom>
+        <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-footer">
+            <padding>
+                <Insets bottom="10" left="20" right="20" top="10"/>
+            </padding>
+
+            <Label fx:id="statusLabel" styleClass="stg-status-label" text="جاهز"/>
+
+            <ProgressIndicator fx:id="footerProgress" prefHeight="16" prefWidth="16"
+                               styleClass="stg-footer-spinner" visible="false"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="btnHealth" onAction="#onHealthCheck"
+                    styleClass="stg-btn-secondary" text="🩺 فحص الجاهزية"/>
+            <Button fx:id="btnRestoreDefaults" onAction="#onRestoreDefaults"
+                    styleClass="stg-btn-secondary" text="🔧 إعادة الافتراضي"/>
+            <Button fx:id="btnQuickStart" onAction="#onQuickStart"
+                    styleClass="stg-btn-primary,stg-btn-green" text="🚀 تشغيل سريع"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

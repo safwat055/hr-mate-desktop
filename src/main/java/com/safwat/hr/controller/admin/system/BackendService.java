@@ -1,7 +1,5 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.controller.login.Config;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +12,10 @@ public class BackendService {
     private Process currentProcess;
     private Long currentPid = null;
     private boolean isRunning = false;
-    private Config config;
     private static final String SERVICE_NAME = "HR_MATE_Service";
     private static final String NSSM_EXE = "nssm.exe";
 
     private BackendService() {
-        config = Config.getInstance();
     }
 
     public static BackendService getInstance() {
@@ -164,7 +160,6 @@ public class BackendService {
 
             if (os.contains("win")) {
 
-
                 // ===== الطريقة الأولى: taskkill (الأفضل) =====
 
                 // HR_MATE.exe
@@ -172,28 +167,24 @@ public class BackendService {
                 int exitCode1 = p1.waitFor();
                 if (exitCode1 == 0) {
                     killed = true;
-
                 }
 
                 // 2. قتل أي Process بـ Window Title يحتوي على "HR_MATE"
                 Process p2 = Runtime.getRuntime().exec("taskkill /F /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // 3. قتل أي javaw.exe بـ Window Title (لأن JavaFX بيشتغل على javaw.exe)
                 Process p3 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq javaw.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p3.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // 4. قتل أي java.exe بـ Window Title
                 Process p4 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq java.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
                 if (p4.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // ===== الطريقة الثانية: PowerShell (بديل wmic) =====
@@ -203,7 +194,6 @@ public class BackendService {
                 );
                 if (p5.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // قتل أي Process بـ Command Line يحتوي على "HR_MATE "
@@ -212,25 +202,21 @@ public class BackendService {
                 );
                 if (p6.waitFor() == 0) {
                     killed = true;
-
                 }
 
             } else {
                 // ===== Linux / Mac =====
 
-
                 // 1. قتل أي Process باسم HR_MATE
                 Process p1 = Runtime.getRuntime().exec("pkill -f HR_MATE");
                 if (p1.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // 2. قتل أي Process بـ Command Line يحتوي على HR_MATE
                 Process p2 = Runtime.getRuntime().exec("pkill -f \"HR_MATE\"");
                 if (p2.waitFor() == 0) {
                     killed = true;
-
                 }
 
                 // 3. قتل أي Process بـ Window Title (X11)
@@ -246,7 +232,6 @@ public class BackendService {
 
             isRunning = false;
             currentPid = null;
-
 
             return true;
 

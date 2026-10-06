@@ -1,8 +1,8 @@
 package com.safwat.hr.controller.login;
 
+import com.safwat.hr.controller.admin.system.AdminConsoleController;
 import com.safwat.hr.controller.admin.system.AppLogBus;
 import com.safwat.hr.controller.admin.system.BackendService;
-import com.safwat.hr.controller.admin.system.MainController;
 import com.safwat.hr.controller.admin.system.PostgreSQLService;
 import com.safwat.hr.controller.appearance.ColorSettingsManager;
 import com.safwat.hr.network.ApiClient;
@@ -12,6 +12,7 @@ import com.safwat.hr.network.auth.dto.LoginRequest;
 import com.safwat.hr.network.auth.dto.LoginResponse;
 import com.safwat.hr.network.auth.service.AuthService;
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import com.safwat.hr.ui.theme.ThemeEventBus;
@@ -64,6 +65,43 @@ public class LoginController implements Initializable {
     private static final int HEALTH_POLL_INTERVAL_MS = 1000; // كل ثانية
     private static final int HEALTH_TIMEOUT_ATTEMPTS = 30;  // 30 ثانية timeout
 
+    // ══════════════════ Config Helpers ══════════════════
+
+    /**
+     * مسار bin — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String pgBinPath() {
+        String v = AppConfig.getString("paths", "pgBin", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgBin().toString())
+                .orElse("");
+    }
+
+    /**
+     * مسار data — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String pgDataPath() {
+        String v = AppConfig.getString("paths", "pgData", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.pgData().toString())
+                .orElse("");
+    }
+
+    /**
+     * مسار الباك إند التنفيذي — من AppConfig مع fallback للكشف التلقائي.
+     */
+    private String backendPath() {
+        String v = AppConfig.getString("paths", "backend", "");
+        if (v != null && !v.isEmpty()) return v;
+        return PathResolver.detect()
+                .map(d -> d.backendExe().toString())
+                .orElse("");
+    }
+
+    // ══════════════════ Init ══════════════════
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         SettingsThemeLoader.apply(btn_cancel);
@@ -71,7 +109,6 @@ public class LoginController implements Initializable {
         String lastUser = AppConfig.getString("connection", "user", "");
         if (!lastUser.isEmpty()) {
             txt_userName.setText(lastUser);
-            // txt_password.setText(lastUser);
             txt_password.requestFocus();
         }
 
@@ -85,10 +122,7 @@ public class LoginController implements Initializable {
         txt_password.setOnAction(e -> handleLogin());
         txt_userName.setOnAction(e -> txt_password.requestFocus());
 
-
         Platform.runLater(this::setupKeyboardShortcut);
-
-        //btn_login.fire();
     }
 
     // ── اختصارات لوحة المفاتيح ──
@@ -108,7 +142,8 @@ public class LoginController implements Initializable {
 
     private void openServiceManager() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/safwat/hr/controller/admin/system/main.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/admin/system/AdminConsole.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -118,12 +153,11 @@ public class LoginController implements Initializable {
             stage.setMinWidth(800);
             stage.setMinHeight(650);
 
-            MainController controller = loader.getController();
+            AdminConsoleController controller = loader.getController();
             controller.setStage(stage);
 
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.show();
-            //  ThemeEventBus.applyTheme(root, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
         } catch (IOException e) {
             e.printStackTrace();
             SAFNotification.error("فشل فتح إدارة الخدمات: " + e.getMessage());
@@ -149,7 +183,6 @@ public class LoginController implements Initializable {
             return;
         }
 
-        // تعطيل الواجهة
         setUiEnabled(false);
         request.setUsername(username);
         request.setPassword(password);
@@ -157,10 +190,8 @@ public class LoginController implements Initializable {
         boolean standaloneMode = AppConfig.getBoolean("connection", "alone", false);
 
         if (standaloneMode) {
-            // ── وضع Standalone: تشغيل الخدمات أولاً ──
             new Thread(() -> doStandaloneLogin(username)).start();
         } else {
-            // ── وضع Client/Server العادي ──
             new Thread(() -> doDirectLogin(username)).start();
         }
     }
@@ -170,21 +201,17 @@ public class LoginController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void doStandaloneLogin(String username) {
-        // ✅ نفس المصدر اللي بيستخدمه PostgreSQLController/BackendController
-        // لما بتشغّل يدوي — لازم تكون نفس القيم المحفوظة فعليًا من شاشة الإعدادات.
-        // (AppConfig قسم "connection" مفيهوش pgBinPath/pgDataPath/backendPath أصلاً)
-        Config config = Config.getInstance();
-
-        // 1. تشغيل PostgreSQL لو مش شغّال
+        // ── 1. تشغيل PostgreSQL لو مش شغّال ──
         updateInfo("⏳ فحص PostgreSQL...");
         PostgreSQLService pgService = PostgreSQLService.getInstance();
+
         if (!pgService.isRunning()) {
-            String pgBin = config.getPgBinPath();
-            String pgData = config.getPgDataPath();
+            String pgBin = pgBinPath();
+            String pgData = pgDataPath();
             boolean pgAsService = AppConfig.getBoolean("connection", "pgAsService", false);
 
             if (!pgAsService && (pgBin.isEmpty() || pgData.isEmpty())) {
-                showError("❌ مسار PostgreSQL غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) وحدد المسار أولاً");
+                showError("❌ مسار PostgreSQL غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) واضغط 'إعادة الافتراضي'");
                 setUiEnabled(true);
                 return;
             }
@@ -202,15 +229,16 @@ public class LoginController implements Initializable {
             sleep(2000);
         }
 
-        // 2. تشغيل Backend لو مش شغّال
+        // ── 2. تشغيل Backend لو مش شغّال ──
         updateInfo("⏳ فحص Backend...");
         BackendService backendService = BackendService.getInstance();
+
         if (!backendService.isRunning()) {
-            String backendPath = config.getBackendPath();
+            String bePath = backendPath();
             boolean backendAsService = AppConfig.getBoolean("connection", "backendAsService", false);
 
-            if (!backendAsService && backendPath.isEmpty()) {
-                showError("❌ مسار Backend غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) وحدد المسار أولاً");
+            if (!backendAsService && bePath.isEmpty()) {
+                showError("❌ مسار Backend غير محدد — افتح إدارة الخدمات (Ctrl+Shift+S) واضغط 'إعادة الافتراضي'");
                 setUiEnabled(true);
                 return;
             }
@@ -218,7 +246,7 @@ public class LoginController implements Initializable {
             updateInfo("⏳ جاري تشغيل Backend...");
             AppLogBus.getInstance().log("[Login] تشغيل Backend في وضع Standalone");
 
-            boolean bkOk = backendService.start(backendPath, backendAsService);
+            boolean bkOk = backendService.start(bePath, backendAsService);
             if (!bkOk) {
                 showError("❌ فشل تشغيل Backend — تحقق من الإعدادات (Ctrl+Shift+S)");
                 setUiEnabled(true);
@@ -226,7 +254,7 @@ public class LoginController implements Initializable {
             }
         }
 
-        // 3. Polling على /actuator/health لحد ما يرد أو Timeout
+        // ── 3. Polling على /actuator/health ──
         updateInfo("⏳ انتظار جاهزية Backend...");
         boolean backendReady = waitForHealth();
         if (!backendReady) {
@@ -235,7 +263,7 @@ public class LoginController implements Initializable {
             return;
         }
 
-        // 4. Backend جاهز → تسجيل الدخول الفعلي
+        // ── 4. تسجيل الدخول الفعلي ──
         updateInfo("⏳ جاري تسجيل الدخول...");
         doDirectLogin(username);
     }
@@ -249,7 +277,6 @@ public class LoginController implements Initializable {
             ApiResponse<LoginResponse> response = AuthService.login(request);
 
             if (!response.isSuccess()) {
-                // ✅ رسالة خطأ واضحة — لا RuntimeException
                 String msg = response.getMessage() != null
                         ? response.getMessage()
                         : "فشل تسجيل الدخول — تحقق من البيانات والاتصال";
@@ -258,7 +285,7 @@ public class LoginController implements Initializable {
                 return;
             }
 
-            // ✅ نجاح — حفظ التوكن ثم فتح النافذة الرئيسية
+            // ✅ نجاح
             AppConfig.setValue("connection", "user", username);
             ApiClient.setAuthToken(response.getData().getToken());
             SessionManager.getInstance().setUsername(response.getData().getUsername());
@@ -282,10 +309,6 @@ public class LoginController implements Initializable {
     //  Health Polling
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * Polling على GET /actuator/health كل ثانية، حتى 30 محاولة.
-     * يعيد true لما يرجع 200.
-     */
     private boolean waitForHealth() {
         String healthUrl = ApiClient.getBaseUrl() + "/actuator/health";
         HttpClient client = HttpClient.newBuilder()
@@ -324,9 +347,8 @@ public class LoginController implements Initializable {
             progressIndicator.setVisible(!enabled);
             if (enabled) {
                 progressIndicator.setProgress(0);
-
             } else {
-                progressIndicator.setProgress(-1); // indeterminate
+                progressIndicator.setProgress(-1);
             }
         });
     }
@@ -339,17 +361,11 @@ public class LoginController implements Initializable {
     }
 
     private void showInfo(String message) {
-        Platform.runLater(() -> {
-            lbl_info.setText(message);
-            lbl_info.setVisible(true);
-        });
+        updateInfo(message);
     }
 
     private void showError(String message) {
-        Platform.runLater(() -> {
-            lbl_info.setText(message);
-            lbl_info.setVisible(true);
-        });
+        updateInfo(message);
     }
 
     private void sleep(long ms) {
@@ -361,7 +377,8 @@ public class LoginController implements Initializable {
 
     private void openMainWindow() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/safwat/hr/controller/login/MainView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/com/safwat/hr/controller/login/MainView.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -370,12 +387,11 @@ public class LoginController implements Initializable {
             stage.setScene(scene);
             stage.setMaximized(true);
 
-            // ✅ تهيئة ThemeEventBus من AppConfig + تسجيل الـ Scene
             ThemeEventBus.initFromConfig();
             ThemeEventBus.register(scene);
-            // تطبيق الثيم المحفوظ
             ThemeEventBus.applyTheme(scene, ThemeEventBus.getCurrentTheme());
-            ColorSettingsManager.attachTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
+            ColorSettingsManager.attachTheme(scene,
+                    AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));
             stage.show();
             AppLifecycle.startNotificationServices(stage);
 
@@ -398,7 +414,6 @@ public class LoginController implements Initializable {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            // ✅ AppLifecycle بدل Platform.exit() المباشر
             AppLifecycle.shutdown();
         }
     }
