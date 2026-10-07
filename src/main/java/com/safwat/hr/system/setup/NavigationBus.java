@@ -19,6 +19,7 @@ public final class NavigationBus {
     public static final String LOGS = "logs";
     public static final String BACKEND_PROPERTIES = "backend-props";
     public static final String BACKEND_JSON = "backend-json";
+    public static final String FRONTEND_JSON = "frontend-json";
     private static volatile Consumer<String> handler;
 
     private NavigationBus() {

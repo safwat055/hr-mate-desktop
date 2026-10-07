@@ -36,11 +36,9 @@ import java.util.List;
  * نفس {@link WageCardExportRequest} ونفس {@code lastCycleResult}.
  *
  * <h2>لازم تضيف في الـ FXML:</h2>
- * زرار جديد بجانب {@code exportButton} في نفس شريط التصدير، بنفس
- * الأسلوب، بـ:
  * <pre>{@code
- * <Button fx:id="exportForm5Button" disable="true" text="تصدير نموذج (5)"
- *         style="-fx-font-weight: bold;"/>
+ *   <Button fx:id="exportAllowanceMatrixButton" disable="true"
+ *           text="مصفوفة البدلات" style="-fx-font-weight: bold;"/>
  * }</pre>
  */
 public class EmployeeWagesScreenController {
@@ -115,9 +113,12 @@ public class EmployeeWagesScreenController {
     @FXML
     private Button exportForm5Button;
     @FXML
-    private Label exportStatusLabel;
-    @FXML
     private Button exportBreakdownButton;
+    @FXML
+    private Button exportAllowanceMatrixButton;   // ⭐ جديد
+    @FXML
+    private Label exportStatusLabel;
+
     // ── State ──
     private String currentNationalId;
 
@@ -136,14 +137,16 @@ public class EmployeeWagesScreenController {
         // ── البحث ──
         searchButton.setOnAction(e -> onSearch());
         searchField.setOnAction(e -> onSearch());
-        clearButton.setOnAction(_ -> {
-            clearEmployee("");
-        });
+        clearButton.setOnAction(_ -> clearEmployee(""));
+
+        // ── أيقونات PDF ──
         Icons.getInstance().getPDFImage(exportButton);
         Icons.getInstance().getPDFImage(exportForm5Button);
         Icons.getInstance().getPDFImage(exportBreakdownButton);
+        Icons.getInstance().getPDFImage(exportAllowanceMatrixButton);   // ⭐ جديد
 
         TextFieldSetupHelper.setupDateFields(fromField, toField);
+
         // ── جدول المستندات ──
         monthColumn.setCellValueFactory(c ->
                 new SimpleStringProperty(c.getValue().periodMonth().toString()));
@@ -186,6 +189,8 @@ public class EmployeeWagesScreenController {
         exportForm5Button.setDisable(true);
         exportBreakdownButton.setOnAction(e -> onExportBreakdown());
         exportBreakdownButton.setDisable(true);
+        exportAllowanceMatrixButton.setOnAction(e -> onExportAllowanceMatrix());   // ⭐ جديد
+        exportAllowanceMatrixButton.setDisable(true);
     }
 
     // ══════════════════════════════════════════════════════
@@ -220,8 +225,9 @@ public class EmployeeWagesScreenController {
         addButton.setDisable(false);
         calculateButton.setDisable(false);
         exportButton.setDisable(false);
-        exportBreakdownButton.setDisable(false);
         exportForm5Button.setDisable(false);
+        exportBreakdownButton.setDisable(false);
+        exportAllowanceMatrixButton.setDisable(false);   // ⭐ جديد
         cycleStatusLabel.setText("");
         exportStatusLabel.setText("");
         cycleTable.setItems(FXCollections.observableArrayList());
@@ -240,6 +246,7 @@ public class EmployeeWagesScreenController {
         exportButton.setDisable(true);
         exportForm5Button.setDisable(true);
         exportBreakdownButton.setDisable(true);
+        exportAllowanceMatrixButton.setDisable(true);   // ⭐ جديد
         documentsTable.setItems(FXCollections.observableArrayList());
         cycleTable.setItems(FXCollections.observableArrayList());
     }
@@ -364,38 +371,41 @@ public class EmployeeWagesScreenController {
     }
 
     // ══════════════════════════════════════════════════════
-    //  تصدير بطاقة الأجور
-    //  — لو lastCycleResult موجودة تتبعت مع الطلب (POST)
-    //  — لو مش موجودة الباك يحسب تلقائيًا (POST بـ precomputedMonths = null)
+    //  تصدير PDF — كل زر له endpoint خاص
     // ══════════════════════════════════════════════════════
 
+    /**
+     * تصدير بطاقة الأجور.
+     */
     private void onExport() {
         exportPdf("/wages/card/export", "wage_card_",
                 exportButton, "بطاقة الأجور");
     }
 
-    // ══════════════════════════════════════════════════════
-    //  تصدير نموذج (5) — نفس منطق تصدير البطاقة بالظبط، إند بوينت مختلف
-    // ══════════════════════════════════════════════════════
-
+    /**
+     * تصدير نموذج (5) — التأمينات.
+     */
     private void onExportForm5() {
         exportPdf("/wages/form5/export", "insurance_form5_",
                 exportForm5Button, "نموذج (5) - التأمينات");
     }
-// ══════════════════════════════════════════════════════
-//  تصدير بنود الأجر المتغير شهر بشهر (جدول منفصل لكل شهر)
-//  — نفس منطق التصدير المشترك، إند بوينت مختلف
-// ══════════════════════════════════════════════════════
 
+    /**
+     * تصدير بنود الأجر المتغير شهر بشهر.
+     */
     private void onExportBreakdown() {
         exportPdf("/wages/breakdown/export", "wage_breakdown_",
                 exportBreakdownButton, "بنود الأجر المتغير");
     }
+
     /**
-     * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
-     * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
-     * لو موجودة عشان الباك ميحسبش الدورة تاني.
+     * ⭐ تصدير مصفوفة البدلات — سنة لكل صفحة.
      */
+    private void onExportAllowanceMatrix() {
+        exportPdf("/wages/allowance-matrix/export", "allowance_matrix_",
+                exportAllowanceMatrixButton, "مصفوفة البدلات");
+    }
+
     /**
      * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
      * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
@@ -426,11 +436,12 @@ public class EmployeeWagesScreenController {
         }
 
         // ── 3. بناء الطلب ──
+        //    نفس شكل الـ request لكل الـ endpoints (nationalId + from + to + precomputedMonths)
         WageCardExportRequest req = new WageCardExportRequest(
                 currentNationalId,
                 fromText.isEmpty() ? null : LocalDate.parse(fromText, ISO),
                 toText.isEmpty() ? null : LocalDate.parse(toText, ISO),
-                lastCycleResult           // null = الباك يحسب من جديد
+                lastCycleResult
         );
 
         // ── 4. اسم الموظف للعرض في الإشعار ──

@@ -99,18 +99,41 @@
 
                     <!-- شريط التصدير -->
                     <HBox alignment="CENTER_LEFT" spacing="12">
-                  <Label layoutX="330.0" layoutY="18.0" style="-fx-font-weight: bold;" text="نموذج 5" />
-                  <Button fx:id="exportForm5Button" layoutX="797.0" layoutY="10.0" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
+                  <VBox prefHeight="102.0" prefWidth="159.0" spacing="5.0">
+                     <children>
+                        <HBox>
+                           <children>
+                                    <Button fx:id="exportButton" disable="true" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
+                              <Label prefHeight="32.0" prefWidth="64.0" text="بطاقة الاجور" />
+                           </children>
+                        </HBox>
+                        <HBox>
+                           <children>
+                              <Button fx:id="exportForm5Button" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
+                              <Label prefHeight="29.0" prefWidth="46.0" style="-fx-font-weight: bold;" text="نموذج 5" />
+                           </children>
+                        </HBox>
+                        <HBox>
+                           <children>
+                              <Button fx:id="exportBreakdownButton" mnemonicParsing="false" prefHeight="34.0" prefWidth="45.0" styleClass="btn-iconFlat" />
+                              <Label layoutX="53.0" layoutY="10.0" prefHeight="32.0" prefWidth="111.0" text="تفصيلي شهري" />
+                           </children>
+                        </HBox>
+                        <HBox layoutX="10.0" layoutY="78.0">
+                           <children>
+                              <Button fx:id="exportAllowanceMatrixButton" disable="true" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
+                              <Label prefHeight="32.0" prefWidth="115.0" text="تفصيلي سنوى" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                         <Region prefHeight="34.0" prefWidth="130.0" HBox.hgrow="ALWAYS" />
-                  <Label prefHeight="26.0" prefWidth="68.0" text="تفصيلي" />
-                  <Button fx:id="exportBreakdownButton" mnemonicParsing="false" prefHeight="34.0" prefWidth="45.0" styleClass="btn-iconFlat" />
-                        <Label style="-fx-font-weight: bold;" text="تصدير بطاقة الأجور المتغيرة" />
+                        <Label style="-fx-font-weight: bold;" text="اختر فترة من و الي اختياري" />
                         <Label text="من:" />
                         <TextField fx:id="fromField" prefWidth="100" promptText="yyyy-MM-dd" />
                         <Label text="إلى:" />
                         <TextField fx:id="toField" prefWidth="100" promptText="yyyy-MM-dd" />
                         <Label fx:id="exportStatusLabel" />
-                        <Button fx:id="exportButton" disable="true" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
                     </HBox>
 
                     <TableView fx:id="cycleTable" prefHeight="300" VBox.vgrow="ALWAYS">
