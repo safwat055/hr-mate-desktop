@@ -76,7 +76,7 @@ public class AdminConsoleController implements Initializable {
         registerView(NavigationBus.BACKEND, "🚀  Backend", "/com/safwat/hr/controller/admin/system/backend.fxml");
         registerView(NavigationBus.LOGS, "📊  السجلات", "/com/safwat/hr/controller/admin/system/logs.fxml");
         registerView(NavigationBus.BACKEND_PROPERTIES, "⚙  إعدادات الباك إند", "/com/safwat/hr/controller/backendSetting/backend-properties.fxml");
-        registerView(NavigationBus.BACKEND_JSON, "⚙  إعدادات الباك إند", "/com/safwat/hr/controller/backendSetting/backend-json.fxml");
+        registerView(NavigationBus.BACKEND_JSON, "اعدادات اضافية للنظام", "/com/safwat/hr/controller/backendSetting/backend-json.fxml");
 
         navList.setItems(FXCollections.observableArrayList(views.keySet()));
         navList.setCellFactory(lv -> new ListCell<>() {

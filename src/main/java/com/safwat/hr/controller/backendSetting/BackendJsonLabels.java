@@ -24,10 +24,10 @@ public final class BackendJsonLabels {
         SECTION_TITLES.put("setting", "⚙  الإعدادات العامة");
         SECTION_TITLES.put("reward", "🎁  المكافآت");
         SECTION_TITLES.put("basic", "🏛  البيانات الأساسية");
-        SECTION_TITLES.put("startupScripts", "🚀  سكريبتات البدء");
+        SECTION_TITLES.put("startupScripts", "تحميل سكريبتات");
 
         // ── setting ──
-        LABELS.put("setting.scaleUp", "تكبير الواجهة");
+        LABELS.put("setting.scaleUp", "التقريب لاعلى");
         LABELS.put("setting.upgradeFirst", "الترقية أولاً");
 
         // ── reward ──

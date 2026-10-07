@@ -47,7 +47,7 @@ public final class PathResolver {
         }
 
         public Path backendConfig() {
-            return backend.resolve("config/application.properties");
+            return backend.resolve("app/config/application.properties");
         }
 
         // داخل PathResolver.Distribution
