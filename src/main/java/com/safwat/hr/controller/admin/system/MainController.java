@@ -3,9 +3,11 @@ package com.safwat.hr.controller.admin.system;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.system.setup.NavigationBus;
 import com.safwat.hr.system.setup.PathResolver;
+import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -13,29 +15,27 @@ import javafx.stage.Window;
 
 import java.io.File;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
 
 /**
  * ══════════════════════════════════════════════════════════════════
  * MainController — شاشة الرئيسية داخل لوحة التحكم الموحّدة
  * ══════════════════════════════════════════════════════════════════
- * <p>
- * المسؤوليات:
  * <ul>
- *   <li>عرض/تعديل بيانات جهاز الماستر (PC + Port + alone)</li>
- *   <li>عرض/تعديل مسارات PostgreSQL و Backend</li>
- *   <li>زر "كشف تلقائي" يملأ الحقول من بنية التوزيع</li>
- *   <li>أزرار تنقّل سريع عبر {@link NavigationBus}</li>
+ *   <li>عرض/تعديل بيانات الماستر (PC + Port + alone).</li>
+ *   <li>عرض/تعديل مسارات PostgreSQL و Backend.</li>
+ *   <li>زر "كشف تلقائي" يملأ الحقول من بنية التوزيع.</li>
+ *   <li>حالة التشغيل بتتحسب على thread منفصل، ولينكس بيخفي زر إصلاح الخدمات.</li>
  * </ul>
- * <p>
- * <b>مصدر الحقيقة الوحيد</b>: {@link AppConfig} (ملف config/app_config.json).
- * لا يوجد اعتماد على Config القديم.
+ * مصدر الحقيقة: {@link AppConfig}.
  */
 public class MainController implements Initializable {
 
-    // ══════════════════════════ FXML Fields ══════════════════════════
     @FXML
     private TextField txtAdminPC, txtAdminPort;
     @FXML
@@ -76,29 +76,30 @@ public class MainController implements Initializable {
     private CheckBox chk_alone;
     @FXML
     private Button btnOpenBackendJsonTab;
-    // ══════════════════════════ State ══════════════════════════
+
     private final Preferences prefs = Preferences.userNodeForPackage(MainController.class);
+    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     // ══════════════════════════ Init ══════════════════════════
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
-        // ── املأ بيانات الماستر من AppConfig ──
         txtAdminPC.setText(AppConfig.getString("connection", "masterPC", "localhost"));
         txtAdminPort.setText(AppConfig.getString("connection", "port", "8080"));
         chk_alone.setSelected(AppConfig.getBoolean("connection", "alone", true));
         btnOpenBackendJsonTab.setOnAction(e -> NavigationBus.navigate(NavigationBus.BACKEND_JSON));
+
         loadSavedPaths();
         setupButtons();
         setupBrowseButtons();
+        applyPlatformUi();
         updateInfo();
 
-        // ── تحديث دوري كل 5 ثواني ──
         Thread ticker = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
-                    Platform.runLater(this::updateInfo);
+                    Platform.runLater(this::updateInfo);   // كان: updateInfo();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -109,26 +110,32 @@ public class MainController implements Initializable {
         ticker.start();
     }
 
+    /**
+     * ويندوز: كل الأزرار متاحة. لينكس: زر إصلاح الخدمات بيتخفي (خدمات Windows بس).
+     */
+    private void applyPlatformUi() {
+        if (OsSupport.WINDOWS) return;
+        hide(btnFixServices);
+        addLog("ℹ️ لينكس: إصلاح خدمات Backend غير متاح (خدمات Windows بس)");
+    }
+
+    private static void hide(Node n) {
+        n.setVisible(false);
+        n.setManaged(false);
+    }
+
     // ══════════════════════════ Path Loading ══════════════════════════
 
     /**
-     * الأولوية:
-     * 1) AppConfig.paths (يكتبها SetupWizardService.restoreDefaults)
-     * 2) Preferences (توافق خلفي مع النسخ القديمة)
-     * 3) الكشف التلقائي من بنية التوزيع
+     * الأولوية: 1) AppConfig.paths  2) Preferences (توافق خلفي)  3) الكشف التلقائي.
      */
     private void loadSavedPaths() {
-        // ── الأولوية 1: AppConfig.paths ──
         String pgRoot = AppConfig.getString("paths", "pgRoot", "");
         String backendExe = AppConfig.getString("paths", "backend", "");
 
-        // ── الأولوية 2: Preferences ──
-        if (pgRoot == null || pgRoot.isEmpty())
-            pgRoot = prefs.get("pgFolder", "");
-        if (backendExe == null || backendExe.isEmpty())
-            backendExe = prefs.get("backend", "");
+        if (pgRoot == null || pgRoot.isEmpty()) pgRoot = prefs.get("pgFolder", "");
+        if (backendExe == null || backendExe.isEmpty()) backendExe = prefs.get("backend", "");
 
-        // ── الأولوية 3: الكشف التلقائي ──
         if (pgRoot.isEmpty() || backendExe.isEmpty()) {
             Optional<PathResolver.Distribution> det = PathResolver.detect();
             if (det.isPresent()) {
@@ -155,7 +162,6 @@ public class MainController implements Initializable {
         btnSaveAdminSet.setOnAction(e -> saveAdminSetting());
         btnDetectPaths.setOnAction(e -> onDetectPaths());
 
-        // التنقّل عبر NavigationBus
         btnOpenPgTab.setOnAction(e -> NavigationBus.navigate(NavigationBus.POSTGRESQL));
         btnOpenBackendTab.setOnAction(e -> NavigationBus.navigate(NavigationBus.BACKEND));
         btnOpenBackendPropsTab.setOnAction(e -> NavigationBus.navigate(NavigationBus.BACKEND_PROPERTIES));
@@ -200,26 +206,19 @@ public class MainController implements Initializable {
         });
     }
 
-    /**
-     * الحصول على الـ Window المالك من الـ Scene بدل حقل stage منفصل.
-     * لأن MainController بقى يتحمّل داخل AdminConsoleController.
-     */
-    private Window ownerWindow(javafx.scene.Node node) {
+    private Window ownerWindow(Node node) {
         if (node == null || node.getScene() == null) return null;
         return node.getScene().getWindow();
     }
 
     // ══════════════════════════ Actions ══════════════════════════
 
-    /**
-     * زر "كشف تلقائي" — يملأ المسارات من بنية التوزيع بدون كتابة مباشرة في الإعدادات.
-     */
     private void onDetectPaths() {
         Optional<PathResolver.Distribution> det = PathResolver.detect();
         if (det.isEmpty()) {
             showAlert("خطأ",
-                    "لم يتم العثور على بنية التوزيع.\n" +
-                            "تأكد من وجود فولدرات pgsql و hr-mate-system بجوار التطبيق.");
+                    "لم يتم العثور على بنية التوزيع.\n"
+                            + "تأكد من وجود فولدرات pgsql و hr-mate-system بجوار التطبيق.");
             return;
         }
         PathResolver.Distribution d = det.get();
@@ -231,9 +230,9 @@ public class MainController implements Initializable {
         addLog("🔍 تم الكشف التلقائي: " + d.root);
         setStatus("✓ تم كشف المسارات", "ok");
         showAlert("نجاح",
-                "تم كشف المسارات:\n" +
-                        "• PostgreSQL: " + d.pgRoot + "\n" +
-                        "• Backend: " + d.backendExe());
+                "تم كشف المسارات:\n"
+                        + "• PostgreSQL: " + d.pgRoot + "\n"
+                        + "• Backend: " + d.backendExe());
     }
 
     private void saveAdminSetting() {
@@ -241,8 +240,7 @@ public class MainController implements Initializable {
                 txtAdminPC.getText().isEmpty() ? "localhost" : txtAdminPC.getText());
         AppConfig.setValue("connection", "port",
                 txtAdminPort.getText().isEmpty() ? "8080" : txtAdminPort.getText());
-        AppConfig.setValue("connection", "alone",
-                String.valueOf(chk_alone.isSelected()));
+        AppConfig.setValue("connection", "alone", String.valueOf(chk_alone.isSelected()));
 
         setStatus("✓ تم حفظ إعدادات الماستر", "ok");
         addLog("💾 تم حفظ إعدادات الماستر");
@@ -271,6 +269,10 @@ public class MainController implements Initializable {
         updateInfo();
     }
 
+    /**
+     * يحدد مسارات bin و data من مجلد PostgreSQL، ويعرض حالة وجودها.
+     * على لينكس الـ bin فيه initdb و pg_ctl بدون امتداد — الفحص بيتعامل مع الاتنين.
+     */
     private void updatePgPaths(String pgFolder) {
         String binPath = pgFolder + File.separator + "bin";
         String dataPath = pgFolder + File.separator + "data";
@@ -278,11 +280,8 @@ public class MainController implements Initializable {
         txtPgBinPath.setText(binPath);
         txtPgDataPath.setText(dataPath);
 
-        File binDir = new File(binPath);
-        File dataDir = new File(dataPath);
-
-        boolean binOk = binDir.exists();
-        boolean dataOk = dataDir.exists();
+        boolean binOk = new File(binPath, OsSupport.exe("pg_ctl")).isFile();
+        boolean dataOk = new File(dataPath).isDirectory();
 
         lblPgBinStatus.setText(binOk ? "✅" : "❌");
         lblPgBinStatus.getStyleClass().setAll(
@@ -295,21 +294,40 @@ public class MainController implements Initializable {
 
     // ══════════════════════════ Info Update ══════════════════════════
 
+    /**
+     * المعلومات الثابتة بتتحدث فوراً. حالة التشغيل بتتحسب على thread منفصل.
+     */
     private void updateInfo() {
         String pgPath = AppConfig.getString("paths", "pgRoot", "");
         String backendPath = AppConfig.getString("paths", "backend", "");
 
         lblPgInfo.setText("PostgreSQL: " + (pgPath.isEmpty() ? "غير محدد" : pgPath));
         lblBackendInfo.setText("Backend: " + (backendPath.isEmpty() ? "غير محدد" : backendPath));
+        lblLastUpdate.setText("آخر تحديث: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
 
-        boolean running = BackendService.getInstance().isRunning();
+        refreshRunningStatusAsync();
+    }
+
+    private void refreshRunningStatusAsync() {
+        if (!refreshing.compareAndSet(false, true)) return;
+
+        Thread t = new Thread(() -> {
+            try {
+                boolean running = BackendService.getInstance().isRunning();
+                Platform.runLater(() -> applyRunningStatus(running));
+            } finally {
+                refreshing.set(false);
+            }
+        }, "main-running-status");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /**
+     * حالة التشغيل بتتعرض في lblStatusInfo بس، و lblStatus بيفضل مخصص لرسائل العملية.
+     */
+    private void applyRunningStatus(boolean running) {
         lblStatusInfo.setText("الحالة: " + (running ? "🟢 النظام يعمل" : "⏹ جاهز للتشغيل"));
-        lblStatus.setText(running ? "🟢 يعمل" : "✅ جاهز");
-        lblStatus.getStyleClass().setAll("stg-status-badge", "stg-status-badge-ok");
-
-        String time = new java.text.SimpleDateFormat("HH:mm:ss")
-                .format(new java.util.Date());
-        lblLastUpdate.setText("آخر تحديث: " + time);
     }
 
     // ══════════════════════════ Logging ══════════════════════════
@@ -323,7 +341,7 @@ public class MainController implements Initializable {
         });
     }
 
-    // ══════════════════════════ Fix Services ══════════════════════════
+    // ══════════════════════════ Fix Services (ويندوز بس) ══════════════════════════
 
     private void fixBackendServices() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
@@ -334,9 +352,12 @@ public class MainController implements Initializable {
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
 
         addLog("🔧 حذف جميع خدمات Backend...");
-        new Thread(() -> {
+        btnFixServices.setDisable(true);
+
+        Thread t = new Thread(() -> {
             boolean fixed = BackendService.getInstance().fixAllServices();
             Platform.runLater(() -> {
+                btnFixServices.setDisable(false);
                 if (fixed) {
                     addLog("✅ تم حذف جميع خدمات Backend");
                     showAlert("نجاح", "تم حذف جميع خدمات Backend");
@@ -346,7 +367,9 @@ public class MainController implements Initializable {
                 }
                 updateInfo();
             });
-        }).start();
+        }, "main-fix-services");
+        t.setDaemon(true);
+        t.start();
     }
 
     // ══════════════════════════ Helpers ══════════════════════════
@@ -372,10 +395,10 @@ public class MainController implements Initializable {
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(
-                "خطأ".equals(title) ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setContentText(message);
-        alert.showAndWait();
+        if (title != null && title.contains("خطأ")) {
+            SAFNotification.error(message);
+        } else {
+            SAFNotification.success(message);
+        }
     }
 }

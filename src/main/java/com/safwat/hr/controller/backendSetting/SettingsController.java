@@ -4,6 +4,7 @@ import com.safwat.hr.controller.backendSetting.AppConfigApiClient.JsonEntry;
 import com.safwat.hr.controller.backendSetting.SettingsApiClient.PropertyEntry;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -17,6 +18,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +34,13 @@ import java.util.stream.Collectors;
  * 2) App Config (JSON)       → /api/app-config
  * <p>
  * كل التنسيقات من settings.css عبر كلاسات stg- (بدون inline styles).
+ * <p>
+ * تاب الـ JSON بيفصل مفاتيح التعليقات (_comment_*) عن البيانات الحقيقية،
+ * والتعليقات بتتعرض كنص توضيحي فوق المفتاح أو جنب اسم القسم.
  */
 public class SettingsController implements Initializable {
+
+    private static final String COMMENT_PREFIX = "_comment_";
 
     // ══════════════════════════ FXML Fields — Header ══════════════════════════
     @FXML
@@ -100,6 +107,11 @@ public class SettingsController implements Initializable {
     private Map<String, List<JsonEntry>> jsonGroupedData = new LinkedHashMap<>();
     private String currentJsonCategory = null;
     private final Map<String, String> jsonPendingChanges = new LinkedHashMap<>();
+
+    /** تعليق كل قسم في الـ JSON (اسم القسم → النص). */
+    private final Map<String, String> jsonSectionComments = new LinkedHashMap<>();
+    /** تعليق كل مفتاح في الـ JSON (المسار الكامل للمفتاح → النص). */
+    private final Map<String, String> jsonFieldComments = new LinkedHashMap<>();
 
     // ══════════════════════════ Init ══════════════════════════
     @Override
@@ -329,7 +341,7 @@ public class SettingsController implements Initializable {
                 Platform.runLater(() -> {
                     showJsonLoading(false);
                     if (response.isSuccess() && response.getData() != null) {
-                        jsonGroupedData = new LinkedHashMap<>(response.getData());
+                        jsonGroupedData = splitJsonComments(new LinkedHashMap<>(response.getData()));
                         jsonCategoryList.setItems(
                                 FXCollections.observableArrayList(jsonGroupedData.keySet()));
                         int total = jsonGroupedData.values().stream().mapToInt(List::size).sum();
@@ -344,9 +356,86 @@ public class SettingsController implements Initializable {
         );
     }
 
+    /**
+     * يفصل مفاتيح التعليقات (_comment_*) عن البيانات الحقيقية.
+     * التعليقات بتتخزن في الـ maps، والبيانات بترجع من غيرها.
+     */
+    private Map<String, List<JsonEntry>> splitJsonComments(Map<String, List<JsonEntry>> raw) {
+        jsonSectionComments.clear();
+        jsonFieldComments.clear();
+
+        Map<String, List<JsonEntry>> cleaned = new LinkedHashMap<>();
+
+        for (Map.Entry<String, List<JsonEntry>> cat : raw.entrySet()) {
+            String catName = cat.getKey();
+
+            // تعليق على مستوى الجذر في شكل قسم كامل
+            if (catName.startsWith(COMMENT_PREFIX)) {
+                String section = catName.substring(COMMENT_PREFIX.length());
+                String text = firstValue(cat.getValue());
+                if (text != null) jsonSectionComments.put(section, text);
+                continue;
+            }
+
+            List<JsonEntry> kept = new ArrayList<>();
+            for (JsonEntry e : cat.getValue()) {
+                if (isCommentEntry(e)) {
+                    storeComment(e);
+                } else {
+                    kept.add(e);
+                }
+            }
+
+            // القسم اللي كان فيه تعليقات بس ما يتعرضش كقسم فاضي
+            if (!kept.isEmpty()) {
+                cleaned.put(catName, kept);
+            }
+        }
+        return cleaned;
+    }
+
+    /**
+     * يخزن التعليق في المكان الصح:
+     * - "setting._comment_scaleUp" → تعليق مفتاح "setting.scaleUp"
+     * - "_comment_setting"         → تعليق قسم "setting"
+     */
+    private void storeComment(JsonEntry e) {
+        String target = targetPath(e.path());
+        if (target == null || e.value() == null) return;
+
+        if (target.contains(".")) {
+            jsonFieldComments.put(target, e.value());
+        } else {
+            jsonSectionComments.put(target, e.value());
+        }
+    }
+
+    private boolean isCommentEntry(JsonEntry e) {
+        return (e.key() != null && e.key().startsWith(COMMENT_PREFIX))
+                || (e.path() != null && e.path().contains(COMMENT_PREFIX));
+    }
+
+    /**
+     * يحوّل مسار التعليق لمسار المفتاح اللي بيوصفه.
+     */
+    private static String targetPath(String commentPath) {
+        if (commentPath == null) return null;
+        int idx = commentPath.indexOf(COMMENT_PREFIX);
+        if (idx < 0) return null;
+        return commentPath.substring(0, idx) + commentPath.substring(idx + COMMENT_PREFIX.length());
+    }
+
+    private static String firstValue(List<JsonEntry> list) {
+        return (list == null || list.isEmpty()) ? null : list.get(0).value();
+    }
+
     private void showJsonCategory(String category) {
         currentJsonCategory = category;
-        jsonCategoryLabel.setText(categoryIcon(category) + "  " + category);
+
+        String sectionDoc = jsonSectionComments.get(category);
+        jsonCategoryLabel.setText(categoryIcon(category)
+                + "  " + category
+                + (sectionDoc != null ? "  —  " + sectionDoc : ""));
 
         List<JsonEntry> entries = jsonGroupedData.getOrDefault(category, List.of());
         jsonEntryCountLabel.setText(entries.size() + " مفتاح");
@@ -398,6 +487,14 @@ public class SettingsController implements Initializable {
         Label pathLbl = new Label(entry.path());
         pathLbl.getStyleClass().add("stg-field-value-muted");
         card.getChildren().add(pathLbl);
+
+        // ★ تعليق المفتاح (من _comment_ اللي فوقه في الملف)
+        String fieldDoc = jsonFieldComments.get(entry.path());
+        if (fieldDoc != null && !fieldDoc.isBlank()) {
+            Label docLbl = new Label("# " + fieldDoc);
+            docLbl.getStyleClass().add("stg-field-hint");
+            card.getChildren().add(docLbl);
+        }
 
         if (!entry.editable()) return card;
 
@@ -831,7 +928,8 @@ public class SettingsController implements Initializable {
         typeBox.setPrefWidth(280);
 
         Label hintLbl = new Label(
-                "المسار: section.subSection.key — الأقسام المتداخلة تُنشأ تلقائياً");
+                "المسار: section.subSection.key — الأقسام المتداخلة تُنشأ تلقائياً.\n"
+                        + "كلمة _comment_ محجوزة للتعليقات ومينفعش تتكتب في المسار.");
         hintLbl.getStyleClass().add("stg-dialog-hint");
 
         addGridRow(grid, "المسار *", pathField, 0);
@@ -845,9 +943,17 @@ public class SettingsController implements Initializable {
         Button okBtn = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
         okBtn.setText("إضافة");
         okBtn.getStyleClass().add("stg-btn-dialog-primary");
-        okBtn.disableProperty().bind(pathField.textProperty().isEmpty()
-                .or(valueField.textProperty().isEmpty()));
-
+        okBtn.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> {
+                    String path = pathField.getText();
+                    String val = valueField.getText();
+                    return path == null || path.isBlank()
+                            || val == null || val.isBlank()
+                            || path.contains(COMMENT_PREFIX);
+                },
+                pathField.textProperty(),
+                valueField.textProperty()
+        ));
         dialog.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 showProgress(true);
@@ -1025,7 +1131,9 @@ public class SettingsController implements Initializable {
         return (e.key() != null && e.key().toLowerCase().contains(query))
                 || (e.path() != null && e.path().toLowerCase().contains(query))
                 || (e.value() != null && e.value().toLowerCase().contains(query))
-                || (e.type() != null && e.type().toLowerCase().contains(query));
+                || (e.type() != null && e.type().toLowerCase().contains(query))
+                || (jsonFieldComments.get(e.path()) != null
+                && jsonFieldComments.get(e.path()).toLowerCase().contains(query));
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -1078,7 +1186,7 @@ public class SettingsController implements Initializable {
     }
 
     /**
-     * نفس styleAlert لكن يضيف headerText = null في الـ dialog.
+     * نفس styleAlert، مخصص للـ Dialog العادي.
      */
     private void styleDialog(Dialog<?> d) {
         styleAlert(d);

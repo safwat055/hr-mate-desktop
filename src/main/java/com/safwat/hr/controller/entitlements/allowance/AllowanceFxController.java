@@ -2,6 +2,7 @@ package com.safwat.hr.controller.entitlements.allowance;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.employee.dto.EmployeeProfileDto;
+import com.safwat.hr.controller.employee.dto.EmployeeSearchResult;
 import com.safwat.hr.controller.employee.dto.JobTitleEntryRequest;
 import com.safwat.hr.controller.employee.dto.SocialStatusEntryRequest;
 import com.safwat.hr.controller.employee.ui.EmployeeHistoryTable;
@@ -10,10 +11,13 @@ import com.safwat.hr.controller.employee.ui.EmployeeRows.SocialStatusRow;
 import com.safwat.hr.controller.employee.ui.JobTitleOption;
 import com.safwat.hr.controller.entitlements.allowance.AllowanceDefinition.ElementType;
 import com.safwat.hr.controller.entitlements.statutory.StatutoryDialogController;
+import com.safwat.hr.controller.leave.service.LeaveApiClient;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
 import com.safwat.hr.controller.wages.ui.EmployeeWagesScreenController;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.shared.FXMLPaths;
+import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
@@ -44,11 +48,9 @@ public class AllowanceFxController implements Initializable {
     @FXML
     private Button btn_supplementaryPdf;
     @FXML
-    private Button btn_statutory, btn_openWage;
+    private Button btn_statutory, btn_openWage, btn_search;
     @FXML
     private TextField txt_nationalId;
-    @FXML
-    private Button btn_search;
     @FXML
     private ProgressIndicator progress_indicator;
     @FXML
@@ -83,6 +85,7 @@ public class AllowanceFxController implements Initializable {
     private TextField txt_basic30From;
     @FXML
     private Button btn_saveBasic30;
+
     // ── تاب البدلات ─────────────────────────────────────────────
     @FXML
     private TextField txt_calculationDate;
@@ -115,7 +118,7 @@ public class AllowanceFxController implements Initializable {
     @FXML
     private Button btn_manageSectors;
 
-    // ── جداول الحالة الاجتماعية والوظائف (جديد) ─────────────────
+    // ── جداول الحالة الاجتماعية والوظائف ────────────────────────
     @FXML
     private HBox historyRow;
     @FXML
@@ -124,12 +127,12 @@ public class AllowanceFxController implements Initializable {
     private VBox jobTitleContainer;
 
     // ── State ────────────────────────────────────────────────────
+    private final LeaveApiClient employeeSearchApi = new LeaveApiClient();
     private String currentNationalId;
     private AllowanceResultDto currentResult;
     private ScaleDto cachedScaleDto;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    // ★ جديد — id الموظف + الجداول القابلة للتعديل
     private Long employeeId;
     private EmployeeHistoryTable<SocialStatusRow> socialTbl;
     private EmployeeHistoryTable<JobTitleRow> jobTbl;
@@ -167,12 +170,12 @@ public class AllowanceFxController implements Initializable {
         setupTable();
         setupDateField();
         setupAllowanceAutocomplete();
+        setupEmployeeSearch();
+
         btn_manageSectors.setOnAction(_ -> openSectorsDialog());
         txt_calculationDate.setText(LocalDate.now().format(DATE_FMT));
 
         btn_statutory.setOnAction(_ -> openStatutoryDialog());
-        txt_nationalId.setOnAction(_ -> handleSearch());
-        btn_search.setOnAction(_ -> handleSearch());
         btn_recalculate.setOnAction(_ -> loadAllowances());
         btn_addAllowance.setOnAction(_ -> handleAddAllowance());
         btn_showAllowances.setOnAction(_ -> showAllAllowancesMenu());
@@ -182,62 +185,96 @@ public class AllowanceFxController implements Initializable {
             btn_manageDefinitions.setOnAction(_ -> openDefinitionsDialog());
         }
         loadDefinitions();
-        btn_exportPDF.setOnAction(_ -> handleExportPayslipPdf());   // ⭐ جديد
-        // في البداية جداول الـ history مخفية
+        btn_exportPDF.setOnAction(_ -> handleExportPayslipPdf());
+
         setHistoryVisible(false);
         btn_openWage.setOnAction(_ -> openWageView());
-        // حقول تعديل basic_30
+
         TextFieldSetupHelper.setupDateFields(txt_basic30Date);
         TextFieldSetupHelper.setupDateFields(txt_basic30From);
         btn_saveBasic30.setOnAction(_ -> handleSaveBasic30());
     }
 
+    // ════════════════════════════════════════════════════════════
+    //  البحث عن موظف (اسم / رقم قومي / رقم وظيفي)
+    // ════════════════════════════════════════════════════════════
+
+    private void setupEmployeeSearch() {
+        SearchDialog<EmployeeSearchResult> dialog = SearchDialog
+                .builder(EmployeeSearchResult.class)
+                .title("اختر موظفًا")
+                .searchPlaceholder("اسم / رقم قومي / رقم وظيفي...")
+                .column("الاسم", EmployeeSearchResult::fullName)
+                .column("الرقم الوظيفي", EmployeeSearchResult::employeeNumber)
+                .column("الرقم القومي", EmployeeSearchResult::nationalId);
+
+        SmartSearchHelper.bind(
+                txt_nationalId,btn_search,
+                () -> {
+                    String q = txt_nationalId.getText();
+                    return q == null ? List.of() : employeeSearchApi.searchEmployees(q.trim());
+                },
+                dialog,
+                this::onEmployeeSelected,
+                SmartSearchHelper.FieldBind.of(txt_nationalId, EmployeeSearchResult::fullName));
+    }
+
+    private void onEmployeeSelected(EmployeeSearchResult emp) {
+        selectEmployee(emp.nationalId());
+    }
 
     /**
-     * ════════════════════════════════════════════════════════════════
-     * تصدير PDF لمفردات المرتب
-     * ════════════════════════════════════════════════════════════════
-     *
-     * <p>الشروط:</p>
-     * <ul>
-     *   <li>لازم يكون فيه رقم قومي (إما بُحث عنه أو مكتوب في الحقل).</li>
-     *   <li>لازم يكون فيه تاريخ احتساب في {@code txt_calculationDate}.</li>
-     * </ul>
+     * يختار الموظف ويحمّل بياناته. لو الموظف اتغير بيمسح الحالة القديمة الأول.
      */
-    private void handleExportPayslipPdf() {
+    private void selectEmployee(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) return;
 
-        // ── 1. التحقق من الرقم القومي ──
+        if (!nationalId.equals(currentNationalId)) {
+            resetEmployeeState();
+        }
+        currentNationalId = nationalId;
+        loadAllowances();
+    }
+
+    private void resetEmployeeState() {
+        cachedScaleDto = null;
+        currentResult = null;
+        employeeId = null;
+        socialTbl = null;
+        jobTbl = null;
+        selectedAllowanceCode = null;
+        socialStatusContainer.getChildren().clear();
+        jobTitleContainer.getChildren().clear();
+        setHistoryVisible(false);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  PDF — مفردات المرتب
+    // ════════════════════════════════════════════════════════════
+
+    private void handleExportPayslipPdf() {
         String nationalId = currentNationalId;
         if (nationalId == null || nationalId.isBlank()) {
-            nationalId = txt_nationalId.getText() != null
-                    ? txt_nationalId.getText().trim() : "";
-        }
-        if (nationalId.isBlank()) {
-            showError("أدخل الرقم القومي أولاً");
+            showError("ابحث عن موظف أولاً");
             return;
         }
 
-        // ── 2. التحقق من التاريخ ──
         LocalDate calcDate = getCalculationDate();
         if (calcDate == null) {
             showError("أدخل تاريخ احتساب صحيح أولاً");
             return;
         }
 
-        // ── 3. اسم الموظف (للعرض في الإشعار) ──
         String empName = (txt_empName != null && txt_empName.getText() != null)
                 ? txt_empName.getText().trim()
                 : nationalId;
 
-        // ── 4. تعطيل الزر ──
         btn_exportPDF.setDisable(true);
         clearError();
 
-        // ── 5. بناء الـ URL ──
         String path = "/entitlements/employee/" + nationalId
                 + "/payslip/pdf?date=" + calcDate.format(DATE_FMT);
 
-        // ── 6. التنزيل + الإشعار ──
         downloadPdfToTempAndNotify(
                 path,
                 "PAYSLIP_" + nationalId,
@@ -246,8 +283,9 @@ public class AllowanceFxController implements Initializable {
                 () -> btn_exportPDF.setDisable(false)
         );
     }
+
     // ════════════════════════════════════════════════════════════
-    //  Date Field — TextField + TextFieldSetupHelper
+    //  Date Field
     // ════════════════════════════════════════════════════════════
 
     private void setupDateField() {
@@ -368,17 +406,15 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  PDF
+    //  PDF — الحافز التكميلي
     // ════════════════════════════════════════════════════════════
 
     private void handleExportSupplementaryPdf() {
-
         if (currentNationalId == null || currentNationalId.isBlank()) {
             showError("ابحث عن موظف أولاً");
             return;
         }
 
-        // ── اسم الموظف (للعرض في الإشعار) ──
         String empName = (txt_empName != null && txt_empName.getText() != null)
                 ? txt_empName.getText().trim()
                 : currentNationalId;
@@ -399,30 +435,8 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Search / Load
+    //  Load Allowances
     // ════════════════════════════════════════════════════════════
-
-    private void handleSearch() {
-        String id = txt_nationalId.getText().trim();
-        if (id.isBlank()) {
-            showError("أدخل الرقم القومي أولاً");
-            return;
-        }
-
-        if (!id.equals(currentNationalId)) {
-            cachedScaleDto = null;
-            currentResult = null;
-            // ★ مسح بيانات الموظف القديم
-            employeeId = null;
-            socialTbl = null;
-            jobTbl = null;
-            socialStatusContainer.getChildren().clear();
-            jobTitleContainer.getChildren().clear();
-            setHistoryVisible(false);
-        }
-        currentNationalId = id;
-        loadAllowances();
-    }
 
     private void loadAllowances() {
         if (currentNationalId == null) return;
@@ -484,7 +498,7 @@ public class AllowanceFxController implements Initializable {
     private void ensureEmployeeDetailsLoaded() {
         if (cachedScaleDto != null) {
             applyEmployeeDetails(cachedScaleDto);
-            loadEmployeeProfile();      // ★
+            loadEmployeeProfile();
             return;
         }
         FxApiSupport.get(
@@ -493,7 +507,7 @@ public class AllowanceFxController implements Initializable {
                 dto -> {
                     cachedScaleDto = dto;
                     applyEmployeeDetails(dto);
-                    loadEmployeeProfile();  // ★
+                    loadEmployeeProfile();
                 },
                 err -> {
                 }
@@ -521,7 +535,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  ★ جداول الحالة الاجتماعية والوظائف
+    //  جداول الحالة الاجتماعية والوظائف
     // ════════════════════════════════════════════════════════════
 
     private void loadEmployeeProfile() {
@@ -535,10 +549,7 @@ public class AllowanceFxController implements Initializable {
                     rebuildHistoryTables(profile);
                     setHistoryVisible(true);
                 },
-                err -> {
-                    // الموظف مش موجود في employee — نخفي الجداول
-                    setHistoryVisible(false);
-                }
+                err -> setHistoryVisible(false)
         );
     }
 
@@ -560,7 +571,7 @@ public class AllowanceFxController implements Initializable {
         );
         socialStatusContainer.getChildren().setAll(socialTbl.build());
 
-        // ── ② الوظائف — محتاجين قائمة وظائف القطاع ──
+        // ── ② الوظائف ──
         List<JobTitleOption> sectorJobTitles = List.of();
         if (profile.sectorId() != null) {
             sectorJobTitles = loadJobTitlesForSector(profile.sectorId());
@@ -600,7 +611,7 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  ★ حفظ الحالة الاجتماعية
+    //  حفظ الحالة الاجتماعية
     // ════════════════════════════════════════════════════════════
 
     private void saveSocialStatus(List<SocialStatusRow> rows) throws Exception {
@@ -625,12 +636,11 @@ public class AllowanceFxController implements Initializable {
                             .toList());
         }
 
-        // invalidate cache عشان البيانات الحالية تتحمّل من جديد
         cachedScaleDto = null;
     }
 
     // ════════════════════════════════════════════════════════════
-    //  ★ حفظ الوظائف
+    //  حفظ الوظائف
     // ════════════════════════════════════════════════════════════
 
     private void saveJobTitles(List<JobTitleRow> rows) throws Exception {
@@ -665,7 +675,7 @@ public class AllowanceFxController implements Initializable {
     private void fillAllowancesTable(AllowanceResultDto result) {
         List<AllowanceResultDto.AllowanceLineDto> displayLines = new ArrayList<>();
 
-        // ⭐ (1) بنود الاستحقاق — كلها بدون فلتر قيمة
+        // (1) بنود الاستحقاق
         List<AllowanceResultDto.AllowanceLineDto> entitlements = result.allowances().stream()
                 .filter(l -> !l.displayOnly())
                 .filter(l -> l.elementType() == ElementType.ENTITLEMENT)
@@ -697,7 +707,7 @@ public class AllowanceFxController implements Initializable {
             displayLines.add(buildInfo(CODE_INFO_COMBINED, "اجر الاشتراك", combined));
         }
 
-        // ⭐ (4) بنود الاستقطاع — كلها بدون فلتر قيمة
+        // (4) بنود الاستقطاع
         List<AllowanceResultDto.AllowanceLineDto> deductions = result.allowances().stream()
                 .filter(l -> !l.displayOnly())
                 .filter(l -> l.elementType() == ElementType.DEDUCTION
@@ -790,7 +800,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ★ عمود النوع — نص عادي بدون badge
+        // عمود النوع
         col_elementType.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().elementType()));
         col_elementType.setCellFactory(tc -> new TableCell<>() {
@@ -814,7 +824,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
 
-        // ★ عمود القيمة — بدون تنسيق ألوان
+        // عمود القيمة
         col_value.setCellValueFactory(d ->
                 new javafx.beans.property.SimpleObjectProperty<>(d.getValue().value()));
         col_value.setCellFactory(tc -> new TableCell<>() {
@@ -915,26 +925,22 @@ public class AllowanceFxController implements Initializable {
         });
     }
 
-
     // ════════════════════════════════════════════════════════════
     //  API Ops
     // ════════════════════════════════════════════════════════════
 
     private void handleAddAllowance() {
 
-        // ⭐ (1) تحقق من الرقم القومي
         if (currentNationalId == null || currentNationalId.isBlank()) {
             showError("ابحث عن موظف أولاً قبل إضافة أي بدل");
             return;
         }
 
-        // ⭐ (2) تحقق من البيانات المحمّلة
         if (currentResult == null) {
             showError("لم يتم تحميل بيانات الموظف بعد — اضغط إعادة الحساب");
             return;
         }
 
-        // ⭐ (3) تحقق من البدل المختار
         AllowanceDefinition selected = resolveSelectedAllowance();
         if (selected == null) {
             String typed = txt_newAllowance.getText();
@@ -946,14 +952,12 @@ public class AllowanceFxController implements Initializable {
             return;
         }
 
-        // ⭐ (4) تحقق من التاريخ
         LocalDate fromDate = getCalculationDate();
         if (fromDate == null) {
             showError("اكتب تاريخ احتساب صحيح أولاً (سيُستخدم كتاريخ بداية البدل)");
             return;
         }
 
-        // ⭐ (5) إرسال الطلب
         AllowanceResultDto.AddAllowanceRequest req = new AllowanceResultDto.AddAllowanceRequest(
                 selected.getCode(),
                 fromDate,
@@ -975,7 +979,7 @@ public class AllowanceFxController implements Initializable {
                 },
                 err -> {
                     btn_addAllowance.setDisable(false);
-                    showError("خطأ في الإضافة: " + err);   // ← تأكد إن دي بتظهر
+                    showError("خطأ في الإضافة: " + err);
                 }
         );
     }
@@ -1108,7 +1112,6 @@ public class AllowanceFxController implements Initializable {
 
     private void showLoading(boolean show) {
         progress_indicator.setVisible(show);
-        btn_search.setDisable(show);
     }
 
     private void showInfo(String msg) {
@@ -1139,54 +1142,41 @@ public class AllowanceFxController implements Initializable {
     }
 
     /**
-     * يُستدعى من TabManager بعد ما التاب يفتح — لتمرير الرقم القومي
-     * من أي تاب تاني.
+     * يُستدعى من شاشة الأجور أو أي تاب تاني لفتح الشاشة على موظف محدد.
      */
     public void setInitialNationalId(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
-        if (txt_nationalId != null) {
-            txt_nationalId.setText(nationalId.trim());
-        }
-        handleSearch();
+        String nid = nationalId.trim();
+        txt_nationalId.setText(nid);
+        selectEmployee(nid);
     }
+
     // ════════════════════════════════════════════════════════════
     //  Dialogs
     // ════════════════════════════════════════════════════════════
 
-    // ════════════════════════════════════════════════════════════
-//  Dialogs — عبر ViewManager
-// ════════════════════════════════════════════════════════════
-
-    /**
-     * Dialog تعديل فترات البدل — Modal + Resizable = false.
-     * <p>الـ viewId ثابت لتسجيل الخطوط/الزوم/الألوان، بينما العنوان
-     * الديناميكي يُضبط داخل الـ callback.</p>
-     */
     private void openOverrideDialog(AllowanceResultDto.AllowanceLineDto line) {
         ViewManager.openIndependentView(
                 "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml",
-                "تعديل فترات البدل",             // viewId (ثابت)
-                null,                            // owner
+                "تعديل فترات البدل",
+                null,
                 Modality.APPLICATION_MODAL,
-                false,                           // resizable
+                false,
                 (ctrl, stage) -> {
-                    stage.setTitle("تعديل فترات: " + line.nameAr());   // عنوان ديناميكي
+                    stage.setTitle("تعديل فترات: " + line.nameAr());
                     ((AllowanceOverrideDialogController) ctrl)
                             .init(line, currentNationalId, () -> loadAllowances());
                 }
         );
     }
 
-    /**
-     * Dialog إدارة قواعد البدلات — Modal + Resizable = true.
-     */
     private void openDefinitionsDialog() {
         ViewManager.openIndependentView(
                 new FXMLPaths().getAllowanceDefinitionDialog(),
                 "إدارة قواعد البدلات",
                 null,
                 Modality.APPLICATION_MODAL,
-                true,                            // resizable
+                true,
                 (ctrl, stage) -> ((AllowanceDefinitionDialogController) ctrl)
                         .init(() -> {
                             if (currentNationalId != null) loadDefinitions();
@@ -1195,22 +1185,19 @@ public class AllowanceFxController implements Initializable {
     }
 
     private void openWageView() {
-        String nationalId = txt_nationalId.getText();
-        if (nationalId.isEmpty()) {
+        if (currentNationalId == null || currentNationalId.isBlank()) {
+            showError("ابحث عن موظف أولاً");
             return;
         }
+        String nationalId = currentNationalId;
         TabManager.loadFXMLInMainTab(new FXMLPaths().getWagesView(), "سجل الاجور", true,
                 controller -> {
                     if (controller instanceof EmployeeWagesScreenController c) {
                         c.setInitialNationalId(nationalId);
-
                     }
                 });
     }
 
-    /**
-     * Dialog إدارة الاستقطاعات القانونية — Modal + Resizable = false.
-     */
     private void openStatutoryDialog() {
         ViewManager.openIndependentView(
                 new FXMLPaths().getStatutoryDialogView(),
@@ -1223,10 +1210,6 @@ public class AllowanceFxController implements Initializable {
         );
     }
 
-    /**
-     * Dialog إدارة القطاعات والوظائف — Modal + Resizable = true.
-     * <p>المسار ديناميك من {@link FXMLPaths}.</p>
-     */
     private void openSectorsDialog() {
         ViewManager.openIndependentView(
                 new FXMLPaths().getSectorView(),
@@ -1239,37 +1222,31 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-//  حفظ basic_30_date و basic_30_from
-// ════════════════════════════════════════════════════════════
+    //  حفظ basic_30_date و basic_30_from
+    // ════════════════════════════════════════════════════════════
 
     private void handleSaveBasic30() {
 
-        // ── 1. لازم يكون فيه موظف محمّل ──
         if (currentNationalId == null || currentNationalId.isBlank()) {
             showError("ابحث عن موظف أولاً");
             return;
         }
 
-        // ── 2. قراءة الحقلين ──
         LocalDate basic30Date = TextFieldSetupHelper.parseDateInput(txt_basic30Date.getText());
         LocalDate basic30From = TextFieldSetupHelper.parseDateInput(txt_basic30From.getText());
 
-        // ── 3. تحقق محلي سريع (الباك إند هيتحقق كمان) ──
         if (basic30Date == null) {
             showError("أدخل تاريخ 30/6 بصيغة صحيحة (yyyy-MM-dd)");
             return;
         }
 
-        // ── 4. تعطيل الزر ──
         btn_saveBasic30.setDisable(true);
         clearError();
 
-        // ── 5. بناء جسم الطلب ──
-        Map<String, Object> body = new java.util.HashMap<>();
+        Map<String, Object> body = new HashMap<>();
         body.put("basic30Date", basic30Date.toString());
         body.put("basic30From", basic30From != null ? basic30From.toString() : null);
 
-        // ── 6. إرسال الطلب ──
         try {
             ApiClient.put(
                     "/salary-scale/" + currentNationalId + "/basic-30",
@@ -1277,25 +1254,24 @@ public class AllowanceFxController implements Initializable {
                     Void.class
             );
 
-            // ── 7. نجاح → أعد تحميل بيانات الموظف والبدلات ──
             cachedScaleDto = null;
             ensureEmployeeDetailsLoaded();
             loadAllowances();
             showInfo("تم حفظ بيانات 30/6 بنجاح");
 
         } catch (Exception ex) {
-            // لو الباك رجّع خطأ validation هيوصلك في الرسالة
             showError("تعذر الحفظ: " + extractMessage(ex));
         } finally {
             btn_saveBasic30.setDisable(false);
         }
     }
 
-    /**
-     * استخراج رسالة الخطأ القادمة من الباك إند (لو موجودة).
-     */
     private String extractMessage(Exception ex) {
         String msg = ex.getMessage();
         return (msg == null || msg.isBlank()) ? "حدث خطأ غير متوقع" : msg;
+    }
+
+    private LocalDate getCalculationDateOrNull() {
+        return getCalculationDate();
     }
 }

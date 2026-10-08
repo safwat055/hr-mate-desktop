@@ -684,3 +684,22 @@
     -fx-font-family: "Consolas", "Courier New", monospace;
     -fx-font-size: 12px;
 }
+
+.section-title {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-text-fill: -brand-navy;
+}
+
+.form-label {
+    -fx-text-fill: -text-secondary;
+}
+
+.current-value-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -brand-navy;
+}
+
+.form-checkbox {
+    -fx-font-size: 13;
+}

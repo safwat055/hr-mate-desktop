@@ -1,363 +1,337 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.String?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ComboBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="800" prefWidth="1180" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.entitlements.allowance.AllowanceDefinitionDialogController">
+<!--
+    شاشة إدارة قواعد البدلات — AllowanceDefinitionDialog
+    ────────────────────────────────────────────────────────────
+    ① جدول كل القواعد
+    ② جدول تاريخ الكود المختار
+    ③ فورم إضافة / تعديل snapshot (الإخفاء والإظهار بيتم في الكنترولر)
+-->
+
+<ScrollPane fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT" prefHeight="800" prefWidth="1180"
+            styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.entitlements.allowance.AllowanceDefinitionDialogController">
     <content>
-        <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="18" styleClass="card">
-
+        <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="16">
             <padding>
-                <Insets bottom="20" left="20" right="20" top="20" />
+                <Insets top="18" right="18" bottom="18" left="18"/>
             </padding>
 
-            <Label alignment="CENTER" maxWidth="Infinity" text="إدارة قواعد البدلات">
-            <styleClass>
-               <String fx:value="bold" />
-               <String fx:value="fs-18" />
-            </styleClass></Label>
+            <!-- ══════════ عنوان الشاشة ══════════ -->
+            <Label alignment="CENTER" maxWidth="Infinity" text="إدارة قواعد البدلات" styleClass="bold fs-18"/>
 
-            <!-- ══════════════════════════════════════════════════
-                 جدول كل القواعد
-            ══════════════════════════════════════════════════ -->
-            <VBox prefHeight="330.0" prefWidth="1122.0" spacing="4" styleClass="card">
-                <HBox alignment="CENTER_RIGHT" spacing="12">
-                    <padding>
-                        <Insets bottom="10" left="12" right="12" top="10" />
-                    </padding>
-                    <Button fx:id="btn_new_code" prefHeight="34" prefWidth="160" styleClass="btn-success" text="+ بدل جديد" />
-                    <Label alignment="CENTER" maxWidth="Infinity" text="كل قواعد البدلات" HBox.hgrow="ALWAYS">
-                  <styleClass>
-                     <String fx:value="header-panel" />
-                     <String fx:value="bold" />
-                     <String fx:value="fs-16" />
-                  </styleClass></Label>
+            <!-- ══════════ ① كل القواعد ══════════ -->
+            <VBox styleClass="card" spacing="0">
+                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel-header">
+                    <Label text="كل قواعد البدلات" styleClass="bold fs-14" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button fx:id="btn_new_code" text="+ بدل جديد" styleClass="btn-success" prefHeight="32"/>
                 </HBox>
 
-                <TableView fx:id="table_definitions" editable="false" minHeight="220" nodeOrientation="RIGHT_TO_LEFT" prefHeight="272.0" prefWidth="1120.0" styleClass="bold">
-                    <columns>
-                        <TableColumn fx:id="col_def_code" prefWidth="100" text="الكود" />
-                        <TableColumn fx:id="col_def_nameAr" prefWidth="220" text="الاسم" />
-                        <TableColumn fx:id="col_def_effectiveFrom" prefWidth="110" text="أحدث سريان" />
-                        <TableColumn fx:id="col_def_effectiveTo" prefWidth="110" text="ينتهي في" />
-                        <TableColumn fx:id="col_def_behavior" prefWidth="100" text="السلوك" />
-                        <TableColumn fx:id="col_def_calcType" prefWidth="190" text="نوع الاحتساب" />
-                        <TableColumn fx:id="col_def_elementType" prefWidth="130" text="طبيعة العنصر" />
-                        <TableColumn fx:id="col_def_scope" prefWidth="90" text="النطاق" />
-                    </columns>
+                <VBox spacing="8">
                     <padding>
-                        <Insets bottom="8" left="8" right="8" top="4" />
+                        <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                </TableView>
+                    <TableView fx:id="table_definitions" editable="false" minHeight="220" prefHeight="300"
+                               nodeOrientation="RIGHT_TO_LEFT" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="col_def_code" prefWidth="100" text="الكود"/>
+                            <TableColumn fx:id="col_def_nameAr" prefWidth="220" text="الاسم"/>
+                            <TableColumn fx:id="col_def_effectiveFrom" prefWidth="110" text="أحدث سريان"/>
+                            <TableColumn fx:id="col_def_effectiveTo" prefWidth="110" text="ينتهي في"/>
+                            <TableColumn fx:id="col_def_behavior" prefWidth="100" text="السلوك"/>
+                            <TableColumn fx:id="col_def_calcType" prefWidth="190" text="نوع الاحتساب"/>
+                            <TableColumn fx:id="col_def_elementType" prefWidth="130" text="طبيعة العنصر"/>
+                            <TableColumn fx:id="col_def_scope" prefWidth="90" text="النطاق"/>
+                        </columns>
+                    </TableView>
+                </VBox>
             </VBox>
 
-            <!-- ══════════════════════════════════════════════════
-                 جدول تاريخ الكود المختار
-            ══════════════════════════════════════════════════ -->
-            <VBox prefHeight="357.0" prefWidth="1122.0" spacing="4" styleClass="card">
-                <HBox alignment="CENTER_RIGHT" spacing="12">
-                    <padding>
-                        <Insets bottom="10" left="12" right="12" top="10" />
-                    </padding>
-                    <Button fx:id="btn_new_snapshot" prefHeight="34" prefWidth="180" styleClass="btn-purple" text="+ تاريخ سريان جديد" />
-                    <Label fx:id="lbl_history_title" alignment="CENTER" maxWidth="Infinity" text="اختر بدل من الأعلى لعرض تاريخه" HBox.hgrow="ALWAYS">
-                  <styleClass>
-                     <String fx:value="header-panel" />
-                     <String fx:value="bold" />
-                     <String fx:value="fs-16" />
-                  </styleClass></Label>
+            <!-- ══════════ ② تاريخ الكود المختار ══════════ -->
+            <VBox styleClass="card" spacing="0">
+                <HBox alignment="CENTER_LEFT" spacing="12" styleClass="panel-header">
+                    <Label fx:id="lbl_history_title" text="اختر بدل من الأعلى لعرض تاريخه"
+                           styleClass="bold fs-14" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button fx:id="btn_new_snapshot" text="+ تاريخ سريان جديد" styleClass="btn-purple" prefHeight="32"/>
                 </HBox>
 
-                <TableView fx:id="table_history" editable="false" minHeight="220" nodeOrientation="RIGHT_TO_LEFT" prefHeight="306.0" prefWidth="1120.0" styleClass="bold">
-                    <columns>
-                        <TableColumn fx:id="col_hist_effectiveFrom" prefWidth="110" text="من تاريخ" />
-                        <TableColumn fx:id="col_hist_effectiveTo" prefWidth="110" text="إلى تاريخ" />
-                        <TableColumn fx:id="col_hist_behavior" prefWidth="100" text="السلوك" />
-                        <TableColumn fx:id="col_hist_calcType" prefWidth="190" text="نوع الاحتساب" />
-                        <TableColumn fx:id="col_hist_baseSource" prefWidth="150" text="مصدر الأساسي" />
-                        <TableColumn fx:id="col_hist_elementType" prefWidth="130" text="طبيعة العنصر" />
-                        <TableColumn fx:id="col_hist_actions" prefWidth="110" text="إجراءات" />
-                    </columns>
+                <VBox spacing="8">
                     <padding>
-                        <Insets bottom="8" left="8" right="8" top="4" />
+                        <Insets top="12" right="12" bottom="12" left="12"/>
                     </padding>
-                </TableView>
+                    <TableView fx:id="table_history" editable="false" minHeight="220" prefHeight="280"
+                               nodeOrientation="RIGHT_TO_LEFT" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="col_hist_effectiveFrom" prefWidth="110" text="من تاريخ"/>
+                            <TableColumn fx:id="col_hist_effectiveTo" prefWidth="110" text="إلى تاريخ"/>
+                            <TableColumn fx:id="col_hist_behavior" prefWidth="100" text="السلوك"/>
+                            <TableColumn fx:id="col_hist_calcType" prefWidth="190" text="نوع الاحتساب"/>
+                            <TableColumn fx:id="col_hist_baseSource" prefWidth="150" text="مصدر الأساسي"/>
+                            <TableColumn fx:id="col_hist_elementType" prefWidth="130" text="طبيعة العنصر"/>
+                            <TableColumn fx:id="col_hist_actions" prefWidth="110" text="إجراءات"/>
+                        </columns>
+                    </TableView>
+                </VBox>
             </VBox>
 
-            <!-- ══════════════════════════════════════════════════
-                 فورم إضافة / تعديل snapshot
-                 (كل العناصر ظاهرة هنا للتصميم، والإخفاء بيتم في initialize)
-            ══════════════════════════════════════════════════ -->
-            <VBox fx:id="pane_form" spacing="14" styleClass="card">
-                <padding>
-                    <Insets bottom="18" left="18" right="18" top="16" />
-                </padding>
+            <!-- ══════════ ③ فورم الإضافة / التعديل ══════════ -->
+            <VBox fx:id="pane_form" styleClass="card" spacing="0">
+                <HBox alignment="CENTER_LEFT" styleClass="panel-header">
+                    <Label fx:id="lbl_form_title" text="إضافة قاعدة" styleClass="bold fs-14" maxWidth="Infinity"/>
+                </HBox>
 
-                <Label fx:id="lbl_form_title" text="إضافة قاعدة">
-               <styleClass>
-                  <String fx:value="bold" />
-                  <String fx:value="fs-16" />
-               </styleClass></Label>
-
-                <!-- ① البيانات الأساسية -->
-                <VBox spacing="10" styleClass="card">
+                <VBox spacing="14">
                     <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
+                        <Insets top="14" right="14" bottom="14" left="14"/>
                     </padding>
-                    <Label text="① البيانات الأساسية">
-                  <styleClass>
-                     <String fx:value="fs-14" />
-                     <String fx:value="bold" />
-                  </styleClass></Label>
-                    <Separator />
-                    <HBox alignment="CENTER_RIGHT" spacing="18">
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="الكود" />
-                            <TextField fx:id="txt_code" prefHeight="36" prefWidth="150" />
-                        </VBox>
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-                            <Label styleClass="bold fs-12" text="الاسم بالعربي *" />
-                            <TextField fx:id="txt_nameAr" maxWidth="Infinity" prefHeight="36" />
-                        </VBox>
-                        <VBox spacing="6" HBox.hgrow="ALWAYS">
-                            <Label styleClass="bold fs-12" text="الاسم بالإنجليزي" />
-                            <TextField fx:id="txt_nameEn" maxWidth="Infinity" prefHeight="36" />
-                        </VBox>
-                    </HBox>
-                </VBox>
 
-                <!-- ② فترة السريان -->
-                <VBox spacing="10" styleClass="card">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label text="② فترة السريان">
-                  <styleClass>
-                     <String fx:value="bold" />
-                     <String fx:value="fs-14" />
-                  </styleClass></Label>
-                    <Separator />
-                    <HBox alignment="CENTER_LEFT" spacing="18">
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="تاريخ السريان *" />
-                            <TextField fx:id="txt_effectiveFrom" prefHeight="36" prefWidth="180" promptText="2024-07-01" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="تاريخ النهاية (فاضي = مفتوح)" />
-                            <TextField fx:id="txt_effectiveTo" prefHeight="36" prefWidth="180" promptText="(فاضي = ساري)" />
-                        </VBox>
-                        <VBox fx:id="pane_referenceDate" spacing="6">
-                            <Label styleClass="bold fs-12" text="التاريخ المرجعي *" />
-                            <TextField fx:id="txt_referenceDate" prefHeight="36" prefWidth="180" promptText="2015-07-01" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="السلوك *" />
-                            <ComboBox fx:id="combo_behavior" prefHeight="36" prefWidth="160" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="نوع الاحتساب *" />
-                            <ComboBox fx:id="combo_calcType" prefHeight="36" prefWidth="240" />
-                        </VBox>
-                    </HBox>
-                </VBox>
-
-                <!-- ③ طريقة الاحتساب -->
-                <VBox spacing="10" styleClass="card">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label text="③ طريقة الاحتساب">
-                  <styleClass>
-                     <String fx:value="bold" />
-                     <String fx:value="fs-14" />
-                  </styleClass></Label>
-                    <Separator />
-                    <HBox alignment="CENTER_LEFT" spacing="18">
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="مصدر الأساسي" />
-                            <ComboBox fx:id="combo_baseSource" prefHeight="36" prefWidth="190" />
-                        </VBox>
-                        <VBox fx:id="pane_insuranceBase" spacing="6">
-                            <Label styleClass="bold fs-12" text="وعاء التأمين *" />
-                            <ComboBox fx:id="combo_insuranceBase" prefHeight="36" prefWidth="200" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="طبيعة العنصر *" />
-                            <ComboBox fx:id="combo_elementType" prefHeight="36" prefWidth="170" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="مصدر الدرجة" />
-                            <ComboBox fx:id="combo_timelineAnchor" prefHeight="36" prefWidth="220" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="النطاق" />
-                            <ComboBox fx:id="combo_scope" prefHeight="36" prefWidth="170" />
-                        </VBox>
-                    </HBox>
-                </VBox>
-
-                <!-- ④ القيم -->
-                <VBox spacing="10" styleClass="card">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label text="④ القيم">
-                  <styleClass>
-                     <String fx:value="bold" />
-                     <String fx:value="fs-14" />
-                  </styleClass></Label>
-                    <Separator />
-
-                    <VBox fx:id="pane_valuesMap" spacing="8">
-                        <Label styleClass="bold fs-12" text="القيم (اختر المفتاح من القائمة وأدخل القيمة) *" />
-                        <HBox alignment="CENTER_LEFT" spacing="10">
-                            <Button fx:id="btn_add_map_entry" prefHeight="34" prefWidth="90" styleClass="btn-success" text="+ إضافة" />
-                            <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="260" promptText="اختر المفتاح" />
-                            <TextField fx:id="txt_map_value" prefHeight="34" prefWidth="120" promptText="القيمة" />
-                        </HBox>
-                        <TableView fx:id="table_values" editable="false" maxHeight="-Infinity" minHeight="150" nodeOrientation="RIGHT_TO_LEFT" prefHeight="150">
-                            <columns>
-                                <TableColumn fx:id="col_map_key" prefWidth="260" text="المفتاح" />
-                                <TableColumn fx:id="col_map_value" prefWidth="140" text="القيمة" />
-                                <TableColumn fx:id="col_map_actions" prefWidth="70" text="" />
-                            </columns>
-                        </TableView>
-                    </VBox>
-
-                    <HBox alignment="CENTER_LEFT" nodeOrientation="RIGHT_TO_LEFT" spacing="18">
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="الحد الأدنى للقيمة" />
-                            <TextField fx:id="txt_minValue" prefHeight="34" prefWidth="180" promptText="فارغ بدون حد ادني" />
-                        </VBox>
-                        <VBox spacing="6">
-                            <Label styleClass="bold fs-12" text="الحد الأقصى للقيمة" />
-                            <TextField fx:id="txt_maxValue" prefHeight="34" prefWidth="180" promptText="فارغ بدون حد اقصي" />
-                        </VBox>
-                        <VBox alignment="CENTER_LEFT" prefHeight="58.0" prefWidth="495.0" spacing="2">
-                            <Label prefHeight="18.0" prefWidth="463.0" styleClass="text-muted fs-11" text="اختياري: لو القيمة المحتسبة أقل من الحد الأدنى تترفع تلقائياً" />
-                            <Label prefHeight="18.0" prefWidth="460.0" styleClass="text-muted fs-11" text="ولو أكبر من الحد الأقصى تتخفض تلقائياً" />
-                            <Label styleClass="text-muted fs-11" text="الأرقام موجبة والأدنى لا يزيد عن الأقصى" />
-                        </VBox>
-                  <VBox.margin>
-                     <Insets />
-                  </VBox.margin>
-                  <padding>
-                     <Insets left="10.0" right="10.0" />
-                  </padding>
-                    </HBox>
-                </VBox>
-
-                <!-- ⑤ الخصائص -->
-                <VBox spacing="10" styleClass="border-gray">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label styleClass="bold text-navy fs-12" text="⑤ الخصائص" />
-                    <Separator />
-                    <FlowPane hgap="28" nodeOrientation="RIGHT_TO_LEFT" vgap="10">
-                        <CheckBox fx:id="chk_subjectToInsurance" selected="true" text="خاضع للتأمينات" />
-                        <CheckBox fx:id="chk_subjectToTaxAndStamp" selected="true" text="خاضع للضريبة والدمغة" />
-                        <CheckBox fx:id="chk_inMinimumWageBase" selected="true" text="يدخل في وعاء التكميلي" />
-                        <CheckBox fx:id="chk_displayOnly" text="عرض فقط" />
-                        <CheckBox fx:id="chk_appliesToNewHires" selected="true" text="يستحق للمعينين الجدد" />
-                    </FlowPane>
-                </VBox>
-
-                <!-- ⑥ نطاق الاستحقاق -->
-                <VBox spacing="10" styleClass="card">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label styleClass="bold text-navy fs-12" text="⑥ نطاق الاستحقاق" />
-                    <Separator />
-               <HBox spacing="10.0">
-                  <children>
-      
-                          <VBox prefHeight="84.0" prefWidth="561.0" spacing="6">
-                              <Label styleClass="bold fs-12" text="القوانين-اختياري" />
-                              <HBox spacing="8">
-                                  <Button fx:id="btn_pick_laws" prefHeight="36" prefWidth="100" styleClass="btn-secondary" text="اختر" />
-                                  <TextField fx:id="txt_eligibleLaws" editable="false" focusTraversable="false" prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS" />
-                              </HBox>
-                              <Label styleClass="text-muted fs-11" />
+                    <!-- ── ① البيانات الأساسية ── -->
+                    <VBox spacing="10" styleClass="soft-box">
                         <padding>
-                           <Insets left="10.0" right="10.0" />
+                            <Insets top="10" right="12" bottom="12" left="12"/>
                         </padding>
-                          </VBox>
-      
-                          <VBox fx:id="pane_sector" prefHeight="84.0" prefWidth="638.0" spacing="6">
-                              <Label fx:id="lbl_sectorTitle" prefHeight="18.0" prefWidth="220.0" styleClass="bold fs-12" text="تحديد قطاع -اختياري" />
-                              <HBox spacing="8">
-                                  <Button fx:id="btn_pick_sectors" prefHeight="36" prefWidth="100" styleClass="btn-secondary" text="اختر" />
-                                  <TextField fx:id="txt_selectedSectors" editable="false" focusTraversable="false" prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS" />
-                              </HBox>
+                        <Label text="① البيانات الأساسية" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+                        <GridPane hgap="16" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                            </columnConstraints>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="الكود" styleClass="form-label"/>
+                                <TextField fx:id="txt_code" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="الاسم بالعربي *" styleClass="form-label"/>
+                                <TextField fx:id="txt_nameAr" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label text="الاسم بالإنجليزي" styleClass="form-label"/>
+                                <TextField fx:id="txt_nameEn" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- ── ② فترة السريان ── -->
+                    <VBox spacing="10" styleClass="soft-box">
                         <padding>
-                           <Insets left="10.0" right="10.0" />
+                            <Insets top="10" right="12" bottom="12" left="12"/>
                         </padding>
-                          </VBox>
-                     <Region prefHeight="0.0" prefWidth="78.0" />
-                  </children>
-               </HBox>
-               <Separator prefHeight="17.0" prefWidth="1054.0" />
+                        <Label text="② فترة السريان" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+                        <GridPane hgap="16" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                            </columnConstraints>
 
-                    <VBox spacing="6">
-                        <Label prefHeight="18.0" prefWidth="117.0" styleClass="bold fs-12" text="تحديد وظيفة-اختياري" />
-                        <HBox spacing="8">
-                            <Button fx:id="btn_pick_jobTitles" prefHeight="36" prefWidth="100" styleClass="btn-secondary" text="اختر" />
-                            <TextField fx:id="txt_eligibleJobTitles" editable="false" focusTraversable="false" prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS" />
-                        </HBox>
-                        <Label fx:id="lbl_jobTitlesHint" styleClass="text-muted fs-11" />
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="تاريخ السريان *" styleClass="form-label"/>
+                                <TextField fx:id="txt_effectiveFrom" prefHeight="36" maxWidth="Infinity" promptText="2024-07-01"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="تاريخ النهاية (فارغ = مفتوح)" styleClass="form-label"/>
+                                <TextField fx:id="txt_effectiveTo" prefHeight="36" maxWidth="Infinity" promptText="فارغ = ساري"/>
+                            </VBox>
+                            <VBox fx:id="pane_referenceDate" spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label text="التاريخ المرجعي *" styleClass="form-label"/>
+                                <TextField fx:id="txt_referenceDate" prefHeight="36" maxWidth="Infinity" promptText="2015-07-01"/>
+                            </VBox>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="السلوك *" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_behavior" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                <Label text="نوع الاحتساب *" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_calcType" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                        </GridPane>
                     </VBox>
+
+                    <!-- ── ③ طريقة الاحتساب ── -->
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets top="10" right="12" bottom="12" left="12"/>
+                        </padding>
+                        <Label text="③ طريقة الاحتساب" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+                        <GridPane hgap="16" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.3"/>
+                            </columnConstraints>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="مصدر الأساسي" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_baseSource" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox fx:id="pane_insuranceBase" spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="وعاء التأمين *" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_insuranceBase" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label text="طبيعة العنصر *" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_elementType" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="مصدر الدرجة" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_timelineAnchor" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label text="النطاق" styleClass="form-label"/>
+                                <ComboBox fx:id="combo_scope" prefHeight="36" maxWidth="Infinity"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- ── ④ القيم ── -->
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets top="10" right="12" bottom="12" left="12"/>
+                        </padding>
+                        <Label text="④ القيم" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+
+                        <VBox fx:id="pane_valuesMap" spacing="8">
+                            <Label text="القيم (اختر المفتاح وأدخل القيمة) *" styleClass="form-label"/>
+                            <HBox alignment="CENTER_LEFT" spacing="10">
+                                <Button fx:id="btn_add_map_entry" text="+ إضافة" styleClass="btn-success" prefHeight="34"/>
+                                <ComboBox fx:id="combo_map_key" prefHeight="34" prefWidth="300" promptText="اختر المفتاح"/>
+                                <TextField fx:id="txt_map_value" prefHeight="34" prefWidth="140" promptText="القيمة"/>
+                            </HBox>
+                            <TableView fx:id="table_values" editable="false" minHeight="150" prefHeight="150"
+                                       nodeOrientation="RIGHT_TO_LEFT">
+                                <columns>
+                                    <TableColumn fx:id="col_map_key" prefWidth="260" text="المفتاح"/>
+                                    <TableColumn fx:id="col_map_value" prefWidth="140" text="القيمة"/>
+                                    <TableColumn fx:id="col_map_actions" prefWidth="90" text="إجراءات"/>
+                                </columns>
+                            </TableView>
+                        </VBox>
+
+                        <GridPane hgap="16" vgap="6">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                            </columnConstraints>
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="الحد الأدنى للقيمة" styleClass="form-label"/>
+                                <TextField fx:id="txt_minValue" prefHeight="34" maxWidth="Infinity" promptText="فارغ = بدون حد أدنى"/>
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="الحد الأقصى للقيمة" styleClass="form-label"/>
+                                <TextField fx:id="txt_maxValue" prefHeight="34" maxWidth="Infinity" promptText="فارغ = بدون حد أقصى"/>
+                            </VBox>
+                            <VBox spacing="2" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                <Label text="اختياري: لو القيمة المحتسبة أقل من الحد الأدنى تترفع تلقائياً، ولو أكبر من الحد الأقصى تتخفض تلقائياً." styleClass="text-muted fs-12"/>
+                                <Label text="الأرقام موجبة، والحد الأدنى لا يزيد عن الحد الأقصى." styleClass="text-muted fs-12"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- ── ⑤ الخصائص ── -->
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets top="10" right="12" bottom="12" left="12"/>
+                        </padding>
+                        <Label text="⑤ الخصائص" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+                        <FlowPane hgap="28" vgap="10" nodeOrientation="RIGHT_TO_LEFT">
+                            <CheckBox fx:id="chk_subjectToInsurance" selected="true" text="خاضع للتأمينات" styleClass="form-checkbox"/>
+                            <CheckBox fx:id="chk_subjectToTaxAndStamp" selected="true" text="خاضع للضريبة والدمغة" styleClass="form-checkbox"/>
+                            <CheckBox fx:id="chk_inMinimumWageBase" selected="true" text="يدخل في وعاء التكميلي" styleClass="form-checkbox"/>
+                            <CheckBox fx:id="chk_displayOnly" text="عرض فقط" styleClass="form-checkbox"/>
+                            <CheckBox fx:id="chk_appliesToNewHires" selected="true" text="يستحق للمعينين الجدد" styleClass="form-checkbox"/>
+                        </FlowPane>
+                    </VBox>
+
+                    <!-- ── ⑥ نطاق الاستحقاق ── -->
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets top="10" right="12" bottom="12" left="12"/>
+                        </padding>
+                        <Label text="⑥ نطاق الاستحقاق" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+                        <GridPane hgap="16" vgap="12">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                            </columnConstraints>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="القوانين (اختياري)" styleClass="form-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Button fx:id="btn_pick_laws" text="اختر" styleClass="btn-secondary" prefHeight="36" prefWidth="90"/>
+                                    <TextField fx:id="txt_eligibleLaws" editable="false" focusTraversable="false"
+                                               prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS"/>
+                                </HBox>
+                            </VBox>
+
+                            <VBox fx:id="pane_sector" spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label fx:id="lbl_sectorTitle" text="القطاعات (اختياري)" styleClass="form-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Button fx:id="btn_pick_sectors" text="اختر" styleClass="btn-secondary" prefHeight="36" prefWidth="90"/>
+                                    <TextField fx:id="txt_selectedSectors" editable="false" focusTraversable="false"
+                                               prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS"/>
+                                </HBox>
+                            </VBox>
+
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                <Label text="الوظائف (اختياري)" styleClass="form-label"/>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Button fx:id="btn_pick_jobTitles" text="اختر" styleClass="btn-secondary" prefHeight="36" prefWidth="90"/>
+                                    <TextField fx:id="txt_eligibleJobTitles" editable="false" focusTraversable="false"
+                                               prefHeight="36" promptText="الكل = فارغ" HBox.hgrow="ALWAYS"/>
+                                </HBox>
+                                <Label fx:id="lbl_jobTitlesHint" styleClass="text-muted fs-12"/>
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- ── ⑦ الاستثناءات والملاحظات ── -->
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets top="10" right="12" bottom="12" left="12"/>
+                        </padding>
+                        <Label text="⑦ الاستثناءات والملاحظات" styleClass="bold text-navy fs-13"/>
+                        <Separator/>
+
+                        <VBox spacing="6">
+                            <Label text="الشهور المستثناة (MM أو yyyy-MM، مفصولة بفاصلة)" styleClass="form-label"/>
+                            <TextField fx:id="txt_excludedMonths" prefHeight="36" promptText="مثال: 08, 2023-09"/>
+                            <Label fx:id="lbl_excludedMonthsHint" text="تنبيه خاص بنوع الاحتساب" styleClass="text-danger fs-12"/>
+                            <Label text="MM = الشهر في كل السنين، yyyy-MM = شهر محدد" styleClass="text-muted fs-12"/>
+                        </VBox>
+
+                        <VBox spacing="6">
+                            <Label text="ملاحظات" styleClass="form-label"/>
+                            <TextArea fx:id="txt_notes" prefHeight="80" wrapText="true"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- ── الخطأ وأزرار الحفظ ── -->
+                    <Label fx:id="lbl_form_error" text="رسالة الخطأ" styleClass="text-danger fs-12"/>
+
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Button fx:id="btn_save_definition" text="حفظ" styleClass="btn-primary" prefHeight="38" prefWidth="120"/>
+                        <Button fx:id="btn_cancel_form" text="إلغاء" styleClass="btn-secondary" prefHeight="38" prefWidth="100"/>
+                    </HBox>
                 </VBox>
-
-                <!-- ⑦ الاستثناءات والملاحظات -->
-                <VBox spacing="10" styleClass="card">
-                    <padding>
-                        <Insets bottom="12" left="14" right="14" top="10" />
-                    </padding>
-                    <Label styleClass="bold text-navy fs-12" text="⑦ الاستثناءات والملاحظات" />
-                    <Separator />
-
-                    <VBox spacing="6">
-                        <Label styleClass="bold fs-12" text="الشهور المستثناة (MM أو yyyy-MM، مفصولة بفاصلة)" />
-                        <TextField fx:id="txt_excludedMonths" prefHeight="36" promptText="مثال: 08, 2023-09" />
-                        <Label fx:id="lbl_excludedMonthsHint" styleClass="text-danger fs-11" text="تنبيه خاص بنوع الاحتساب" />
-                        <Label styleClass="text-muted fs-11" text="MM = الشهر في كل السنين، yyyy-MM = شهر محدد" />
-                    </VBox>
-
-                    <VBox spacing="6">
-                        <Label styleClass="bold fs-12" text="ملاحظات" />
-                        <TextArea fx:id="txt_notes" prefHeight="70" wrapText="true" />
-                    </VBox>
-                </VBox>
-
-                <Label fx:id="lbl_form_error" styleClass="text-danger fs-12" text="رسالة الخطأ" />
-
-                <HBox alignment="CENTER_LEFT" spacing="12">
-                    <Button fx:id="btn_save_definition" prefHeight="38" prefWidth="110" styleClass="btn-primary" text="حفظ" />
-                    <Button fx:id="btn_cancel_form" prefHeight="38" prefWidth="90" styleClass="btn-secondary" text="إلغاء" />
-                </HBox>
             </VBox>
 
-            <Region VBox.vgrow="ALWAYS" />
-
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <Button fx:id="btn_close" prefHeight="38" prefWidth="100" styleClass="btn-secondary" text="إغلاق" />
-                <Region HBox.hgrow="ALWAYS" />
+            <!-- ══════════ زر الإغلاق ══════════ -->
+            <HBox alignment="CENTER_LEFT">
+                <Button fx:id="btn_close" text="إغلاق" styleClass="btn-secondary" prefHeight="38" prefWidth="110"/>
             </HBox>
 
         </VBox>

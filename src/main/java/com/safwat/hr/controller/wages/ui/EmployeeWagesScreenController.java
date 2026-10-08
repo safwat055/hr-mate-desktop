@@ -1,19 +1,24 @@
 package com.safwat.hr.controller.wages.ui;
 
+import com.safwat.hr.controller.employee.dto.EmployeeSearchResult;
+import com.safwat.hr.controller.leave.service.LeaveApiClient;
 import com.safwat.hr.controller.wages.dto.EmployeeProfileDto;
 import com.safwat.hr.controller.wages.dto.VariableWageDocumentDto;
 import com.safwat.hr.controller.wages.dto.WageCardExportRequest;
 import com.safwat.hr.controller.wages.dto.WageMonthResultDto;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.DownloadWithNotification;
+import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
-import com.safwat.hr.ui.icons.Icons;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,34 +27,21 @@ import java.util.List;
 /**
  * كنترولر موحَّد لشاشة الأجور المتغيرة بالكامل.
  *
- * <p>يدمج منطق 4 كنترولرز سابقة في ملف واحد:
- * <ul>
- *   <li>البحث عن الموظف وعرض بياناته</li>
- *   <li>جدول مستندات الأجور المتغيرة (CRUD)</li>
- *   <li>جدول نتيجة محرك الأجور + التصدير</li>
- * </ul>
+ * <p>البحث عن الموظف بيتم بنفس طريقة شاشة الإجازات والبدلات:
+ * بالاسم أو الرقم القومي أو رقم الموظف، ومن نتيجة البحث بيتختار الموظف.
  *
- * <p><b>تحسين التصدير:</b> لو المستخدم احتسب الدورة الأول، النتيجة
- * ({@code lastCycleResult}) بتتبعت مع طلب التصدير مباشرة بدون ما الباك
- * يحسب تاني — لو مش محتسبة يحسب الباك من جديد تلقائيًا. نفس المنطق
- * بيتطبق على تصدير بطاقة الأجور وتصدير نموذج (5) — الاتنين بيستخدموا
- * نفس {@link WageCardExportRequest} ونفس {@code lastCycleResult}.
- *
- * <h2>لازم تضيف في الـ FXML:</h2>
- * <pre>{@code
- *   <Button fx:id="exportAllowanceMatrixButton" disable="true"
- *           text="مصفوفة البدلات" style="-fx-font-weight: bold;"/>
- * }</pre>
+ * <p>لو المستخدم احتسب الدورة الأول، النتيجة ({@code lastCycleResult})
+ * بتتبعت مع طلب التصدير، والباك ما يحسبهاش تاني.
  */
 public class EmployeeWagesScreenController {
 
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
-    // ══ بيانات الموظف ══
+    // ══ بيانات الموظف / البحث ══
     @FXML
     private TextField searchField;
     @FXML
-    private Button searchButton, clearButton;
+    private Button clearButton, searchButton;
     @FXML
     private Label searchStatusLabel;
     @FXML
@@ -115,16 +107,19 @@ public class EmployeeWagesScreenController {
     @FXML
     private Button exportBreakdownButton;
     @FXML
-    private Button exportAllowanceMatrixButton;   // ⭐ جديد
+    private Button exportAllowanceMatrixButton;
     @FXML
     private Label exportStatusLabel;
+
+    // ── Services ──
+    private final LeaveApiClient employeeSearchApi = new LeaveApiClient();
 
     // ── State ──
     private String currentNationalId;
 
     /**
-     * آخر نتيجة احتساب — تُبعَت مع طلب التصدير مباشرة إن وُجدت،
-     * تُصفَّر عند البحث عن موظف جديد.
+     * آخر نتيجة احتساب — تُبعَت مع طلب التصدير إن وُجدت،
+     * وتتصفّر عند اختيار موظف جديد.
      */
     private List<WageMonthResultDto> lastCycleResult;
 
@@ -134,16 +129,8 @@ public class EmployeeWagesScreenController {
 
     @FXML
     public void initialize() {
-        // ── البحث ──
-        searchButton.setOnAction(e -> onSearch());
-        searchField.setOnAction(e -> onSearch());
+        setupEmployeeSearch();
         clearButton.setOnAction(_ -> clearEmployee(""));
-
-        // ── أيقونات PDF ──
-        Icons.getInstance().getPDFImage(exportButton);
-        Icons.getInstance().getPDFImage(exportForm5Button);
-        Icons.getInstance().getPDFImage(exportBreakdownButton);
-        Icons.getInstance().getPDFImage(exportAllowanceMatrixButton);   // ⭐ جديد
 
         TextFieldSetupHelper.setupDateFields(fromField, toField);
 
@@ -189,36 +176,62 @@ public class EmployeeWagesScreenController {
         exportForm5Button.setDisable(true);
         exportBreakdownButton.setOnAction(e -> onExportBreakdown());
         exportBreakdownButton.setDisable(true);
-        exportAllowanceMatrixButton.setOnAction(e -> onExportAllowanceMatrix());   // ⭐ جديد
+        exportAllowanceMatrixButton.setOnAction(e -> onExportAllowanceMatrix());
         exportAllowanceMatrixButton.setDisable(true);
     }
 
     // ══════════════════════════════════════════════════════
-    //  البحث عن الموظف
+    //  البحث عن الموظف (اسم / رقم قومي / رقم وظيفي)
     // ══════════════════════════════════════════════════════
 
-    private void onSearch() {
-        String q = searchField.getText() == null ? "" : searchField.getText().trim();
-        if (q.isEmpty()) {
-            searchStatusLabel.setText("اكتب الرقم القومي أو رقم الموظف الأول");
-            return;
-        }
+    private void setupEmployeeSearch() {
+        SearchDialog<EmployeeSearchResult> dialog = SearchDialog
+                .builder(EmployeeSearchResult.class)
+                .title("اختر موظفًا")
+                .searchPlaceholder("اسم / رقم قومي / رقم وظيفي...")
+                .column("الاسم", EmployeeSearchResult::fullName)
+                .column("الرقم الوظيفي", EmployeeSearchResult::employeeNumber)
+                .column("الرقم القومي", EmployeeSearchResult::nationalId);
+
+        SmartSearchHelper.bind(
+                searchField,searchButton,
+                () -> {
+                    String q = searchField.getText();
+                    return q == null ? List.of() : employeeSearchApi.searchEmployees(q.trim());
+                },
+                dialog,
+                this::onEmployeeSelected,
+                SmartSearchHelper.FieldBind.of(searchField, EmployeeSearchResult::fullName));
+    }
+
+    private void onEmployeeSelected(EmployeeSearchResult emp) {
+        loadEmployee(emp.nationalId());
+    }
+
+    /**
+     * يحمّل بيانات الموظف بالرقم القومي. لو الموظف اتغير بيمسح الحالة القديمة.
+     */
+    private void loadEmployee(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) return;
         try {
-            var res = ApiClient.get("/wages/employees/search?query=" + q, EmployeeProfileDto.class);
-            if (!res.isSuccess()) {
-                clearEmployee("مفيش موظف بهذا الرقم");
+            String url = "/wages/employees/search?query="
+                    + URLEncoder.encode(nationalId.trim(), StandardCharsets.UTF_8);
+            var res = ApiClient.get(url, EmployeeProfileDto.class);
+            if (!res.isSuccess() || res.getData() == null) {
+                clearEmployee("تعذر تحميل بيانات الموظف");
                 return;
             }
             searchStatusLabel.setText("");
             bindEmployee(res.getData());
         } catch (Exception ex) {
-            clearEmployee("مفيش موظف بهذا الرقم");
+            clearEmployee("تعذر تحميل بيانات الموظف");
         }
     }
 
     private void bindEmployee(EmployeeProfileDto p) {
         currentNationalId = p.nationalId();
-        lastCycleResult = null;   // نتيجة قديمة لموظف سابق — تُصفَّر
+        lastCycleResult = null;
+        searchField.setText(p.fullName());
         employeeNameLabel.setText(p.fullName());
         employeeNumberLabel.setText(p.employeeNumber());
         employeeNationalIdLabel.setText(p.nationalId());
@@ -227,7 +240,7 @@ public class EmployeeWagesScreenController {
         exportButton.setDisable(false);
         exportForm5Button.setDisable(false);
         exportBreakdownButton.setDisable(false);
-        exportAllowanceMatrixButton.setDisable(false);   // ⭐ جديد
+        exportAllowanceMatrixButton.setDisable(false);
         cycleStatusLabel.setText("");
         exportStatusLabel.setText("");
         cycleTable.setItems(FXCollections.observableArrayList());
@@ -246,7 +259,7 @@ public class EmployeeWagesScreenController {
         exportButton.setDisable(true);
         exportForm5Button.setDisable(true);
         exportBreakdownButton.setDisable(true);
-        exportAllowanceMatrixButton.setDisable(true);   // ⭐ جديد
+        exportAllowanceMatrixButton.setDisable(true);
         documentsTable.setItems(FXCollections.observableArrayList());
         cycleTable.setItems(FXCollections.observableArrayList());
     }
@@ -371,48 +384,32 @@ public class EmployeeWagesScreenController {
     }
 
     // ══════════════════════════════════════════════════════
-    //  تصدير PDF — كل زر له endpoint خاص
+    //  تصدير PDF
     // ══════════════════════════════════════════════════════
 
-    /**
-     * تصدير بطاقة الأجور.
-     */
     private void onExport() {
         exportPdf("/wages/card/export", "wage_card_",
                 exportButton, "بطاقة الأجور");
     }
 
-    /**
-     * تصدير نموذج (5) — التأمينات.
-     */
     private void onExportForm5() {
         exportPdf("/wages/form5/export", "insurance_form5_",
                 exportForm5Button, "نموذج (5) - التأمينات");
     }
 
-    /**
-     * تصدير بنود الأجر المتغير شهر بشهر.
-     */
     private void onExportBreakdown() {
         exportPdf("/wages/breakdown/export", "wage_breakdown_",
                 exportBreakdownButton, "بنود الأجر المتغير");
     }
 
-    /**
-     * ⭐ تصدير مصفوفة البدلات — سنة لكل صفحة.
-     */
     private void onExportAllowanceMatrix() {
         exportPdf("/wages/allowance-matrix/export", "allowance_matrix_",
                 exportAllowanceMatrixButton, "مصفوفة البدلات");
     }
 
     /**
-     * منطق مشترك لأي تصدير PDF من نفس الشاشة — الفرق بينهم بس الإند
-     * بوينت واسم الملف الافتراضي. الاتنين بيبعتوا نفس {@code lastCycleResult}
-     * لو موجودة عشان الباك ميحسبش الدورة تاني.
-     *
-     * <p><b>تنزيل + إشعار:</b> الملف يُحفظ في {@code temp_downloads/}
-     * بدون فتح نافذة اختيار — والمستخدم يستلم إشعار فيه رابط الملف.</p>
+     * منطق مشترك لكل تصدير PDF من الشاشة.
+     * الفرق بينهم الإند بوينت واسم الملف الافتراضي.
      */
     private void exportPdf(String endpoint,
                            String fileNamePrefix,
@@ -421,11 +418,9 @@ public class EmployeeWagesScreenController {
 
         if (currentNationalId == null) return;
 
-        // ── 1. قراءة التواريخ ──
         String fromText = fromField.getText() == null ? "" : fromField.getText().trim();
         String toText = toField.getText() == null ? "" : toField.getText().trim();
 
-        // ── 2. تحقق من الصيغة ──
         if (!fromText.isEmpty() && !isValidDate(fromText)) {
             setExportMsg("صيغة تاريخ «من» غير صحيحة (yyyy-MM-dd)", "#b00020");
             return;
@@ -435,8 +430,6 @@ public class EmployeeWagesScreenController {
             return;
         }
 
-        // ── 3. بناء الطلب ──
-        //    نفس شكل الـ request لكل الـ endpoints (nationalId + from + to + precomputedMonths)
         WageCardExportRequest req = new WageCardExportRequest(
                 currentNationalId,
                 fromText.isEmpty() ? null : LocalDate.parse(fromText, ISO),
@@ -444,22 +437,18 @@ public class EmployeeWagesScreenController {
                 lastCycleResult
         );
 
-        // ── 4. اسم الموظف للعرض في الإشعار ──
         String empName = employeeNameLabel.getText() != null
                 ? employeeNameLabel.getText()
                 : currentNationalId;
 
-        // ── 5. فترة التصدير (للإشعار) ──
         String period = (!fromText.isEmpty() || !toText.isEmpty())
                 ? " (" + (fromText.isEmpty() ? "..." : fromText)
                 + " → " + (toText.isEmpty() ? "..." : toText) + ")"
                 : "";
 
-        // ── 6. حالة الواجهة ──
         setExportMsg("جاري التصدير...", "#555555");
         triggerButton.setDisable(true);
 
-        // ── 7. التنزيل + الإشعار ──
         DownloadWithNotification.downloadPdfToTempAndNotifyPost(
                 endpoint,
                 req,
@@ -473,12 +462,13 @@ public class EmployeeWagesScreenController {
         );
     }
 
+    // ══════════════════════════════════════════════════════
+    //  فتح الشاشة على موظف محدد (من شاشة البدلات أو غيرها)
+    // ══════════════════════════════════════════════════════
+
     public void setInitialNationalId(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
-        if (searchField != null) {
-            searchField.setText(nationalId.trim());
-        }
-        onSearch();
+        loadEmployee(nationalId.trim());
     }
 
     // ══════════════════════════════════════════════════════

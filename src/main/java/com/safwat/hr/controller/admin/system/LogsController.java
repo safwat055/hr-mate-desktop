@@ -1,5 +1,6 @@
 package com.safwat.hr.controller.admin.system;
 
+import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -139,9 +140,10 @@ public class LogsController implements Initializable {
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(title.contains("خطأ") ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setContentText(message);
-        alert.showAndWait();
+        if (title != null && title.contains("خطأ")) {
+            SAFNotification.error(message);
+        } else {
+            SAFNotification.success(message);
+        }
     }
 }

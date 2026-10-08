@@ -1,50 +1,126 @@
 package com.safwat.hr.controller.admin.system;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
+import com.safwat.hr.shared.AppConfig;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * تشغيل وإيقاف الباك إند (jpackage launcher) على ويندوز ولينكس.
+ *
+ * <ul>
+ *   <li>الوضع العادي: تشغيل الـ launcher كـ process، والـ PID بيتحفظ في logs/backend.pid.</li>
+ *   <li>الإيقاف: بالـ PID + كل العمليات اللي شغالة من نفس الـ exe بالمسار الكامل، مع أولادها.</li>
+ *   <li>خدمة ويندوز: NSSM + sc (ويندوز بس). على لينكس بترجع false برسالة واضحة.</li>
+ * </ul>
+ */
+@Slf4j
 public class BackendService {
 
-    private static BackendService instance;
-    private Process currentProcess;
-    private Long currentPid = null;
-    private boolean isRunning = false;
-    private static final String SERVICE_NAME = "HR_MATE_Service";
+    static final String SERVICE_NAME = "HR_MATE_Service";
+    private static final String DISPLAY_NAME = "HR_MATE_Service";
     private static final String NSSM_EXE = "nssm.exe";
+    private static final String PID_FILE = "backend.pid";
+    private static final Pattern SERVICE_LINE = Pattern.compile("SERVICE_NAME\\s*:\\s*(\\S+)");
+    private static final Pattern SERVICE_NAME_RE = Pattern.compile("[A-Za-z0-9_.\\-]{1,128}");
+
+    private static volatile BackendService instance;
+
+    private volatile Path lastExe;
 
     private BackendService() {
     }
 
     public static BackendService getInstance() {
         if (instance == null) {
-            instance = new BackendService();
+            synchronized (BackendService.class) {
+                if (instance == null) instance = new BackendService();
+            }
         }
         return instance;
     }
 
-    /**
-     * البحث عن NSSM في المسارات المختلفة
-     */
-    private String findNssm() {
-        String[] searchPaths = {
-                System.getProperty("user.dir") + File.separator + "nssm.exe",
-                System.getProperty("user.dir") + File.separator + "services" + File.separator + "windows" + File.separator + "nssm.exe",
-                System.getProperty("user.dir") + File.separator + ".." + File.separator + "nssm.exe",
-                System.getProperty("user.dir") + File.separator + "lib" + File.separator + "nssm.exe",
-                "nssm.exe",
-                "C:\\nssm\\nssm.exe",
-                "C:\\nssm-2.24\\win64\\nssm.exe",
-                "C:\\Program Files\\nssm\\nssm.exe"
-        };
+    private static final String WINDOWS_SERVICE_MSG =
+            "ℹ️ خدمة الباك إند مدعومة على ويندوز فقط — على لينكس استخدم الوضع العادي";
 
-        for (String path : searchPaths) {
-            File file = new File(path);
-            if (file.exists()) {
-                return path;
-            }
+    // ══════════════════════════════════════════════════════════════
+    //  Paths & PID
+    // ══════════════════════════════════════════════════════════════
+
+    /** يحوّل المسار المدخل لمسار exe مطلق (على ويندوز يضيف .exe لو ناقصة). */
+    private static Path resolveExe(String path) {
+        Path p = Paths.get(path.trim().replace("\"", "")).toAbsolutePath().normalize();
+        if (OsSupport.WINDOWS && !Files.exists(p) && !p.toString().toLowerCase().endsWith(".exe")) {
+            Path withExe = Paths.get(p + ".exe");
+            if (Files.isRegularFile(withExe)) return withExe;
+        }
+        return p;
+    }
+
+    /** آخر exe اتشغّل، ولو مفيش نرجع للمسار المحفوظ في الإعدادات. */
+    private Path currentExe() {
+        if (lastExe != null) return lastExe;
+        String cfg = AppConfig.getString("paths", "backend", "");
+        return (cfg == null || cfg.isBlank()) ? null : resolveExe(cfg);
+    }
+
+    private static void writePid(long pid) throws IOException {
+        Path f = OsSupport.logsDir().resolve(PID_FILE);
+        Files.createDirectories(f.getParent());
+        Files.writeString(f, String.valueOf(pid), StandardCharsets.UTF_8);
+    }
+
+    private static Optional<Long> readPid() {
+        Path f = OsSupport.logsDir().resolve(PID_FILE);
+        try {
+            if (!Files.isRegularFile(f)) return Optional.empty();
+            return Optional.of(Long.parseLong(Files.readString(f, StandardCharsets.UTF_8).trim()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private static void clearPid() {
+        try {
+            Files.deleteIfExists(OsSupport.logsDir().resolve(PID_FILE));
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static void say(String msg) {
+        log.info(msg);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  NSSM (ويندوز بس)
+    // ══════════════════════════════════════════════════════════════
+
+    private Path findNssm() {
+        if (!OsSupport.WINDOWS) return null;
+        Path appDir = OsSupport.appDir();
+        List<Path> candidates = List.of(
+                appDir.resolve(NSSM_EXE),
+                appDir.resolve("services").resolve("windows").resolve(NSSM_EXE),
+                appDir.resolve("..").resolve(NSSM_EXE),
+                appDir.resolve("lib").resolve(NSSM_EXE),
+                Paths.get("C:\\nssm\\nssm.exe"),
+                Paths.get("C:\\nssm-2.24\\win64\\nssm.exe"),
+                Paths.get("C:\\Program Files\\nssm\\nssm.exe"));
+        for (Path c : candidates) {
+            Path n = c.toAbsolutePath().normalize();
+            if (Files.isRegularFile(n)) return n;
         }
         return null;
     }
@@ -53,389 +129,311 @@ public class BackendService {
         return findNssm() != null;
     }
 
-    // ==================== التشغيل والإيقاف ====================
-
-    public boolean start(String backendPath, boolean asService) {
-        if (backendPath == null || backendPath.isEmpty()) {
-            return false;
-        }
-
-        if (isRunning()) {
-            return true;
-        }
-
-        if (asService) {
-            return startService();
-        } else {
-            return startNormal(backendPath);
-        }
+    private boolean nssm(Path nssm, String... args) throws IOException, InterruptedException {
+        List<String> cmd = new ArrayList<>();
+        cmd.add(nssm.toString());
+        cmd.addAll(List.of(args));
+        ProcessRunner.Result r = ProcessRunner.run(60, cmd);
+        if (!r.ok()) say("❌ nssm " + String.join(" ", args) + " فشل: " + r.output());
+        return r.ok();
     }
 
-    public boolean startNormal(String backendPath) {
+    // ══════════════════════════════════════════════════════════════
+    //  Start / Stop (وضع عادي وخدمة)
+    // ══════════════════════════════════════════════════════════════
+
+    public synchronized boolean start(String backendPath, boolean asService) {
+        if (backendPath == null || backendPath.isBlank()) {
+            say("❌ مسار الباك إند فاضي");
+            return false;
+        }
+        if (isRunning()) {
+            say("ℹ️ الباك إند شغال بالفعل");
+            return true;
+        }
+        return asService ? startService() : startNormal(backendPath);
+    }
+
+    public synchronized boolean startNormal(String backendPath) {
         try {
-            File backendFile = new File(backendPath);
-            if (!backendFile.exists()) {
+            if (backendPath == null || backendPath.isBlank()) return false;
+
+            Path exe = resolveExe(backendPath);
+            if (!Files.isRegularFile(exe)) {
+                say("❌ الملف التنفيذي غير موجود: " + exe);
+                return false;
+            }
+            if (isRunning(exe)) {
+                lastExe = exe;
+                say("ℹ️ الباك إند شغال بالفعل");
+                return true;
+            }
+            if (!OsSupport.WINDOWS) exe.toFile().setExecutable(true, false);
+
+            Path logFile = OsSupport.logsDir().resolve("backend.log");
+            Files.createDirectories(logFile.getParent());
+
+            Process p = new ProcessBuilder(exe.toString())
+                    .directory(exe.getParent().toFile())
+                    .redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile.toFile()))
+                    .start();
+
+            // الـ launcher بيفضل شغال طول ما التطبيق شغال — لو خرج في أول ثانيتين يبقى فيه خطأ
+            if (p.waitFor(2, TimeUnit.SECONDS)) {
+                say("❌ الباك إند خرج مباشرة (رمز " + p.exitValue() + ") — راجع logs/backend.log");
                 return false;
             }
 
-            stopNormal();
-
-            ProcessBuilder pb = new ProcessBuilder(backendPath);
-            pb.directory(backendFile.getParentFile());
-            pb.redirectErrorStream(true);
-
-            String logsDir = System.getProperty("user.dir") + File.separator + "logs";
-            new File(logsDir).mkdirs();
-
-            String logFile = logsDir + File.separator + "backend.log";
-            pb.redirectOutput(new File(logFile));
-
-            currentProcess = pb.start();
-            currentPid = currentProcess.pid();
-            isRunning = true;
-
-            new Thread(() -> {
-                try {
-                    currentProcess.waitFor();
-                    isRunning = false;
-                    currentPid = null;
-                } catch (InterruptedException ignored) {
-                }
-            }).start();
-
+            lastExe = exe;
+            writePid(p.pid());
+            say("✅ تم تشغيل الباك إند (PID " + p.pid() + ")");
             return true;
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
-            isRunning = false;
+            say("❌ فشل تشغيل الباك إند: " + e.getMessage());
             return false;
         }
+    }
+
+    public synchronized boolean startPortable(String backendPath) {
+        return startNormal(backendPath);
     }
 
     private boolean startService() {
+        if (!OsSupport.WINDOWS) {
+            say(WINDOWS_SERVICE_MSG);
+            return false;
+        }
         try {
-            if (!isServiceInstalled(SERVICE_NAME)) {
+            if (!ProcessRunner.serviceInstalled(SERVICE_NAME)) {
+                say("❌ الخدمة " + SERVICE_NAME + " مش مثبتة");
                 return false;
             }
-
-            Process process = Runtime.getRuntime().exec("net start " + SERVICE_NAME);
-            boolean success = process.waitFor() == 0;
-            if (success) {
-                isRunning = true;
-            }
-            return success;
+            ProcessRunner.Result r = ProcessRunner.run(60, List.of("sc", "start", SERVICE_NAME));
+            boolean ok = r.ok() || r.output().contains("1056"); // 1056 = already running
+            boolean running = ok && ProcessRunner.waitUntil(() -> ProcessRunner.serviceRunning(SERVICE_NAME), 60);
+            say(running ? "✅ خدمة الباك إند شغالة" : "❌ فشل تشغيل الخدمة: " + r.output());
+            return running;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
+            say("❌ خطأ: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean stop(boolean asService) {
-        if (asService) {
-            return stopService();
-        } else {
-            return stopNormal();
-        }
+    public synchronized boolean stop(boolean asService) {
+        return asService ? stopService() : stopNormal();
     }
 
+    /**
+     * يقفل الـ launcher وكل الـ children بتاعه.
+     * بيستخدم PID المحفوظ + أي عملية شغالة من نفس الـ exe بالمسار الكامل.
+     */
     private boolean stopNormal() {
         try {
-            if (currentProcess != null && currentProcess.isAlive()) {
+            Path exe = currentExe();
 
-                currentProcess.destroy();
-                // انتظر ثانية عشان العملية تخلص
-                Thread.sleep(1000);
+            Set<ProcessHandle> targets = new LinkedHashSet<>();
+            readPid().flatMap(ProcessRunner::handle)
+                    .filter(h -> exe == null || ProcessRunner.matchesExe(h, exe))
+                    .ifPresent(targets::add);
+            if (exe != null) targets.addAll(ProcessRunner.findByExecutable(exe));
 
-                // لو لسه شغالة، استخدم القتل القسري
-                if (currentProcess.isAlive()) {
-                    currentProcess.destroyForcibly();
-                }
-
-                currentProcess = null;
-
-                currentPid = null;
-                isRunning = false;
+            if (targets.isEmpty()) {
+                clearPid();
+                say("ℹ️ الباك إند مش شغال");
                 return true;
             }
 
-            String os = System.getProperty("os.name").toLowerCase();
-            boolean killed = false;
-
-            if (os.contains("win")) {
-
-                // ===== الطريقة الأولى: taskkill (الأفضل) =====
-
-                // HR_MATE.exe
-                Process p1 = Runtime.getRuntime().exec("taskkill /F /IM HR_MATE.exe");
-                int exitCode1 = p1.waitFor();
-                if (exitCode1 == 0) {
-                    killed = true;
-                }
-
-                // 2. قتل أي Process بـ Window Title يحتوي على "HR_MATE"
-                Process p2 = Runtime.getRuntime().exec("taskkill /F /FI \"WINDOWTITLE eq *HR_MATE*\"");
-                if (p2.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // 3. قتل أي javaw.exe بـ Window Title (لأن JavaFX بيشتغل على javaw.exe)
-                Process p3 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq javaw.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
-                if (p3.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // 4. قتل أي java.exe بـ Window Title
-                Process p4 = Runtime.getRuntime().exec("taskkill /F /FI \"IMAGENAME eq java.exe\" /FI \"WINDOWTITLE eq *HR_MATE*\"");
-                if (p4.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // ===== الطريقة الثانية: PowerShell (بديل wmic) =====
-                // قتل أي Process بـ Command Line يحتوي على HR_MATE
-                Process p5 = Runtime.getRuntime().exec(
-                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*HR_MATE*' } | Stop-Process -Force\""
-                );
-                if (p5.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // قتل أي Process بـ Command Line يحتوي على "HR_MATE "
-                Process p6 = Runtime.getRuntime().exec(
-                        "powershell -Command \"Get-Process | Where-Object { $_.CommandLine -like '*HR_MATE*' } | Stop-Process -Force\""
-                );
-                if (p6.waitFor() == 0) {
-                    killed = true;
-                }
-
-            } else {
-                // ===== Linux / Mac =====
-
-                // 1. قتل أي Process باسم HR_MATE
-                Process p1 = Runtime.getRuntime().exec("pkill -f HR_MATE");
-                if (p1.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // 2. قتل أي Process بـ Command Line يحتوي على HR_MATE
-                Process p2 = Runtime.getRuntime().exec("pkill -f \"HR_MATE\"");
-                if (p2.waitFor() == 0) {
-                    killed = true;
-                }
-
-                // 3. قتل أي Process بـ Window Title (X11)
-                Process p3 = Runtime.getRuntime().exec("wmctrl -c \"HR_MATE\" 2>/dev/null");
-                p3.waitFor();
-
-                // 4. قتل أي Process بـ PID (للمزيد من التحكم)
-                Process p4 = Runtime.getRuntime().exec("pgrep -f \"HR_MATE\" | xargs kill -9 2>/dev/null");
-                if (p4.waitFor() == 0) {
-                    killed = true;
-                }
+            for (ProcessHandle h : targets) {
+                say("🔄 إيقاف العملية PID " + h.pid());
+                ProcessRunner.killTree(h);
             }
+            clearPid();
 
-            isRunning = false;
-            currentPid = null;
-
-            return true;
+            boolean stopped = targets.stream().noneMatch(ProcessHandle::isAlive)
+                    && (exe == null || ProcessRunner.findByExecutable(exe).isEmpty());
+            say(stopped ? "✅ تم إيقاف الباك إند" : "❌ الباك إند لسه شغال");
+            return stopped;
 
         } catch (Exception e) {
-            System.err.println("⚠️ خطأ في إيقاف البرنامج: " + e.getMessage());
+            say("⚠️ خطأ في إيقاف الباك إند: " + e.getMessage());
             return false;
         }
     }
 
     private boolean stopService() {
+        if (!OsSupport.WINDOWS) {
+            say(WINDOWS_SERVICE_MSG);
+            return false;
+        }
         try {
-            if (!isServiceInstalled(SERVICE_NAME)) {
-                return true;
-            }
-
-            Process process = Runtime.getRuntime().exec("net stop " + SERVICE_NAME);
-            boolean success = process.waitFor() == 0;
-            if (success) {
-                isRunning = false;
-            }
-            return success;
+            if (!ProcessRunner.serviceInstalled(SERVICE_NAME)) return true;
+            ProcessRunner.run(60, List.of("sc", "stop", SERVICE_NAME));
+            boolean stopped = ProcessRunner.waitUntil(() -> !ProcessRunner.serviceRunning(SERVICE_NAME), 60);
+            say(stopped ? "✅ الخدمة متوقفة" : "❌ الخدمة لسه شغالة");
+            return stopped;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
+            say("❌ خطأ: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean restart(String backendPath, boolean asService) {
-        stop(asService);
+    public synchronized boolean restart(String backendPath, boolean asService) {
+        if (!stop(asService)) return false;
         try {
             Thread.sleep(2000);
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
         return start(backendPath, asService);
     }
 
-    public boolean startPortable(String backendPath) {
-        return startNormal(backendPath);
+    // ══════════════════════════════════════════════════════════════
+    //  Status
+    // ══════════════════════════════════════════════════════════════
+
+    private boolean isRunning(Path exe) {
+        boolean byPid = readPid().flatMap(ProcessRunner::handle)
+                .filter(h -> ProcessRunner.matchesExe(h, exe))
+                .isPresent();
+        return byPid || !ProcessRunner.findByExecutable(exe).isEmpty();
     }
 
-    // ==================== إدارة الخدمة باستخدام NSSM ====================
+    public synchronized boolean isRunning() {
+        if (OsSupport.WINDOWS && ProcessRunner.serviceRunning(SERVICE_NAME)) return true;
+        Path exe = currentExe();
+        return exe != null && isRunning(exe);
+    }
 
-    /**
-     * تثبيت خدمة Backend باستخدام NSSM (مثل الباتش)
-     */
-    public boolean installService(String backendPath, String serviceName) {
+    public Long getPid() {
+        return readPid().flatMap(ProcessRunner::handle).map(ProcessHandle::pid).orElse(null);
+    }
+
+    public boolean isServiceInstalled(String serviceName) {
+        return ProcessRunner.serviceInstalled(serviceName);
+    }
+
+    public boolean isServiceRunning(String serviceName) {
+        return ProcessRunner.serviceRunning(serviceName);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Service install / uninstall (ويندوز بس — NSSM)
+    // ══════════════════════════════════════════════════════════════
+
+    public synchronized boolean installService(String backendPath, String serviceName) {
+        if (!OsSupport.WINDOWS) {
+            say(WINDOWS_SERVICE_MSG);
+            return false;
+        }
+        if (serviceName == null || !SERVICE_NAME_RE.matcher(serviceName).matches()) {
+            say("❌ اسم الخدمة غير صالح");
+            return false;
+        }
+        Path nssm = findNssm();
+        if (nssm == null) {
+            say("❌ nssm.exe مش موجود (حطه جنب البرنامج أو في C:\\nssm)");
+            return false;
+        }
+        if (backendPath == null || backendPath.isBlank()) return false;
+        Path exe = resolveExe(backendPath);
+        if (!Files.isRegularFile(exe)) {
+            say("❌ الملف التنفيذي غير موجود: " + exe);
+            return false;
+        }
+
         try {
+            if (ProcessRunner.serviceInstalled(serviceName) && !forceUninstallService(serviceName)) return false;
 
-            if (backendPath == null || backendPath.isEmpty()) {
+            Path logs = OsSupport.logsDir();
+            Files.createDirectories(logs);
+
+            if (!nssm(nssm, "install", serviceName, exe.toString())) return false;
+
+            // الإعدادات. ملاحظة: JVM options لازم تتحط في jpackage --java-options (مش هنا)
+            boolean ok = true;
+            ok &= nssm(nssm, "set", serviceName, "AppDirectory", exe.getParent().toString());
+            ok &= nssm(nssm, "set", serviceName, "AppStdout", logs.resolve("backend_stdout.log").toString());
+            ok &= nssm(nssm, "set", serviceName, "AppStderr", logs.resolve("backend_stderr.log").toString());
+            ok &= nssm(nssm, "set", serviceName, "AppRotateFiles", "1");
+            ok &= nssm(nssm, "set", serviceName, "AppRotateOnline", "1");
+            ok &= nssm(nssm, "set", serviceName, "AppRotateSeconds", "86400");
+            ok &= nssm(nssm, "set", serviceName, "AppRotateBytes", "10485760");
+            ok &= nssm(nssm, "set", serviceName, "DisplayName", DISPLAY_NAME);
+            ok &= nssm(nssm, "set", serviceName, "Description", "HR_MATE backend service");
+            ok &= nssm(nssm, "set", serviceName, "Start", "SERVICE_DELAYED_AUTO_START");
+            ok &= nssm(nssm, "set", serviceName, "AppExit", "Default", "Restart");
+            ok &= nssm(nssm, "set", serviceName, "AppThrottle", "10000");
+            ok &= nssm(nssm, "set", serviceName, "AppRestartDelay", "15000");
+            if (!ok) {
+                say("❌ فشل ضبط بعض إعدادات الخدمة");
                 return false;
             }
 
-            File backendFile = new File(backendPath);
+            // تبعية على PostgreSQL (مش فاشلة لو مش موجودة — بس بنسجل)
+            String pgSvc = AppConfig.getString("connection", "pgServiceName", "PostgreSQL");
+            ProcessRunner.Result dep = ProcessRunner.run(30, List.of("sc", "config", serviceName, "depend=", pgSvc));
+            if (!dep.ok()) say("⚠️ تعذر ضبط التبعية على " + pgSvc + ": " + dep.output());
 
-            if (!backendFile.exists()) {
-                return false;
-            }
-
-            // ✅ 1. البحث عن NSSM
-            String nssmPath = findNssm();
-
-            if (nssmPath == null) {
-                return false;
-            }
-
-            // ✅ 2. حذف الخدمة القديمة
-            forceUninstallService(serviceName);
-            Thread.sleep(2000);
-
-            // ✅ 3. تثبيت الخدمة باستخدام NSSM
-            String installCmd = String.format(
-                    "\"%s\" install %s \"%s\"",
-                    nssmPath, serviceName, backendPath
-            );
-
-            Process process = Runtime.getRuntime().exec(installCmd);
-            int result = process.waitFor();
-
-            if (result != 0) {
-                return false;
-            }
-            String javaArgs = "-Djava.awt.headless=false -Dfile.encoding=UTF-8";
-            // ✅ 4. تعيين إعدادات NSSM
-            String baseDir = backendFile.getParent();
-            String logsDir = System.getProperty("user.dir") + File.separator + "logs";
-            new File(logsDir).mkdirs();
-
-            String[] settings = {
-                    "AppDirectory", baseDir,
-                    "AppStdout", logsDir + File.separator + "backend_stdout.log",
-                    "AppStderr", logsDir + File.separator + "backend_stderr.log",
-                    "AppRotateFiles", "1",
-                    "AppRotateOnline", "1",
-                    "AppRotateSeconds", "86400",
-                    "AppRotateBytes", "10485760",
-                    "DisplayName", "AHR_MATE_Service",
-                    "Description", "HR_MATE_Service",
-                    "Start", "SERVICE_DELAYED_AUTO_START",  // ✅ بدء متأخر
-                    // ✅ إضافة تأخير عند فشل البدء
-                    "AppFail", "ignore",                    // تجاهل الفشل
-                    "AppFailDelay", "10000",                // انتظار 10 ثواني قبل إعادة المحاولة
-                    "AppRestartDelay", "15000",              // تأخير 15 ثانية بين إعادة المحاولات
-                    "AppParameters", javaArgs
-            };
-
-            for (int i = 0; i < settings.length; i += 2) {
-                String setCmd = String.format(
-                        "\"%s\" set %s %s \"%s\"",
-                        nssmPath, serviceName, settings[i], settings[i + 1]
-                );
-                Runtime.getRuntime().exec(setCmd).waitFor();
-            }
-
-            // ✅ 5. إضافة تبعية على PostgreSQL
-            String depCmd = String.format(
-                    "sc config %s depend= PostgreSQL",
-                    serviceName
-            );
-            Runtime.getRuntime().exec(depCmd);
-
-            // ✅ 6. إضافة تأخير إضافي عن طريق sc
-            // لا يوجد أمر مباشر للتأخير، لكننا نعتمد على SERVICE_DELAYED_AUTO_START
-
+            say("✅ تم تثبيت الخدمة " + serviceName);
             return true;
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
-            e.printStackTrace();
+            say("❌ خطأ في تثبيت الخدمة: " + e.getMessage());
             return false;
         }
     }
 
-    /**
-     * حذف الخدمة بالقوة مع محاولات متعددة
-     */
-    public boolean forceUninstallService(String serviceName) {
+    /** إيقاف + حذف الخدمة (NSSM remove، وبعدين sc delete كـ fallback). */
+    public synchronized boolean forceUninstallService(String serviceName) {
+        if (!OsSupport.WINDOWS) {
+            say(WINDOWS_SERVICE_MSG);
+            return false;
+        }
         try {
-            // ✅ 1. محاولة إيقاف الخدمة عدة مرات
-            for (int i = 0; i < 3; i++) {
-                try {
-                    Process stopProcess = Runtime.getRuntime().exec("net stop \"" + serviceName + "\"");
-                    stopProcess.waitFor(5, TimeUnit.SECONDS);
-                } catch (Exception ignored) {
-                }
-                Thread.sleep(1000);
-            }
+            if (!ProcessRunner.serviceInstalled(serviceName)) return true;
 
-            // ✅ 2. محاولة الحذف باستخدام NSSM أولاً
-            String nssmPath = findNssm();
-            if (nssmPath != null) {
-                String removeCmd = String.format(
-                        "\"%s\" remove %s confirm",
-                        nssmPath, serviceName
-                );
-                Process process = Runtime.getRuntime().exec(removeCmd);
-                boolean result = process.waitFor(10, TimeUnit.SECONDS);
-                if (result) {
-                    return true;
-                }
-            }
+            ProcessRunner.run(60, List.of("sc", "stop", serviceName));
+            ProcessRunner.waitUntil(() -> !ProcessRunner.serviceRunning(serviceName), 30);
 
-            // ✅ 3. محاولة الحذف باستخدام SC مع تأخير
-            for (int i = 0; i < 5; i++) {
-                Process process = Runtime.getRuntime().exec("sc delete \"" + serviceName + "\"");
-                boolean result = process.waitFor(5, TimeUnit.SECONDS);
+            Path nssm = findNssm();
+            if (nssm != null) nssm(nssm, "remove", serviceName, "confirm");
 
-                if (result) { // 1060 = service does not exist
-                    return true;
-                }
-
-                if (result) { // marked for deletion
-                    Thread.sleep(3000);
-                    continue;
-                }
-
+            for (int i = 0; i < 5 && ProcessRunner.serviceInstalled(serviceName); i++) {
+                ProcessRunner.Result r = ProcessRunner.run(30, List.of("sc", "delete", serviceName));
+                if (r.ok() || r.output().contains("1060")) break; // 1060 = not exists
                 Thread.sleep(2000);
             }
 
-            // ✅ 4. المحاولة الأخيرة - حذف من الريجستري
-            String regCmd = String.format(
-                    "reg delete HKLM\\SYSTEM\\CurrentControlSet\\Services\\\"%s\" /f",
-                    serviceName
-            );
-            Process regProcess = Runtime.getRuntime().exec(regCmd);
-            boolean regResult = regProcess.waitFor(5, TimeUnit.SECONDS);
+            boolean gone = !ProcessRunner.serviceInstalled(serviceName);
+            say(gone
+                    ? "✅ تم حذف الخدمة " + serviceName
+                    : "❌ الخدمة " + serviceName + " لسه موجودة (ممكن تحتاج إعادة تشغيل)");
+            return gone;
 
-            if (regResult) {
-                return true;
-            }
-
-            // ✅ 5. استخدام WMIC كحل أخير
-            String wmicCmd = String.format(
-                    "wmic service where \"name='%s'\" delete",
-                    serviceName
-            );
-            Process wmicProcess = Runtime.getRuntime().exec(wmicCmd);
-            return wmicProcess.waitFor(10, TimeUnit.SECONDS);
-
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
+            say("❌ خطأ في حذف الخدمة: " + e.getMessage());
             return false;
         }
     }
 
-    /**
-     * إلغاء تثبيت الخدمة (نسخة مبسطة)
-     */
     public boolean uninstallService(String serviceName) {
         return forceUninstallService(serviceName);
     }
@@ -444,133 +442,37 @@ public class BackendService {
         return forceUninstallService(serviceName);
     }
 
-    /**
-     * إصلاح جميع خدمات Backend
-     */
-    public boolean fixAllServices() {
+    /** يحذف كل الخدمات اللي اسمها HR_MATE* (ويندوز بس). */
+    public synchronized boolean fixAllServices() {
+        if (!OsSupport.WINDOWS) {
+            say(WINDOWS_SERVICE_MSG);
+            return false;
+        }
         try {
-            List<String> services = findBackendServices();
-            boolean allDeleted = true;
+            ProcessRunner.Result list = ProcessRunner.run(30, List.of("sc", "query", "state=", "all"));
+            if (!list.ok()) return false;
 
-            // ✅ 1. حذف الخدمات الموجودة
-            for (String service : services) {
-                if (!forceUninstallService(service)) {
-                    allDeleted = false;
+            Matcher m = SERVICE_LINE.matcher(list.output());
+            List<String> targets = new ArrayList<>();
+            while (m.find()) {
+                String name = m.group(1);
+                if (name.equalsIgnoreCase(SERVICE_NAME)
+                        || name.toUpperCase().startsWith("HR_MATE")) {
+                    targets.add(name);
                 }
             }
 
-            // ✅ 2. انتظار للتأكد
-            Thread.sleep(3000);
-
-            // ✅ 3. التحقق من وجود خدمات متبقية
-            List<String> remaining = findBackendServices();
-            for (String service : remaining) {
-                // محاولة حذف من الريجستري مباشرة
-                String regCmd = String.format(
-                        "reg delete HKLM\\SYSTEM\\CurrentControlSet\\Services\\\"%s\" /f",
-                        service
-                );
-                Runtime.getRuntime().exec(regCmd);
+            boolean all = true;
+            for (String name : targets) {
+                all &= forceUninstallService(name);
             }
+            return all;
 
-            return allDeleted;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * البحث عن جميع خدمات Backend المثبتة
-     */
-    private List<String> findBackendServices() {
-        List<String> services = new ArrayList<>();
-        try {
-            Process process = Runtime.getRuntime().exec("sc query");
-            try (Scanner scanner = new Scanner(process.getInputStream())) {
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    if (line.contains("SERVICE_NAME:")) {
-                        String[] parts = line.split(":");
-                        if (parts.length > 1) {
-                            String name = parts[1].trim();
-                            if (name.toLowerCase().contains("HR_MATE") ||
-                                    name.toLowerCase().contains("HR_MATE")) {
-                                services.add(name);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // تجاهل
-        }
-        return services;
-    }
-
-    // ==================== فحص الحالة ====================
-
-    public boolean isRunning() {
-        if (currentProcess != null && currentProcess.isAlive()) {
-            return true;
-        }
-
-        if (isServiceRunning(SERVICE_NAME)) {
-            return true;
-        }
-
-        try {
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                // البحث عن HR_MATE.exe
-                Process process = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq HR_MATE.exe\"");
-                try (Scanner scanner = new Scanner(process.getInputStream())) {
-                    while (scanner.hasNextLine()) {
-                        if (scanner.nextLine().contains("HR_MATE.exe")) {
-                            return true;
-                        }
-                    }
-                }
-            } else {
-                Process process = Runtime.getRuntime().exec("ps aux | grep -E 'HR_MATE|HR_MATE' | grep -v grep");
-                try (Scanner scanner = new Scanner(process.getInputStream())) {
-                    return scanner.hasNext();
-                }
-            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return false;
         } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public Long getPid() {
-        if (currentPid != null && currentProcess != null && currentProcess.isAlive()) {
-            return currentPid;
-        }
-        return null;
-    }
-
-    public boolean isServiceInstalled(String serviceName) {
-        try {
-            Process process = Runtime.getRuntime().exec("sc query \"" + serviceName + "\"");
-            return process.waitFor() == 0;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    public boolean isServiceRunning(String serviceName) {
-        try {
-            Process process = Runtime.getRuntime().exec("sc query \"" + serviceName + "\"");
-            try (Scanner scanner = new Scanner(process.getInputStream())) {
-
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    if (line.contains("STATE") && line.contains("RUNNING")) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        } catch (Exception e) {
+            say("❌ خطأ: " + e.getMessage());
             return false;
         }
     }

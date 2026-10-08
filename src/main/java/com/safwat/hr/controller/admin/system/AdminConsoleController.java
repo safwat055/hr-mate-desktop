@@ -1,9 +1,7 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.system.setup.HealthCheckService;
-import com.safwat.hr.system.setup.NavigationBus;
-import com.safwat.hr.system.setup.PathResolver;
-import com.safwat.hr.system.setup.SetupWizardService;
+import com.safwat.hr.system.setup.*;
+import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -22,7 +20,13 @@ import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
+import com.safwat.hr.system.setup.PgCredentialsDialog;
+import javafx.util.Pair;
 
+import java.nio.file.Files;
+import java.util.Optional;
 /**
  * AdminConsoleController — الواجهة الموحّدة لكل شاشات إدارة النظام.
  * <p>
@@ -167,11 +171,30 @@ public class AdminConsoleController implements Initializable {
 
     @FXML
     private void onQuickStart() {
+        // 1) لو PostgreSQL مش متهيأ، نطلب اليوزر والباسورد قبل ما نبدأ
+        boolean needsInit = PathResolver.detect()
+                .map(d -> !Files.isRegularFile(d.pgConf()))
+                .orElse(false);
+
+        String user = null;
+        String pass = null;
+        if (needsInit) {
+            Optional<Pair<String, String>> creds = PgCredentialsDialog.ask(
+                    AppConfig.getString("connection", "pgUser", PgCredentialsDialog.DEFAULT_USER),
+                    "تشغيل سريع — مستخدم PostgreSQL",
+                    "PostgreSQL مش متهيأ. أدخل بيانات المستخدم.\n"
+                            + "لو سبت أي حقل فاضي هيتستخدم admin / admin");
+            if (creds.isEmpty()) return;   // المستخدم ألغى
+            user = creds.get().getKey();
+            pass = creds.get().getValue();
+        }
+
+        // 2) التشغيل
         setStatus("⏳ جاري التشغيل...", "stg-status-msg");
         showProgress(true);
         btnQuickStart.setDisable(true);
 
-        SetupWizardService.quickStart(PG_PORT, BE_PORT,
+        SetupWizardService.quickStart(PG_PORT, BE_PORT, user, pass,
                 (msg, pct) -> {
                     setStatus(msg, "stg-status-msg");
                     footerProgress.setProgress(pct / 100.0);
@@ -228,14 +251,12 @@ public class AdminConsoleController implements Initializable {
         dlg.showAndWait();
     }
 
-    private void showAlert(String title, String msg) {
-        Alert a = new Alert("خطأ".equals(title)
-                ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
-        a.setTitle(title);
-        a.setContentText(msg);
-        a.getDialogPane().getStyleClass().add("stg-dialog");
-        SettingsThemeLoader.apply(a.getDialogPane());
-        a.showAndWait();
+    private void showAlert(String title, String message) {
+        if (title != null && title.contains("خطأ")) {
+            SAFNotification.error(message);
+        } else {
+            SAFNotification.success(message);
+        }
     }
 
     // ══════════════════ Helpers ══════════════════

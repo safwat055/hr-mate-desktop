@@ -3,44 +3,72 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
+<!--
+    حوار إضافة / تعديل إذن تأخير — LatePermissionDialogController
+    ────────────────────────────────────────────────────────────
+    ① اسم الموظف (عنوان)
+    ② الحقول: التاريخ، الساعات، الملاحظات
+    ③ ملاحظة قاعدة الخصم
+    ④ أزرار الحفظ والإلغاء
+-->
+
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.safwat.hr.controller.leave.LatePermissionDialogController"
-      spacing="12">
+      nodeOrientation="RIGHT_TO_LEFT"
+      spacing="14"
+      styleClass="app-bg"
+      prefWidth="460">
 
     <padding>
-        <Insets top="16" right="18" bottom="16" left="18"/>
+        <Insets top="18" right="18" bottom="18" left="18"/>
     </padding>
 
-    <Label fx:id="employeeLabel" styleClass="bold fs-14"/>
-    <Separator/>
+    <!-- ══════════ ① اسم الموظف ══════════ -->
+    <VBox styleClass="card">
+        <Label fx:id="employeeLabel" styleClass="panel-header" maxWidth="Infinity" text="إذن تأخير"/>
+    </VBox>
 
-    <GridPane hgap="10" vgap="10">
-        <columnConstraints>
-            <ColumnConstraints minWidth="100" prefWidth="100"/>
-            <ColumnConstraints hgrow="ALWAYS" minWidth="280"/>
-        </columnConstraints>
+    <!-- ══════════ ② بيانات الإذن ══════════ -->
+    <VBox spacing="12" styleClass="card">
+        <padding>
+            <Insets top="14" right="14" bottom="14" left="14"/>
+        </padding>
 
-        <Label text="التاريخ:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <TextField fx:id="dateField" promptText="yyyy-MM-dd"
-                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints minWidth="100" prefWidth="110"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="260"/>
+            </columnConstraints>
 
-        <Label text="عدد الساعات:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="hoursField" promptText="مثال: 1.5"
-                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label styleClass="form-label" text="التاريخ:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="dateField" promptText="yyyy-MM-dd" prefHeight="36" maxWidth="Infinity"
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-        <Label text="ملاحظات:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true"
-                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-    </GridPane>
+            <Label styleClass="form-label" text="عدد الساعات:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="hoursField" promptText="مثال: 1.5" prefHeight="36" maxWidth="Infinity"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-    <Label text="ملاحظة: كل 6 ساعات في نفس الشهر = يوم واحد يخصم من الاعتيادي"
-           styleClass="text-muted fs-12" wrapText="true"/>
+            <Label styleClass="form-label" text="ملاحظات:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true" maxWidth="Infinity"
+                      GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+    </VBox>
 
-    <Region VBox.vgrow="ALWAYS"/>
+    <!-- ══════════ ③ ملاحظة القاعدة ══════════ -->
+    <HBox styleClass="soft-box" alignment="CENTER_LEFT">
+        <padding>
+            <Insets top="10" right="12" bottom="10" left="12"/>
+        </padding>
+        <Label text="ℹ كل 6 ساعات في نفس الشهر = يوم واحد يُخصم من الاعتيادي"
+               styleClass="text-muted fs-12" wrapText="true"/>
+    </HBox>
 
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="cancelButton" text="إلغاء" styleClass="btn-secondary"/>
-        <Button fx:id="saveButton" text="حفظ" styleClass="btn-primary"/>
+    <!-- ══════════ ④ الأزرار ══════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="cancelButton" text="إلغاء" styleClass="btn-secondary" prefHeight="38" prefWidth="110"/>
+        <Button fx:id="saveButton" text="حفظ" styleClass="btn-primary" prefHeight="38" prefWidth="110"/>
     </HBox>
 </VBox>

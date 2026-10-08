@@ -4,329 +4,318 @@ import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.system.setup.PathResolver;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+/**
+ * التشغيل التلقائي عند تسجيل الدخول.
+ * <ul>
+ *   <li><b>ويندوز:</b> مفتاح Run في الـ Registry (HKCU) → bat بينتظر PostgreSQL ويشغّل التطبيق.</li>
+ *   <li><b>لينكس:</b> ملف .desktop في ~/.config/autostart → سكريبت بينتظر بورت PostgreSQL ويشغّل التطبيق.</li>
+ * </ul>
+ */
 @Slf4j
 public class StartupManager {
 
-    private static final String REG_KEY = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     private static final String APP_NAME = "hr-mate-system";
     private static final String LEGACY_APP_NAME = "HR_MATE";
-    private static final String LEGACY_BAT_NAME = LEGACY_APP_NAME + ".bat";
+    private static final String REG_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+    private static final String DESKTOP_FILE = APP_NAME + ".desktop";
+    private static final String WRAPPER_FILE = "autostart.sh";
+    private static final Pattern REG_SZ = Pattern.compile("REG_SZ\\s+(.+)$", Pattern.MULTILINE);
 
-    /**
-     * إضافة التطبيق للتشغيل التلقائي باستخدام المسار المحفوظ في AppConfig
-     * (مع fallback للكشف التلقائي من بنية التوزيع).
-     *
-     * @return true إذا نجحت العملية
-     */
+    // ══════════════════════════════════════════════════════════════
+    //  Public API
+    // ══════════════════════════════════════════════════════════════
+
+    /** يضيف التطبيق للتشغيل التلقائي باستخدام المسار المحفوظ (مع fallback للكشف التلقائي). */
     public static boolean addToStartup() {
         String path = AppConfig.getString("paths", "backend", "");
-
-        // Fallback: كشف تلقائي من بنية التوزيع
         if (path == null || path.isBlank()) {
-            path = PathResolver.detect()
-                    .map(d -> d.backendExe().toString())
-                    .orElse("");
+            path = PathResolver.detect().map(d -> d.backendExe().toString()).orElse("");
         }
-
         if (path.isBlank()) {
-            log.error("❌ مسار التطبيق غير محفوظ في ملف الإعدادات ولم يتم العثور عليه تلقائياً");
+            log.error("❌ مسار التطبيق غير محفوظ ولم يتم العثور عليه تلقائياً");
             return false;
         }
-
-        String exePath = resolveExePath(path);
-        if (exePath == null) {
-            log.error("❌ لم يتم العثور على الملف التنفيذي انطلاقاً من المسار المحفوظ: " + path);
+        Path exe = resolveExePath(path);
+        if (exe == null) {
+            log.error("❌ لم يتم العثور على الملف التنفيذي انطلاقاً من: " + path);
             return false;
         }
-        return addToStartup(exePath);
+        return addToStartup(exe.toString());
     }
 
-    /**
-     * تحديد مسار الملف التنفيذي من القيمة المحفوظة في الإعدادات، وتغطي الحالات دي:
-     * <ul>
-     *   <li>القيمة هي الملف التنفيذي نفسه (بامتداد أو من غيره على ويندوز)</li>
-     *   <li>القيمة هي فولدر الملف التنفيذي (جذر الصورة على ويندوز / bin على لينكس)</li>
-     *   <li>القيمة هي جذر الصورة على لينكس (الملف داخل bin)</li>
-     *   <li>القيمة هي الفولدر الأب اللي جواه فولدر hr-mate-system</li>
-     *   <li>الملف التنفيذي لسه بالاسم القديم HR_MATE</li>
-     * </ul>
-     *
-     * @return مسار الملف التنفيذي، أو null لو مش موجود
-     */
-    private static String resolveExePath(String path) {
-        if (path == null) {
-            return null;
-        }
-        // تنظيف: مسافات وعلامات تنصيص
-        path = path.trim().replace("\"", "");
-        if (path.isEmpty()) {
-            return null;
-        }
-
-        boolean win = System.getProperty("os.name").toLowerCase().contains("win");
-        File f = new File(path);
-
-        // 1) القيمة هي ملف
-        if (f.isFile()) {
-            return f.getPath();
-        }
-        // ويندوز: اتحفظ الاسم من غير .exe
-        if (win && !f.exists()) {
-            File withExt = new File(path + ".exe");
-            if (withExt.isFile()) {
-                return withExt.getPath();
-            }
-        }
-
-        // 2) القيمة هي فولدر: نجرب الأماكن المحتملة بالاسم الجديد ثم القديم
-        if (f.isDirectory()) {
-            String[] names = win
-                    ? new String[]{APP_NAME + ".exe", LEGACY_APP_NAME + ".exe"}
-                    : new String[]{APP_NAME, LEGACY_APP_NAME};
-
-            File[] bases = {
-                    f,                                              // فولدر الملف التنفيذي نفسه
-                    new File(f, "bin"),                             // جذر الصورة على لينكس
-                    new File(f, APP_NAME),                          // الفولدر الأب
-                    new File(new File(f, APP_NAME), "bin")          // الفولدر الأب على لينكس
-            };
-
-            for (File base : bases) {
-                for (String name : names) {
-                    File candidate = new File(base, name);
-                    if (candidate.isFile()) {
-                        return candidate.getPath();
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * إضافة التطبيق للتشغيل التلقائي عند تسجيل الدخول
-     *
-     * @param appPath المسار الكامل لتطبيق الواجهة (hr-mate-system.exe)
-     * @return true إذا نجحت العملية
-     */
     public static boolean addToStartup(String appPath) {
         try {
-            if (appPath == null || appPath.trim().isEmpty()) {
+            if (appPath == null || appPath.isBlank()) {
                 log.error("❌ مسار التطبيق فارغ");
                 return false;
             }
-
-            File appFile = new File(appPath);
-            if (!appFile.exists()) {
-                log.error("❌ التطبيق غير موجود: " + appPath);
+            Path exe = Paths.get(appPath.trim().replace("\"", "")).toAbsolutePath().normalize();
+            if (!Files.isRegularFile(exe)) {
+                log.error("❌ التطبيق غير موجود: " + exe);
                 return false;
             }
-
-            // ✅ 0. حذف ملف .bat القديم (HR_MATE.bat) لو موجود من نسخة سابقة
-            new File(appFile.getParent(), LEGACY_BAT_NAME).delete();
-
-            // ✅ 1. إنشاء ملف .bat بجوار التطبيق (اسم الملف التنفيذي مأخوذ من المسار نفسه)
-            String exeName = appFile.getName();
-            String batPath = appFile.getParent() + File.separator + APP_NAME + ".bat";
-            String batContent = createBatContent(exeName);
-
-            try (FileWriter fw = new FileWriter(batPath)) {
-                fw.write(batContent);
-            }
-
-            // ✅ 2. جعل الـ .bat قابل للتنفيذ (على Linux/Mac)
-            if (!System.getProperty("os.name").toLowerCase().contains("win")) {
-                File batFile = new File(batPath);
-                batFile.setExecutable(true);
-            }
-
-            // ✅ 3. إضافة الـ .bat إلى الـ Registry بدلاً من الـ .exe
-            String command = "\"" + batPath + "\"";
-            ProcessBuilder pb = new ProcessBuilder(
-                    "reg", "add",
-                    "HKCU\\" + REG_KEY,
-                    "/v", APP_NAME,
-                    "/t", "REG_SZ",
-                    "/d", command,
-                    "/f"
-            );
-
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                log.info("✅ تم إضافة التطبيق للتشغيل التلقائي: " + batPath);
-                return true;
-            } else {
-                log.error("❌ فشل إضافة التطبيق، رمز الخطأ: " + exitCode);
-                return false;
-            }
-
+            return OsSupport.WINDOWS ? addWindows(exe) : addLinux(exe);
         } catch (Exception e) {
             log.error("❌ خطأ أثناء إضافة التطبيق للتشغيل التلقائي", e);
             return false;
         }
     }
 
-    /**
-     * إنشاء محتوى ملف .bat مع التحقق من PostgreSQL
-     *
-     * @param exeName اسم الملف التنفيذي (hr-mate-system.exe أو hr-mate-system)
-     */
-    private static String createBatContent(String exeName) {
-        String os = System.getProperty("os.name").toLowerCase();
-        boolean isWindows = os.contains("win");
-
-        if (isWindows) {
-            return """
-                    @echo off
-                    echo Checking for PostgreSQL service...
-                    
-                    :: انتظار خدمة PostgreSQL حتى تعمل
-                    set SERVICE_NAME=PostgreSQL
-                    set TIMEOUT=60
-                    set ELAPSED=0
-                    
-                    :CHECK_SERVICE
-                    sc query "%SERVICE_NAME%" | find "RUNNING" > nul
-                    if %errorlevel% equ 0 (
-                        echo PostgreSQL is running.
-                        goto START_APP
-                    )
-                    
-                    echo Waiting for PostgreSQL to start... (%ELAPSED%/%TIMEOUT% seconds)
-                    timeout /t 2 /nobreak > nul
-                    set /a ELAPSED=%ELAPSED%+2
-                    
-                    if %ELAPSED% geq %TIMEOUT% (
-                        echo Timeout waiting for PostgreSQL. Starting application anyway...
-                        goto START_APP
-                    )
-                    
-                    goto CHECK_SERVICE
-                    
-                    :START_APP
-                    cd /d "%~dp0"
-                    echo Starting __APP__...
-                    start "" "__EXE__"
-                    """.replace("__APP__", APP_NAME).replace("__EXE__", exeName);
-        } else {
-            // ✅ Linux/Mac
-            return """
-                    #!/bin/bash
-                    echo "Checking for PostgreSQL service..."
-                    
-                    SERVICE_NAME="postgresql"
-                    TIMEOUT=60
-                    ELAPSED=0
-                    
-                    while [ $ELAPSED -lt $TIMEOUT ]; do
-                        if systemctl is-active --quiet $SERVICE_NAME; then
-                            echo "PostgreSQL is running."
-                            break
-                        fi
-                        echo "Waiting for PostgreSQL to start... ($ELAPSED/$TIMEOUT seconds)"
-                        sleep 2
-                        ELAPSED=$((ELAPSED + 2))
-                    done
-                    
-                    if [ $ELAPSED -ge $TIMEOUT ]; then
-                        echo "Timeout waiting for PostgreSQL. Starting application anyway..."
-                    fi
-                    
-                    cd "$(dirname "$0")"
-                    echo "Starting __APP__..."
-                    ./__EXE__
-                    """.replace("__APP__", APP_NAME).replace("__EXE__", exeName);
-        }
-    }
-
-    /**
-     * حذف التطبيق من التشغيل التلقائي
-     *
-     * @return true إذا نجحت العملية
-     */
     public static boolean removeFromStartup() {
         try {
-            String cmd = String.format(
-                    "reg delete HKCU\\%s /v %s /f",
-                    REG_KEY, APP_NAME
-            );
-
-            Process process = Runtime.getRuntime().exec(cmd);
-            int exitCode = process.waitFor();
-
-            if (exitCode == 0) {
-                log.info("✅ تم حذف التطبيق من التشغيل التلقائي");
-                return true;
-            } else {
-                log.error("❌ فشل حذف التطبيق، رمز الخطأ: " + exitCode);
-                return false;
+            if (OsSupport.WINDOWS) {
+                Path bat = windowsBatFromRegistry();
+                ProcessRunner.Result r = ProcessRunner.run(30,
+                        List.of("reg", "delete", REG_KEY, "/v", APP_NAME, "/f"));
+                if (bat != null && bat.getFileName().toString().equals(APP_NAME + ".bat")) {
+                    Files.deleteIfExists(bat);
+                }
+                boolean ok = r.ok() || !isInStartup();
+                log.info(ok ? "✅ تم حذف التطبيق من التشغيل التلقائي" : "❌ فشل حذف التشغيل التلقائي");
+                return ok;
             }
-
-        } catch (IOException | InterruptedException e) {
-            log.error("❌ خطأ أثناء حذف التطبيق من التشغيل التلقائي", e);
+            Files.deleteIfExists(desktopPath());
+            Files.deleteIfExists(wrapperPath());
+            boolean ok = !isInStartup();
+            log.info(ok ? "✅ تم حذف التطبيق من التشغيل التلقائي" : "❌ فشل حذف التشغيل التلقائي");
+            return ok;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (IOException e) {
+            log.error("❌ خطأ أثناء حذف التشغيل التلقائي", e);
             return false;
         }
     }
 
-    /**
-     * التحقق من وجود التطبيق في التشغيل التلقائي
-     *
-     * @return true إذا كان موجوداً
-     */
     public static boolean isInStartup() {
         try {
-            String cmd = String.format(
-                    "reg query HKCU\\%s /v %s",
-                    REG_KEY, APP_NAME
-            );
-
-            Process process = Runtime.getRuntime().exec(cmd);
-            int exitCode = process.waitFor();
-
-            return exitCode == 0;
-
-        } catch (IOException | InterruptedException e) {
+            if (OsSupport.WINDOWS) {
+                return ProcessRunner.run(15, List.of("reg", "query", REG_KEY, "/v", APP_NAME)).ok();
+            }
+            return Files.isRegularFile(desktopPath());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (IOException e) {
             return false;
         }
     }
 
-    /**
-     * الحصول على مسار التطبيق المسجل في التشغيل التلقائي
-     *
-     * @return المسار أو null إذا غير موجود
-     */
+    /** المسار المسجّل للتشغيل التلقائي، أو null. */
     public static String getStartupPath() {
         try {
-            String cmd = String.format(
-                    "reg query HKCU\\%s /v %s",
-                    REG_KEY, APP_NAME
-            );
+            if (OsSupport.WINDOWS) {
+                ProcessRunner.Result r = ProcessRunner.run(15,
+                        List.of("reg", "query", REG_KEY, "/v", APP_NAME));
+                if (!r.ok()) return null;
+                Matcher m = REG_SZ.matcher(r.output());
+                return m.find() ? m.group(1).trim().replace("\"", "") : null;
+            }
+            Path d = desktopPath();
+            if (!Files.isRegularFile(d)) return null;
+            for (String line : Files.readAllLines(d, StandardCharsets.UTF_8)) {
+                if (line.startsWith("Exec=")) {
+                    return line.substring(5).trim().replace("\"", "");
+                }
+            }
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
 
-            Process process = Runtime.getRuntime().exec(cmd);
-            try (java.util.Scanner scanner = new java.util.Scanner(process.getInputStream())) {
-                while (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    // تنسيق الـ Registry: "    hr-mate-system    REG_SZ    C:\path\to\hr-mate-system.bat"
-                    if (line.contains("REG_SZ")) {
-                        String[] parts = line.split("REG_SZ");
-                        if (parts.length > 1) {
-                            return parts[1].trim().replace("\"", "");
-                        }
+    // ══════════════════════════════════════════════════════════════
+    //  Windows
+    // ══════════════════════════════════════════════════════════════
+
+    private static boolean addWindows(Path exe) throws IOException, InterruptedException {
+        Files.deleteIfExists(exe.getParent().resolve(LEGACY_APP_NAME + ".bat"));
+
+        Path bat = exe.getParent().resolve(APP_NAME + ".bat");
+        Files.writeString(bat, windowsBat(exe.getFileName().toString()), StandardCharsets.US_ASCII);
+
+        ProcessRunner.Result r = ProcessRunner.run(30, List.of(
+                "reg", "add", REG_KEY, "/v", APP_NAME, "/t", "REG_SZ",
+                "/d", "\"" + bat + "\"", "/f"));
+        if (r.ok()) {
+            log.info("✅ تم إضافة التطبيق للتشغيل التلقائي: " + bat);
+            return true;
+        }
+        log.error("❌ فشل reg add: " + r.output());
+        return false;
+    }
+
+    /** bat بينتظر PostgreSQL (بالخدمة أو بالبورت) ثم يشغّل التطبيق. CRLF عشان cmd يتعامل معاه صح. */
+    private static String windowsBat(String exeName) {
+        String bat = """
+                @echo off
+                setlocal
+                set PG_SERVICE=__PG_SERVICE__
+                set PG_PORT=__PG_PORT__
+                set TIMEOUT=60
+                set ELAPSED=0
+                :CHECK_PG
+                sc query "%PG_SERVICE%" | find ": 4" > nul
+                if not errorlevel 1 goto START_APP
+                netstat -an | find ":%PG_PORT% " | find "LISTENING" > nul
+                if not errorlevel 1 goto START_APP
+                if %ELAPSED% geq %TIMEOUT% goto START_APP
+                timeout /t 2 /nobreak > nul
+                set /a ELAPSED=%ELAPSED%+2
+                goto CHECK_PG
+                :START_APP
+                cd /d "%~dp0"
+                start "" "__EXE__"
+                """;
+        return bat.replace("__PG_SERVICE__", pgService())
+                .replace("__PG_PORT__", pgPort())
+                .replace("__EXE__", exeName)
+                .replace("\n", "\r\n");
+    }
+
+    private static Path windowsBatFromRegistry() {
+        try {
+            ProcessRunner.Result r = ProcessRunner.run(15,
+                    List.of("reg", "query", REG_KEY, "/v", APP_NAME));
+            if (!r.ok()) return null;
+            Matcher m = REG_SZ.matcher(r.output());
+            return m.find() ? Paths.get(m.group(1).trim().replace("\"", "")) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Linux
+    // ══════════════════════════════════════════════════════════════
+
+    private static boolean addLinux(Path exe) throws IOException {
+        exe.toFile().setExecutable(true, false);
+
+        Path dataDir = xdgHome("XDG_DATA_HOME", ".local/share").resolve(APP_NAME);
+        Files.createDirectories(dataDir);
+        Path wrapper = dataDir.resolve(WRAPPER_FILE);
+        Files.writeString(wrapper, linuxWrapper(exe), StandardCharsets.UTF_8);
+        wrapper.toFile().setExecutable(true, false);
+
+        Path autostartDir = xdgHome("XDG_CONFIG_HOME", ".config").resolve("autostart");
+        Files.createDirectories(autostartDir);
+        String desktop = """
+                [Desktop Entry]
+                Type=Application
+                Name=HR MATE System
+                Comment=Start HR MATE after login
+                Exec="__EXEC__"
+                Terminal=false
+                X-GNOME-Autostart-enabled=true
+                """.replace("__EXEC__", escapeDesktop(wrapper.toString()));
+        Files.writeString(autostartDir.resolve(DESKTOP_FILE), desktop, StandardCharsets.UTF_8);
+
+        log.info("✅ تم إضافة التطبيق للتشغيل التلقائي: " + autostartDir.resolve(DESKTOP_FILE));
+        return true;
+    }
+
+    /** سكريبت بينتظر بورت PostgreSQL (بدون pg_isready) ثم يشغّل التطبيق. */
+    private static String linuxWrapper(Path exe) {
+        return "#!/bin/bash\n"
+                + "# Generated by hr-mate-system: waits for PostgreSQL then starts the app.\n"
+                + "PORT=" + pgPort() + "\n"
+                + "for i in $(seq 1 60); do\n"
+                + "  if (exec 3<>/dev/tcp/127.0.0.1/$PORT) 2>/dev/null; then break; fi\n"
+                + "  sleep 2\n"
+                + "done\n"
+                + "cd " + shQuote(exe.getParent().toString()) + " || exit 1\n"
+                + "exec " + shQuote(exe.toString()) + "\n";
+    }
+
+    private static Path desktopPath() {
+        return xdgHome("XDG_CONFIG_HOME", ".config").resolve("autostart").resolve(DESKTOP_FILE);
+    }
+
+    private static Path wrapperPath() {
+        return xdgHome("XDG_DATA_HOME", ".local/share").resolve(APP_NAME).resolve(WRAPPER_FILE);
+    }
+
+    private static Path xdgHome(String envVar, String fallback) {
+        String v = System.getenv(envVar);
+        return (v != null && !v.isBlank())
+                ? Paths.get(v)
+                : Paths.get(System.getProperty("user.home"), fallback);
+    }
+
+    private static String shQuote(String s) {
+        return "'" + s.replace("'", "'\\''") + "'";
+    }
+
+    private static String escapeDesktop(String s) {
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("`", "\\`")
+                .replace("$", "\\$");
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Shared
+    // ══════════════════════════════════════════════════════════════
+
+    private static String pgService() {
+        String v = AppConfig.getString("connection", "pgServiceName", "PostgreSQL");
+        return (v == null || v.isBlank()) ? "PostgreSQL" : v;
+    }
+
+    private static String pgPort() {
+        String v = AppConfig.getString("connection", "pgPort", "5432");
+        return (v != null && v.trim().matches("\\d{1,5}")) ? v.trim() : "5432";
+    }
+
+    /**
+     * يحوّل المسار المحفوظ (ملف / فولدر / جذر الصورة) لمسار الـ exe الفعلي.
+     */
+    private static Path resolveExePath(String raw) {
+        try {
+            String cleaned = raw.trim().replace("\"", "");
+            if (cleaned.isEmpty()) return null;
+
+            Path p = Paths.get(cleaned).toAbsolutePath().normalize();
+            if (Files.isRegularFile(p)) return p;
+
+            if (OsSupport.WINDOWS && !Files.exists(p)) {
+                Path withExe = Paths.get(p + ".exe");
+                if (Files.isRegularFile(withExe)) return withExe;
+            }
+
+            if (Files.isDirectory(p)) {
+                String[] names = OsSupport.WINDOWS
+                        ? new String[]{APP_NAME + ".exe", LEGACY_APP_NAME + ".exe"}
+                        : new String[]{APP_NAME, LEGACY_APP_NAME};
+                Path[] bases = {
+                        p,
+                        p.resolve("bin"),
+                        p.resolve(APP_NAME),
+                        p.resolve(APP_NAME).resolve("bin")
+                };
+                for (Path base : bases) {
+                    for (String n : names) {
+                        Path c = base.resolve(n);
+                        if (Files.isRegularFile(c)) return c;
                     }
                 }
             }
-
             return null;
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             return null;
         }
     }

@@ -16,56 +16,82 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="12" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.wages.ui.EmployeeWagesScreenController">
+<VBox nodeOrientation="RIGHT_TO_LEFT" spacing="14" styleClass="app-bg" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.safwat.hr.controller.wages.ui.EmployeeWagesScreenController">
+
     <padding>
-        <Insets bottom="15" left="15" right="15" top="15" />
+        <Insets bottom="16" left="16" right="16" top="16" />
     </padding>
 
-    <Label style="-fx-font-size: 18; -fx-font-weight: bold;" text="الأجور المتغيرة" />
+    <!-- ══ العنوان ══ -->
+    <VBox spacing="2">
+        <Label styleClass="fs-18, bold" text="الأجور المتغيرة" />
+        <Label styleClass="text-secondary" text="ابحث عن موظف لعرض سجلات أجوره المتغيرة وبطاقة الأجور الخاصة به" />
+    </VBox>
 
-    <!-- ── شريط البحث ── -->
-    <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="بحث (الرقم القومي أو رقم الموظف):" />
-        <TextField fx:id="searchField" prefWidth="220" promptText="اكتب الرقم القومي أو رقم الموظف" />
-        <Button fx:id="searchButton" defaultButton="true" text="بحث" />
-        <Label fx:id="searchStatusLabel" style="-fx-text-fill: #b00020;" />
-      <Button fx:id="clearButton" mnemonicParsing="false" styleClass="btn-secondary" text="مسح" />
-    </HBox>
+    <!-- ══ كارت البحث ══ -->
+    <VBox styleClass="card">
+        <HBox alignment="CENTER_LEFT" styleClass="panel-header">
+            <Label text="بحث عن موظف" />
+        </HBox>
+        <VBox spacing="10">
+            <padding>
+                <Insets bottom="12" left="12" right="12" top="12" />
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label styleClass="bold" text="الرقم القومي أو رقم الموظف:" />
+                <TextField fx:id="searchField" maxWidth="360" prefWidth="260" promptText="اكتب الرقم القومي أو رقم الموظف" HBox.hgrow="ALWAYS" />
+                <Button fx:id="searchButton" defaultButton="true" styleClass="btn-primary" text="بحث" />
+                <Button fx:id="clearButton" styleClass="btn-secondary" text="مسح" />
+            </HBox>
+            <Label fx:id="searchStatusLabel" styleClass="text-danger" />
+        </VBox>
+    </VBox>
 
-    <Separator />
+    <!-- ══ كارت بيانات الموظف ══ -->
+    <VBox styleClass="card">
+        <HBox alignment="CENTER_LEFT" styleClass="panel-header">
+            <Label text="بيانات الموظف" />
+        </HBox>
+        <GridPane hgap="24" vgap="10">
+            <padding>
+                <Insets bottom="12" left="12" right="12" top="12" />
+            </padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="90" />
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180" />
+                <ColumnConstraints minWidth="90" />
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints />
+                <RowConstraints />
+            </rowConstraints>
 
-    <!-- ── بيانات الموظف ── -->
-    <GridPane hgap="10" vgap="6">
-        <Label text="الاسم:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-        <Label fx:id="employeeNameLabel" style="-fx-font-weight: bold;" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-        <Label text="رقم الموظف:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-        <Label fx:id="employeeNumberLabel" text="—" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-        <Label text="الرقم القومي:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-        <Label fx:id="employeeNationalIdLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-        <columnConstraints>
-            <ColumnConstraints /><ColumnConstraints />
-            <ColumnConstraints /><ColumnConstraints />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints /><RowConstraints />
-        </rowConstraints>
-    </GridPane>
+            <Label styleClass="text-muted" text="الاسم:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <Label fx:id="employeeNameLabel" styleClass="bold fs-14" text="—" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label styleClass="text-muted" text="رقم الموظف:" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+            <Label fx:id="employeeNumberLabel" text="—" GridPane.columnIndex="3" GridPane.rowIndex="0" />
 
-    <Separator />
+            <Label styleClass="text-muted" text="الرقم القومي:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label fx:id="employeeNationalIdLabel" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        </GridPane>
+    </VBox>
 
-    <!-- ── تبويبان ── -->
+    <!-- ══ التبويبات ══ -->
     <TabPane VBox.vgrow="ALWAYS">
         <tabs>
 
-            <!-- ══ تبويب المستندات ══ -->
+            <!-- ── تبويب السجلات ── -->
             <Tab closable="false" text="سجلات الأجور المتغيرة">
                 <VBox spacing="10">
-                    <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
+                    <padding>
+                        <Insets bottom="12" left="12" right="12" top="12" />
+                    </padding>
 
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label style="-fx-font-weight: bold;" text="سجلات الموظف" />
+                        <Label styleClass="bold fs-14" text="سجلات الموظف" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="addButton" disable="true" text="+ إضافة مستند" />
+                        <Button fx:id="addButton" disable="true" styleClass="btn-success" text="+ إضافة مستند" />
                     </HBox>
 
                     <TableView fx:id="documentsTable" prefHeight="350" VBox.vgrow="ALWAYS">
@@ -74,78 +100,69 @@
                             <TableColumn fx:id="nameColumn" prefWidth="160" text="اسم المستند" />
                             <TableColumn fx:id="numberColumn" prefWidth="110" text="رقم الشطب" />
                             <TableColumn fx:id="totalColumn" prefWidth="100" text="الإجمالي" />
-                            <TableColumn fx:id="pensionColumn" prefWidth="100" text="خاضع معاشات" />
-                            <TableColumn fx:id="taxColumn" prefWidth="100" text="خاضع ضريبة" />
-                            <TableColumn fx:id="actionsColumn" prefWidth="70" text="" />
+                            <TableColumn fx:id="pensionColumn" prefWidth="110" text="خاضع معاشات" />
+                            <TableColumn fx:id="taxColumn" prefWidth="110" text="خاضع ضريبة" />
+                            <TableColumn fx:id="actionsColumn" prefWidth="90" text="إجراءات" />
                         </columns>
                     </TableView>
                 </VBox>
             </Tab>
 
-            <!-- ══ تبويب المحرك ══ -->
-            <Tab closable="false" text=" بطاقة الأجور">
+            <!-- ── تبويب بطاقة الأجور ── -->
+            <Tab closable="false" text="بطاقة الأجور">
                 <VBox spacing="10">
-                    <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
-
-                    <Separator />
+                    <padding>
+                        <Insets bottom="12" left="12" right="12" top="12" />
+                    </padding>
 
                     <!-- شريط الاحتساب -->
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label style="-fx-font-weight: bold;" text="عرض دورة الأجر المتغير" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Label fx:id="cycleStatusLabel" style="-fx-text-fill: #b00020;" />
-                        <Button fx:id="calculateButton" disable="true" styleClass="btn-purple" text="احسب / تحديث" />
-                    </HBox>
+                    <VBox spacing="10" styleClass="soft-box">
+                        <padding>
+                            <Insets bottom="10" left="12" right="12" top="10" />
+                        </padding>
 
-                    <!-- شريط التصدير -->
-                    <HBox alignment="CENTER_LEFT" spacing="12">
-                  <VBox prefHeight="102.0" prefWidth="159.0" spacing="5.0">
-                     <children>
-                        <HBox>
-                           <children>
-                                    <Button fx:id="exportButton" disable="true" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
-                              <Label prefHeight="32.0" prefWidth="64.0" text="بطاقة الاجور" />
-                           </children>
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label styleClass="bold fs-14" text="دورة الأجر المتغير" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="cycleStatusLabel" styleClass="text-danger" />
+                            <Button fx:id="calculateButton" disable="true" styleClass="btn-purple" text="احسب / تحديث" />
                         </HBox>
-                        <HBox>
-                           <children>
-                              <Button fx:id="exportForm5Button" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
-                              <Label prefHeight="29.0" prefWidth="46.0" style="-fx-font-weight: bold;" text="نموذج 5" />
-                           </children>
+
+                        <Separator />
+
+                        <!-- فترة اختيارية -->
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label styleClass="bold" text="الفترة اختياري" />
+                            <Label text="من" />
+                            <TextField fx:id="fromField" prefWidth="120" promptText="yyyy-MM-dd" />
+                            <Label text="إلى" />
+                            <TextField fx:id="toField" prefWidth="120" promptText="yyyy-MM-dd" />
                         </HBox>
-                        <HBox>
-                           <children>
-                              <Button fx:id="exportBreakdownButton" mnemonicParsing="false" prefHeight="34.0" prefWidth="45.0" styleClass="btn-iconFlat" />
-                              <Label layoutX="53.0" layoutY="10.0" prefHeight="32.0" prefWidth="111.0" text="تفصيلي شهري" />
-                           </children>
+
+                        <Separator />
+
+                        <!-- التصدير -->
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label styleClass="bold" text="تصدير:" />
+                            <Button fx:id="exportButton" disable="true" styleClass="btn-outline, primary" text="بطاقة الأجور" />
+                            <Button fx:id="exportForm5Button" styleClass="btn-outline, primary" text="نموذج 5" />
+                            <Button fx:id="exportBreakdownButton" styleClass="btn-outline, primary" text="تفصيلي شهري" />
+                            <Button fx:id="exportAllowanceMatrixButton" disable="true" styleClass="btn-outline, primary" text="تفصيلي سنوي" />
+                            <Region HBox.hgrow="ALWAYS" />
+                            <Label fx:id="exportStatusLabel" />
                         </HBox>
-                        <HBox layoutX="10.0" layoutY="78.0">
-                           <children>
-                              <Button fx:id="exportAllowanceMatrixButton" disable="true" prefHeight="34.0" prefWidth="47.0" style="-fx-font-weight: bold;" styleClass="btn-iconFlat" />
-                              <Label prefHeight="32.0" prefWidth="115.0" text="تفصيلي سنوى" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-                        <Region prefHeight="34.0" prefWidth="130.0" HBox.hgrow="ALWAYS" />
-                        <Label style="-fx-font-weight: bold;" text="اختر فترة من و الي اختياري" />
-                        <Label text="من:" />
-                        <TextField fx:id="fromField" prefWidth="100" promptText="yyyy-MM-dd" />
-                        <Label text="إلى:" />
-                        <TextField fx:id="toField" prefWidth="100" promptText="yyyy-MM-dd" />
-                        <Label fx:id="exportStatusLabel" />
-                    </HBox>
+                    </VBox>
 
                     <TableView fx:id="cycleTable" prefHeight="300" VBox.vgrow="ALWAYS">
                         <columns>
                             <TableColumn fx:id="cycleMonthColumn" prefWidth="90" text="الشهر" />
-                            <TableColumn fx:id="rawTotalColumn" prefWidth="100" text="الإجمالي الخام" />
-                            <TableColumn fx:id="ceilingColumn" prefWidth="100" text="الحد الأقصى" />
-                            <TableColumn fx:id="pensionableColumn" prefWidth="110" text="الخاضع للمعاشات" />
-                            <TableColumn fx:id="ceilingAppliedColumn" prefWidth="80" text="مقطوع؟" />
+                            <TableColumn fx:id="rawTotalColumn" prefWidth="110" text="الإجمالي الخام" />
+                            <TableColumn fx:id="ceilingColumn" prefWidth="110" text="الحد الأقصى" />
+                            <TableColumn fx:id="pensionableColumn" prefWidth="120" text="الخاضع للمعاشات" />
+                            <TableColumn fx:id="ceilingAppliedColumn" prefWidth="90" text="مقطوع؟" />
                             <TableColumn fx:id="sourceColumn" prefWidth="120" text="المصدر" />
-                            <TableColumn fx:id="allowanceDetailsColumn" prefWidth="110" text="" />
-                            <TableColumn fx:id="documentDetailsColumn" prefWidth="120" text="" />
+                            <TableColumn fx:id="allowanceDetailsColumn" prefWidth="110" text="تفاصيل البدلات" />
+                            <TableColumn fx:id="documentDetailsColumn" prefWidth="120" text="تفاصيل المستند" />
                         </columns>
                     </TableView>
                 </VBox>

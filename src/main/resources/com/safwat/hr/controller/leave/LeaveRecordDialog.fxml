@@ -3,76 +3,87 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
+<!--
+    حوار إضافة / تعديل سجل إجازة — LeaveRecordDialogController
+    ────────────────────────────────────────────────────────────
+    ① اسم الموظف (عنوان)
+    ② نوع الإجازة والتواريخ وعدد الأيام
+    ③ تنبيهات (الإجازات المفتوحة + التحذيرات)
+    ④ الملاحظات
+    ⑤ أزرار الحفظ والإلغاء
+-->
+
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.safwat.hr.controller.leave.LeaveRecordDialogController"
-      spacing="12">
+      nodeOrientation="RIGHT_TO_LEFT"
+      spacing="14"
+      styleClass="app-bg"
+      prefWidth="500">
 
     <padding>
-        <Insets top="16" right="18" bottom="16" left="18"/>
+        <Insets top="18" right="18" bottom="18" left="18"/>
     </padding>
 
-    <Label fx:id="employeeLabel" styleClass="bold fs-14"/>
+    <!-- ══════════ ① اسم الموظف ══════════ -->
+    <VBox styleClass="card">
+        <Label fx:id="employeeLabel" styleClass="panel-header" maxWidth="Infinity" text="سجل إجازة"/>
+    </VBox>
 
-    <Separator/>
+    <!-- ══════════ ② بيانات الإجازة ══════════ -->
+    <VBox spacing="12" styleClass="card">
+        <padding>
+            <Insets top="14" right="14" bottom="14" left="14"/>
+        </padding>
 
-    <GridPane hgap="10" vgap="10">
-        <columnConstraints>
-            <ColumnConstraints minWidth="100" prefWidth="100"/>
-            <ColumnConstraints hgrow="ALWAYS" minWidth="280"/>
-        </columnConstraints>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints minWidth="100" prefWidth="110"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="280"/>
+            </columnConstraints>
 
-        <!-- ═══ النوع ═══ -->
-        <Label text="النوع:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="leaveTypeCombo" maxWidth="Infinity"
-                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <Label styleClass="form-label" text="النوع:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="leaveTypeCombo" maxWidth="Infinity" prefHeight="36"
+                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-        <!-- ═══ من تاريخ ═══ -->
-        <Label text="من تاريخ:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="fromDateField" promptText="yyyy-MM-dd"
-                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label styleClass="form-label" text="من تاريخ:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="fromDateField" promptText="yyyy-MM-dd" prefHeight="36" maxWidth="Infinity"
+                       GridPane.rowIndex="1" GridPane.columnIndex="1"/>
 
-        <!-- ═══ إلى تاريخ ═══ -->
-        <Label fx:id="toDateLabel" text="إلى تاريخ:"
-               GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextField fx:id="toDateField" promptText="yyyy-MM-dd"
-                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <Label fx:id="toDateLabel" styleClass="form-label" text="إلى تاريخ:"
+                   GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="toDateField" promptText="yyyy-MM-dd" prefHeight="36" maxWidth="Infinity"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-        <!-- ═══ النص الإرشادي — صف منفصل تحت الحقل ═══ -->
-        <Label fx:id="openEndedHint" text=""
-               GridPane.rowIndex="3" GridPane.columnIndex="0"
-               GridPane.columnSpan="2"
-               visible="false" managed="false"
-               styleClass="text-muted fs-12" wrapText="true"/>
+            <Label styleClass="form-label" text="عدد الأيام:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <HBox alignment="CENTER_LEFT" styleClass="soft-box"
+                  GridPane.rowIndex="3" GridPane.columnIndex="1">
+                <padding>
+                    <Insets top="6" right="12" bottom="6" left="12"/>
+                </padding>
+                <Label fx:id="daysPreviewLabel" text="—" styleClass="fs-16 bold text-navy"/>
+            </HBox>
 
-        <!-- ═══ عدد الأيام ═══ -->
-        <Label text="عدد الأيام:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <Label fx:id="daysPreviewLabel" text="—"
-               GridPane.rowIndex="4" GridPane.columnIndex="1"
-               styleClass="fs-16 bold text-navy"/>
+            <Label styleClass="form-label" text="ملاحظات:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true" maxWidth="Infinity"
+                      GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        </GridPane>
+    </VBox>
 
-        <!-- ═══ ملاحظات ═══ -->
-        <Label text="ملاحظات:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-        <TextArea fx:id="notesArea" prefRowCount="3" wrapText="true"
-                  GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+    <!-- ══════════ ③ تنبيهات ══════════ -->
+    <!-- الإرشادي: يظهر لما يكون في إجازة مفتوحة -->
+    <Label fx:id="openEndedHint" text="" visible="false" managed="false"
+           styleClass="soft-box text-muted fs-12" wrapText="true" maxWidth="Infinity"/>
 
-        <rowConstraints>
-            <RowConstraints/>
-            <RowConstraints/>
-            <RowConstraints/>
-            <RowConstraints/>
-            <RowConstraints/>
-            <RowConstraints/>
-        </rowConstraints>
-    </GridPane>
-
+    <!-- التحذير: يظهر عند وجود خطأ أو تعارض -->
     <Label fx:id="warningLabel" text="" visible="false" managed="false"
-           styleClass="text-danger bold fs-13" wrapText="true"/>
+           styleClass="text-danger bold fs-13" wrapText="true" maxWidth="Infinity"/>
 
-    <Region VBox.vgrow="ALWAYS"/>
-
-    <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="cancelButton" text="إلغاء" styleClass="btn-secondary"/>
-        <Button fx:id="saveButton" text="حفظ" styleClass="btn-primary"/>
+    <!-- ══════════ ④ الأزرار ══════════ -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="cancelButton" text="إلغاء" styleClass="btn-secondary" prefHeight="38" prefWidth="110"/>
+        <Button fx:id="saveButton" text="حفظ" styleClass="btn-primary" prefHeight="38" prefWidth="110"/>
     </HBox>
 </VBox>

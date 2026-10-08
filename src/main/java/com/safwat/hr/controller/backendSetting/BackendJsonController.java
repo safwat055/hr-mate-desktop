@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 
 /**
  * BackendJsonController — تحرير app_config.json للباك إند من الفرونت.
+ * <p>
+ * التعليقات (_comment_*) مابتظهرش كمفاتيح، وبتتعرض كنص توضيحي:
+ * تعليق القسم جنب اسمه، وتعليق المفتاح تحت مساره.
  */
 public class BackendJsonController implements Initializable {
 
@@ -49,6 +52,8 @@ public class BackendJsonController implements Initializable {
     // ══════════════════ State ══════════════════
     private BackendJsonStore store;
     private Map<String, List<Entry>> grouped = new LinkedHashMap<>();
+    /** التعليقات: "setting" → تعليق القسم، "setting.scaleUp" → تعليق المفتاح. */
+    private Map<String, String> comments = new HashMap<>();
     private String currentSection;
     private final Map<String, String> pendingChanges = new LinkedHashMap<>();
 
@@ -73,7 +78,7 @@ public class BackendJsonController implements Initializable {
             return;
         }
 
-        store = new BackendJsonStore(det.get().backendAppConfig());
+        store = new BackendJsonStore(det.get().backendAppConfig(), BackendJsonStore.BACKEND_DOCS);
 
         if (!store.exists()) {
             setStatus("⚠️ ملف app_config.json غير موجود — اضغط 'إنشاء بالافتراضي'",
@@ -81,6 +86,7 @@ public class BackendJsonController implements Initializable {
             btnCreateDefaults.setVisible(true);
             btnCreateDefaults.setManaged(true);
             grouped.clear();
+            comments.clear();
             sectionList.setItems(FXCollections.observableArrayList());
             return;
         }
@@ -90,6 +96,8 @@ public class BackendJsonController implements Initializable {
 
         try {
             List<Entry> all = store.read();
+            comments = store.comments();
+
             grouped = all.stream().collect(Collectors.groupingBy(
                     Entry::section,
                     LinkedHashMap::new,
@@ -120,7 +128,10 @@ public class BackendJsonController implements Initializable {
 
     private void showSection(String section) {
         currentSection = section;
-        currentCategoryLabel.setText(BackendJsonLabels.sectionTitle(section));
+
+        String sectionDoc = comments.get(section);
+        currentCategoryLabel.setText(BackendJsonLabels.sectionTitle(section)
+                + (isBlank(sectionDoc) ? "" : "  —  " + sectionDoc));
 
         List<Entry> entries = grouped.getOrDefault(section, List.of());
         entryCountLabel.setText(entries.size() + " مفتاح");
@@ -129,12 +140,18 @@ public class BackendJsonController implements Initializable {
         List<Entry> filtered = (q == null || q.isBlank())
                 ? entries
                 : entries.stream()
-                .filter(e -> e.key().toLowerCase().contains(q.toLowerCase())
-                        || BackendJsonLabels.label(e.path()).toLowerCase().contains(q.toLowerCase())
-                        || (e.value() != null && e.value().toLowerCase().contains(q.toLowerCase())))
+                .filter(e -> matches(e, q.toLowerCase()))
                 .collect(Collectors.toList());
 
         renderEntries(filtered);
+    }
+
+    private boolean matches(Entry e, String q) {
+        return e.key().toLowerCase().contains(q)
+                || BackendJsonLabels.label(e.path()).toLowerCase().contains(q)
+                || (e.value() != null && e.value().toLowerCase().contains(q))
+                || (comments.get(e.path()) != null
+                && comments.get(e.path()).toLowerCase().contains(q));
     }
 
     private void renderEntries(List<Entry> entries) {
@@ -176,10 +193,18 @@ public class BackendJsonController implements Initializable {
             card.getChildren().add(arLbl);
         }
 
-        // المسار الكامل (معلوماتي)
+        // المسار الكامل
         Label pathLbl = new Label(entry.path());
         pathLbl.getStyleClass().add("stg-field-value-muted");
         card.getChildren().add(pathLbl);
+
+        // تعليق المفتاح (من _comment_ اللي فوقه في الملف)
+        String doc = comments.get(entry.path());
+        if (!isBlank(doc)) {
+            Label docLbl = new Label("# " + doc);
+            docLbl.getStyleClass().add("stg-field-hint");
+            card.getChildren().add(docLbl);
+        }
 
         // حقل القيمة
         HBox valueRow = new HBox(8);
@@ -260,9 +285,11 @@ public class BackendJsonController implements Initializable {
         btnSaveAll.setDisable(true);
         setStatus("جاري حفظ " + pendingChanges.size() + " مفتاح...", "stg-status-msg");
 
+        Map<String, String> snapshot = new LinkedHashMap<>(pendingChanges);
+
         new Thread(() -> {
             try {
-                store.updateBatch(new LinkedHashMap<>(pendingChanges));
+                store.updateBatch(snapshot);
                 Platform.runLater(() -> {
                     showProgress(false);
                     pendingChanges.clear();
@@ -306,6 +333,7 @@ public class BackendJsonController implements Initializable {
     }
 
     // ══════════════════ State ══════════════════
+
     private void trackChange(String path, String value, VBox card) {
         String original = findOriginal(path);
         if (Objects.equals(original, value)) {
@@ -336,6 +364,7 @@ public class BackendJsonController implements Initializable {
     }
 
     // ══════════════════ Helpers ══════════════════
+
     private Button iconBtn(String icon, String cssClass, String tip) {
         Button b = new Button(icon);
         b.setTooltip(new Tooltip(tip));
@@ -371,5 +400,9 @@ public class BackendJsonController implements Initializable {
                     "stg-status-msg-error", "stg-status-msg-warn");
             statusLabel.getStyleClass().add(cssClass);
         });
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }

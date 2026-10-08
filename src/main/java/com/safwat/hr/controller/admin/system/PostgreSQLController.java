@@ -5,18 +5,41 @@ import com.safwat.hr.network.ApiResponse;
 import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.system.setup.PathResolver;
-import com.safwat.hr.ui.util.AlertUtil;
+import com.safwat.hr.system.setup.PgCredentialsDialog;
+import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import javafx.util.Pair;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
+/**
+ * شاشة PostgreSQL — ويندوز ولينكس.
+ * <ul>
+ *   <li>التشغيل المباشر (pg_ctl) متاح على الاتنين.</li>
+ *   <li>خدمة النظام (Windows Service) على ويندوز بس، والأزرار بتتخفي على لينكس.</li>
+ *   <li>بيانات المستخدم وقت التهيئة من شاشة منبثقة؛ الفاضي بياخد admin / admin.</li>
+ *   <li>كل العمليات اللي ممكن تاخد وقت بتتعمل على threads، والـ FX thread بيعرض النتيجة بس.</li>
+ * </ul>
+ */
 public class PostgreSQLController implements Initializable {
+
+    private static final String DEFAULT_DB_NAME = PostgreSQLService.DEFAULT_DB;
 
     @FXML
     private Label lblPgStatus;
@@ -67,36 +90,37 @@ public class PostgreSQLController implements Initializable {
     private Label lblBackupStatus;
 
     private PostgreSQLService pgService;
+    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     // ══════════════════ Config Helpers ══════════════════
 
-    /**
-     * منفذ PostgreSQL — من AppConfig مع افتراضي 5432.
-     */
     private String pgPort() {
         return AppConfig.getString("connection", "pgPort", "5432");
     }
 
-    /**
-     * مسار bin — من AppConfig مع fallback للكشف التلقائي.
-     */
+    private String appUser() {
+        return AppConfig.getString("connection", "pgUser", PgCredentialsDialog.DEFAULT_USER);
+    }
+
+    private String serviceName() {
+        return AppConfig.getString("connection", "pgServiceName", "PostgreSQL");
+    }
+
     private String pgBinPath() {
         String v = AppConfig.getString("paths", "pgBin", "");
         if (v != null && !v.isEmpty()) return v;
-        return PathResolver.detect()
-                .map(d -> d.pgBin().toString())
-                .orElse("");
+        return PathResolver.detect().map(d -> d.pgBin().toString()).orElse("");
     }
 
-    /**
-     * مسار data — من AppConfig مع fallback للكشف التلقائي.
-     */
     private String pgDataPath() {
         String v = AppConfig.getString("paths", "pgData", "");
         if (v != null && !v.isEmpty()) return v;
-        return PathResolver.detect()
-                .map(d -> d.pgData().toString())
-                .orElse("");
+        return PathResolver.detect().map(d -> d.pgData().toString()).orElse("");
+    }
+
+    /** وضع الخدمة مسموح بس على ويندوز. */
+    private boolean serviceMode() {
+        return OsSupport.WINDOWS && chkServiceMode.isSelected();
     }
 
     // ══════════════════ Init ══════════════════
@@ -105,15 +129,18 @@ public class PostgreSQLController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         pgService = PostgreSQLService.getInstance();
 
-        updateInfo();
+        applyPlatformUi();
         setupButtons();
-        disableServiceControlsOnLinux();
+        refreshStatusAsync();
+        startTicker();
+    }
 
+    private void startTicker() {
         Thread t = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
-                    Platform.runLater(this::updateInfo);
+                    refreshStatusAsync();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -124,19 +151,54 @@ public class PostgreSQLController implements Initializable {
         t.start();
     }
 
-    private void updateInfo() {
+    /**
+     * يحسب الحالة على thread منفصل (pg_ctl status ممكن ياخد ثواني)،
+     * والـ FX thread بيعرض النتيجة بس.
+     */
+    private void refreshStatusAsync() {
+        if (!refreshing.compareAndSet(false, true)) return;
+
         String binPath = pgBinPath();
         String dataPath = pgDataPath();
-        boolean running = pgService.isRunning();
-        boolean initialized = pgService.isInitialized(dataPath);
 
+        Thread t = new Thread(() -> {
+            try {
+                boolean running = pgService.isRunning();
+                boolean initialized = pgService.isInitialized(dataPath);
+                Platform.runLater(() -> applyStatus(binPath, dataPath, running, initialized));
+            } finally {
+                refreshing.set(false);
+            }
+        }, "pg-status");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void applyStatus(String binPath, String dataPath, boolean running, boolean initialized) {
         lblPgPath.setText(binPath.isEmpty() ? "غير محدد" : binPath);
         lblPgData.setText(dataPath.isEmpty() ? "غير محدد" : dataPath);
         lblPgRunningStatus.setText(running ? "🟢 يعمل" : (initialized ? "⏹ جاهز" : "❌ غير مهيأ"));
         lblPgStatus.setText(running ? "🟢 يعمل" : (initialized ? "⏹ متوقف" : "❌ غير مهيأ"));
         lblPgPort.setText(pgPort());
-        lblPgUser.setText("admin");
-        lblPgDatabase.setText("hr_db");
+        lblPgUser.setText(appUser());
+        lblPgDatabase.setText(DEFAULT_DB_NAME);
+    }
+
+    /**
+     * لينكس: إخفاء أزرار خدمة النظام. التشغيل المباشر بيفضل متاح.
+     */
+    private void applyPlatformUi() {
+        if (OsSupport.WINDOWS) return;
+        hide(btnInstallService);
+        hide(btnDeleteService);
+        hide(chkServiceMode);
+        chkServiceMode.setSelected(false);
+        addLog("ℹ️ لينكس: التشغيل المباشر فقط — خدمات النظام غير مدعومة");
+    }
+
+    private static void hide(Node n) {
+        n.setVisible(false);
+        n.setManaged(false);
     }
 
     private void addLog(String message) {
@@ -160,6 +222,8 @@ public class PostgreSQLController implements Initializable {
         btnListDb.setOnAction(e -> listDatabases());
     }
 
+    // ══════════════════ Initialize ══════════════════
+
     private void initializeDatabase() {
         String binPath = pgBinPath();
         String dataPath = pgDataPath();
@@ -168,19 +232,39 @@ public class PostgreSQLController implements Initializable {
             showAlert("خطأ", "يرجى تحديد مسار PostgreSQL أولاً");
             return;
         }
-        if (new File(dataPath).exists()) {
-            if (!AlertUtil.showConfirmation("تحذير",
-                    "فولدر داتا موجود بالفعل في حال الاستمرار ستفقد كل قواعد البيانات "
-                            + "\n" + "للاستمرار اضغط موافق")) {
+
+        try {
+            Path data = Paths.get(dataPath);
+            if (Files.isDirectory(data) && hasEntries(data)) {
+                showAlert("خطأ",
+                        "مجلد البيانات مش فاضي:\n" + data
+                                + "\nاحذفه يدوياً أو اختر مسار تاني. التهيئة مابتمسحش بيانات موجودة.");
                 return;
             }
+        } catch (IOException e) {
+            showAlert("خطأ", "تعذر قراءة مجلد البيانات: " + e.getMessage());
+            return;
         }
+
+        Optional<Pair<String, String>> creds = PgCredentialsDialog.ask(
+                appUser(),
+                "تهيئة PostgreSQL — مستخدم",
+                "أدخل بيانات مستخدم قاعدة البيانات.\n"
+                        + "لو سبت أي حقل فاضي هيتستخدم admin / admin");
+        if (creds.isEmpty()) return;
+
+        String user = creds.get().getKey();
+        String pass = creds.get().getValue();
+
+        // اسم المستخدم بس بيتحفظ — الباسورد مابيتخزنش
+        AppConfig.setValue("connection", "pgUser", user);
+
         btnInit.setDisable(true);
         lblInitStatus.setText("⏳ جاري التهيئة...");
-        addLog("🔄 بدء تهيئة PostgreSQL...");
+        addLog("🔄 بدء تهيئة PostgreSQL (المستخدم: " + user + ")...");
 
         new Thread(() -> {
-            boolean success = pgService.initialize(binPath, dataPath, "admin", "admin");
+            boolean success = pgService.initialize(binPath, dataPath, user, pass);
             Platform.runLater(() -> {
                 btnInit.setDisable(false);
                 if (success) {
@@ -189,18 +273,26 @@ public class PostgreSQLController implements Initializable {
                     showAlert("نجاح", "تم تهيئة PostgreSQL وإنشاء قاعدة البيانات");
                 } else {
                     lblInitStatus.setText("❌ فشل التهيئة");
-                    addLog("❌ فشل تهيئة PostgreSQL");
-                    showAlert("خطأ", "فشل تهيئة PostgreSQL");
+                    addLog("❌ فشل تهيئة PostgreSQL — راجع السجل");
+                    showAlert("خطأ", "فشل تهيئة PostgreSQL. راجع السجل للتفاصيل.");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-init").start();
     }
+
+    private static boolean hasEntries(Path dir) throws IOException {
+        try (Stream<Path> s = Files.list(dir)) {
+            return s.findAny().isPresent();
+        }
+    }
+
+    // ══════════════════ Start / Stop / Restart ══════════════════
 
     private void startPostgreSQL() {
         String binPath = pgBinPath();
         String dataPath = pgDataPath();
-        boolean asService = chkServiceMode.isSelected();
+        boolean asService = serviceMode();
 
         addLog("▶ تشغيل PostgreSQL...");
         new Thread(() -> {
@@ -213,13 +305,13 @@ public class PostgreSQLController implements Initializable {
                     addLog("❌ فشل تشغيل PostgreSQL");
                     showAlert("خطأ", "فشل تشغيل PostgreSQL");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-start").start();
     }
 
     private void stopPostgreSQL() {
-        boolean asService = chkServiceMode.isSelected();
+        boolean asService = serviceMode();
         addLog("⏹ إيقاف PostgreSQL...");
         new Thread(() -> {
             boolean success = pgService.stop(asService);
@@ -231,15 +323,15 @@ public class PostgreSQLController implements Initializable {
                     addLog("❌ فشل إيقاف PostgreSQL");
                     showAlert("خطأ", "فشل إيقاف PostgreSQL");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-stop").start();
     }
 
     private void restartPostgreSQL() {
         String binPath = pgBinPath();
         String dataPath = pgDataPath();
-        boolean asService = chkServiceMode.isSelected();
+        boolean asService = serviceMode();
 
         addLog("🔄 إعادة تشغيل PostgreSQL...");
         new Thread(() -> {
@@ -252,35 +344,39 @@ public class PostgreSQLController implements Initializable {
                     addLog("❌ فشل إعادة تشغيل PostgreSQL");
                     showAlert("خطأ", "فشل إعادة تشغيل PostgreSQL");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-restart").start();
     }
+
+    // ══════════════════ Service (ويندوز بس) ══════════════════
 
     private void installService() {
         String binPath = pgBinPath();
         String dataPath = pgDataPath();
+        String svc = serviceName();
 
-        addLog("📦 تثبيت خدمة PostgreSQL...");
+        addLog("📦 تثبيت خدمة PostgreSQL (" + svc + ")...");
         new Thread(() -> {
-            boolean success = pgService.installService(binPath, dataPath, "PostgreSQL");
+            boolean success = pgService.installService(binPath, dataPath, svc);
             Platform.runLater(() -> {
                 if (success) {
                     addLog("✅ تم تثبيت خدمة PostgreSQL");
                     showAlert("نجاح", "تم تثبيت خدمة PostgreSQL");
                 } else {
-                    addLog("❌ فشل تثبيت الخدمة");
+                    addLog("❌ فشل تثبيت الخدمة — راجع السجل");
                     showAlert("خطأ", "فشل تثبيت الخدمة");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-install-svc").start();
     }
 
     private void deleteService() {
-        addLog("❌ حذف خدمة PostgreSQL...");
+        String svc = serviceName();
+        addLog("🗑 حذف خدمة PostgreSQL (" + svc + ")...");
         new Thread(() -> {
-            boolean success = pgService.deleteService("PostgreSQL");
+            boolean success = pgService.deleteService(svc);
             Platform.runLater(() -> {
                 if (success) {
                     addLog("✅ تم حذف خدمة PostgreSQL");
@@ -289,13 +385,15 @@ public class PostgreSQLController implements Initializable {
                     addLog("❌ فشل حذف الخدمة");
                     showAlert("خطأ", "فشل حذف الخدمة");
                 }
-                updateInfo();
+                refreshStatusAsync();
             });
-        }).start();
+        }, "pg-delete-svc").start();
     }
 
+    // ══════════════════ Databases ══════════════════
+
     private void createDatabase() {
-        TextInputDialog dialog = new TextInputDialog("hr_db");
+        TextInputDialog dialog = new TextInputDialog(DEFAULT_DB_NAME);
         dialog.setTitle("إنشاء قاعدة بيانات");
         dialog.setHeaderText("أدخل اسم قاعدة البيانات");
         dialog.setContentText("اسم القاعدة:");
@@ -312,9 +410,9 @@ public class PostgreSQLController implements Initializable {
                         addLog("❌ فشل إنشاء قاعدة البيانات");
                         showAlert("خطأ", "فشل إنشاء قاعدة البيانات");
                     }
-                    updateInfo();
+                    refreshStatusAsync();
                 });
-            }).start();
+            }, "pg-create-db").start();
         });
     }
 
@@ -328,6 +426,7 @@ public class PostgreSQLController implements Initializable {
             Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
             confirm.setTitle("تأكيد");
             confirm.setHeaderText("هل أنت متأكد من حذف قاعدة البيانات '" + dbName + "'؟");
+            confirm.setContentText("هذه العملية لا يمكن التراجع عنها.");
 
             if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 addLog("🗑 حذف قاعدة بيانات: " + dbName);
@@ -341,9 +440,9 @@ public class PostgreSQLController implements Initializable {
                             addLog("❌ فشل حذف قاعدة البيانات");
                             showAlert("خطأ", "فشل حذف قاعدة البيانات");
                         }
-                        updateInfo();
+                        refreshStatusAsync();
                     });
-                }).start();
+                }, "pg-drop-db").start();
             }
         });
     }
@@ -360,7 +459,7 @@ public class PostgreSQLController implements Initializable {
                 alert.showAndWait();
                 addLog("✅ تم عرض قواعد البيانات");
             });
-        }).start();
+        }, "pg-list-db").start();
     }
 
     // ════════════════════════════════════════════════════════════
@@ -377,7 +476,7 @@ public class PostgreSQLController implements Initializable {
             try {
                 ApiResponse<Object> response = ApiClient.post(
                         "/payroll/backupFull",
-                        new java.util.HashMap<>(),
+                        new HashMap<>(),
                         Object.class
                 );
                 Platform.runLater(() -> {
@@ -401,7 +500,7 @@ public class PostgreSQLController implements Initializable {
                     showAlert("خطأ", "خطأ في الاتصال: " + e.getMessage());
                 });
             }
-        }).start();
+        }, "pg-backup").start();
     }
 
     @FXML
@@ -410,10 +509,9 @@ public class PostgreSQLController implements Initializable {
         confirm.setTitle("تأكيد الاستعادة");
         confirm.setHeaderText("⚠️ تحذير: سيتم مسح قاعدة البيانات الحالية بالكامل!");
         confirm.setContentText(
-                "ستُستعاد قاعدة البيانات من الملف المختار.\n" +
-                        "هذه العملية لا يمكن التراجع عنها.\n\n" +
-                        "هل أنت متأكد من المتابعة؟"
-        );
+                "ستُستعاد قاعدة البيانات من الملف المختار.\n"
+                        + "هذه العملية لا يمكن التراجع عنها.\n\n"
+                        + "هل أنت متأكد من المتابعة؟");
 
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) return;
 
@@ -421,8 +519,7 @@ public class PostgreSQLController implements Initializable {
         fileChooser.setTitle("اختر ملف النسخة الاحتياطية");
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("Backup Files", "*.sql", "*.dump", "*.backup"),
-                new FileChooser.ExtensionFilter("All Files", "*.*")
-        );
+                new FileChooser.ExtensionFilter("All Files", "*.*"));
 
         File file = fileChooser.showOpenDialog(btnRestoreFile.getScene().getWindow());
         if (file == null) return;
@@ -432,11 +529,11 @@ public class PostgreSQLController implements Initializable {
         btnRestoreFile.setDisable(true);
         btnBackupNow.setDisable(true);
 
-        java.nio.file.Path filePath = file.toPath();
+        Path filePath = file.toPath();
 
         new Thread(() -> {
             try {
-                java.util.Map<String, Object> formData = new java.util.HashMap<>();
+                Map<String, Object> formData = new HashMap<>();
                 formData.put("data", "{}");
                 formData.put("file", filePath);
 
@@ -470,33 +567,16 @@ public class PostgreSQLController implements Initializable {
                     showAlert("خطأ", "خطأ أثناء الاستعادة:\n" + e.getMessage());
                 });
             }
-        }).start();
+        }, "pg-restore").start();
     }
 
-    /**
-     * على Linux: تعطيل أزرار الخدمة (Windows-only).
-     */
-    private void disableServiceControlsOnLinux() {
-        if (!System.getProperty("os.name", "").toLowerCase().contains("windows")) {
-            Platform.runLater(() -> {
-                btnInstallService.setDisable(true);
-                btnInstallService.setVisible(false);
-                btnDeleteService.setDisable(true);
-                btnDeleteService.setVisible(false);
-                chkServiceMode.setSelected(false);
-                chkServiceMode.setDisable(true);
-                chkServiceMode.setVisible(false);
-                AppConfig.setValue("connection", "pgAsService", "false");
-                addLog("ℹ️ Linux: تم تعطيل أزرار خدمة PostgreSQL — التشغيل المباشر فقط");
-            });
-        }
-    }
+    // ══════════════════ Helpers ══════════════════
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(title.contains("خطأ")
-                ? Alert.AlertType.ERROR : Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setContentText(message);
-        alert.showAndWait();
+        if (title != null && title.contains("خطأ")) {
+            SAFNotification.error(message);
+        } else {
+            SAFNotification.success(message);
+        }
     }
 }

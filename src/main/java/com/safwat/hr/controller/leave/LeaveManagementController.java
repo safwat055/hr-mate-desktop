@@ -30,7 +30,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
-
+import com.safwat.hr.network.DownloadWithNotification;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 public class LeaveManagementController implements Initializable {
 
     // ═══════════ FXML — Top ═══════════
@@ -123,7 +125,11 @@ public class LeaveManagementController implements Initializable {
     private TableColumn<LatePermissionMonthDto, Object> colMonthHours, colMonthDeducted;
     @FXML
     private Label lateTotalLabel;
-
+    // تاب 1 — تصدير الإجازات
+    @FXML
+    private Button exportRecordsButton;
+    @FXML
+    private TextField exportFromField, exportToField;
     // تاب 3
     @FXML
     private TableView<AnnualBalanceSummaryDto.YearSlice> balanceTable;
@@ -169,6 +175,7 @@ public class LeaveManagementController implements Initializable {
         setupHandlers();
         wireSelectionListeners();
         hideCardsUntilEmployeeSelected();
+        exportRecordsButton.setDisable(true);   // ← جديد
     }
 
     private void hideCardsUntilEmployeeSelected() {
@@ -286,6 +293,7 @@ public class LeaveManagementController implements Initializable {
         employeeInfoBar.setVisible(true);
         employeeInfoBar.setManaged(true);
         showAllCards();
+        exportRecordsButton.setDisable(false);  // ← جديد
         clearViews();              // ← امسح أي بيانات قديمة
         rebuildYearCombo(null);
         reloadAll();
@@ -734,6 +742,9 @@ public class LeaveManagementController implements Initializable {
             if (sel != null) openLateDialog(sel);
         });
         deleteLateButton.setOnAction(e -> deleteSelectedLate());
+
+        exportRecordsButton.setOnAction(e -> exportLeaveReport());
+        TextFieldSetupHelper.setupDateFields(exportFromField,exportToField);
     }
 
     private void wireSelectionListeners() {
@@ -838,7 +849,48 @@ public class LeaveManagementController implements Initializable {
                     });
         });
     }
+// ═══════════════════════════════════════════════════════════
+//  تصدير تقرير الإجازات (PDF)
+// ═══════════════════════════════════════════════════════════
 
+    private void exportLeaveReport() {
+        if (currentEmployee == null) {
+            SAFNotification.warning("اختر موظفًا أولًا");
+            return;
+        }
+        Integer year = yearComboBox.getValue();
+        if (year == null) {
+            SAFNotification.warning("اختر سنة الرصيد");
+            return;
+        }
+
+        LocalDate from = TextFieldSetupHelper.parseDateInput(exportFromField.getText());
+        LocalDate to = TextFieldSetupHelper.parseDateInput(exportToField.getText());
+        if (from == null || to == null) {
+            SAFNotification.error("تاريخ الفترة غير صالح (الصيغة: yyyy-MM-dd)");
+            return;
+        }
+        if (to.isBefore(from)) {
+            SAFNotification.error("تاريخ النهاية قبل تاريخ البداية");
+            return;
+        }
+
+        String nid = currentEmployee.nationalId();
+        String path = "/leaves/export/balance-report"
+                + "?nationalId=" + URLEncoder.encode(nid, StandardCharsets.UTF_8)
+                + "&year=" + year
+                + "&from=" + from
+                + "&to=" + to;
+
+        exportRecordsButton.setDisable(true);
+        DownloadWithNotification.downloadPdfToTempAndNotify(
+                path,
+                "LEAVE_REPORT_" + nid,
+                currentEmployee.fullName(),
+                "تقرير الإجازات",
+                () -> exportRecordsButton.setDisable(false)
+        );
+    }
     // ═══════════════════════════════════════════════════════════
     //  حذف سجل
     // ═══════════════════════════════════════════════════════════
@@ -855,6 +907,7 @@ public class LeaveManagementController implements Initializable {
                 + " إلى " + (sel.getToDate() == null ? "مفتوح" : sel.getToDate()));
         Optional<ButtonType> r = confirm.showAndWait();
         if (r.isEmpty() || r.get() != ButtonType.OK) return;
+
 
         UiAsync.runVoid(
                 () -> api.deleteRecord(sel.getId()),

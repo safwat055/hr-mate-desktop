@@ -3,6 +3,17 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+
+<!--
+    شاشة إعدادات التطبيق — SettingsController
+    ────────────────────────────────────────────────────────────
+    ① الهيدر: عنوان + بحث + أزرار الأدوات
+    ② التابات:
+       - اعدادات التطبيق  (application.properties)
+       - اعدادات المستخدم (app_config.json)
+    ③ الفوتر: الحالة + تجاهل + حفظ الكل
+-->
+
 <BorderPane nodeOrientation="RIGHT_TO_LEFT"
             prefHeight="740" prefWidth="1100"
             styleClass="stg-root"
@@ -10,7 +21,7 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.safwat.hr.controller.backendSetting.SettingsController">
 
-    <!-- ═══ HEADER ═══ -->
+    <!-- ══════════ HEADER ══════════ -->
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-header">
             <padding>
@@ -18,6 +29,7 @@
             </padding>
 
             <Label styleClass="stg-header-icon" text="⚙"/>
+
             <VBox spacing="2">
                 <Label styleClass="stg-header-title" text="إعدادات التطبيق"/>
                 <Label fx:id="headerSubtitle" styleClass="stg-header-subtitle"
@@ -26,32 +38,33 @@
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <!-- Search -->
-            <TextField fx:id="searchField" onKeyReleased="#onSearch"
+            <TextField fx:id="searchField"
+                       onKeyReleased="#onSearch"
                        prefWidth="240"
                        promptText="🔍  ابحث عن مفتاح أو قيمة..."
                        styleClass="stg-search-field"/>
 
-            <!-- Toolbar buttons -->
             <Button fx:id="btnRefresh" onAction="#onRefresh"
                     styleClass="stg-btn-toolbar" text="↻  تحديث"/>
             <Button fx:id="btnBackup" onAction="#onBackup"
-                    styleClass="stg-btn-toolbar,stg-btn-purple" text="💾  نسخة احتياطية"/>
+                    styleClass="stg-btn-toolbar stg-btn-purple" text="💾  نسخة احتياطية"/>
             <Button fx:id="btnAdd" onAction="#onAdd"
-                    styleClass="stg-btn-toolbar,stg-btn-green" text="➕  إعداد جديد"/>
+                    styleClass="stg-btn-toolbar stg-btn-green" text="➕  إعداد جديد"/>
             <Button fx:id="btnBackups" onAction="#onShowBackups"
                     styleClass="stg-btn-toolbar" text="🗂  سجل النسخ"/>
         </HBox>
     </top>
 
-    <!-- ═══ BODY ═══ -->
+    <!-- ══════════ BODY ══════════ -->
     <center>
-        <TabPane fx:id="mainTabPane" styleClass="stg-tab-pane-dark"
+        <TabPane fx:id="mainTabPane"
+                 styleClass="stg-tab-pane-dark"
                  tabClosingPolicy="UNAVAILABLE">
 
             <!-- TAB 1 — application.properties -->
             <Tab text="اعدادات التطبيق">
-                <SplitPane fx:id="propsSplitPane" dividerPositions="0.22"
+                <SplitPane fx:id="propsSplitPane"
+                           dividerPositions="0.22"
                            styleClass="stg-main-split">
 
                     <VBox maxWidth="240" minWidth="180" styleClass="stg-sidebar">
@@ -65,8 +78,10 @@
                             </VBox.margin>
                         </Label>
 
-                        <ListView fx:id="categoryList" onMouseClicked="#onCategorySelected"
-                                  styleClass="stg-category-list" VBox.vgrow="ALWAYS"/>
+                        <ListView fx:id="categoryList"
+                                  onMouseClicked="#onCategorySelected"
+                                  styleClass="stg-category-list"
+                                  VBox.vgrow="ALWAYS"/>
                     </VBox>
 
                     <VBox styleClass="stg-entries-area" VBox.vgrow="ALWAYS">
@@ -80,19 +95,25 @@
                                    text="اختر تصنيفًا"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Label fx:id="entryCountLabel"
-                                   styleClass="stg-entry-count-badge" text=""/>
+                                   styleClass="stg-entry-count-badge"
+                                   text=""/>
                         </HBox>
 
-                        <ScrollPane fx:id="entriesScroll" fitToWidth="true"
-                                    styleClass="stg-entries-scroll" VBox.vgrow="ALWAYS">
-                            <VBox fx:id="entriesContainer" spacing="6"
+                        <ScrollPane fx:id="entriesScroll"
+                                    fitToWidth="true"
+                                    styleClass="stg-entries-scroll"
+                                    VBox.vgrow="ALWAYS">
+                            <VBox fx:id="entriesContainer"
+                                  spacing="6"
                                   styleClass="stg-entries-container">
                                 <padding>
                                     <Insets bottom="10" left="14" right="14" top="10"/>
                                 </padding>
 
-                                <VBox fx:id="loadingPlaceholder" alignment="CENTER"
-                                      prefHeight="300" spacing="12">
+                                <VBox fx:id="loadingPlaceholder"
+                                      alignment="CENTER"
+                                      prefHeight="300"
+                                      spacing="12">
                                     <Label styleClass="stg-loading-icon" text="⟳"/>
                                     <Label styleClass="stg-loading-text"
                                            text="جاري تحميل الإعدادات..."/>
@@ -106,7 +127,8 @@
 
             <!-- TAB 2 — app_config.json -->
             <Tab text="اعدادات المستخدم">
-                <SplitPane fx:id="jsonSplitPane" dividerPositions="0.22"
+                <SplitPane fx:id="jsonSplitPane"
+                           dividerPositions="0.22"
                            styleClass="stg-main-split">
 
                     <VBox maxWidth="240" minWidth="180" styleClass="stg-sidebar">
@@ -120,8 +142,10 @@
                             </VBox.margin>
                         </Label>
 
-                        <ListView fx:id="jsonCategoryList" onMouseClicked="#onJsonCategorySelected"
-                                  styleClass="stg-category-list" VBox.vgrow="ALWAYS"/>
+                        <ListView fx:id="jsonCategoryList"
+                                  onMouseClicked="#onJsonCategorySelected"
+                                  styleClass="stg-category-list"
+                                  VBox.vgrow="ALWAYS"/>
                     </VBox>
 
                     <VBox styleClass="stg-entries-area" VBox.vgrow="ALWAYS">
@@ -135,19 +159,25 @@
                                    text="اختر قسمًا"/>
                             <Region HBox.hgrow="ALWAYS"/>
                             <Label fx:id="jsonEntryCountLabel"
-                                   styleClass="stg-entry-count-badge" text=""/>
+                                   styleClass="stg-entry-count-badge"
+                                   text=""/>
                         </HBox>
 
-                        <ScrollPane fx:id="jsonEntriesScroll" fitToWidth="true"
-                                    styleClass="stg-entries-scroll" VBox.vgrow="ALWAYS">
-                            <VBox fx:id="jsonEntriesContainer" spacing="6"
+                        <ScrollPane fx:id="jsonEntriesScroll"
+                                    fitToWidth="true"
+                                    styleClass="stg-entries-scroll"
+                                    VBox.vgrow="ALWAYS">
+                            <VBox fx:id="jsonEntriesContainer"
+                                  spacing="6"
                                   styleClass="stg-entries-container">
                                 <padding>
                                     <Insets bottom="10" left="14" right="14" top="10"/>
                                 </padding>
 
-                                <VBox fx:id="jsonLoadingPlaceholder" alignment="CENTER"
-                                      prefHeight="300" spacing="12">
+                                <VBox fx:id="jsonLoadingPlaceholder"
+                                      alignment="CENTER"
+                                      prefHeight="300"
+                                      spacing="12">
                                     <Label styleClass="stg-loading-icon" text="⟳"/>
                                     <Label styleClass="stg-loading-text"
                                            text="جاري تحميل إعدادات JSON..."/>
@@ -162,7 +192,7 @@
         </TabPane>
     </center>
 
-    <!-- ═══ FOOTER ═══ -->
+    <!-- ══════════ FOOTER ══════════ -->
     <bottom>
         <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-footer">
             <padding>
@@ -171,20 +201,26 @@
 
             <Label fx:id="statusLabel" styleClass="stg-status-label" text="جاهز"/>
 
-            <ProgressIndicator fx:id="progressIndicator" prefHeight="16" prefWidth="16"
-                               styleClass="stg-footer-spinner" visible="false"/>
+            <ProgressIndicator fx:id="progressIndicator"
+                               prefHeight="16" prefWidth="16"
+                               styleClass="stg-footer-spinner"
+                               visible="false"/>
 
             <Region HBox.hgrow="ALWAYS"/>
 
-            <Label fx:id="pendingBadge" styleClass="stg-pending-badge"
-                   text="" visible="false"/>
+            <Label fx:id="pendingBadge"
+                   styleClass="stg-pending-badge"
+                   text=""
+                   visible="false"/>
 
             <Button fx:id="btnDiscard" onAction="#onDiscard"
                     styleClass="stg-btn-danger-outline"
-                    text="↩  تجاهل" visible="false"/>
+                    text="↩  تجاهل"
+                    visible="false"/>
 
             <Button fx:id="btnSaveAll" disable="true" onAction="#onSaveAll"
-                    styleClass="stg-btn-primary" text="💾  حفظ الكل"/>
+                    styleClass="stg-btn-primary"
+                    text="💾  حفظ الكل"/>
         </HBox>
     </bottom>
 
