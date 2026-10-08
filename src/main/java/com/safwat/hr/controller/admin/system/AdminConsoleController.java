@@ -1,9 +1,13 @@
 package com.safwat.hr.controller.admin.system;
 
-import com.safwat.hr.system.setup.*;
-import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.theme.SettingsThemeLoader;
+import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.HealthCheckService;
+import com.safwat.hr.system.setup.NavigationBus;
+import com.safwat.hr.system.setup.PathResolver;
+import com.safwat.hr.system.setup.PgCredentialsDialog;
+import com.safwat.hr.system.setup.SetupWizardService;
 import com.safwat.hr.ui.util.AlertUtil;
+import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -15,27 +19,29 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 import lombok.Setter;
 
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.ResourceBundle;
-import com.safwat.hr.shared.AppConfig;
-import com.safwat.hr.system.setup.PathResolver;
-import com.safwat.hr.system.setup.PgCredentialsDialog;
-import javafx.util.Pair;
-
-import java.nio.file.Files;
 import java.util.Optional;
+import java.util.ResourceBundle;
+
 /**
- * AdminConsoleController — الواجهة الموحّدة لكل شاشات إدارة النظام.
+ * AdminConsoleController — الواجهة الموحّدة لكل شاشات إدارة النظام (ويندوز ولينكس).
  * <p>
- * تحتوي على ListView جانبي بمفاتيح: الرئيسية / PostgreSQL / Backend /
- * السجلات / إعدادات الباك إند.
- * كل شاشة تُحمّل مرة واحدة وتُخزّن في StackPane — التبديل = visible فقط.
+ * ListView جانبي بمفاتيح الشاشات. كل شاشة تُحمّل مرة واحدة وتُخزّن في StackPane،
+ * والتبديل = visible فقط.
+ * <p>
+ * البورتات بتتقرأ من AppConfig ({@code connection.pgPort} و{@code connection.port})،
+ * عشان التوزيع المحمول يشتغل بالإعدادات اللي المستخدم حددها.
  */
 public class AdminConsoleController implements Initializable {
+
+    private static final int DEFAULT_PG_PORT = 5432;
+    private static final int DEFAULT_BE_PORT = 8080;
 
     // ══════════════════ FXML ══════════════════
     @FXML
@@ -61,31 +67,56 @@ public class AdminConsoleController implements Initializable {
     private final Map<String, Node> views = new LinkedHashMap<>();
     private final Map<String, String> viewTitles = new LinkedHashMap<>();
 
-    private static final int PG_PORT = 5432;
-    private static final int BE_PORT = 8080;
-    // لو احتجته لاحقاً لفتح Dialogs
+    /** لو احتجته لاحقاً لفتح Dialogs */
     @Setter
     private Stage stage;
 
+    // ══════════════════ Config ══════════════════
+
+    private int pgPort() {
+        return parsePort(AppConfig.getString("connection", "pgPort", String.valueOf(DEFAULT_PG_PORT)),
+                DEFAULT_PG_PORT);
+    }
+
+    private int bePort() {
+        return parsePort(AppConfig.getString("connection", "port", String.valueOf(DEFAULT_BE_PORT)),
+                DEFAULT_BE_PORT);
+    }
+
+    private static int parsePort(String v, int fallback) {
+        try {
+            int p = Integer.parseInt(v == null ? "" : v.trim());
+            return (p > 0 && p < 65536) ? p : fallback;
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
     // ══════════════════ Init ══════════════════
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         SettingsThemeLoader.apply(navList);
 
         // سجّل الـ NavigationBus عشان MainController يقدر يطلب انتقال
-
         NavigationBus.register(this::navigateTo);
 
-        // حمّل الشاشات الخمس مرة واحدة
-        registerView(NavigationBus.HOME, "🏠  الرئيسية", "/com/safwat/hr/controller/admin/system/main.fxml");
-        registerView(NavigationBus.POSTGRESQL, "🐘  PostgreSQL", "/com/safwat/hr/controller/admin/system/postgresql.fxml");
-        registerView(NavigationBus.BACKEND, "🚀  Backend", "/com/safwat/hr/controller/admin/system/backend.fxml");
-        registerView(NavigationBus.LOGS, "📊  السجلات", "/com/safwat/hr/controller/admin/system/logs.fxml");
-        registerView(NavigationBus.BACKEND_PROPERTIES, "⚙  إعدادات الباك إند", "/com/safwat/hr/controller/backendSetting/backend-properties.fxml");
-        registerView(NavigationBus.BACKEND_JSON, "اعدادات اضافية للنظام", "/com/safwat/hr/controller/backendSetting/backend-json.fxml");
-        registerView(NavigationBus.FRONTEND_JSON,
-                "🔧  إعدادات الفرونت (JSON)",
+        // حمّل الشاشات مرة واحدة
+        registerView(NavigationBus.HOME, "🏠  الرئيسية",
+                "/com/safwat/hr/controller/admin/system/main.fxml");
+        registerView(NavigationBus.POSTGRESQL, "🐘  PostgreSQL",
+                "/com/safwat/hr/controller/admin/system/postgresql.fxml");
+        registerView(NavigationBus.BACKEND, "🚀  Backend",
+                "/com/safwat/hr/controller/admin/system/backend.fxml");
+        registerView(NavigationBus.LOGS, "📊  السجلات",
+                "/com/safwat/hr/controller/admin/system/logs.fxml");
+        registerView(NavigationBus.BACKEND_PROPERTIES, "⚙  إعدادات الباك إند",
+                "/com/safwat/hr/controller/backendSetting/backend-properties.fxml");
+        registerView(NavigationBus.BACKEND_JSON, "اعدادات اضافية للنظام",
+                "/com/safwat/hr/controller/backendSetting/backend-json.fxml");
+        registerView(NavigationBus.FRONTEND_JSON, "🔧  إعدادات الفرونت (JSON)",
                 "/com/safwat/hr/controller/backendSetting/frontend-json.fxml");
+
         navList.setItems(FXCollections.observableArrayList(views.keySet()));
         navList.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -104,9 +135,15 @@ public class AdminConsoleController implements Initializable {
     }
 
     // ══════════════════ Loading ══════════════════
+
     private void registerView(String key, String title, String fxmlPath) {
+        URL res = getClass().getResource(fxmlPath);
+        if (res == null) {
+            System.err.println("[AdminConsole] ملف FXML مش موجود: " + fxmlPath);
+            return;
+        }
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            FXMLLoader loader = new FXMLLoader(res);
             Node node = loader.load();
             node.setVisible(false);
             node.setManaged(false);
@@ -140,12 +177,12 @@ public class AdminConsoleController implements Initializable {
 
     @FXML
     private void onHealthCheck() {
-        var det = PathResolver.detect();
+        Optional<PathResolver.Distribution> det = PathResolver.detect();
         if (det.isEmpty()) {
             showAlert("خطأ", "لم يتم العثور على بنية التوزيع");
             return;
         }
-        var rep = HealthCheckService.check(det.get(), PG_PORT, BE_PORT);
+        HealthCheckService.Report rep = HealthCheckService.check(det.get(), pgPort(), bePort());
         showHealthReport(rep);
     }
 
@@ -154,8 +191,11 @@ public class AdminConsoleController implements Initializable {
         setStatus("⏳ جاري الاكتشاف والإعداد...", "stg-status-msg");
         showProgress(true);
 
+        int pg = pgPort();
+        int be = bePort();
+
         new Thread(() -> {
-            var result = SetupWizardService.restoreDefaults(PG_PORT, BE_PORT);
+            SetupWizardService.SetupResult result = SetupWizardService.restoreDefaults(pg, be);
             Platform.runLater(() -> {
                 showProgress(false);
                 if (!result.success()) {
@@ -165,15 +205,22 @@ public class AdminConsoleController implements Initializable {
                 }
                 setStatus("✅ " + result.message(), "stg-status-msg-ok");
                 showHealthReport(result.report());
-                // انتقل للرئيسية عشان المستخدم يشوف الحقول المحدّثة
                 navigateTo(NavigationBus.HOME);
             });
-        }).start();
+        }, "admin-restore-defaults").start();
     }
 
     @FXML
     private void onQuickStart() {
-        // 1) لو PostgreSQL مش متهيأ، نطلب اليوزر والباسورد قبل ما نبدأ
+        // 1) PostgreSQL مابيشتغلش بـ root على لينكس — نوقف قبل أي حاجة
+        if (OsSupport.isRootUser()) {
+            showAlert("خطأ",
+                    "التطبيق شغال بصلاحيات root.\n"
+                            + "PostgreSQL مابيشتغلش بصلاحيات root. شغّل البرنامج بمستخدم عادي.");
+            return;
+        }
+
+        // 2) لو PostgreSQL مش متهيأ نطلب بيانات المستخدم قبل ما نبدأ
         boolean needsInit = PathResolver.detect()
                 .map(d -> !Files.isRegularFile(d.pgConf()))
                 .orElse(false);
@@ -191,12 +238,12 @@ public class AdminConsoleController implements Initializable {
             pass = creds.get().getValue();
         }
 
-        // 2) التشغيل
+        // 3) التشغيل
         setStatus("⏳ جاري التشغيل...", "stg-status-msg");
         showProgress(true);
         btnQuickStart.setDisable(true);
 
-        SetupWizardService.quickStart(PG_PORT, BE_PORT, user, pass,
+        SetupWizardService.quickStart(pgPort(), bePort(), user, pass,
                 (msg, pct) -> {
                     setStatus(msg, "stg-status-msg");
                     footerProgress.setProgress(pct / 100.0);
@@ -257,7 +304,7 @@ public class AdminConsoleController implements Initializable {
         if (title != null && title.contains("خطأ")) {
             AlertUtil.showError(title, message);
         } else {
-            AlertUtil.showInfo(title,message);
+            AlertUtil.showInfo(title, message);
         }
     }
 

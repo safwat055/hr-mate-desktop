@@ -16,9 +16,11 @@ import java.util.regex.Pattern;
 /**
  * التشغيل التلقائي عند تسجيل الدخول.
  * <ul>
- *   <li><b>ويندوز:</b> مفتاح Run في الـ Registry (HKCU) → bat بينتظر PostgreSQL ويشغّل التطبيق.</li>
- *   <li><b>لينكس:</b> ملف .desktop في ~/.config/autostart → سكريبت بينتظر بورت PostgreSQL ويشغّل التطبيق.</li>
+ *   <li><b>ويندوز:</b> مفتاح Run في الـ Registry (HKCU) → bat بينتظر PostgreSQL ويشغّل الـ launcher.</li>
+ *   <li><b>لينكس:</b> ملف .desktop في ~/.config/autostart → سكريبت بينتظر بورت PostgreSQL ويشغّل الـ launcher.</li>
  * </ul>
+ * المسار المدخل ممكن يكون جذر التوزيع أو الـ launcher أو java أو jar،
+ * والتحويل للـ launcher الفعلي بيتم بـ {@link BackendService#resolveLauncher(String)}.
  */
 @Slf4j
 public class StartupManager {
@@ -44,12 +46,7 @@ public class StartupManager {
             log.error("❌ مسار التطبيق غير محفوظ ولم يتم العثور عليه تلقائياً");
             return false;
         }
-        Path exe = resolveExePath(path);
-        if (exe == null) {
-            log.error("❌ لم يتم العثور على الملف التنفيذي انطلاقاً من: " + path);
-            return false;
-        }
-        return addToStartup(exe.toString());
+        return addToStartup(path);
     }
 
     public static boolean addToStartup(String appPath) {
@@ -58,12 +55,12 @@ public class StartupManager {
                 log.error("❌ مسار التطبيق فارغ");
                 return false;
             }
-            Path exe = Paths.get(appPath.trim().replace("\"", "")).toAbsolutePath().normalize();
-            if (!Files.isRegularFile(exe)) {
-                log.error("❌ التطبيق غير موجود: " + exe);
+            Path launcher = BackendService.resolveLauncher(appPath);
+            if (launcher == null || !Files.isRegularFile(launcher)) {
+                log.error("❌ لم يتم العثور على الـ launcher انطلاقاً من: " + appPath);
                 return false;
             }
-            return OsSupport.WINDOWS ? addWindows(exe) : addLinux(exe);
+            return OsSupport.WINDOWS ? addWindows(launcher) : addLinux(launcher);
         } catch (Exception e) {
             log.error("❌ خطأ أثناء إضافة التطبيق للتشغيل التلقائي", e);
             return false;
@@ -141,11 +138,11 @@ public class StartupManager {
     //  Windows
     // ══════════════════════════════════════════════════════════════
 
-    private static boolean addWindows(Path exe) throws IOException, InterruptedException {
-        Files.deleteIfExists(exe.getParent().resolve(LEGACY_APP_NAME + ".bat"));
+    private static boolean addWindows(Path launcher) throws IOException, InterruptedException {
+        Files.deleteIfExists(launcher.getParent().resolve(LEGACY_APP_NAME + ".bat"));
 
-        Path bat = exe.getParent().resolve(APP_NAME + ".bat");
-        Files.writeString(bat, windowsBat(exe.getFileName().toString()), StandardCharsets.US_ASCII);
+        Path bat = launcher.getParent().resolve(APP_NAME + ".bat");
+        Files.writeString(bat, windowsBat(launcher.getFileName().toString()), StandardCharsets.US_ASCII);
 
         ProcessRunner.Result r = ProcessRunner.run(30, List.of(
                 "reg", "add", REG_KEY, "/v", APP_NAME, "/t", "REG_SZ",
@@ -158,7 +155,7 @@ public class StartupManager {
         return false;
     }
 
-    /** bat بينتظر PostgreSQL (بالخدمة أو بالبورت) ثم يشغّل التطبيق. CRLF عشان cmd يتعامل معاه صح. */
+    /** bat بينتظر PostgreSQL (بالخدمة أو بالبورت) ثم يشغّل الـ launcher. CRLF عشان cmd يتعامل معاه صح. */
     private static String windowsBat(String exeName) {
         String bat = """
                 @echo off
@@ -174,7 +171,7 @@ public class StartupManager {
                 if not errorlevel 1 goto START_APP
                 if %ELAPSED% geq %TIMEOUT% goto START_APP
                 timeout /t 2 /nobreak > nul
-                set /a ELAPSED=%ELAPSED%+2
+                set /a ELAPSED=%ELAPSED%+2  
                 goto CHECK_PG
                 :START_APP
                 cd /d "%~dp0"
@@ -202,13 +199,13 @@ public class StartupManager {
     //  Linux
     // ══════════════════════════════════════════════════════════════
 
-    private static boolean addLinux(Path exe) throws IOException {
-        exe.toFile().setExecutable(true, false);
+    private static boolean addLinux(Path launcher) throws IOException {
+        launcher.toFile().setExecutable(true, false);
 
         Path dataDir = xdgHome("XDG_DATA_HOME", ".local/share").resolve(APP_NAME);
         Files.createDirectories(dataDir);
         Path wrapper = dataDir.resolve(WRAPPER_FILE);
-        Files.writeString(wrapper, linuxWrapper(exe), StandardCharsets.UTF_8);
+        Files.writeString(wrapper, linuxWrapper(launcher), StandardCharsets.UTF_8);
         wrapper.toFile().setExecutable(true, false);
 
         Path autostartDir = xdgHome("XDG_CONFIG_HOME", ".config").resolve("autostart");
@@ -228,8 +225,11 @@ public class StartupManager {
         return true;
     }
 
-    /** سكريبت بينتظر بورت PostgreSQL (بدون pg_isready) ثم يشغّل التطبيق. */
-    private static String linuxWrapper(Path exe) {
+    /** سكريبت بينتظر بورت PostgreSQL (بدون pg_isready) ثم يشغّل الـ launcher. */
+    private static String linuxWrapper(Path launcher) {
+        Path home = PathResolver.homeOfLauncher(launcher);
+        Path launcherDir = launcher.getParent();           // bin/
+        Path storage = home.resolve("app");
         return "#!/bin/bash\n"
                 + "# Generated by hr-mate-system: waits for PostgreSQL then starts the app.\n"
                 + "PORT=" + pgPort() + "\n"
@@ -237,8 +237,9 @@ public class StartupManager {
                 + "  if (exec 3<>/dev/tcp/127.0.0.1/$PORT) 2>/dev/null; then break; fi\n"
                 + "  sleep 2\n"
                 + "done\n"
-                + "cd " + shQuote(exe.getParent().toString()) + " || exit 1\n"
-                + "exec " + shQuote(exe.toString()) + "\n";
+                + "export APP_STORAGE_ROOT=" + shQuote(storage.toString()) + "\n"
+                + "cd " + shQuote(launcherDir.toString()) + " || exit 1\n"   // ← bin/
+                + "exec " + shQuote(launcher.toString()) + "\n";
     }
 
     private static Path desktopPath() {
@@ -279,44 +280,5 @@ public class StartupManager {
     private static String pgPort() {
         String v = AppConfig.getString("connection", "pgPort", "5432");
         return (v != null && v.trim().matches("\\d{1,5}")) ? v.trim() : "5432";
-    }
-
-    /**
-     * يحوّل المسار المحفوظ (ملف / فولدر / جذر الصورة) لمسار الـ exe الفعلي.
-     */
-    private static Path resolveExePath(String raw) {
-        try {
-            String cleaned = raw.trim().replace("\"", "");
-            if (cleaned.isEmpty()) return null;
-
-            Path p = Paths.get(cleaned).toAbsolutePath().normalize();
-            if (Files.isRegularFile(p)) return p;
-
-            if (OsSupport.WINDOWS && !Files.exists(p)) {
-                Path withExe = Paths.get(p + ".exe");
-                if (Files.isRegularFile(withExe)) return withExe;
-            }
-
-            if (Files.isDirectory(p)) {
-                String[] names = OsSupport.WINDOWS
-                        ? new String[]{APP_NAME + ".exe", LEGACY_APP_NAME + ".exe"}
-                        : new String[]{APP_NAME, LEGACY_APP_NAME};
-                Path[] bases = {
-                        p,
-                        p.resolve("bin"),
-                        p.resolve(APP_NAME),
-                        p.resolve(APP_NAME).resolve("bin")
-                };
-                for (Path base : bases) {
-                    for (String n : names) {
-                        Path c = base.resolve(n);
-                        if (Files.isRegularFile(c)) return c;
-                    }
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

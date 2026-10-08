@@ -1,14 +1,7 @@
 {
   "ui": {"theme": "theme-light.css"},
-  "paths": {
-    "pgRoot": "",
-    "backendDir": "",
-    "pgBin": "",
-    "backend": "",
-    "pgData": "",
-    "frontend": ""
-  },
   "meta": {"registeredViews": [
+    "/com/safwat/hr/controller/report/PayrollReport.fxml",
     "server setting",
     "إدارة قواعد البدلات",
     "اجر الاشتراك",
@@ -24,7 +17,7 @@
     "مفردات بيرول",
     "نسخ احتياطي",
     "نماذج التحميل",
-    "/com/safwat/hr/controller/report/PayrollReport.fxml"
+    "تقرير جديد"
   ]},
   "connection": {
     "alone": "false",

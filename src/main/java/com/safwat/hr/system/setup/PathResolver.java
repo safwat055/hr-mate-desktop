@@ -9,10 +9,11 @@ import java.util.Optional;
  * يكتشف بنية التوزيع تلقائياً:
  * <pre>
  *   hr-mate-win/
- *   ├── hr-mate/         ← الفرونت (هنا يعمل التطبيق)
- *   ├── hr-mate-system/  ← الباك إند
+ *   ├── hr-mate/         ← الفرونت
+ *   ├── hr-mate-system/  ← الباك إند (فيه app/ = مكان الإعدادات والتخزين)
  *   └── pgsql/           ← قاعدة البيانات
  * </pre>
+ * على لينكس الـ launcher بيكون جوه bin/، لكن الجذر (الـ home) بيفضل هو المرجع لكل المسارات.
  */
 public final class PathResolver {
 
@@ -21,6 +22,8 @@ public final class PathResolver {
         public Path frontend;
         public Path backend;
         public Path pgRoot;
+
+        // ══════════════ PostgreSQL ══════════════
 
         public Path pgBin() {
             return pgRoot.resolve("bin");
@@ -42,22 +45,46 @@ public final class PathResolver {
             return pgData().resolve("postgresql.conf");
         }
 
+        // ══════════════ Backend ══════════════
+
+        /** جذر الباك إند — هنا بيتشغل، وهنا فيه app/ */
+        public Path backendHome() {
+            return backend;
+        }
+
+        /** مكان التخزين والإعدادات للباك إند: <home>/app (نفس قيمة APP_STORAGE_ROOT) */
+        public Path backendStorageRoot() {
+            return backend.resolve("app");
+        }
+
+        /** الـ launcher الفعلي: bin/hr-mate-system على لينكس، والـ exe في الجذر على ويندوز. */
         public Path backendExe() {
+            if (!win()) {
+                Path inBin = backend.resolve("bin").resolve("hr-mate-system");
+                if (Files.isRegularFile(inBin)) return inBin;
+            }
             return backend.resolve(win() ? "hr-mate-system.exe" : "hr-mate-system");
         }
 
         public Path backendConfig() {
-            return backend.resolve("app/config/application.properties");
+            return backendStorageRoot().resolve("config").resolve("application.properties");
         }
 
-        // داخل PathResolver.Distribution
         public Path backendAppConfig() {
-            return backend.resolve("app").resolve("config").resolve("app_config.json");
+            return backendStorageRoot().resolve("config").resolve("app_config.json");
+        }
+
+        // ══════════════ Frontend ══════════════
+
+        public Path frontendHome() {
+            return frontend;
         }
 
         public Path frontendConfig() {
-            return frontend.resolve("config/app_config.json");
+            return frontend.resolve("config").resolve("app_config.json");
         }
+
+        // ══════════════ Misc ══════════════
 
         public boolean signature() {
             return Files.isDirectory(pgRoot) && Files.isDirectory(backend);
@@ -70,8 +97,26 @@ public final class PathResolver {
         }
     }
 
-    private static boolean win() {
+    private PathResolver() {
+    }
+
+    static boolean win() {
         return System.getProperty("os.name", "").toLowerCase().contains("win");
+    }
+
+    /**
+     * يحسب جذر التوزيع (home) من مسار الـ launcher.
+     * لو الـ launcher جوه bin/ بيطلع فوق لجذر التوزيع، وإلا بيرجع فولدر الـ launcher نفسه.
+     * <p>
+     * ده المرجع الوحيد لمكان التشغيل (working directory) ولمكان app/ على ويندوز ولينكس.
+     */
+    public static Path homeOfLauncher(Path launcher) {
+        Path dir = launcher.toAbsolutePath().normalize().getParent();
+        if (dir != null && dir.getFileName() != null
+                && "bin".equals(dir.getFileName().toString())) {
+            return dir.getParent();
+        }
+        return dir;
     }
 
     /**

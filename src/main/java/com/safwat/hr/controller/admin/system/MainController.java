@@ -3,7 +3,6 @@ package com.safwat.hr.controller.admin.system;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.system.setup.NavigationBus;
 import com.safwat.hr.system.setup.PathResolver;
-import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.util.AlertUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -13,9 +12,14 @@ import javafx.scene.control.*;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import lombok.SneakyThrows;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
@@ -30,8 +34,9 @@ import java.util.prefs.Preferences;
  * <ul>
  *   <li>عرض/تعديل بيانات الماستر (PC + Port + alone).</li>
  *   <li>عرض/تعديل مسارات PostgreSQL و Backend.</li>
- *   <li>زر "كشف تلقائي" يملأ الحقول من بنية التوزيع.</li>
- *   <li>حالة التشغيل بتتحسب على thread منفصل، ولينكس بيخفي زر إصلاح الخدمات.</li>
+ *   <li>مسار الباك إند بيتحفظ دايماً كـ launcher فعلي (مش java ولا jar).</li>
+ *   <li>زر "كشف تلقائي" بيملأ الحقول من بنية التوزيع (ويندوز ولينكس).</li>
+ *   <li>حالة التشغيل بتتحسب على thread منفصل، وخدمات Windows بتتخفي على لينكس.</li>
  * </ul>
  * مصدر الحقيقة: {@link AppConfig}.
  */
@@ -83,6 +88,7 @@ public class MainController implements Initializable {
 
     // ══════════════════════════ Init ══════════════════════════
 
+    @SneakyThrows
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         txtAdminPC.setText(AppConfig.getString("connection", "masterPC", "localhost"));
@@ -100,7 +106,7 @@ public class MainController implements Initializable {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     Thread.sleep(5000);
-                    Platform.runLater(this::updateInfo);   // كان: updateInfo();
+                    Platform.runLater(this::updateInfo);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -112,12 +118,16 @@ public class MainController implements Initializable {
     }
 
     /**
-     * ويندوز: كل الأزرار متاحة. لينكس: زر إصلاح الخدمات بيتخفي (خدمات Windows بس).
+     * ويندوز: كل الأزرار متاحة.
+     * لينكس: خدمات Windows بتتخفي، ولو التطبيق شغال بـ root بنحذر إن PostgreSQL مش هيشتغل.
      */
     private void applyPlatformUi() {
         if (OsSupport.WINDOWS) return;
         hide(btnFixServices);
         addLog("ℹ️ لينكس: إصلاح خدمات Backend غير متاح (خدمات Windows بس)");
+        if (OsSupport.isRootUser()) {
+            addLog("⚠️ التطبيق شغال بصلاحيات root — PostgreSQL مش هيشتغل. شغّله بمستخدم عادي.");
+        }
     }
 
     private static void hide(Node n) {
@@ -125,39 +135,64 @@ public class MainController implements Initializable {
         n.setManaged(false);
     }
 
+    // ══════════════════════════ Path Helpers ══════════════════════════
+
+    /**
+     * يحوّل أي مسار (جذر التوزيع، الـ launcher، java، jar) للـ launcher الفعلي.
+     * لو ملقيناش، بيرجع المسار زي ما هو.
+     */
+    private static String normalizeBackend(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        Path launcher = BackendService.resolveLauncher(raw.trim());
+        return launcher != null ? launcher.toString() : raw.trim();
+    }
+
+    /** الـ launcher من بنية التوزيع المكتشفة (ويندوز ولينكس). */
+    private static String launcherOf(PathResolver.Distribution d) {
+        Path launcher = BackendService.resolveLauncher(d.backend.toString());
+        return launcher != null ? launcher.toString() : d.backendExe().toString();
+    }
+
     // ══════════════════════════ Path Loading ══════════════════════════
 
     /**
      * الأولوية: 1) AppConfig.paths  2) Preferences (توافق خلفي)  3) الكشف التلقائي.
+     * لو المسار المحفوظ قديم (java أو jar أو جذر)، بيتصحح للـ launcher ويتحفظ.
      */
-    private void loadSavedPaths() {
+    private void loadSavedPaths() throws IOException {
         String pgRoot = AppConfig.getString("paths", "pgRoot", "");
-        String backendExe = AppConfig.getString("paths", "backend", "");
+        String backendRaw = AppConfig.getString("paths", "backend", "");
 
         if (pgRoot == null || pgRoot.isEmpty()) pgRoot = prefs.get("pgFolder", "");
-        if (backendExe == null || backendExe.isEmpty()) backendExe = prefs.get("backend", "");
+        if (backendRaw == null || backendRaw.isEmpty()) backendRaw = prefs.get("backend", "");
 
-        if (pgRoot.isEmpty() || backendExe.isEmpty()) {
+        if (pgRoot.isEmpty() || backendRaw.isEmpty()) {
             Optional<PathResolver.Distribution> det = PathResolver.detect();
             if (det.isPresent()) {
                 PathResolver.Distribution d = det.get();
                 if (pgRoot.isEmpty()) pgRoot = d.pgRoot.toString();
-                if (backendExe.isEmpty()) backendExe = d.backendExe().toString();
+                if (backendRaw.isEmpty()) backendRaw = launcherOf(d);
             }
         }
 
-        if (pgRoot != null && !pgRoot.isEmpty()) {
+        if (!pgRoot.isEmpty()) {
             txtPgFolder.setText(pgRoot);
             updatePgPaths(pgRoot);
         }
-        if (backendExe != null && !backendExe.isEmpty()) {
-            txtBackendPath.setText(backendExe);
+
+        if (!backendRaw.isEmpty()) {
+            String backend = normalizeBackend(backendRaw);
+            txtBackendPath.setText(backend);
+            if (!backend.equals(backendRaw.trim())) {
+                AppConfig.setValue("paths", "backend", backend);
+                addLog("🔧 تم تصحيح مسار Backend للـ launcher: " + backend);
+            }
         }
     }
 
     // ══════════════════════════ Buttons Wiring ══════════════════════════
 
-    private void setupButtons() {
+    private void setupButtons() throws IOException{
         btnFixServices.setOnAction(e -> fixBackendServices());
         btnSavePaths.setOnAction(e -> savePaths());
         btnSaveAdminSet.setOnAction(e -> saveAdminSetting());
@@ -188,7 +223,7 @@ public class MainController implements Initializable {
 
         btnBrowseBackend.setOnAction(e -> {
             FileChooser chooser = new FileChooser();
-            chooser.setTitle("اختر ملف Backend");
+            chooser.setTitle("اختر launcher الباك إند (hr-mate-system)");
 
             if (!txtBackendPath.getText().isEmpty()) {
                 File init = new File(txtBackendPath.getText());
@@ -199,11 +234,19 @@ public class MainController implements Initializable {
             }
 
             File file = chooser.showOpenDialog(ownerWindow(btnBrowseBackend));
-            if (file != null) {
-                txtBackendPath.setText(file.getAbsolutePath());
-                AppConfig.setValue("paths", "backend", file.getAbsolutePath());
-                updateInfo();
+            if (file == null) return;
+
+            Path launcher = BackendService.resolveLauncher(file.getAbsolutePath());
+            if (launcher == null) {
+                showAlert("خطأ",
+                        "الملف ده مش launcher الباك إند ولا جزء من توزيعه.\n"
+                                + "اختار hr-mate-system (على ويندوز hr-mate-system.exe).");
+                return;
             }
+
+            txtBackendPath.setText(launcher.toString());
+            AppConfig.setValue("paths", "backend", launcher.toString());
+            updateInfo();
         });
     }
 
@@ -224,16 +267,19 @@ public class MainController implements Initializable {
         }
         PathResolver.Distribution d = det.get();
 
-        txtPgFolder.setText(d.pgRoot.toString());
-        updatePgPaths(d.pgRoot.toString());
-        txtBackendPath.setText(d.backendExe().toString());
+        String pg = d.pgRoot.toString();
+        String backend = launcherOf(d);
+
+        txtPgFolder.setText(pg);
+        updatePgPaths(pg);
+        txtBackendPath.setText(backend);
 
         addLog("🔍 تم الكشف التلقائي: " + d.root);
         setStatus("✓ تم كشف المسارات", "ok");
         showAlert("نجاح",
                 "تم كشف المسارات:\n"
-                        + "• PostgreSQL: " + d.pgRoot + "\n"
-                        + "• Backend: " + d.backendExe());
+                        + "• PostgreSQL: " + pg + "\n"
+                        + "• Backend: " + backend);
     }
 
     private void saveAdminSetting() {
@@ -246,7 +292,7 @@ public class MainController implements Initializable {
         setStatus("✓ تم حفظ إعدادات الماستر", "ok");
         addLog("💾 تم حفظ إعدادات الماستر");
     }
-
+    @SneakyThrows
     private void savePaths() {
         String pgFolder = txtPgFolder.getText();
         if (pgFolder != null && !pgFolder.isEmpty()) {
@@ -258,10 +304,34 @@ public class MainController implements Initializable {
             AppConfig.setValue("paths", "pgData", txtPgDataPath.getText());
         }
 
-        String backend = txtBackendPath.getText();
-        if (backend != null && !backend.isEmpty()) {
+        String backend = normalizeBackend(txtBackendPath.getText());
+        if (!backend.isEmpty()) {
+            txtBackendPath.setText(backend);
             prefs.put("backend", backend);
             AppConfig.setValue("paths", "backend", backend);
+
+            if (!Files.isRegularFile(Paths.get(backend))) {
+                addLog("⚠️ الـ launcher المحفوظ مش موجود: " + backend);
+            } else {
+                // ⚠️ إصلاح: نضمن وجود فولدرات التخزين على طول (لينكس بالذات)
+                try {
+                    Path launcher = Paths.get(backend);
+                    Path home = com.safwat.hr.system.setup.PathResolver.homeOfLauncher(launcher);
+                    Path storage = home.resolve("app");
+                    Files.createDirectories(storage.resolve("config"));
+                    Files.createDirectories(storage.resolve("logs"));
+                    Files.createDirectories(storage.resolve("data"));
+
+                    // لينكس: صلاحيات التنفيذ للـ launcher وللـ runtime
+                    if (!OsSupport.WINDOWS) {
+                        launcher.toFile().setExecutable(true, false);
+                        setExecRecursive(home.resolve("bin"));
+                        setExecRecursive(home.resolve("lib").resolve("runtime").resolve("bin"));
+                    }
+                } catch (Exception ex) {
+                    addLog("⚠️ تعذر تجهيز فولدرات التخزين: " + ex.getMessage());
+                }
+            }
         }
 
         setStatus("✓ تم حفظ المسارات", "ok");
@@ -270,11 +340,22 @@ public class MainController implements Initializable {
         updateInfo();
     }
 
+    /** صلاحيات تنفيذ متكررة لملفات فولدر (لينكس بس). */
+    private static void setExecRecursive(Path dir) {
+        if (dir == null || !Files.isDirectory(dir)) return;
+        try (var walk = Files.walk(dir, 4)) {
+            walk.filter(Files::isRegularFile)
+                    .forEach(p -> p.toFile().setExecutable(true, false));
+        } catch (Exception ignored) {
+        }
+    }
+
     /**
      * يحدد مسارات bin و data من مجلد PostgreSQL، ويعرض حالة وجودها.
-     * على لينكس الـ bin فيه initdb و pg_ctl بدون امتداد — الفحص بيتعامل مع الاتنين.
+     * على لينكس: الملفات بتتعمل لها صلاحية تنفيذ (الـ zip بيضيعها غالباً).
      */
-    private void updatePgPaths(String pgFolder) {
+    @SneakyThrows
+    private void updatePgPaths(String pgFolder)  {
         String binPath = pgFolder + File.separator + "bin";
         String dataPath = pgFolder + File.separator + "data";
 
@@ -283,6 +364,10 @@ public class MainController implements Initializable {
 
         boolean binOk = new File(binPath, OsSupport.exe("pg_ctl")).isFile();
         boolean dataOk = new File(dataPath).isDirectory();
+
+        if (binOk && !OsSupport.WINDOWS) {
+            OsSupport.makeExecutable(Paths.get(binPath));
+        }
 
         lblPgBinStatus.setText(binOk ? "✅" : "❌");
         lblPgBinStatus.getStyleClass().setAll(
@@ -345,6 +430,11 @@ public class MainController implements Initializable {
     // ══════════════════════════ Fix Services (ويندوز بس) ══════════════════════════
 
     private void fixBackendServices() {
+        if (!OsSupport.WINDOWS) {
+            showAlert("معلومات", "إصلاح الخدمات متاح على ويندوز فقط");
+            return;
+        }
+
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("إصلاح خدمات Backend");
         confirm.setHeaderText("سيتم حذف جميع خدمات Backend المثبتة");
@@ -397,9 +487,9 @@ public class MainController implements Initializable {
 
     private void showAlert(String title, String message) {
         if (title != null && title.contains("خطأ")) {
-            AlertUtil.showError(title,message);
+            AlertUtil.showError(title, message);
         } else {
-            AlertUtil.showInfo(title,message);
+            AlertUtil.showInfo(title, message);
         }
     }
 }

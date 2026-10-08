@@ -3,11 +3,13 @@ package com.safwat.hr.controller.admin.system;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +61,6 @@ final class ProcessRunner {
         try (var os = p.getOutputStream()) {
             if (stdin != null) os.write(stdin.getBytes(StandardCharsets.UTF_8));
         } catch (IOException ignored) {
-            // العملية ممكن تقفل قبل ما نكتب كل الإدخال
         }
 
         if (!p.waitFor(timeoutSec, TimeUnit.SECONDS)) {
@@ -102,8 +103,79 @@ final class ProcessRunner {
         }
     }
 
+    /**
+     * مطابقة أكثر أماناً بين عملية ومسار launcher.
+     * على لينكس، {@code Info.command()} ممكن يرجع مسار مختلف شكلياً:
+     * <ul>
+     *   <li>الـ launcher ممكن يكون wrapper script شغّل الـ binary الحقيقي.</li>
+     *   <li>jpackage launcher على لينكس بيفضل نفس العملية، لكن بعض التوزيعات
+     *       بتعمل exec للـ java فبيتغير الأمر.</li>
+     *   <li>أحياناً الـ command بيرجع بدون extension أو بشكل مختصر.</li>
+     * </ul>
+     * عشان كده بنقبل المطابقة لو أي من الآتي اتحقق:
+     * <ul>
+     *   <li>المسار الكامل مطابق (بعد resolve للـ symlinks).</li>
+     *   <li>اسم الملف مطابق لاسم الـ launcher.</li>
+     *   <li>الأمر java وجذر التوزيع موجود في الـ command line.</li>
+     * </ul>
+     */
     static boolean matchesExe(ProcessHandle h, Path exe) {
-        return h.info().command().map(c -> samePath(c, exe)).orElse(false);
+        if (h == null || exe == null) return false;
+
+        Optional<String> cmdOpt = h.info().command();
+        if (cmdOpt.isEmpty()) return false;
+        String cmd = cmdOpt.get();
+
+        // 1) مطابقة مباشرة
+        if (samePath(cmd, exe)) return true;
+
+        // 2) مطابقة بعد resolve للـ symlinks
+        try {
+            Path a = Paths.get(cmd).toAbsolutePath().normalize();
+            Path aReal = Files.exists(a) ? a.toRealPath() : a;
+            Path bReal = Files.exists(exe) ? exe.toRealPath() : exe.toAbsolutePath().normalize();
+            if (OsSupport.WINDOWS
+                    ? aReal.toString().equalsIgnoreCase(bReal.toString())
+                    : aReal.equals(bReal)) {
+                return true;
+            }
+        } catch (Exception ignored) {
+        }
+
+        // 3) اسم الملف مطابق (best-effort لما الـ command مختصر)
+        String cmdName = fileName(cmd);
+        String exeName = exe.getFileName().toString();
+        if (cmdName != null && (cmdName.equals(exeName) || stripExe(cmdName).equals(stripExe(exeName)))) {
+            return true;
+        }
+
+        // 4) لينكس: الأمر java والـ cwd أو الـ jar يشاور على التوزيع
+        if (!OsSupport.WINDOWS && ("java".equals(cmdName) || "javaw".equals(cmdName))) {
+            Optional<String[]> args = h.info().arguments();
+            if (args.isPresent()) {
+                Path home = exe.getParent();
+                if (home != null && home.getParent() != null) home = home.getParent(); // بنطلع لجذر التوزيع
+                if (home != null) {
+                    String homeStr = home.toString();
+                    for (String a : args.get()) {
+                        if (a != null && a.contains(homeStr)) return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static String fileName(String cmd) {
+        if (cmd == null) return null;
+        int i = Math.max(cmd.lastIndexOf('/'), cmd.lastIndexOf('\\'));
+        return i >= 0 ? cmd.substring(i + 1) : cmd;
+    }
+
+    private static String stripExe(String n) {
+        return (n != null && n.toLowerCase(Locale.ROOT).endsWith(".exe"))
+                ? n.substring(0, n.length() - 4) : n;
     }
 
     /** كل العمليات اللي شغالة من نفس الملف بالظبط (المسار الكامل). */
@@ -149,7 +221,6 @@ final class ProcessRunner {
             Matcher m = SC_NUMBER.matcher(r.output());
             List<Integer> nums = new ArrayList<>();
             while (m.find()) nums.add(Integer.valueOf(m.group(1)));
-            // الرقم التاني = STATE
             return nums.size() >= 2 ? nums.get(1) : null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

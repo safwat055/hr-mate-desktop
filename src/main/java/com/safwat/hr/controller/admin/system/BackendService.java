@@ -1,6 +1,7 @@
 package com.safwat.hr.controller.admin.system;
 
 import com.safwat.hr.shared.AppConfig;
+import com.safwat.hr.system.setup.PathResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -11,30 +12,51 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * تشغيل وإيقاف الباك إند (jpackage launcher) على ويندوز ولينكس.
+ * تشغيل وإيقاف الباك إند (jpackage app-image launcher) على ويندوز ولينكس.
  *
  * <ul>
- *   <li>الوضع العادي: تشغيل الـ launcher كـ process، والـ PID بيتحفظ في logs/backend.pid.</li>
- *   <li>الإيقاف: بالـ PID + كل العمليات اللي شغالة من نفس الـ exe بالمسار الكامل، مع أولادها.</li>
- *   <li>خدمة ويندوز: NSSM + sc (ويندوز بس). على لينكس بترجع false برسالة واضحة.</li>
+ *   <li><b>ويندوز:</b> تشغيل مباشر للـ exe من فولدره.</li>
+ *   <li><b>لينكس:</b> نولّد {@code run.sh} في جذر الباكيج يحاكي التشغيل اليدوي
+ *       ({@code cd bin && exec ./hr-mate-system}) + ينظف env + يعمل symlink
+ *       {@code bin/app → ../app}. الـ Java بتنفذ السكريبت بس.</li>
+ *   <li>الـ PID بيتحفظ في logs/backend.pid.</li>
+ *   <li>الإيقاف: بالـ PID + كل العمليات اللي شغالة من نفس الـ launcher، مع أولادها.</li>
+ *   <li>خدمة ويندوز: NSSM + sc (ويندوز بس).</li>
  * </ul>
  */
 @Slf4j
 public class BackendService {
 
     static final String SERVICE_NAME = "HR_MATE_Service";
+
     private static final String DISPLAY_NAME = "HR_MATE_Service";
     private static final String NSSM_EXE = "nssm.exe";
     private static final String PID_FILE = "backend.pid";
     private static final Pattern SERVICE_LINE = Pattern.compile("SERVICE_NAME\\s*:\\s*(\\S+)");
     private static final Pattern SERVICE_NAME_RE = Pattern.compile("[A-Za-z0-9_.\\-]{1,128}");
+
+    /** أسماء الـ launcher المعروفة (بدون .exe). */
+    private static final List<String> LAUNCHER_NAMES = List.of("hr-mate-system", "HR_MATE", "hr-mate");
+    /** فولدرات التوزيع الداخلية — بنتخطاها وإحنا بندور على الجذر. */
+    private static final List<String> LAYOUT_DIRS = List.of("bin", "lib", "runtime", "app");
+
+    /**
+     * أقصى مدة نستنى فيها الـ launcher قبل ما نحكم إنه بدأ بنجاح.
+     * على لينكس الـ jpackage launcher بياخد وقت لرفع الـ JVM.
+     */
+    private static final int STARTUP_GRACE_SECONDS = 10;
+
+    private static final String WINDOWS_SERVICE_MSG =
+            "ℹ️ خدمة الباك إند مدعومة على ويندوز فقط — على لينكس استخدم الوضع العادي";
 
     private static volatile BackendService instance;
 
@@ -52,24 +74,87 @@ public class BackendService {
         return instance;
     }
 
-    private static final String WINDOWS_SERVICE_MSG =
-            "ℹ️ خدمة الباك إند مدعومة على ويندوز فقط — على لينكس استخدم الوضع العادي";
+    // ══════════════════════════════════════════════════════════════
+    //  Launcher resolution (jpackage layout)
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * يحوّل أي مسار (جذر التوزيع، الـ launcher، java، أو jar) لمسار الـ launcher الفعلي.
+     * يرجع null لو ملقاش حاجة صالحة.
+     */
+    static Path resolveLauncher(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        Path p = Paths.get(raw.trim().replace("\"", "")).toAbsolutePath().normalize();
+
+        // 1) ملف launcher مباشرة بالاسم المعروف
+        if (Files.isRegularFile(p) && !isJavaOrJar(p) && isLauncherName(p)) return p;
+
+        // 2) مسار جوه التوزيع: نطلع للجذر ونلاقي الـ launcher
+        Path root = appRootOf(p);
+        if (root != null) {
+            Path launcher = findLauncher(root);
+            if (launcher != null) return launcher;
+        }
+
+        // 3) ملف تنفيذي مختار يدوياً بإسم مختلف
+        if (Files.isRegularFile(p) && !isJavaOrJar(p)) return p;
+
+        // 4) ويندوز: المسار من غير .exe
+        if (OsSupport.WINDOWS && !Files.exists(p)) {
+            Path withExe = Paths.get(p + ".exe");
+            if (Files.isRegularFile(withExe)) return withExe;
+        }
+        return null;
+    }
+
+    /** يرجع الـ launcher لو موجود، وإلا المسار الخام (عشان رسالة الخطأ تبقى واضحة). */
+    private static Path resolveExe(String path) {
+        Path launcher = resolveLauncher(path);
+        return launcher != null
+                ? launcher
+                : Paths.get(path.trim().replace("\"", "")).toAbsolutePath().normalize();
+    }
+
+    private static boolean isJavaOrJar(Path p) {
+        String n = p.getFileName().toString().toLowerCase(Locale.ROOT);
+        return n.equals("java") || n.equals("java.exe") || n.equals("javaw.exe") || n.endsWith(".jar");
+    }
+
+    private static boolean isLauncherName(Path p) {
+        String n = p.getFileName().toString();
+        if (n.toLowerCase(Locale.ROOT).endsWith(".exe")) n = n.substring(0, n.length() - 4);
+        return LAUNCHER_NAMES.contains(n);
+    }
+
+    /** يطلع من المسار لحد ما يلاقي جذر فيه launcher، ويتخطى فولدرات التوزيع الداخلية. */
+    private static Path appRootOf(Path p) {
+        Path cur = Files.isDirectory(p) ? p : p.getParent();
+        for (int i = 0; cur != null && i < 6; i++, cur = cur.getParent()) {
+            Path name = cur.getFileName();
+            if (name != null && LAYOUT_DIRS.contains(name.toString().toLowerCase(Locale.ROOT))) continue;
+            if (findLauncher(cur) != null) return cur;
+        }
+        return null;
+    }
+
+    /** يدور على الـ launcher في الجذر حسب النظام. */
+    private static Path findLauncher(Path root) {
+        for (String n : LAUNCHER_NAMES) {
+            List<Path> candidates = OsSupport.WINDOWS
+                    ? List.of(root.resolve(n + ".exe"))
+                    : List.of(root.resolve("bin").resolve(n), root.resolve(n));
+            for (Path c : candidates) {
+                if (Files.isRegularFile(c)) return c;
+            }
+        }
+        return null;
+    }
 
     // ══════════════════════════════════════════════════════════════
     //  Paths & PID
     // ══════════════════════════════════════════════════════════════
 
-    /** يحوّل المسار المدخل لمسار exe مطلق (على ويندوز يضيف .exe لو ناقصة). */
-    private static Path resolveExe(String path) {
-        Path p = Paths.get(path.trim().replace("\"", "")).toAbsolutePath().normalize();
-        if (OsSupport.WINDOWS && !Files.exists(p) && !p.toString().toLowerCase().endsWith(".exe")) {
-            Path withExe = Paths.get(p + ".exe");
-            if (Files.isRegularFile(withExe)) return withExe;
-        }
-        return p;
-    }
-
-    /** آخر exe اتشغّل، ولو مفيش نرجع للمسار المحفوظ في الإعدادات. */
+    /** آخر launcher اتشغّل، ولو مفيش نرجع للمسار المحفوظ في الإعدادات. */
     private Path currentExe() {
         if (lastExe != null) return lastExe;
         String cfg = AppConfig.getString("paths", "backend", "");
@@ -101,6 +186,82 @@ public class BackendService {
 
     private static void say(String msg) {
         log.info(msg);
+    }
+
+    /** آخر n سطر من ملف (للتشخيص). */
+    private static String tailOf(Path file, int n) {
+        try {
+            if (file == null || !Files.isRegularFile(file)) return "(لا يوجد سجل)";
+            List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
+            int from = Math.max(0, lines.size() - n);
+            return lines.subList(from, lines.size()).stream()
+                    .collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            return "(تعذر قراءة السجل: " + e.getMessage() + ")";
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  Linux: run.sh generation
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * يكتب {@code run.sh} في جذر الباكيج (بجانب bin/) ويخليه قابل للتنفيذ.
+     *
+     * <p>السكريبت بيحاكي التشغيل اليدوي 100%:
+     * <ol>
+     *   <li>ينظف متغيرات jpackage اللي بتتسرب من الأدمن كونسول
+     *       (JAVA_TOOL_OPTIONS, LD_LIBRARY_PATH, ...).</li>
+     *   <li>يعمل symlink {@code bin/app → ../app} عشان المسارات النسبية في cfg
+     *       (spring.config.location=file:app/config/) تقع على جذر الباكيج
+     *       بدل ما تروح جوه bin/.</li>
+     *   <li>{@code cd bin && exec ./hr-mate-system} — نفس اللي بتعمله يدوي.</li>
+     * </ol>
+     * idempotent: بيتكتب كل مرة (خفيف) والـ chmod بيتطبق.
+     */
+    private static Path ensureLinuxRunScript(Path launcher) throws IOException {
+        Path home = PathResolver.homeOfLauncher(launcher);
+        Path script = home.resolve("run.sh");
+
+        String content = """
+                #!/bin/bash
+                # Auto-generated by HR MATE Admin Console.
+                # Simulates: cd bin && ./hr-mate-system
+                set -e
+
+                PKG_ROOT="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+                LAUNCHER_DIR="$PKG_ROOT/bin"
+
+                # 🧹 نظّف متغيرات jpackage اللي بتتسرب من الأدمن كونسول
+                unset JAVA_TOOL_OPTIONS _JAVA_OPTIONS JDK_JAVA_OPTIONS
+                unset JAVA_HOME JRE_HOME CLASSPATH
+                unset LD_PRELOAD LD_LIBRARY_PATH APP_STORAGE_ROOT
+
+                # 🔗 symlink: bin/app → ../app
+                # CWD=bin/ (الـ launcher سعيد) + المسارات النسبية تقع على الجذر
+                if [ ! -e "$LAUNCHER_DIR/app" ] && [ ! -L "$LAUNCHER_DIR/app" ]; then
+                    mkdir -p "$PKG_ROOT/app"
+                    ln -s ../app "$LAUNCHER_DIR/app"
+                fi
+
+                export APP_STORAGE_ROOT="$PKG_ROOT/app"
+
+                # سجل تشخيصي بسيط
+                mkdir -p "$PKG_ROOT/logs"
+                {
+                    echo "=== $(date) ==="
+                    echo "PKG_ROOT=$PKG_ROOT"
+                    echo "CWD_AFTER_CD=$LAUNCHER_DIR"
+                    env | grep -iE 'java|jre|ld_|class' || true
+                } >> "$PKG_ROOT/logs/backend-script.log"
+
+                cd "$LAUNCHER_DIR"
+                exec ./hr-mate-system "$@"
+                """;
+
+        Files.writeString(script, content, StandardCharsets.UTF_8);
+        script.toFile().setExecutable(true, false);
+        return script;
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -139,7 +300,7 @@ public class BackendService {
     }
 
     // ══════════════════════════════════════════════════════════════
-    //  Start / Stop (وضع عادي وخدمة)
+    //  Start / Stop
     // ══════════════════════════════════════════════════════════════
 
     public synchronized boolean start(String backendPath, boolean asService) {
@@ -154,13 +315,20 @@ public class BackendService {
         return asService ? startService() : startNormal(backendPath);
     }
 
+    /**
+     * تشغيل الباك إند:
+     * <ul>
+     *   <li>ويندوز: تنفيذ مباشر للـ exe من فولدره.</li>
+     *   <li>لينكس: توليد {@code run.sh} وتنفيذه — السكريبت بيحاكي التشغيل اليدوي.</li>
+     * </ul>
+     */
     public synchronized boolean startNormal(String backendPath) {
         try {
             if (backendPath == null || backendPath.isBlank()) return false;
 
             Path exe = resolveExe(backendPath);
             if (!Files.isRegularFile(exe)) {
-                say("❌ الملف التنفيذي غير موجود: " + exe);
+                say("❌ الـ launcher غير موجود: " + exe);
                 return false;
             }
             if (isRunning(exe)) {
@@ -168,20 +336,35 @@ public class BackendService {
                 say("ℹ️ الباك إند شغال بالفعل");
                 return true;
             }
-            if (!OsSupport.WINDOWS) exe.toFile().setExecutable(true, false);
 
             Path logFile = OsSupport.logsDir().resolve("backend.log");
             Files.createDirectories(logFile.getParent());
 
-            Process p = new ProcessBuilder(exe.toString())
-                    .directory(exe.getParent().toFile())
-                    .redirectErrorStream(true)
-                    .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile.toFile()))
-                    .start();
+            ProcessBuilder pb;
 
-            // الـ launcher بيفضل شغال طول ما التطبيق شغال — لو خرج في أول ثانيتين يبقى فيه خطأ
-            if (p.waitFor(2, TimeUnit.SECONDS)) {
-                say("❌ الباك إند خرج مباشرة (رمز " + p.exitValue() + ") — راجع logs/backend.log");
+            if (OsSupport.WINDOWS) {
+                // ويندوز: تشغيل مباشر من فولدر الـ exe
+                Path workDir = exe.getParent();
+                exe.toFile().setExecutable(true, false);
+                say("🔄 تشغيل: " + exe + " | CWD: " + workDir);
+                pb = new ProcessBuilder(exe.toString())
+                        .directory(workDir.toFile());
+            } else {
+                // لينكس: نولّد run.sh في جذر الباكيج ونشغّله
+                Path script = ensureLinuxRunScript(exe);
+                say("🔄 تشغيل عبر run.sh: " + script);
+                pb = new ProcessBuilder("/bin/bash", script.toString());
+                // مش بنحدد directory — السكريبت بيعمل cd بنفسه
+            }
+
+            pb.redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.appendTo(logFile.toFile()));
+
+            Process p = pb.start();
+
+            if (p.waitFor(STARTUP_GRACE_SECONDS, TimeUnit.SECONDS)) {
+                say("❌ الباك إند خرج مباشرة (رمز " + p.exitValue() + ") — آخر السجل:\n"
+                        + tailOf(logFile, 25));
                 return false;
             }
 
@@ -214,7 +397,7 @@ public class BackendService {
                 return false;
             }
             ProcessRunner.Result r = ProcessRunner.run(60, List.of("sc", "start", SERVICE_NAME));
-            boolean ok = r.ok() || r.output().contains("1056"); // 1056 = already running
+            boolean ok = r.ok() || r.output().contains("1056");
             boolean running = ok && ProcessRunner.waitUntil(() -> ProcessRunner.serviceRunning(SERVICE_NAME), 60);
             say(running ? "✅ خدمة الباك إند شغالة" : "❌ فشل تشغيل الخدمة: " + r.output());
             return running;
@@ -231,10 +414,6 @@ public class BackendService {
         return asService ? stopService() : stopNormal();
     }
 
-    /**
-     * يقفل الـ launcher وكل الـ children بتاعه.
-     * بيستخدم PID المحفوظ + أي عملية شغالة من نفس الـ exe بالمسار الكامل.
-     */
     private boolean stopNormal() {
         try {
             Path exe = currentExe();
@@ -349,7 +528,7 @@ public class BackendService {
         if (backendPath == null || backendPath.isBlank()) return false;
         Path exe = resolveExe(backendPath);
         if (!Files.isRegularFile(exe)) {
-            say("❌ الملف التنفيذي غير موجود: " + exe);
+            say("❌ الـ launcher غير موجود: " + exe);
             return false;
         }
 
@@ -361,7 +540,6 @@ public class BackendService {
 
             if (!nssm(nssm, "install", serviceName, exe.toString())) return false;
 
-            // الإعدادات. ملاحظة: JVM options لازم تتحط في jpackage --java-options (مش هنا)
             boolean ok = true;
             ok &= nssm(nssm, "set", serviceName, "AppDirectory", exe.getParent().toString());
             ok &= nssm(nssm, "set", serviceName, "AppStdout", logs.resolve("backend_stdout.log").toString());
@@ -381,7 +559,6 @@ public class BackendService {
                 return false;
             }
 
-            // تبعية على PostgreSQL (مش فاشلة لو مش موجودة — بس بنسجل)
             String pgSvc = AppConfig.getString("connection", "pgServiceName", "PostgreSQL");
             ProcessRunner.Result dep = ProcessRunner.run(30, List.of("sc", "config", serviceName, "depend=", pgSvc));
             if (!dep.ok()) say("⚠️ تعذر ضبط التبعية على " + pgSvc + ": " + dep.output());
@@ -415,7 +592,7 @@ public class BackendService {
 
             for (int i = 0; i < 5 && ProcessRunner.serviceInstalled(serviceName); i++) {
                 ProcessRunner.Result r = ProcessRunner.run(30, List.of("sc", "delete", serviceName));
-                if (r.ok() || r.output().contains("1060")) break; // 1060 = not exists
+                if (r.ok() || r.output().contains("1060")) break;
                 Thread.sleep(2000);
             }
 
@@ -457,7 +634,7 @@ public class BackendService {
             while (m.find()) {
                 String name = m.group(1);
                 if (name.equalsIgnoreCase(SERVICE_NAME)
-                        || name.toUpperCase().startsWith("HR_MATE")) {
+                        || name.toUpperCase(Locale.ROOT).startsWith("HR_MATE")) {
                     targets.add(name);
                 }
             }
