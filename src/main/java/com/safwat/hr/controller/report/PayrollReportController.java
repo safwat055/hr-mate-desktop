@@ -354,7 +354,7 @@ public class PayrollReportController implements Initializable {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("اختر الملفات");
         chooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("Excel & PDF", "*.xlsx", "*.xls", "*.pdf")
+                new FileChooser.ExtensionFilter("Excel & PDF & SQL", "*.xlsx", "*.xls", "*.pdf", "*.sql")
         );
 
         List<File> files = chooser.showOpenMultipleDialog(mainCont.getScene().getWindow());

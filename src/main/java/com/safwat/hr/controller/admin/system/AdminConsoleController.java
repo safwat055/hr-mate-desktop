@@ -3,6 +3,7 @@ package com.safwat.hr.controller.admin.system;
 import com.safwat.hr.system.setup.*;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
+import com.safwat.hr.ui.util.AlertUtil;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -72,6 +73,7 @@ public class AdminConsoleController implements Initializable {
         SettingsThemeLoader.apply(navList);
 
         // سجّل الـ NavigationBus عشان MainController يقدر يطلب انتقال
+
         NavigationBus.register(this::navigateTo);
 
         // حمّل الشاشات الخمس مرة واحدة
@@ -253,9 +255,9 @@ public class AdminConsoleController implements Initializable {
 
     private void showAlert(String title, String message) {
         if (title != null && title.contains("خطأ")) {
-            SAFNotification.error(message);
+            AlertUtil.showError(title, message);
         } else {
-            SAFNotification.success(message);
+            AlertUtil.showInfo(title,message);
         }
     }
 

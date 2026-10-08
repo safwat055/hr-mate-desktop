@@ -409,7 +409,7 @@ public class UserReportsController implements Initializable {
     @FXML
     void openNewReport() {
 
-        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport());
+        ViewManager.openIndependentView(new FXMLPaths().getPayrollReport(), "تقرير جديد");
 
     }
 }
