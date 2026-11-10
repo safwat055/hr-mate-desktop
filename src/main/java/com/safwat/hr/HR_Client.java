@@ -32,21 +32,6 @@ public class HR_Client extends Application {
         // لازم يكون هنا في init() عشان يكون جاهز قبل start()
         FontLoader.load();
 
-        // ── تسجيل الدخول ──────────────────────────────────────────
-      /*  LoginRequest request = new LoginRequest();
-        request.setUsername("admin");
-        request.setPassword("admin");
-
-        ApiResponse<LoginResponse> response = AuthService.login(request);
-        if (!response.isSuccess()) {
-            throw new RuntimeException(response.getMessage());
-        }
-
-        ApiClient.setAuthToken(response.getData().getToken());
-        ApiClient.setUserName(response.getData().getUsername());
-
-
-        MessageClientService.getInstance().connect();*/
     }
 
     @Override
@@ -68,25 +53,5 @@ public class HR_Client extends Application {
         stage.setScene(scene);
         stage.show();
 
-        // ── الاتصال بـ WebSocket التقارير (بعد ما الـ Stage يبقى موجود) ──
-       /* ReportWebSocketService reportWs = new ReportWebSocketService(stage);
-        reportWs.connect();
-
-        stage.setOnCloseRequest(e -> reportWs.disconnect());
-
-        // ── مستمع Toast للإشعارات الجديدة ──────────────────────────
-        notifService.getAll().addListener(
-                (ListChangeListener<HRNotification>) change -> {
-                    while (change.next()) {
-                        if (change.wasAdded()) {
-                            change.getAddedSubList().forEach(notification -> {
-                                if (stage.isShowing()) {
-                                    HRToast.show(stage, notification);
-                                }
-                            });
-                        }
-                    }
-                }
-        );*/
     }
 }
