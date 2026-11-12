@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 
 public class PayrollChangeService {
@@ -37,7 +38,6 @@ public class PayrollChangeService {
         return payrollChangeCardApi.getEmployeeMonthsChangeCard(request);
     }
 
-
     public ObservableList<ChangeCardResult> getChangeCardData(String nationalId, String startMonth, String endMonth) {
         PayrollRequest request = PayrollRequest.builder()
                 .nationalId(nationalId)
@@ -54,27 +54,33 @@ public class PayrollChangeService {
                     row[2] != null ? row[2].toString() : ""
             );
             resultList.add(result);
-
         }
 
         return resultList;
     }
 
     /**
-     *
-     * @param nationalId
-     * @param startMonth
-     * @param endMonth
-     * @param empName
-     * @param webView
+     * تحميل البطاقة من شهور نصية (من الحقول)
      */
     public void downloadChangeCardPDF(String nationalId, String startMonth, String endMonth, String empName, WebView webView) {
-        // 4. تحميل الملف
+        downloadChangeCardPDF(
+                nationalId,
+                DateUtils.getFirstDayOfMonth(startMonth),
+                DateUtils.getLastDayOfMonth(endMonth),
+                empName,
+                webView
+        );
+    }
+
+    /**
+     * تحميل البطاقة لفترة محددة بتواريخ (مثلاً سنة كاملة من الكومبو)
+     */
+    public void downloadChangeCardPDF(String nationalId, LocalDate startDate, LocalDate endDate, String empName, WebView webView) {
         try {
             PayrollRequest request = PayrollRequest.builder()
                     .nationalId(nationalId)
-                    .startDate(DateUtils.getFirstDayOfMonth(startMonth))
-                    .endDate(DateUtils.getLastDayOfMonth(endMonth))
+                    .startDate(startDate)
+                    .endDate(endDate)
                     .build();
             String fileName = "CHANGE_CARD_" + System.currentTimeMillis() + ".pdf";
 
@@ -95,9 +101,7 @@ public class PayrollChangeService {
 
         } catch (IOException e) {
             SAFNotification.error(e.getMessage());
-
         }
-
     }
 
     public void updateNote(String nationalId, String month) {
@@ -118,9 +122,7 @@ public class PayrollChangeService {
         SAFNotification.success("تم حذف " + count + " قيد");
     }
 
-
     private void openPDF(Path targetPath, WebView webView, String name) {
-
         PDFView.showIN(targetPath.toString(), webView);
         NotificationService.getInstance().send(
                 HRNotification.builder()

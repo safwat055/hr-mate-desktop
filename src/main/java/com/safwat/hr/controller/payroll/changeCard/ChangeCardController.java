@@ -2,7 +2,6 @@ package com.safwat.hr.controller.payroll.changeCard;
 
 import com.safwat.hr.controller.payroll.changeCard.service.ChangeCardResult;
 import com.safwat.hr.controller.payroll.changeCard.service.PayrollChangeService;
-
 import com.safwat.hr.controller.payroll.payrollApi.dto.EmployeeSearchResult;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
@@ -12,6 +11,7 @@ import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.controls.SAFTextField;
 import com.safwat.hr.ui.controls.SAFTooltip;
 import com.safwat.hr.ui.icons.Icons;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -25,18 +25,36 @@ import javafx.scene.layout.HBox;
 import javafx.scene.web.WebView;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChangeCardController implements Initializable {
+    private static final Pattern YEAR_PATTERN = Pattern.compile("(\\d{4})");
+
     private final PayrollChangeService changeService = new PayrollChangeService();
     private final ObservableList<ChangeCardResult> resultList = FXCollections.observableArrayList();
     private TableColumn<ChangeCardResult, Void> colActions;
+
+    /**
+     * يمنع تفعيل الكومبو وقت تعبئته برمجياً
+     */
+    private boolean updatingYears = false;
+
+    
     @FXML
     private Button btn_clear, btn_pdf, btn_search, btn_view;
     @FXML
     private TextField txt_empCode, txt_empName, txt_nationalID, txt_searchValue;
     @FXML
     private TextField txt_startMonth, txt_endMonth;
+    @FXML
+    private ComboBox<String> cmb_year;
 
     @FXML
     private WebView webView;
@@ -50,7 +68,7 @@ public class ChangeCardController implements Initializable {
         setView();
         setUpSearchEmployee();
         setTextFieldsAction();
-
+        setupYearCombo();
 
         setButtonsAction();
 
@@ -66,21 +84,18 @@ public class ChangeCardController implements Initializable {
         Icons.getInstance().getPDFImage(btn_pdf);
 
         SAFTooltip.install(btn_pdf, "استخراج او عرض بطافة اجر الاشتراك");
+        SAFTooltip.install(cmb_year, "اختر سنة لعرض بطاقتها فوراً");
     }
 
     /**
      * Use To Set Buttons Actions
      */
     void setButtonsAction() {
-
         btn_view.setOnAction(_ -> getEmployeeDataView());
         btn_pdf.setOnAction(_ -> exportToPDF());
         btn_clear.setOnAction(_ -> clear());
         chk_showAction.selectedProperty().addListener((_, _, newValue) -> colActions.setVisible(newValue));
-
-
     }
-
 
     /**
      * use to clear all components in view
@@ -94,18 +109,87 @@ public class ChangeCardController implements Initializable {
         txt_nationalID.clear();
         txt_startMonth.clear();
         txt_endMonth.clear();
+        resetYears();
 
         webView.setManaged(false);
         resultTable.setManaged(false);
     }
 
+    /**
+     * يجهز الكومبو بوكس: لما المستخدم يختار سنة بتتولد البطاقة فوراً
+     */
+    void setupYearCombo() {
+        cmb_year.setPromptText("السنة");
+        cmb_year.setOnAction(_ -> {
+            String year = cmb_year.getValue();
+            if (!updatingYears && year != null) {
+                generateYearCard(year);
+            }
+        });
+    }
+
+    /**
+     * يعبّي الكومبو بالسنين المتاحة لموظف، في الخلفية عشان الواجهة ما تهنّجش
+     */
+    private void loadEmployeeYears(String nationalId) {
+        if (!isValidNationalId(nationalId)) {
+            resetYears();
+            return;
+        }
+
+        CompletableFuture
+                .supplyAsync(() -> changeService.getEmployeeAvailableMonths(nationalId))
+                .thenAccept(months -> Platform.runLater(() -> fillYears(months)))
+                .exceptionally(ex -> {
+                    Platform.runLater(this::resetYears);
+                    return null;
+                });
+    }
+
+    private void fillYears(List<String> months) {
+        updatingYears = true;
+        try {
+            cmb_year.getItems().setAll(extractYears(months));
+            cmb_year.setValue(null);
+        } finally {
+            updatingYears = false;
+        }
+    }
+
+    private void resetYears() {
+        updatingYears = true;
+        try {
+            cmb_year.getItems().clear();
+            cmb_year.setValue(null);
+        } finally {
+            updatingYears = false;
+        }
+    }
+
+    /**
+     * يستخرج السنين الفريدة من قائمة الشهور، من الأحدث للأقدم
+     */
+    private List<String> extractYears(List<String> months) {
+        if (months == null) {
+            return List.of();
+        }
+        return months.stream()
+                .filter(Objects::nonNull)
+                .map(month -> {
+                    Matcher matcher = YEAR_PATTERN.matcher(month);
+                    return matcher.find() ? matcher.group(1) : null;
+                })
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted(Comparator.reverseOrder())
+                .toList();
+    }
 
     /**
      * use to set result table
      */
     @SuppressWarnings("unchecked")
     private void setupTable() {
-
         resultTable.setItems(resultList);
 
         resultTable.getColumns().clear();
@@ -160,16 +244,13 @@ public class ChangeCardController implements Initializable {
                     } else {
                         SAFNotification.error("يجب تحديد الصف أولا ...");
                     }
-
                 });
 
                 btnDelete.setOnAction(_ -> {
                     ChangeCardResult row = getTableView().getItems().get(getIndex());
                     if (row.isSelected()) {
                         if (SAFDialog.confirm("تأكيد", "هل تريد حذف هذا القيد ؟")) {
-
                             deleteOneEmployeeRecord(row);
-
                         }
                     } else {
                         SAFNotification.error("يجب تحديد الصف أولا ...");
@@ -197,7 +278,6 @@ public class ChangeCardController implements Initializable {
 
         resultTable.setEditable(true);
     }
-
 
     private void showWebView() {
         resultTable.getItems().clear();
@@ -243,7 +323,7 @@ public class ChangeCardController implements Initializable {
     }
 
     /**
-     *
+     * بحث عن موظف، وبعد الاختيار بيتعبى كومبو السنين
      */
     void setUpSearchEmployee() {
         SmartSearchHelper.bind(
@@ -259,6 +339,7 @@ public class ChangeCardController implements Initializable {
                         .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
                     getEmployeeDataView();
+                    loadEmployeeYears(txt_nationalID.getText());
                 },
                 SmartSearchHelper.FieldBind.of(txt_nationalID, EmployeeSearchResult::getNational_id),
                 SmartSearchHelper.FieldBind.of(txt_empName, EmployeeSearchResult::getEmp_name),
@@ -270,13 +351,14 @@ public class ChangeCardController implements Initializable {
      * get employee change card data
      */
     private void getEmployeeDataView() {
-        if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
+        if (!isValidNationalId(txt_nationalID.getText())) {
             SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
             return;
         }
         resultList.clear();
         showResultTable();
-        ObservableList<ChangeCardResult> data = changeService.getChangeCardData(txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText());
+        ObservableList<ChangeCardResult> data = changeService.getChangeCardData(
+                txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText());
         if (data == null) {
             SAFNotification.warning("لا توجد بيانات للعرض");
             return;
@@ -284,9 +366,11 @@ public class ChangeCardController implements Initializable {
         resultList.addAll(data);
     }
 
+    /**
+     * استخراج البطاقة بالفترة اللي في حقول من/الى (زر الاستخراج)
+     */
     private void exportToPDF() {
-
-        if (txt_nationalID.getText().isEmpty() || txt_nationalID.getText().length() != 14) {
+        if (!isValidNationalId(txt_nationalID.getText())) {
             SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
             return;
         }
@@ -297,6 +381,31 @@ public class ChangeCardController implements Initializable {
                 txt_endMonth.getText(),
                 txt_empName.getText(),
                 webView);
+    }
+
+    /**
+     * استخراج بطاقة سنة كاملة (من 1 يناير لـ 31 ديسمبر) عند اختيارها من الكومبو
+     */
+    private void generateYearCard(String year) {
+        if (!isValidNationalId(txt_nationalID.getText())) {
+            SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
+            return;
+        }
+        int yearValue = Integer.parseInt(year);
+        LocalDate from = LocalDate.of(yearValue, 1, 1);
+        LocalDate to = LocalDate.of(yearValue, 12, 31);
+
+        showWebView();
+        changeService.downloadChangeCardPDF(
+                txt_nationalID.getText(),
+                from,
+                to,
+                txt_empName.getText(),
+                webView);
+    }
+
+    private boolean isValidNationalId(String nationalId) {
+        return nationalId != null && !nationalId.isEmpty() && nationalId.length() == 14;
     }
 
     private void updateNote(ChangeCardResult row) {
