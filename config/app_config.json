@@ -3,6 +3,7 @@
   "meta": {"registeredViews": [
     "/com/safwat/hr/controller/report/PayrollReport.fxml",
     "server setting",
+    "إدارة الاستقطاعات القانونية",
     "إدارة قواعد البدلات",
     "اجر الاشتراك",
     "اعدادات التشغيل",
@@ -19,7 +20,8 @@
     "مفردات بيرول",
     "نسخ احتياطي",
     "نماذج التحميل",
-    "واجهة الإدخال"
+    "واجهة الإدخال",
+    "نموذج 5"
   ]},
   "connection": {
     "alone": "false",

@@ -30,12 +30,13 @@ public class FXMLPaths {
     private final String employeeForm = "/com/safwat/hr/controller/EmployeeForm.fxml";
     private final String historyDialog = "/com/safwat/hr/controller/HistoryDialog.fxml";
     private final String wagesView = "/com/safwat/hr/controller/EmployeeWagesScreen.fxml";
+    private final String form5View = "/com/safwat/hr/controller/Form5.fxml";
     private final String sectorView = "/com/safwat/hr/controller/entitlements/allowance/SectorJobTitleDialog.fxml";
     private final String OverrideDialogView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml";
     private final String statutoryDialogView = "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml";
     private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml";
 
-    
+
     public String getLeavesView() {
         return "/com/safwat/hr/controller/leave/LeaveManagementView.fxml";
     }

@@ -359,6 +359,11 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
+    void openForm5View() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getForm5View(), "نموذج 5", true);
+    }
+
+    @FXML
     void openSectorView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getSectorView(), "إدارة القطاعات والوظائف", true);
     }

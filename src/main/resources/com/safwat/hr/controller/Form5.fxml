@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+<ScrollPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fitToWidth="true" fitToHeight="true" nodeOrientation="RIGHT_TO_LEFT"
+            styleClass="app-bg" prefHeight="1200.0" prefWidth="1280.0"
+            fx:controller="com.safwat.hr.controller.payroll.form5.Form5Controller">
+    <content>
+        <VBox spacing="10" styleClass="card" nodeOrientation="RIGHT_TO_LEFT">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
+
+            <!-- ═══ شريط البحث والأزرار ═══ -->
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
+                <Button fx:id="btn_search" text="🔍 بحث" prefHeight="32" prefWidth="90" styleClass="btn-primary"/>
+                <TextField fx:id="txt_query" prefHeight="32" prefWidth="380"
+                           promptText="الاسم أو رقم الصرف أو الرقم القومي"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btn_calculate" text="احتساب" prefHeight="32" prefWidth="100" styleClass="btn-purple"/>
+                <Button fx:id="btn_export" text="استخراج النموذج" prefHeight="32" prefWidth="150"
+                        styleClass="btn-primary"/>
+            </HBox>
+
+            <!-- ═══ بيانات الموظف ═══ -->
+            <VBox spacing="6" styleClass="card">
+                <padding>
+                    <Insets top="8" right="12" bottom="8" left="12"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="الاسم" styleClass="text-dark bold" prefWidth="60"/>
+                    <TextField fx:id="txt_empName" editable="false" prefWidth="260" prefHeight="30"/>
+                    <Label text="الرقم القومي" styleClass="text-dark bold" prefWidth="90"/>
+                    <TextField fx:id="txt_nationalId" editable="false" prefWidth="170" prefHeight="30"/>
+                    <Label text="رقم الصرف" styleClass="text-dark bold" prefWidth="80"/>
+                    <TextField fx:id="txt_empNumber" editable="false" prefWidth="120" prefHeight="30"/>
+                </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="الوظيفة" styleClass="text-dark"/>
+                        <Label fx:id="lbl_job"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="المنطقة" styleClass="text-dark"/>
+                        <Label fx:id="lbl_region"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="تاريخ الميلاد" styleClass="text-dark"/>
+                        <Label fx:id="lbl_birthDate"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="تاريخ التعيين" styleClass="text-dark"/>
+                        <Label fx:id="lbl_hireDate"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="تاريخ الإنهاء" styleClass="text-dark"/>
+                        <Label fx:id="lbl_termDate"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+
+            <!-- ═══ الجدولين + المعاينة ═══ -->
+            <VBox fx:id="tablesBox" spacing="8" VBox.vgrow="ALWAYS">
+                <HBox spacing="12" VBox.vgrow="ALWAYS">
+
+                    <!-- الأجر الأساسي -->
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="الأجر الأساسي" styleClass="panel-header" maxWidth="Infinity"/>
+                        <HBox spacing="6">
+                            <Button fx:id="btn_addBasic" text="➕ إضافة صف" styleClass="btn-primary"/>
+                            <Button fx:id="btn_delBasic" text="🗑 حذف الصف المحدد" styleClass="btn-danger"/>
+                        </HBox>
+                        <TableView fx:id="tblBasic" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colBasicDate" text="التاريخ" prefWidth="180"/>
+                                <TableColumn fx:id="colBasicAmount" text="الأجر الأساسي" prefWidth="180"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                    <!-- الأجر المتغير / الشامل -->
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="الأجر المتغير / الشامل" styleClass="panel-header" maxWidth="Infinity"/>
+                        <HBox spacing="6">
+                            <Button fx:id="btn_addVar" text="➕ إضافة صف" styleClass="btn-primary"/>
+                            <Button fx:id="btn_delVar" text="🗑 حذف الصف المحدد" styleClass="btn-danger"/>
+                        </HBox>
+                        <TableView fx:id="tblVariable" VBox.vgrow="ALWAYS">
+                            <columns>
+                                <TableColumn fx:id="colVarDate" text="التاريخ" prefWidth="180"/>
+                                <TableColumn fx:id="colVarAmount" text="الأجر المتغير/الشامل" prefWidth="180"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </HBox>
+
+                <!-- الإجماليات -->
+                <HBox alignment="CENTER_LEFT" spacing="30" styleClass="card">
+                    <padding>
+                        <Insets top="8" right="12" bottom="8" left="12"/>
+                    </padding>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="إجمالي الأجور المتغيرة (قبل 2020)" styleClass="text-dark bold"/>
+                        <Label fx:id="lbl_totalVar" styleClass="bold"/>
+                    </HBox>
+                    <HBox alignment="CENTER_LEFT" spacing="6">
+                        <Label text="إجمالي أجر الاشتراك (من 2020)" styleClass="text-dark bold"/>
+                        <Label fx:id="lbl_totalSub" styleClass="bold"/>
+                    </HBox>
+                </HBox>
+            </VBox>
+
+            <!-- ═══ معاينة PDF ═══ -->
+            <WebView fx:id="webView" managed="false" visible="false" VBox.vgrow="ALWAYS"
+                     prefHeight="900.0" prefWidth="1226.0"/>
+
+            <!-- ═══ الفوتر ═══ -->
+            <HBox alignment="CENTER_LEFT" spacing="8">
+                <Button fx:id="btn_restore" text="↺ استعادة القيم المحسوبة" styleClass="btn-secondary"/>
+                <Button fx:id="btn_back" text="← رجوع للجداول" styleClass="btn-secondary" managed="false"
+                        visible="false"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="lbl_status" styleClass="text-dark"/>
+            </HBox>
+        </VBox>
+    </content>
+</ScrollPane>
