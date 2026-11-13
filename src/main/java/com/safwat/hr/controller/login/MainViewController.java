@@ -339,6 +339,11 @@ public class MainViewController implements Initializable {
     }
 
     @FXML
+    void openPayrollDataView() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getPayrollDateView(), "واجهة البيانات", true);
+    }
+
+    @FXML
     void openServerSetting() {
         ViewManager.openNoIndependentView(new FXMLPaths().getBackendSetting(), "server setting");
     }

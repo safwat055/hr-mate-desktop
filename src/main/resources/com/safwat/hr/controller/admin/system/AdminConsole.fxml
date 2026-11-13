@@ -4,7 +4,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <BorderPane nodeOrientation="RIGHT_TO_LEFT"
-            prefHeight="820" prefWidth="1180"
             styleClass="stg-root"
             xmlns="http://javafx.com/javafx/26"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -35,10 +34,10 @@
 
     <!-- ═══ BODY ═══ -->
     <center>
-        <SplitPane fx:id="mainSplit" dividerPositions="0.17"
+        <SplitPane fx:id="mainSplit" dividerPositions="0.20"
                    styleClass="stg-main-split">
 
-            <VBox maxWidth="240" minWidth="180" styleClass="stg-sidebar">
+            <VBox minWidth="160" prefWidth="220" maxWidth="320" styleClass="stg-sidebar">
                 <padding>
                     <Insets bottom="10" left="0" right="0" top="10"/>
                 </padding>

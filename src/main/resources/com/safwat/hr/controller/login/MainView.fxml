@@ -121,8 +121,8 @@
                                     <Button layoutX="27.0" layoutY="86.0" onAction="#openAllowancesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مفردات" />
                                                 <Button fx:id="btn_records" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="سجلات" />
                                                 <Button fx:id="btn_tableView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="شيت الادخال" />
-                                                <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اضافة موظف" />
                                     <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
+                                                <Button onAction="#openPayrollDataView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات" />
                                                 <Button fx:id="btn_payManager" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاستحقاقات" />
                                             </VBox>
                                         </content>

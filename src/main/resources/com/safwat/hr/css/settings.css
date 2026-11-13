@@ -4,7 +4,7 @@
    ملف ثيم مستقل لشاشات الإعدادات. كل الكلاسات هنا فريدة
    ومسبوقة بـ stg- عشان ميتعارضش مع common.css أو أي ثيم تاني.
 ═══════════════════════════════════════════════════════ */
-
+@import "login.css";
 /* ─── Root ─── */
 .stg-root {
     -fx-background-color: #1a1d2e;
@@ -2098,3 +2098,42 @@
     -fx-base: #1a1d2e;
     -fx-text-base-color: #e8eaf6;
 }
+
+/* ═══════════════════════════════════════════════════════
+   Missing classes — إصلاحات
+   ═══════════════════════════════════════════════════════ */
+
+/* ✅ الخلفية العامة (كانت stg-app-bgg بالغلط) */
+.stg-app-bg {
+    -fx-background-color: #1a1d2e;
+}
+
+/* ✅ زر أخضر standalone (للـ AdminConsole btnQuickStart) */
+.stg-btn-green {
+    -fx-background-color: #2f8060;
+    -fx-text-fill: #e8faf3;
+    -fx-font-weight: bold;
+    -fx-border-color: #43c59e;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 6 16 6 16;
+    -fx-cursor: hand;
+}
+
+.stg-btn-green:hover {
+    -fx-background-color: #43c59e;
+    -fx-text-fill: #ffffff;
+}
+
+/* ✅ Responsive: منع القطع على الشاشات الصغيرة */
+.stg-main-scroll > .viewport {
+    -fx-background-color: #1a1d2e;
+}
+
+/* ✅ HBox المحتاجة wrap — استخدم معها FlowPane بدل HBox */
+.stg-toolbar-dark {
+    /* لو بتستخدم FlowPane، الكلاس ده شغال عليه */
+    -fx-hgap: 8;
+    -fx-vgap: 6;
+}
+

@@ -1,109 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.github.palexdev.materialfx.controls.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.text.Font?>
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
-      minHeight="-Infinity" minWidth="-Infinity"
-      prefHeight="380.0" prefWidth="555.0" spacing="12.0"
-      styleClass="stg-login-root"
-      xmlns="http://javafx.com/javafx/26"
-      xmlns:fx="http://javafx.com/fxml/1"
+
+<HBox alignment="CENTER" maxHeight="420.0" maxWidth="720.0" minHeight="420.0" minWidth="720.0"
+      nodeOrientation="RIGHT_TO_LEFT" prefHeight="420.0" prefWidth="720.0" spacing="0"
+      styleClass="stg-login-root" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.safwat.hr.controller.login.LoginController">
 
-    <padding>
-        <Insets top="30.0" right="30.0" bottom="24.0" left="30.0"/>
-    </padding>
+    <!-- ═══════════════════════════════════════════════
+         العمود الأيمن: Brand Panel — أزرق بيبسي
+         ═══════════════════════════════════════════════ -->
+    <VBox alignment="CENTER" maxWidth="260.0" minWidth="260.0" prefWidth="260.0" spacing="10"
+          styleClass="stg-login-brand-panel">
+        <padding>
+            <Insets bottom="30" left="24" right="24" top="30" />
+        </padding>
 
-    <!-- Logo / Title -->
-    <Label alignment="CENTER" contentDisplay="CENTER"
-           prefHeight="40.0" prefWidth="360.0"
-           text="HR MATE" underline="true"
-           styleClass="stg-login-title">
-        <textFill>
-            <LinearGradient endX="1.0" endY="1.0">
-                <stops>
-                    <Stop>
-                        <color>
-                            <Color red="0.310" green="0.557" blue="0.969"/>
-                        </color>
-                    </Stop>
-                    <Stop offset="0.010067114093959731">
-                        <color>
-                            <Color red="0.310" green="0.557" blue="0.969"/>
-                        </color>
-                    </Stop>
-                    <Stop offset="1.0">
-                        <color>
-                            <Color red="0.263" green="0.773" blue="0.620"/>
-                        </color>
-                    </Stop>
-                </stops>
-            </LinearGradient>
-        </textFill>
-        <font>
-            <Font name="Liberation Serif" size="26.0"/>
-        </font>
-    </Label>
+        <Region VBox.vgrow="ALWAYS" />
 
-    <Label text="تسجيل الدخول للنظام" styleClass="stg-login-subtitle"/>
+        <Label alignment="CENTER" styleClass="stg-login-title" text="HR MATE" />
 
-    <!-- Username -->
-    <HBox alignment="CENTER" prefHeight="40.0" prefWidth="604.0" spacing="10.0">
-        <children>
-            <MFXTextField fx:id="txt_userName"
-                          maxHeight="-Infinity" minHeight="-Infinity"
-                          prefHeight="34.0" prefWidth="240.0"
-                          styleClass="stg-mfx-field-dark"
-                          floatingText="اسم المستخدم"
-                          textLimit="50"/>
-            <Label maxWidth="90.0" prefHeight="30.0" prefWidth="90.0"
-                   text="اسم المستخدم" styleClass="stg-login-label"/>
-        </children>
-    </HBox>
+        <Label alignment="CENTER" styleClass="stg-login-brand-subtitle" text="رفيق لإدارة الموارد البشرية"
+               textAlignment="CENTER" wrapText="true" />
 
-    <!-- Password -->
-    <HBox alignment="CENTER" prefHeight="40.0" prefWidth="604.0" spacing="10.0">
-        <children>
-            <MFXPasswordField fx:id="txt_password"
-                              maxHeight="-Infinity" minHeight="-Infinity"
-                              prefHeight="34.0" prefWidth="240.0"
-                              styleClass="stg-mfx-field-dark"
-                              floatingText="كلمة المرور"/>
-            <Label maxWidth="90.0" prefHeight="30.0" prefWidth="90.0"
-                   text="كلمة المرور" styleClass="stg-login-label"/>
-        </children>
-    </HBox>
+        <Separator maxWidth="50" styleClass="stg-login-brand-separator" />
 
-    <!-- Buttons -->
-    <HBox alignment="CENTER" prefHeight="50.0" prefWidth="604.0" spacing="14.0">
-        <children>
-            <MFXButton fx:id="btn_login"
-                       alignment="CENTER" contentDisplay="CENTER"
-                       prefHeight="34.0" prefWidth="110.0"
-                       styleClass="stg-mfx-btn-primary"
-                       text="دخول"/>
-            <MFXButton fx:id="btn_cancel"
-                       alignment="CENTER" contentDisplay="CENTER"
-                       prefHeight="34.0" prefWidth="110.0"
-                       styleClass="stg-mfx-btn-secondary"
-                       text="إلغاء"/>
-        </children>
-    </HBox>
+        <Label fx:id="lbl_version" styleClass="stg-login-brand-version" text="نسخة 1.0" />
 
-    <!-- Info -->
-    <Label fx:id="lbl_info"
-           prefHeight="37.0" prefWidth="480.0"
-           wrapText="true"
-           styleClass="stg-login-info"/>
+        <!-- Progress — أسفل البراند -->
+        <ProgressBar fx:id="progressIndicator" maxWidth="180.0" prefHeight="6.0"
+                     styleClass="stg-progress-dark" visible="false" />
 
-    <!-- Progress -->
-    <MFXProgressBar fx:id="progressIndicator"
-                    prefHeight="6.0" prefWidth="455.0"
-                    viewOrder="1.0"
-                    styleClass="stg-mfx-progress-dark"/>
-</VBox>
+        <Region VBox.vgrow="ALWAYS" />
+    </VBox>
+
+    <!-- ═══════════════════════════════════════════════
+         العمود الأيسر: Form Panel
+         ═══════════════════════════════════════════════ -->
+    <VBox alignment="CENTER" spacing="12" styleClass="stg-login-form-panel" HBox.hgrow="ALWAYS">
+        <padding>
+            <Insets bottom="30" left="40" right="40" top="30" />
+        </padding>
+
+        <Region VBox.vgrow="ALWAYS" />
+
+        <VBox alignment="CENTER_LEFT" spacing="2">
+            <Label styleClass="stg-login-form-title" text="تسجيل الدخول" />
+            <Label styleClass="stg-login-form-subtitle" text="أدخل بيانات حسابك للمتابعة" />
+        </VBox>
+
+        <Region prefHeight="4" />
+
+        <!-- Username -->
+        <VBox maxWidth="Infinity" spacing="5">
+            <Label styleClass="stg-login-label" text="اسم المستخدم" />
+            <TextField fx:id="txt_userName" maxWidth="Infinity" prefHeight="38.0"
+                       promptText="أدخل اسم المستخدم" styleClass="stg-text-field" />
+        </VBox>
+
+        <!-- Password + Toggle -->
+        <VBox maxWidth="Infinity" spacing="5">
+            <Label styleClass="stg-login-label" text="كلمة المرور" />
+
+            <HBox alignment="CENTER" maxWidth="Infinity" spacing="6">
+
+                <!-- الحقل المخفي والمرئي فوق بعض -->
+                <StackPane maxWidth="Infinity" prefHeight="38.0" HBox.hgrow="ALWAYS">
+                    <PasswordField fx:id="txt_password" maxWidth="Infinity" prefHeight="38.0"
+                                   promptText="أدخل كلمة المرور" styleClass="stg-text-field" />
+                    <TextField fx:id="txt_password_visible" managed="false" maxWidth="Infinity"
+                               prefHeight="38.0" promptText="أدخل كلمة المرور"
+                               styleClass="stg-text-field" visible="false" />
+                </StackPane>
+
+                <!-- زر إظهار/إخفاء -->
+                <Button fx:id="btn_togglePassword" focusTraversable="false" minWidth="38.0"
+                        prefHeight="38.0" prefWidth="38.0" styleClass="stg-btn-eye" text="👁" />
+            </HBox>
+        </VBox>
+
+        <!-- Info / Error Label — المساحة محجوزة دايمًا -->
+        <Label fx:id="lbl_info" managed="true" maxHeight="34.0" maxWidth="Infinity" minHeight="34.0"
+               prefHeight="34.0" styleClass="stg-login-info" visible="false" wrapText="true" />
+
+        <!-- الأزرار: بتتوزع بالتساوي على العرض المتاح -->
+        <HBox alignment="CENTER" maxWidth="Infinity" spacing="10">
+            <Button fx:id="btn_login" alignment="CENTER" maxWidth="Infinity" prefHeight="40.0"
+                    styleClass="stg-btn-primary" text="دخول" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btn_cancel" alignment="CENTER" maxWidth="Infinity" prefHeight="40.0"
+                    styleClass="stg-btn-secondary" text="إلغاء" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <Region VBox.vgrow="ALWAYS" />
+    </VBox>
+</HBox>

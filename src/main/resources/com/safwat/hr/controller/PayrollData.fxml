@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true" nodeOrientation="RIGHT_TO_LEFT"
+            prefHeight="787.0" prefWidth="1301.0" styleClass="app-bg"
+            xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.safwat.hr.controller.payroll.payrollData.PayrollData">
+
+    <content>
+        <VBox nodeOrientation="RIGHT_TO_LEFT" spacing="8" styleClass="card">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </padding>
+
+            <!-- ══════════════════════════════════════════════════════
+                 عنوان الصفحة
+            ══════════════════════════════════════════════════════ -->
+            <Label alignment="CENTER" maxWidth="Infinity" prefHeight="32"
+                   styleClass="panel-header" text="بيانات عامة"/>
+
+            <!-- ══════════════════════════════════════════════════════
+                 1. أرقام الصرف
+            ══════════════════════════════════════════════════════ -->
+            <Label styleClass="panel-header compact" text="أرقام الصرف"/>
+
+            <HBox alignment="CENTER_RIGHT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="10" left="12" right="12" top="10"/>
+                </padding>
+
+                <Label prefWidth="130" styleClass="bold" text="آخر رقم صرف مضاف"/>
+                <TextField fx:id="txt_lastPayId" alignment="CENTER" prefHeight="30" prefWidth="220"
+                           editable="false" promptText="—"/>
+                <Button fx:id="btn_lastPayId" prefHeight="30" prefWidth="30"
+                        styleClass="btn-success" text="+"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Label prefWidth="130" styleClass="bold" text="رقم صرف جديد"/>
+                <TextField fx:id="txt_NewPayId" alignment="CENTER" prefHeight="30" prefWidth="220"
+                           editable="false" promptText="—"/>
+                <Button fx:id="btn_NewPayId" prefHeight="30" prefWidth="30"
+                        styleClass="btn-success" text="+"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+            <!-- ══════════════════════════════════════════════════════
+                 2. الإدارات
+            ══════════════════════════════════════════════════════ -->
+            <Label styleClass="panel-header compact" text="الإدارات"/>
+
+            <HBox alignment="CENTER_RIGHT" spacing="8" styleClass="card">
+                <padding>
+                    <Insets bottom="10" left="12" right="12" top="10"/>
+                </padding>
+
+                <Label prefWidth="130" styleClass="bold" text="إدارات الفهرس"/>
+                <TextField fx:id="txt_Paymanagement" alignment="CENTER" prefHeight="30"
+                           prefWidth="320" promptText="اسم الإدارة" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btn_payManagement" prefHeight="30" prefWidth="30"
+                        styleClass="btn-success" text="+"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Label prefWidth="130" styleClass="bold" text="إدارات المستخدم"/>
+                <TextField fx:id="txt_UserManagement" alignment="CENTER" prefHeight="30"
+                           prefWidth="320" promptText="اسم الإدارة" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btn_UserManagement" prefHeight="30" prefWidth="30"
+                        styleClass="btn-success" text="+"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

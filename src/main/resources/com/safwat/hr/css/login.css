@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════
+   Login Screen — Horizontal Split (Brand | Form)
+   ═══════════════════════════════════════════════════════ */
+
+.stg-login-root {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16 16 16 16;
+    -fx-border-color: #dde3f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16 16 16 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 75, 147, 0.22), 32, 0, 0, 12);
+}
+
+/* ─── Brand Panel — أزرق بيبسي ─── */
+.stg-login-brand-panel {
+    -fx-background-color: linear-gradient(to bottom right, #004B93, #0072CE);
+    -fx-background-radius: 16 0 0 16;
+}
+
+/* الحجم واللون من هنا فقط */
+.stg-login-title {
+    -fx-font-family: "Liberation Serif", "Segoe UI", system;
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+}
+
+.stg-login-brand-subtitle {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13px;
+}
+
+.stg-login-brand-separator .line {
+    -fx-border-color: rgba(255, 255, 255, 0.40);
+    -fx-border-width: 1 0 0 0;
+}
+
+.stg-login-brand-version {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 11px;
+    -fx-font-family: monospace;
+}
+
+/* ─── Form Panel ─── */
+.stg-login-form-panel {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 0 16 16 0;
+}
+
+.stg-login-form-title {
+    -fx-text-fill: #003366;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+/* ✅ كان أبيض على أبيض */
+.stg-login-form-subtitle {
+    -fx-text-fill: #5b6785;
+    -fx-font-size: 12.5px;
+    -fx-padding: 0;
+}
+
+.stg-login-label {
+    -fx-text-fill: #003366;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: bold;
+}
+
+/* ─── Info / Error / Success Label ─── */
+.stg-login-info {
+    -fx-text-fill: #5b6785;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+
+    /* مساحة ثابتة — يمنع التقطع */
+    -fx-min-height: 34;
+    -fx-pref-height: 34;
+    -fx-max-height: 34;
+}
+
+.stg-login-info-error {
+    -fx-text-fill: #c0392b;
+    -fx-font-weight: bold;
+    -fx-background-color: #fdecea;
+    -fx-border-color: #f5c6c0;
+}
+
+.stg-login-info-success {
+    -fx-text-fill: #1e8449;
+    -fx-font-weight: bold;
+    -fx-background-color: #eafaf1;
+    -fx-border-color: #b8e5c9;
+}
+
+/* ─── Native TextField / PasswordField ─── */
+.stg-text-field {
+    -fx-font-size: 13px;
+    -fx-background-color: #f5f7fc;
+    -fx-text-fill: #002a52;
+    -fx-prompt-text-fill: #7d89a6;
+    -fx-border-color: #c3cce3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 0 12 0 12;
+    -fx-pref-height: 38;
+}
+
+.stg-text-field:focused {
+    -fx-border-color: #0072CE;
+    -fx-border-width: 1.5;
+    -fx-background-color: #ffffff;
+}
+
+.stg-text-field .text {
+    -fx-fill: #002a52;
+}
+
+/* ─── Native Buttons (الارتفاع من الـ FXML، padding أفقي فقط) ─── */
+.stg-btn-primary {
+    -fx-background-color: linear-gradient(to bottom right, #004B93, #0072CE);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13.5px;
+    -fx-background-radius: 8;
+    -fx-padding: 0 20 0 20;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 75, 147, 0.35), 10, 0, 0, 3);
+}
+
+.stg-btn-primary:hover {
+    -fx-background-color: linear-gradient(to bottom right, #003a73, #005fa8);
+    -fx-effect: dropshadow(gaussian, rgba(0, 75, 147, 0.55), 14, 0, 0, 4);
+}
+
+.stg-btn-primary:pressed {
+    -fx-background-color: #002a52;
+}
+
+.stg-btn-primary:disabled {
+    -fx-opacity: 0.55;
+    -fx-cursor: default;
+}
+
+.stg-btn-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #004B93;
+    -fx-border-color: #9fb4d3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 0 20 0 20;
+    -fx-font-size: 13.5px;
+    -fx-cursor: hand;
+}
+
+.stg-btn-secondary:hover {
+    -fx-background-color: #e6f0fa;
+    -fx-border-color: #0072CE;
+    -fx-text-fill: #0072CE;
+}
+
+/* ─── زر إظهار/إخفاء كلمة المرور — جنب الحقل ─── */
+.stg-btn-eye {
+    -fx-background-color: #f5f7fc;
+    -fx-border-color: #c3cce3;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 0;
+    -fx-font-size: 15px;
+    -fx-cursor: hand;
+    -fx-text-fill: #5b6785;
+}
+
+.stg-btn-eye:hover {
+    -fx-background-color: #e6f0fa;
+    -fx-border-color: #0072CE;
+    -fx-text-fill: #0072CE;
+}
+
+.stg-btn-eye:pressed {
+    -fx-background-color: #d0e2f5;
+}
+
+/* ─── Native ProgressBar — على الخلفية البيبسي الداكنة ─── */
+.stg-progress-dark {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.stg-progress-dark > .bar {
+    -fx-background-color: linear-gradient(to right, #ffffff, #b8d9ff);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+    -fx-padding: 3;
+}
+
+.stg-progress-dark > .track {
+    -fx-background-color: rgba(255, 255, 255, 0.20);
+    -fx-background-radius: 4;
+    -fx-background-insets: 0;
+}

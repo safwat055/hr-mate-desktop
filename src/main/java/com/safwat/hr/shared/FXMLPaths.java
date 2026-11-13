@@ -10,6 +10,7 @@ public class FXMLPaths {
     private final String payrollManager = "/com/safwat/hr/controller/payroll/PayrollManagerView.fxml";
     private final String payrollRecords = "/com/safwat/hr/controller/payroll/PayrollRecords.fxml";
     private final String payrollTableView = "/com/safwat/hr/controller/payroll/ExcelTableView.fxml";
+    private final String payrollDateView = "/com/safwat/hr/controller/PayrollData.fxml";
 
     private final String reportManager = "/com/safwat/hr/controller/report/user_reports.fxml";
     private final String payrollReport = "/com/safwat/hr/controller/report/PayrollReport.fxml";

@@ -26,6 +26,7 @@ public final class Form5Api {
     public static CompletableFuture<ApiResponse<List<EmployeeHit>>> searchAsync(String query) {
         return ApiClient.getAsync(
                 BASE + "/search",
+                
                 Map.of("query", query == null ? "" : query),
                 new TypeReference<List<EmployeeHit>>() {
                 });

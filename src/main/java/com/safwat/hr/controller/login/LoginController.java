@@ -16,19 +16,13 @@ import com.safwat.hr.system.setup.PathResolver;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.SettingsThemeLoader;
 import com.safwat.hr.ui.theme.ThemeEventBus;
-import io.github.palexdev.materialfx.controls.MFXButton;
-import io.github.palexdev.materialfx.controls.MFXPasswordField;
-import io.github.palexdev.materialfx.controls.MFXProgressBar;
-import io.github.palexdev.materialfx.controls.MFXTextField;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -46,58 +40,64 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
+    private String clientVersion = "v1.2.1";
+
     @FXML
-    private MFXButton btn_cancel;
+    private Button btn_cancel;
     @FXML
-    private MFXButton btn_login;
+    private Button btn_login;
+    @FXML
+    private Button btn_togglePassword;
+
     @FXML
     private Label lbl_info;
     @FXML
-    private MFXPasswordField txt_password;
-    @FXML
-    private MFXTextField txt_userName;
-    @FXML
-    private MFXProgressBar progressIndicator;
+    private Label lbl_version;
 
-    LoginRequest request = new LoginRequest();
+    @FXML
+    private PasswordField txt_password;
+    @FXML
+    private TextField txt_password_visible;
+    @FXML
+    private TextField txt_userName;
+
+    @FXML
+    private ProgressBar progressIndicator;
+
+    private LoginRequest request = new LoginRequest();
+
+    /**
+     * هل كلمة المرور ظاهرة الآن؟
+     */
+    private boolean passwordVisible = false;
 
     // ── ثوابت وضع Standalone ──
-    private static final int HEALTH_POLL_INTERVAL_MS = 1000; // كل ثانية
-    private static final int HEALTH_TIMEOUT_ATTEMPTS = 30;  // 30 ثانية timeout
+    private static final int HEALTH_POLL_INTERVAL_MS = 1000;
+    private static final int HEALTH_TIMEOUT_ATTEMPTS = 30;
+
+    // ── كلاسات الحالة لـ lbl_info ──
+    private static final String STYLE_INFO = "stg-login-info";
+    private static final String STYLE_ERROR = "stg-login-info-error";
+    private static final String STYLE_SUCCESS = "stg-login-info-success";
 
     // ══════════════════ Config Helpers ══════════════════
 
-    /**
-     * مسار bin — من AppConfig مع fallback للكشف التلقائي.
-     */
     private String pgBinPath() {
         String v = AppConfig.getString("paths", "pgBin", "");
         if (v != null && !v.isEmpty()) return v;
-        return PathResolver.detect()
-                .map(d -> d.pgBin().toString())
-                .orElse("");
+        return PathResolver.detect().map(d -> d.pgBin().toString()).orElse("");
     }
 
-    /**
-     * مسار data — من AppConfig مع fallback للكشف التلقائي.
-     */
     private String pgDataPath() {
         String v = AppConfig.getString("paths", "pgData", "");
         if (v != null && !v.isEmpty()) return v;
-        return PathResolver.detect()
-                .map(d -> d.pgData().toString())
-                .orElse("");
+        return PathResolver.detect().map(d -> d.pgData().toString()).orElse("");
     }
 
-    /**
-     * مسار الباك إند التنفيذي — من AppConfig مع fallback للكشف التلقائي.
-     */
     private String backendPath() {
         String v = AppConfig.getString("paths", "backend", "");
         if (v != null && !v.isEmpty()) return v;
-        return PathResolver.detect()
-                .map(d -> d.backendExe().toString())
-                .orElse("");
+        return PathResolver.detect().map(d -> d.backendExe().toString()).orElse("");
     }
 
     // ══════════════════ Init ══════════════════
@@ -105,7 +105,12 @@ public class LoginController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         SettingsThemeLoader.apply(btn_cancel);
-        // ✅ تحميل آخر مستخدم
+        lbl_version.setText(clientVersion);
+
+        // حد أقصى لطول اسم المستخدم (بديل textLimit في MaterialFX)
+        txt_userName.setTextFormatter(new TextFormatter<>(change ->
+                change.getControlNewText().length() <= 50 ? change : null));
+
         String lastUser = AppConfig.getString("connection", "user", "");
         if (!lastUser.isEmpty()) {
             txt_userName.setText(lastUser);
@@ -115,11 +120,26 @@ public class LoginController implements Initializable {
         btn_login.setOnAction(e -> handleLogin());
         btn_cancel.setOnAction(e -> confirmAndExit());
 
+        // ── مزامنة الحقلين (مخفي / مرئي) ──
+        txt_password.textProperty().addListener((obs, old, nv) -> {
+            if (!passwordVisible) txt_password_visible.setText(nv);
+            validateFields();
+        });
+        txt_password_visible.textProperty().addListener((obs, old, nv) -> {
+            if (passwordVisible) txt_password.setText(nv);
+            validateFields();
+        });
+
         txt_userName.textProperty().addListener((obs, old, nv) -> validateFields());
-        txt_password.textProperty().addListener((obs, old, nv) -> validateFields());
+
         validateFields();
 
+        // ── زر إظهار/إخفاء كلمة المرور ──
+        btn_togglePassword.setOnAction(e -> togglePasswordVisibility());
+
+        // ── Enter navigation ──
         txt_password.setOnAction(e -> handleLogin());
+        txt_password_visible.setOnAction(e -> handleLogin());
         txt_userName.setOnAction(e -> txt_password.requestFocus());
 
         Platform.runLater(this::setupKeyboardShortcut);
@@ -164,10 +184,49 @@ public class LoginController implements Initializable {
         }
     }
 
+    // ── التحقق من الحقول ──
+
     private void validateFields() {
         boolean isValid = !txt_userName.getText().trim().isEmpty()
-                && !txt_password.getText().isEmpty();
+                && !getPassword().isEmpty();
         btn_login.setDisable(!isValid);
+    }
+
+    /**
+     * القيمة الحالية لكلمة المرور (سواء كانت مخفية أو مرئية)
+     */
+    private String getPassword() {
+        return passwordVisible ? txt_password_visible.getText() : txt_password.getText();
+    }
+
+    // ── التبديل بين المخفي / المرئي ──
+
+    private void togglePasswordVisibility() {
+        passwordVisible = !passwordVisible;
+
+        if (passwordVisible) {
+            txt_password_visible.setText(txt_password.getText());
+            txt_password_visible.setVisible(true);
+            txt_password_visible.setManaged(true);
+
+            txt_password.setVisible(false);
+            txt_password.setManaged(false);
+
+            btn_togglePassword.setText("🙈");
+            txt_password_visible.requestFocus();
+            txt_password_visible.positionCaret(txt_password_visible.getText().length());
+        } else {
+            txt_password.setText(txt_password_visible.getText());
+            txt_password.setVisible(true);
+            txt_password.setManaged(true);
+
+            txt_password_visible.setVisible(false);
+            txt_password_visible.setManaged(false);
+
+            btn_togglePassword.setText("👁");
+            txt_password.requestFocus();
+            txt_password.positionCaret(txt_password.getText().length());
+        }
     }
 
     // ════════════════════════════════════════════════════════════
@@ -176,13 +235,14 @@ public class LoginController implements Initializable {
 
     private void handleLogin() {
         String username = txt_userName.getText().trim();
-        String password = txt_password.getText();
+        String password = getPassword();
 
         if (username.isEmpty() || password.isEmpty()) {
-            showInfo("الرجاء إدخال اسم المستخدم وكلمة المرور");
+            showError("❌ الرجاء إدخال اسم المستخدم وكلمة المرور");
             return;
         }
 
+        clearInfo();
         setUiEnabled(false);
         request.setUsername(username);
         request.setPassword(password);
@@ -201,7 +261,6 @@ public class LoginController implements Initializable {
     // ════════════════════════════════════════════════════════════
 
     private void doStandaloneLogin(String username) {
-        // ── 1. تشغيل PostgreSQL لو مش شغّال ──
         updateInfo("⏳ فحص PostgreSQL...");
         PostgreSQLService pgService = PostgreSQLService.getInstance();
 
@@ -225,11 +284,9 @@ public class LoginController implements Initializable {
                 setUiEnabled(true);
                 return;
             }
-            // انتظر قليلاً للـ PostgreSQL يستقر
             sleep(2000);
         }
 
-        // ── 2. تشغيل Backend لو مش شغّال ──
         updateInfo("⏳ فحص Backend...");
         BackendService backendService = BackendService.getInstance();
 
@@ -254,7 +311,6 @@ public class LoginController implements Initializable {
             }
         }
 
-        // ── 3. Polling على /actuator/health ──
         updateInfo("⏳ انتظار جاهزية Backend...");
         boolean backendReady = waitForHealth();
         if (!backendReady) {
@@ -263,13 +319,12 @@ public class LoginController implements Initializable {
             return;
         }
 
-        // ── 4. تسجيل الدخول الفعلي ──
         updateInfo("⏳ جاري تسجيل الدخول...");
         doDirectLogin(username);
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Direct Login (الـ API call الفعلي)
+    //  Direct Login
     // ════════════════════════════════════════════════════════════
 
     private void doDirectLogin(String username) {
@@ -280,18 +335,19 @@ public class LoginController implements Initializable {
                 String msg = response.getMessage() != null
                         ? response.getMessage()
                         : "فشل تسجيل الدخول — تحقق من البيانات والاتصال";
-                showError(msg);
+                showError("❌ " + msg);
                 setUiEnabled(true);
                 return;
             }
 
-            // ✅ نجاح
             AppConfig.setValue("connection", "user", username);
             ApiClient.setAuthToken(response.getData().getToken());
             SessionManager.getInstance().setUsername(response.getData().getUsername());
             SessionManager.getInstance().setDisplayName(response.getData().getDisplayName());
 
             AppLogBus.getInstance().log("[Login] ✅ تسجيل دخول ناجح: " + username);
+
+            showSuccess("✅ تسجيل الدخول ناجح — جاري الفتح...");
 
             Platform.runLater(() -> {
                 openMainWindow();
@@ -300,7 +356,7 @@ public class LoginController implements Initializable {
 
         } catch (Exception e) {
             AppLogBus.getInstance().log("[Login] ❌ خطأ في تسجيل الدخول: " + e.getMessage());
-            showError("خطأ في الاتصال: " + e.getMessage());
+            showError("❌ خطأ في الاتصال: " + e.getMessage());
             setUiEnabled(true);
         }
     }
@@ -328,7 +384,6 @@ public class LoginController implements Initializable {
                     return true;
                 }
             } catch (Exception ignored) {
-                // Backend لسه بيشتغل — استمر في الانتظار
             }
             int attempt = i + 1;
             updateInfo("⏳ انتظار Backend... (" + attempt + "/" + HEALTH_TIMEOUT_ATTEMPTS + ")");
@@ -348,24 +403,56 @@ public class LoginController implements Initializable {
             if (enabled) {
                 progressIndicator.setProgress(0);
             } else {
-                progressIndicator.setProgress(-1);
+                progressIndicator.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
             }
         });
     }
+
+    // ── Info / Error / Success — المساحة محجوزة في الـ FXML ──
 
     private void updateInfo(String message) {
         Platform.runLater(() -> {
             lbl_info.setText(message);
             lbl_info.setVisible(true);
+            applyInfoStyle(STYLE_INFO);
         });
     }
 
     private void showInfo(String message) {
-        updateInfo(message);
+        Platform.runLater(() -> {
+            lbl_info.setText(message);
+            lbl_info.setVisible(true);
+            applyInfoStyle(STYLE_INFO);
+        });
     }
 
     private void showError(String message) {
-        updateInfo(message);
+        Platform.runLater(() -> {
+            lbl_info.setText(message);
+            lbl_info.setVisible(true);
+            applyInfoStyle(STYLE_ERROR);
+        });
+    }
+
+    private void showSuccess(String message) {
+        Platform.runLater(() -> {
+            lbl_info.setText(message);
+            lbl_info.setVisible(true);
+            applyInfoStyle(STYLE_SUCCESS);
+        });
+    }
+
+    private void clearInfo() {
+        Platform.runLater(() -> {
+            lbl_info.setText("");
+            lbl_info.setVisible(false);
+        });
+    }
+
+    private void applyInfoStyle(String activeClass) {
+        lbl_info.getStyleClass().removeAll(STYLE_INFO, STYLE_ERROR, STYLE_SUCCESS);
+        lbl_info.getStyleClass().add(STYLE_INFO);
+        lbl_info.getStyleClass().add(activeClass);
     }
 
     private void sleep(long ms) {

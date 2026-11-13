@@ -3,125 +3,138 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<ScrollPane fitToHeight="true" fitToWidth="true"
-            prefHeight="661.0" prefWidth="724.0"
+<BorderPane nodeOrientation="RIGHT_TO_LEFT"
+            styleClass="stg-app-bg"
             xmlns="http://javafx.com/javafx/26"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.safwat.hr.controller.admin.system.BackendController"
-            styleClass="stg-main-scroll">
-    <content>
-        <VBox spacing="14.0" styleClass="stg-app-bg">
+            fx:controller="com.safwat.hr.controller.admin.system.BackendController">
+
+    <!-- ═══ Header ═══ -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-page-header">
             <padding>
-                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+                <Insets bottom="14" left="20" right="20" top="14"/>
             </padding>
-
-            <!-- ═══ Header ═══ -->
-            <HBox alignment="CENTER_LEFT" spacing="12" styleClass="stg-page-header">
-                <Label styleClass="stg-header-icon" text="🚀"/>
-                <VBox spacing="2">
-                    <Label styleClass="stg-page-title" text="إدارة Backend"/>
-                    <Label styleClass="stg-page-subtitle" text="التحكم في خدمة الخادم"/>
-                </VBox>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Label fx:id="lblBackendStatus" styleClass="stg-status-badge" text="⏹ غير معروف"/>
-            </HBox>
-
-            <!-- ═══ Card: معلومات Backend ═══ -->
-            <VBox spacing="0" styleClass="stg-card">
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                    <Label styleClass="stg-card-icon" text="📋"/>
-                    <Label styleClass="stg-card-title" text="معلومات Backend"/>
-                </HBox>
-                <VBox spacing="0" styleClass="stg-card-body">
-                    <GridPane hgap="15" vgap="10">
-                        <columnConstraints>
-                            <ColumnConstraints minWidth="100" prefWidth="100"/>
-                            <ColumnConstraints hgrow="ALWAYS"/>
-                        </columnConstraints>
-                        <rowConstraints>
-                            <RowConstraints/>
-                            <RowConstraints/>
-                            <RowConstraints/>
-                            <RowConstraints/>
-                        </rowConstraints>
-
-                        <Label styleClass="stg-field-label" text="المسار:"
-                               GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                        <Label fx:id="lblBackendPath" styleClass="stg-field-value" text="-"
-                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-                        <Label styleClass="stg-field-label" text="الحالة:"
-                               GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                        <Label fx:id="lblBackendRunningStatus" styleClass="stg-field-value"
-                               text="❌ غير مشغول"
-                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
-                        <Label styleClass="stg-field-label" text="المنفذ:"
-                               GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                        <Label fx:id="lblBackendPort" styleClass="stg-field-value" text="8080"
-                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-
-                        <Label styleClass="stg-field-label" text="PID:"
-                               GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                        <Label fx:id="lblBackendPid" styleClass="stg-field-value" text="-"
-                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                    </GridPane>
-                </VBox>
+            <Label styleClass="stg-header-icon" text="🚀"/>
+            <VBox spacing="2">
+                <Label styleClass="stg-page-title" text="إدارة Backend"/>
+                <Label styleClass="stg-page-subtitle" text="التحكم في خدمة الخادم"/>
             </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblBackendStatus" styleClass="stg-status-badge" text="⏹ غير معروف"/>
+        </HBox>
+    </top>
 
-            <!-- ═══ Card: العمليات ═══ -->
-            <VBox spacing="0" styleClass="stg-card">
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                    <Label styleClass="stg-card-icon" text="🛠"/>
-                    <Label styleClass="stg-card-title" text="العمليات"/>
-                </HBox>
-                <VBox spacing="12" styleClass="stg-card-body">
+    <!-- ═══ Body ═══ -->
+    <center>
+        <ScrollPane fitToWidth="true" fitToHeight="false"
+                    hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED"
+                    styleClass="stg-main-scroll">
+            <VBox spacing="14">
+                <padding>
+                    <Insets bottom="16" left="16" right="16" top="16"/>
+                </padding>
 
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label minWidth="110" styleClass="stg-field-label" text="التشغيل:"/>
-                        <Button fx:id="btnStart" styleClass="stg-btn-primary" text="▶ تشغيل"/>
-                        <Button fx:id="btnStop" styleClass="stg-btn-danger" text="⏹ إيقاف"/>
-                        <Button fx:id="btnRestart" styleClass="stg-btn-secondary" text="🔄 إعادة تشغيل"/>
-                        <CheckBox fx:id="chkServiceMode" styleClass="stg-checkbox-dark" text="خدمة (Windows)"/>
+                <!-- ═══ Card: معلومات Backend ═══ -->
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="📋"/>
+                        <Label styleClass="stg-card-title" text="معلومات Backend"/>
                     </HBox>
+                    <VBox spacing="0" styleClass="stg-card-body">
+                        <GridPane hgap="15" vgap="10">
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" prefWidth="100"/>
+                                <ColumnConstraints hgrow="ALWAYS"/>
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints/>
+                                <RowConstraints/>
+                                <RowConstraints/>
+                                <RowConstraints/>
+                            </rowConstraints>
 
-                    <Separator styleClass="stg-separator-dark"/>
+                            <Label styleClass="stg-field-label" text="المسار:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <Label fx:id="lblBackendPath" styleClass="stg-field-value" text="-"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label minWidth="110" styleClass="stg-field-label" text="الخدمة:"/>
-                        <Button fx:id="btnInstallService" styleClass="stg-btn-primary" text="📦 تثبيت"/>
-                        <Button fx:id="btnDeleteService" styleClass="stg-btn-danger" text="❌ حذف"/>
-                        <Button fx:id="btnFixServices" styleClass="stg-btn-secondary" text="🔧 إصلاح الخدمات"/>
-                    </HBox>
+                            <Label styleClass="stg-field-label" text="الحالة:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <Label fx:id="lblBackendRunningStatus" styleClass="stg-field-value"
+                                   text="❌ غير مشغول"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
-                    <Separator styleClass="stg-separator-dark"/>
+                            <Label styleClass="stg-field-label" text="المنفذ:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <Label fx:id="lblBackendPort" styleClass="stg-field-value" text="8080"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
 
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label minWidth="110" styleClass="stg-field-label" text="وضع محمول:"/>
-                        <Button fx:id="btnPortable" styleClass="stg-btn-secondary" text="📱 تشغيل محمول"/>
-                    </HBox>
-
-                    <Separator styleClass="stg-separator-dark"/>
-
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label minWidth="110" styleClass="stg-field-label" text="تشغيل تلقائي:"/>
-                        <Button fx:id="btnAutoStart" onAction="#handleAutoStart"
-                                styleClass="stg-btn-secondary" text="🚀 تشغيل تلقائي"/>
-                    </HBox>
+                            <Label styleClass="stg-field-label" text="PID:"
+                                   GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                            <Label fx:id="lblBackendPid" styleClass="stg-field-value" text="-"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                        </GridPane>
+                    </VBox>
                 </VBox>
-            </VBox>
 
-            <!-- ═══ Card: سجل العمليات ═══ -->
-            <VBox spacing="0" styleClass="stg-card" VBox.vgrow="ALWAYS">
-                <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
-                    <Label styleClass="stg-card-icon" text="📋"/>
-                    <Label styleClass="stg-card-title" text="سجل العمليات"/>
-                </HBox>
-                <TextArea fx:id="txtBackendLogs" editable="false" prefHeight="180"
-                          styleClass="stg-textarea-dark,stg-textarea-in-card"
-                          wrapText="true" VBox.vgrow="ALWAYS"/>
-            </VBox>
+                <!-- ═══ Card: العمليات ═══ -->
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="🛠"/>
+                        <Label styleClass="stg-card-title" text="العمليات"/>
+                    </HBox>
+                    <VBox spacing="12" styleClass="stg-card-body">
 
-        </VBox>
-    </content>
-</ScrollPane>
+                        <FlowPane alignment="CENTER_LEFT" hgap="10" vgap="8">
+                            <Label minWidth="110" styleClass="stg-field-label" text="التشغيل:"/>
+                            <Button fx:id="btnStart" styleClass="stg-btn-primary" text="▶ تشغيل"/>
+                            <Button fx:id="btnStop" styleClass="stg-btn-danger" text="⏹ إيقاف"/>
+                            <Button fx:id="btnRestart" styleClass="stg-btn-secondary" text="🔄 إعادة تشغيل"/>
+                            <CheckBox fx:id="chkServiceMode" styleClass="stg-checkbox-dark"
+                                      text="خدمة (Windows)"/>
+                        </FlowPane>
+
+                        <Separator styleClass="stg-separator-dark"/>
+
+                        <FlowPane alignment="CENTER_LEFT" hgap="10" vgap="8">
+                            <Label minWidth="110" styleClass="stg-field-label" text="الخدمة:"/>
+                            <Button fx:id="btnInstallService" styleClass="stg-btn-primary" text="📦 تثبيت"/>
+                            <Button fx:id="btnDeleteService" styleClass="stg-btn-danger" text="❌ حذف"/>
+                            <Button fx:id="btnFixServices" styleClass="stg-btn-secondary"
+                                    text="🔧 إصلاح الخدمات"/>
+                        </FlowPane>
+
+                        <Separator styleClass="stg-separator-dark"/>
+
+                        <FlowPane alignment="CENTER_LEFT" hgap="10" vgap="8">
+                            <Label minWidth="110" styleClass="stg-field-label" text="وضع محمول:"/>
+                            <Button fx:id="btnPortable" styleClass="stg-btn-secondary"
+                                    text="📱 تشغيل محمول"/>
+                        </FlowPane>
+
+                        <Separator styleClass="stg-separator-dark"/>
+
+                        <FlowPane alignment="CENTER_LEFT" hgap="10" vgap="8">
+                            <Label minWidth="110" styleClass="stg-field-label" text="تشغيل تلقائي:"/>
+                            <Button fx:id="btnAutoStart" onAction="#handleAutoStart"
+                                    styleClass="stg-btn-secondary" text="🚀 تشغيل تلقائي"/>
+                        </FlowPane>
+                    </VBox>
+                </VBox>
+
+                <!-- ═══ Card: سجل العمليات ═══ -->
+                <VBox spacing="0" styleClass="stg-card">
+                    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="stg-card-header">
+                        <Label styleClass="stg-card-icon" text="📋"/>
+                        <Label styleClass="stg-card-title" text="سجل العمليات"/>
+                    </HBox>
+                    <TextArea fx:id="txtBackendLogs" editable="false" prefHeight="180"
+                              styleClass="stg-textarea-dark,stg-textarea-in-card"
+                              wrapText="true"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
