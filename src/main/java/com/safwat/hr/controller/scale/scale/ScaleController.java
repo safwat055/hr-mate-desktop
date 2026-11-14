@@ -133,7 +133,7 @@ public class ScaleController implements Initializable {
     @FXML
     private Button btn_save;
     @FXML
-    private Button btn_pdf;
+    private Button btn_pdf, btn_shortScale;
     @FXML
     private Button btn_clear;
 
@@ -158,6 +158,7 @@ public class ScaleController implements Initializable {
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
+        btn_shortScale.setOnAction(_ -> doShortPdf());
         btn_clear.setOnAction(_ -> doClear());
 // في initialize()
         if (btn_delete != null) btn_delete.setOnAction(_ -> doDelete());
@@ -371,7 +372,27 @@ public class ScaleController implements Initializable {
         ScaleDto dto = buildDto();
         apiService.downloadScale(dto);
     }
+    private void doShortPdf() {
+        if (!validateForm()) return;
 
+        LocalDate fromDate;
+        String text = txt_shortTimeLine.getText();
+        if (text == null || text.isBlank()) {
+            fromDate = LocalDate.now();
+        } else {
+            fromDate = parseDate(text);
+            if (fromDate == null) {
+                showWarning("اكتب تاريخ البداية بصيغة yyyy-MM-dd أو dd/MM/yyyy، أو سيبه فاضي");
+                txt_shortTimeLine.requestFocus();
+                return;
+            }
+        }
+
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        apiService.downloadSalaryDetails(dto, fromDate);
+    }
     // ═════════════════════════════════════════════
     //  باقي الكلاس كما هو (ما عدا حذف import TypeReference)
     // ═════════════════════════════════════════════

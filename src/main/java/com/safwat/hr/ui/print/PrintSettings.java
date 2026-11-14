@@ -1,4 +1,4 @@
-package com.safwat.hr.ui.util;
+package com.safwat.hr.ui.print;
 
 import com.safwat.hr.shared.AppConfig;
 
@@ -20,6 +20,9 @@ public final class PrintSettings {
     private static final String KEY_PAGE_RANGE = "pageRange";
     private static final String KEY_COLLATE = "collate";
     private static final String KEY_COLOR = "color";
+    private static final String KEY_PER_SHEET = "perSheet";
+    private static final String KEY_MARGIN = "margin";
+    private static final String KEY_SAVE_AS_PDF = "saveAsPdf";
 
     private PrintSettings() {
     }
@@ -56,11 +59,24 @@ public final class PrintSettings {
         return AppConfig.getString(SECTION, KEY_COLOR, "COLOR");
     }
 
+    public static String getPerSheet() {
+        return AppConfig.getString(SECTION, KEY_PER_SHEET, "ONE");
+    }
+
+    public static String getMargin() {
+        return AppConfig.getString(SECTION, KEY_MARGIN, "NORMAL");
+    }
+
+    public static boolean isSaveAsPdf() {
+        return AppConfig.getBoolean(SECTION, KEY_SAVE_AS_PDF, false);
+    }
+
     /**
      * يحفظ كل الإعدادات دفعة واحدة في ملف واحد.
      */
     public static void save(String printerName, String paperName, String sidesName, int copies,
-                            String orientationName, String pageRange, boolean collate, String colorName) {
+                            String orientationName, String pageRange, boolean collate, String colorName,
+                            String perSheetName, String marginName, boolean saveAsPdf) {
         Map<String, Object> values = new LinkedHashMap<>();
         values.put(SECTION + "." + KEY_PRINTER, printerName);
         values.put(SECTION + "." + KEY_PAPER, paperName);
@@ -70,6 +86,9 @@ public final class PrintSettings {
         values.put(SECTION + "." + KEY_PAGE_RANGE, pageRange);
         values.put(SECTION + "." + KEY_COLLATE, collate);
         values.put(SECTION + "." + KEY_COLOR, colorName);
+        values.put(SECTION + "." + KEY_PER_SHEET, perSheetName);
+        values.put(SECTION + "." + KEY_MARGIN, marginName);
+        values.put(SECTION + "." + KEY_SAVE_AS_PDF, saveAsPdf);
         AppConfig.setValues(values);
     }
 }

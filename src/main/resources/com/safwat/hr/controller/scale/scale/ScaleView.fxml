@@ -220,8 +220,9 @@
                             <Label alignment="CENTER" prefHeight="18.0" prefWidth="230.0" styleClass="text-danger bold fs-12" text="تدرج مختصر" />
                      <HBox alignment="CENTER_LEFT" spacing="6">
                         <children>
-                           <Label prefWidth="110.0" styleClass="bold" text="بداية التدرج" />
+                           <Label prefHeight="18.0" prefWidth="26.0" styleClass="bold" text="من" />
                            <TextField fx:id="txt_shortTimeLine" alignment="CENTER" prefHeight="28" prefWidth="120.0" promptText="تاريخ" />
+                           <Button fx:id="btn_shortScale" mnemonicParsing="false" />
                         </children>
                      </HBox>
                         </VBox>

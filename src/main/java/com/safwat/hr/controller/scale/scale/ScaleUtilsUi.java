@@ -13,6 +13,6 @@ public class ScaleUtilsUi {
         TextFieldSetupHelper.setupDateFields("yyyy-MM-dd", controller.getTxt_startDate(), controller.getTxt_backStart(),
                 controller.getTxt_startCut(), controller.getTxt_endCut(), controller.getTxt_regrade3(), controller.getTxt_regrade4(),
                 controller.getTxt_regrade5(), controller.getTxt_backRegrade(), controller.getTxt_debloma(), controller.getTxt_magester(),
-                controller.getTxt_doctoraa(), controller.getDate_kader());
+                controller.getTxt_doctoraa(), controller.getDate_kader(), controller.getTxt_shortTimeLine());
     }
 }

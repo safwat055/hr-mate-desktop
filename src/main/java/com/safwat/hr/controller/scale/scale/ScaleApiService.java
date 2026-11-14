@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,7 @@ public class ScaleApiService {
     private static ScaleApiService instance;
 
     private ScaleApiService() {
+
     }
 
     public static synchronized ScaleApiService getInstance() {
@@ -101,10 +103,28 @@ public class ScaleApiService {
     //  PDF
     // ═════════════════════════════════════════════════════════════
 
-    @SneakyThrows
+    /**
+     * تدرج كامل لحد الإحالة (زرار التحميل القديم).
+     */
     public void downloadScale(ScaleDto dto) {
+        downloadPdf(API_BASE + "/download", dto, "ScaleReport", dto.getEmpName());
+    }
 
-        String fileName = "ScaleReport" + System.currentTimeMillis() + ".pdf";
+    /**
+     * تفاصيل الراتب (قانون 81) ابتداءً من تاريخ معين (زرار btn_shortScale).
+     * لو fromDate فاضي، الـ PDF بيبدأ من أول التعيين.
+     */
+    public void downloadSalaryDetails(ScaleDto dto, LocalDate fromDate) {
+        String endpoint = API_BASE + "/" + dto.getNationalId() + "/details/pdf";
+        if (fromDate != null) {
+            endpoint += "?fromDate=" + fromDate;
+        }
+        downloadPdf(endpoint, dto, "SalaryDetails", dto.getEmpName());
+    }
+
+    @SneakyThrows
+    private void downloadPdf(String endpoint, ScaleDto dto, String prefix, String empName) {
+        String fileName = prefix + System.currentTimeMillis() + ".pdf";
         String workingDir = System.getProperty("user.dir");
 
         Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
@@ -113,14 +133,10 @@ public class ScaleApiService {
         }
 
         Path targetPath = tempDownloadsDir.resolve(fileName);
-        boolean success = FileTransferClient.downloadFileViaPost(
-                API_BASE + "/download",
-                dto,
-                targetPath
-        );
+        boolean success = FileTransferClient.downloadFileViaPost(endpoint, dto, targetPath);
 
         if (success) {
-            openPDF(targetPath, "تدرج راتب", dto.getEmpName());
+            openPDF(targetPath, "تفاصيل الراتب", empName);
         } else {
             SAFNotification.error("فشل تحميل الملف");
         }
