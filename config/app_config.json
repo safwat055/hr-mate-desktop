@@ -36,5 +36,11 @@
     "url": "http://",
     "backendAsService": "false"
   },
-  "notifications": {"reportsEnabled": true}
+  "notifications": {"reportsEnabled": true},
+  "printing": {
+    "copies": 1,
+    "paper": "A4",
+    "printer": "Canon Generic Plus PCL6",
+    "sides": "ONE_SIDED"
+  }
 }
