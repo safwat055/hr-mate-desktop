@@ -1,8 +1,8 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.controller.appearance.ColorSettingsManager;
-import com.safwat.hr.controller.appearance.FontSettingsManager;
-import com.safwat.hr.controller.appearance.ZoomManager;
+import com.safwat.hr.controller._public.appearance.ColorSettingsManager;
+import com.safwat.hr.controller._public.appearance.FontSettingsManager;
+import com.safwat.hr.controller._public.appearance.ZoomManager;
 import com.safwat.hr.shared.AppConfig;
 import com.safwat.hr.shared.ViewRegistry;
 import com.safwat.hr.ui.controls.SAFNotification;

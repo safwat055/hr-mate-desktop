@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
 <!--
     شاشة إعدادات التطبيق — SettingsController
     ────────────────────────────────────────────────────────────
@@ -14,12 +10,15 @@
     ③ الفوتر: الحالة + تجاهل + حفظ الكل
 -->
 
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <BorderPane nodeOrientation="RIGHT_TO_LEFT"
             prefHeight="740" prefWidth="1100"
             styleClass="stg-root"
             xmlns="http://javafx.com/javafx/26"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.safwat.hr.controller.backendSetting.SettingsController">
+            fx:controller="com.safwat.hr.controller._public.backendSetting.SettingsController">
 
     <!-- ══════════ HEADER ══════════ -->
     <top>

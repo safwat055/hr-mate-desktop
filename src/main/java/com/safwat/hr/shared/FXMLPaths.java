@@ -4,13 +4,13 @@ import lombok.Getter;
 
 @Getter
 public class FXMLPaths {
-    private final String paymentsView = "/com/safwat/hr/controller/payroll/Payments.fxml";
-    private final String changeCardView = "/com/safwat/hr/controller/payroll/ChangeCard.fxml";
-    private final String payrollVocab = "/com/safwat/hr/controller/payroll/PayrollVocab.fxml";
-    private final String payrollManager = "/com/safwat/hr/controller/payroll/PayrollManagerView.fxml";
-    private final String payrollRecords = "/com/safwat/hr/controller/payroll/PayrollRecords.fxml";
-    private final String payrollTableView = "/com/safwat/hr/controller/payroll/ExcelTableView.fxml";
-    private final String payrollDateView = "/com/safwat/hr/controller/PayrollData.fxml";
+    private final String paymentsView = "/com/safwat/hr/controller/payroll/payments/Payments.fxml";
+    private final String changeCardView = "/com/safwat/hr/controller/payroll/changeCard/ChangeCard.fxml";
+    private final String payrollVocab = "/com/safwat/hr/controller/payroll/vocab/PayrollVocab.fxml";
+    private final String payrollManager = "/com/safwat/hr/controller/payroll/payrollManager/PayrollManagerView.fxml";
+    private final String payrollRecords = "/com/safwat/hr/controller/payroll/records/PayrollRecords.fxml";
+    private final String payrollTableView = "/com/safwat/hr/controller/payroll/table/ExcelTableView.fxml";
+    private final String payrollDateView = "/com/safwat/hr/controller/payroll/payrollData/PayrollData.fxml";
 
     private final String reportManager = "/com/safwat/hr/controller/report/user_reports.fxml";
     private final String payrollReport = "/com/safwat/hr/controller/report/PayrollReport.fxml";
@@ -23,15 +23,15 @@ public class FXMLPaths {
     private final String backendSetting = "/com/safwat/hr/view/Settings.fxml";
 
     // scale views
-    private final String salaryScale = "/com/safwat/hr/controller/scale/scale/ScaleView.fxml";
+    private final String salaryScale = "/com/safwat/hr/controller/hr/scale/ScaleView.fxml";
     private final String allowanceView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml";
 
-    private final String backupView = "/com/safwat/hr/controller/BackupView.fxml";
+    private final String backupView = "/com/safwat/hr/controller/_public/backup/BackupView.fxml";
 
-    private final String employeeForm = "/com/safwat/hr/controller/EmployeeForm.fxml";
+    private final String employeeForm = "/com/safwat/hr/controller/hr/employee/EmployeeForm.fxml";
     private final String historyDialog = "/com/safwat/hr/controller/HistoryDialog.fxml";
-    private final String wagesView = "/com/safwat/hr/controller/EmployeeWagesScreen.fxml";
-    private final String form5View = "/com/safwat/hr/controller/Form5.fxml";
+    private final String wagesView = "/com/safwat/hr/controller/hr/wages/EmployeeWagesScreen.fxml";
+    private final String form5View = "/com/safwat/hr/controller/hr/form5/Form5.fxml";
     private final String sectorView = "/com/safwat/hr/controller/entitlements/allowance/SectorJobTitleDialog.fxml";
     private final String OverrideDialogView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml";
     private final String statutoryDialogView = "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml";

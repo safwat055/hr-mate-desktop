@@ -1,6 +1,6 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.controller.login.CentralController;
+import com.safwat.hr.controller._public.login.CentralController;
 import com.safwat.hr.ui.print.PrintDialogService;
 import javafx.application.Platform;
 import javafx.concurrent.Worker;

@@ -1,0 +1,1047 @@
+package com.safwat.hr.controller.hr.scale;
+
+import com.safwat.hr.controller.hr.entitlements.allowance.AllowanceFxController;
+import com.safwat.hr.controller.hr.scale.dto.*;
+import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.ui.controls.SAFNotification;
+import com.safwat.hr.ui.table.TableSetupHelper;
+import com.safwat.hr.ui.util.PDFView;
+import com.safwat.hr.ui.util.TabManager;
+import javafx.application.Platform;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
+import lombok.Getter;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import static com.safwat.hr.ui.table.TableSetupHelper.*;
+
+/**
+ * Controller شاشة السلم الوظيفي.
+ * <p>
+ * كل استدعاءات REST بتتم عبر {@link ScaleApiService}.
+ * معاينة الـ PDF بتتعرض في WebView، وزرار "رجوع" بيرجّع الفورم.
+ */
+@Getter
+public class ScaleController implements Initializable {
+
+    // ─────────────────────────────────────────────
+    //  Service
+    // ─────────────────────────────────────────────
+    private final ScaleApiService apiService = ScaleApiService.getInstance();
+
+    // ─────────────────────────────────────────────
+    //  ثوابت التنسيق
+    // ─────────────────────────────────────────────
+    private static final DateTimeFormatter FMT_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter FMT_DISPLAY = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    // ─────────────────────────────────────────────
+    //  FXML Fields
+    // ─────────────────────────────────────────────
+    @FXML
+    private TextField txt_nationalId, txt_shortTimeLine;
+    @FXML
+    private TextField txt_empName;
+    @FXML
+    private TextField txt_empCode;
+    @FXML
+    private TextField txt_Management;
+    @FXML
+    private TextField txt_group;
+    @FXML
+    private TextField txt_law;
+    @FXML
+    private TextField txt_code;
+    @FXML
+    private TextField txt_startDegree;
+    @FXML
+    private TextField txt_startDate;
+    @FXML
+    private TextField txt_backStart;
+    @FXML
+    private TextField txt_debloma;
+    @FXML
+    private TextField txt_magester;
+    @FXML
+    private TextField txt_doctoraa;
+    @FXML
+    private TextField txt_tied;
+    @FXML
+    private TextField txt_startCut;
+    @FXML
+    private TextField txt_endCut;
+
+    @FXML
+    private TextField txt_regrade3;
+    @FXML
+    private TextField txt_regrade4;
+    @FXML
+    private TextField txt_regrade5;
+    @FXML
+    private TextField txt_backRegrade;
+    @FXML
+    private TextField yearUp;
+    @FXML
+    private TextField yearNoUp;
+    @FXML
+    private TextField gpUp;
+    @FXML
+    private TextField gpNoUp;
+    @FXML
+    private TextField yearsBack;
+    @FXML
+    private TextField date_kader;
+    @FXML
+    private TextField txt_retirementDay;
+
+    @FXML
+    private TableView<UpgradeRecord> table_upgrade;
+    @FXML
+    private TableView<EncouragementRecord> table_encourge;
+    @FXML
+    private TableView<PromotionIncentiveRecord> table_promotion;
+    @FXML
+    private TableView<AdjustmentRecord> table_mogardAdd;
+    @FXML
+    private TableView<AdjustmentRecord> table_mogardRival;
+    @FXML
+    private TableView<AdjustmentRecord> table_bonusAdd;
+    @FXML
+    private TableView<AdjustmentRecord> table_bonusRival;
+    @FXML
+    private TableView<ScaleTimelinePoint> table_result;
+    @FXML
+    private TableView<ExtraResultScale> table_extraDate;
+    @FXML
+    private TableView<StopPeriodic> table_stopPeriodic;
+
+    @FXML
+    private Button btn_search, btn_delete, btn_updateIdentity;
+    @FXML
+    private Button btn_calculate;
+    @FXML
+    private Button btn_save;
+    @FXML
+    private Button btn_pdf, btn_shortScale;
+    @FXML
+    private Button btn_clear;
+    @FXML
+    private Button btn_back;
+
+    @FXML
+    private Button btn_addUpgrade;
+    @FXML
+    private Button btn_addEncouragement;
+    @FXML
+    private Button btn_addPromotion;
+
+    // ─────────────────────────────────────────────
+    //  عرض الـ PDF
+    // ─────────────────────────────────────────────
+    @FXML
+    private VBox formBox;
+    @FXML
+    private WebView webView;
+
+    private ScaleUtilsUi utilsUi;
+    private ScaleDto currentDto = null;
+
+    // ═════════════════════════════════════════════
+    //  Initialize
+    // ═════════════════════════════════════════════
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        utilsUi = new ScaleUtilsUi(this);
+
+        btn_search.setOnAction(_ -> search());
+        btn_calculate.setOnAction(_ -> doCalculate());
+        btn_save.setOnAction(_ -> doSave());
+        btn_pdf.setOnAction(_ -> doPdf());
+        btn_shortScale.setOnAction(_ -> doShortPdf());
+        btn_clear.setOnAction(_ -> doClear());
+        btn_back.setOnAction(_ -> showForm());
+
+        if (btn_delete != null) btn_delete.setOnAction(_ -> doDelete());
+        if (btn_updateIdentity != null) btn_updateIdentity.setOnAction(_ -> doUpdateIdentity());
+        if (btn_addUpgrade != null) btn_addUpgrade.setOnAction(_ -> addEmptyUpgradeRow());
+        if (btn_addEncouragement != null) btn_addEncouragement.setOnAction(_ -> addEmptyEncouragementRow());
+        if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
+
+        txt_nationalId.setOnAction(_ -> search());
+
+        setupUpgradeTable();
+        setupEncouragementTable();
+        setupPromotionTable();
+        setTable_stopPeriodic();
+        setExtartDataTable();
+        utilsUi.setupDateFields();
+        setTable_result();
+
+        setupAdjustmentTable(table_mogardAdd);
+        setupAdjustmentTable(table_mogardRival);
+        setupAdjustmentTable(table_bonusAdd);
+        setupAdjustmentTable(table_bonusRival);
+
+        showForm();
+    }
+
+    // ═════════════════════════════════════════════
+    //  حالة الواجهة (فورم / معاينة PDF)
+    // ═════════════════════════════════════════════
+
+    private void showForm() {
+        setShown(formBox, true);
+        setShown(webView, false);
+        setShown(btn_back, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");   // يفضّي الـ PDF من الذاكرة
+        }
+    }
+
+    private void showPreview() {
+        setShown(formBox, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(javafx.scene.Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    // ═════════════════════════════════════════════
+    //  Delete / Update identity
+    // ═════════════════════════════════════════════
+
+    private void doDelete() {
+        String id = txt_nationalId.getText().trim();
+        if (id.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setHeaderText(null);
+        confirm.setContentText("هل تريد حذف سجل السلم الوظيفي للموظف؟");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        setButtonsDisabled(true);
+        try {
+            apiService.delete(id);
+            doClear();
+            showInfo("تم الحذف بنجاح ✓");
+        } catch (Exception e) {
+            showError("فشل الحذف: " + e.getMessage());
+        } finally {
+            setButtonsDisabled(false);
+        }
+    }
+
+    private void doUpdateIdentity() {
+        String oldId = txt_nationalId.getText().trim();
+        if (oldId.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+
+        UpdateEmployeeIdentityRequest req = new UpdateEmployeeIdentityRequest();
+        req.setNewNationalId(txt_nationalId.getText().trim());
+        req.setNewCodeId(txt_empCode.getText().trim());
+        req.setNewEmpName(txt_empName.getText().trim());
+
+        setButtonsDisabled(true);
+        apiService.updateIdentity(oldId, req)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل التعديل:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                    showInfo("تم التعديل بنجاح ✓");
+                }));
+    }
+
+    // ═════════════════════════════════════════════
+    //  Search
+    // ═════════════════════════════════════════════
+
+    private void search() {
+        showForm();
+
+        String searchValue;
+        String searchType;
+
+        if (!txt_nationalId.getText().isEmpty()) {
+            searchValue = txt_nationalId.getText();
+            searchType = "nationalId";
+        } else if (!txt_code.getText().isEmpty()) {
+            searchValue = txt_code.getText();
+            searchType = "code";
+        } else if (!txt_empName.getText().isEmpty()) {
+            searchValue = txt_empName.getText();
+            searchType = "empName";
+        } else {
+            searchValue = txt_nationalId.getText();
+            searchType = "all";
+        }
+
+        if (searchValue == null || searchValue.isEmpty()) {
+            SAFNotification.error("يجب ادخال قيمة للبحث اولا");
+            return;
+        }
+
+        setButtonsDisabled(true);
+
+        List<SearchScaleEmployee> data;
+        try {
+            data = apiService.search(searchValue, searchType);
+        } catch (IOException | InterruptedException e) {
+            setButtonsDisabled(false);
+            showError("فشل البحث: " + e.getMessage());
+            return;
+        }
+
+        if (data.size() == 1) {
+            txt_nationalId.setText(data.getFirst().nationalId());
+            Platform.runLater(this::doSearch);
+
+        } else if (data.size() > 1) {
+            Optional<SearchScaleEmployee> d = SearchDialog.builder(SearchScaleEmployee.class)
+                    .title("بحث عن موظف")
+                    .column("رقم قومي", SearchScaleEmployee::nationalId)
+                    .column("كود الموظف", SearchScaleEmployee::codeId)
+                    .column("الاسم", SearchScaleEmployee::empName)
+                    .column("قانون", SearchScaleEmployee::castToString)
+                    .column("المجموعة النوعية", SearchScaleEmployee::qualitativeGroup)
+                    .data(data)
+                    .show();
+
+            d.ifPresent(emp -> {
+                txt_nationalId.setText(emp.nationalId());
+                Platform.runLater(this::doSearch);
+            });
+
+        } else {
+            SAFNotification.warning("لايوجد نتائج للبحث");
+        }
+
+        setButtonsDisabled(false);
+    }
+
+    private void doSearch() {
+        String id = txt_nationalId.getText().trim();
+        if (id.isBlank()) {
+            showWarning("أدخل الرقم القومي أولاً");
+            return;
+        }
+        doClear();
+        setButtonsDisabled(true);
+
+        apiService.findById(id)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("الموظف غير موجود:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                }));
+    }
+
+    // ═════════════════════════════════════════════
+    //  Calculate
+    // ═════════════════════════════════════════════
+
+    private void doCalculate() {
+        if (!validateForm()) return;
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+
+        apiService.calculate(dto)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل الاحتساب:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                }));
+    }
+
+    // ═════════════════════════════════════════════
+    //  Save
+    // ═════════════════════════════════════════════
+
+    private void doSave() {
+        if (!validateForm()) return;
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+
+        apiService.save(dto)
+                .thenAcceptAsync(response -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (!response.isSuccess() || response.getData() == null) {
+                        showError("فشل الحفظ:\n" + response.getMessage());
+                        return;
+                    }
+                    currentDto = response.getData();
+                    fillForm(currentDto);
+                    showInfo("تم الحفظ بنجاح ✓");
+                }));
+    }
+
+    // ═════════════════════════════════════════════
+    //  PDF (الميثودين بيستخدموا نفس الفلو)
+    // ═════════════════════════════════════════════
+
+    /**
+     * زرار PDF: السلم الوظيفي الكامل.
+     */
+    private void doPdf() {
+        if (!validateForm()) return;
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+        apiService.downloadScaleToFile(dto)
+                .whenComplete((path, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    showPreview();
+                    PDFView.showIN(path.toString(), webView);
+                }));
+    }
+
+    /**
+     * زرار "تدرج مختصر": تفاصيل المرتبات من تاريخ معيّن.
+     */
+    private void doShortPdf() {
+        if (!validateForm()) return;
+
+        LocalDate fromDate;
+        String text = txt_shortTimeLine.getText();
+        if (text == null || text.isBlank()) {
+            fromDate = LocalDate.now();
+        } else {
+            fromDate = parseDate(text);
+            if (fromDate == null) {
+                showWarning("اكتب تاريخ البداية بصيغة yyyy-MM-dd أو dd/MM/yyyy، أو سيبه فاضي");
+                txt_shortTimeLine.requestFocus();
+                return;
+            }
+        }
+
+        ScaleDto dto = buildDto();
+        if (dto == null) return;
+
+        final LocalDate from = fromDate;
+        setButtonsDisabled(true);
+        apiService.downloadSalaryDetailsToFile(dto, from)
+                .whenComplete((path, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    showPreview();
+                    PDFView.showIN(path.toString(), webView);
+                }));
+    }
+
+    /**
+     * الفلو المشترك للميثودين:
+     * 1) تعطيل الأزرار 2) طلب الـ PDF كـ bytes 3) حفظ + عرض في الـ WebView
+     */
+    private void generateAndPreview(Supplier<CompletableFuture<byte[]>> request, String prefix) {
+        setButtonsDisabled(true);
+
+        request.get()
+                .whenComplete((bytes, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    if (bytes == null || bytes.length == 0) {
+                        showError("الملف الناتج فارغ");
+                        return;
+                    }
+                    savePdfAndShow(bytes, prefix);
+                }));
+    }
+
+    /**
+     * يحفظ الـ PDF في temp_downloads ويعرضه في الـ WebView. لازم يتنادى على الـ FX thread.
+     */
+    private void savePdfAndShow(byte[] bytes, String prefix) {
+        try {
+            Path dir = Paths.get(System.getProperty("user.dir"), "temp_downloads");
+            Files.createDirectories(dir);
+
+            String id = txt_nationalId.getText() == null ? "unknown" : txt_nationalId.getText().trim();
+            Path target = dir.resolve(prefix + "_" + id + "_" + System.currentTimeMillis() + ".pdf");
+            Files.write(target, bytes);
+
+            showPreview();
+            PDFView.showIN(target.toString(), webView);
+
+        } catch (IOException e) {
+            showError("تعذر حفظ الملف: " + e.getMessage());
+        }
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
+    }
+
+    // ═════════════════════════════════════════════
+    //  Tables setup
+    // ═════════════════════════════════════════════
+
+    private void setupUpgradeTable() {
+        List<TableSetupHelper.ColumnConfig<UpgradeRecord>> cols = List.of(
+                new TableSetupHelper.ColumnConfig<>("تاريخ الترقية", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new TableSetupHelper.ColumnConfig<>("الدرجة", 90,
+                        UpgradeRecord::getDegree,
+                        UpgradeRecord::setDegree,
+                        false, false, ColumnAlign.CENTER, true),
+                new TableSetupHelper.ColumnConfig<>("رقم القرار", 120,
+                        UpgradeRecord::getDecisionNumber,
+                        UpgradeRecord::setDecisionNumber,
+                        true, false, ColumnAlign.LEFT, true)
+        );
+        setupGenericTable(table_upgrade, cols, 10, UpgradeRecord::new);
+    }
+
+    private void setupEncouragementTable() {
+        List<ColumnConfig<EncouragementRecord>> cols = List.of(
+                new ColumnConfig<>("تاريخ التشجيعية", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("رقم القرار", 120,
+                        EncouragementRecord::getDecisionNumber,
+                        EncouragementRecord::setDecisionNumber,
+                        true, false, ColumnAlign.LEFT, true)
+        );
+        setupGenericTable(table_encourge, cols, 10, EncouragementRecord::new);
+    }
+
+    private void setupPromotionTable() {
+        List<ColumnConfig<PromotionIncentiveRecord>> cols = List.of(
+                new ColumnConfig<>("تاريخ الحافز", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("رقم القرار", 120,
+                        PromotionIncentiveRecord::getDecisionNumber,
+                        PromotionIncentiveRecord::setDecisionNumber,
+                        true, false, ColumnAlign.LEFT, true)
+        );
+        setupGenericTable(table_promotion, cols, 10, PromotionIncentiveRecord::new);
+    }
+
+    public void setTable_stopPeriodic() {
+        List<ColumnConfig<StopPeriodic>> cols = new ArrayList<>();
+        cols.add(new ColumnConfig<>("عام البداية", 100,
+                r -> r.getStartYear() != null ? r.getStartYear().toString() : "",
+                (r, v) -> r.setStartYear(parseInt(v)),
+                true, false));
+        cols.add(new ColumnConfig<>("عام النهاية", 100,
+                r -> r.getEndYear() != null ? r.getEndYear().toString() : "",
+                (r, v) -> r.setEndYear(parseInt(v)),
+                true, false));
+        setupGenericTable(table_stopPeriodic, cols, 2, StopPeriodic::new);
+    }
+
+    private void setupAdjustmentTable(TableView<AdjustmentRecord> table) {
+        List<ColumnConfig<AdjustmentRecord>> cols = List.of(
+                new ColumnConfig<>("التاريخ", 100,
+                        r -> formatDateOutput(r.getDate()),
+                        (r, v) -> r.setDate(parseDateInput(v)),
+                        true, true),
+                new ColumnConfig<>("المبلغ", 100,
+                        r -> r.getAmount() != null ? r.getAmount().toString() : "",
+                        (r, v) -> r.setAmount(parseBigDecimal(v)),
+                        true, false, ColumnAlign.LEFT, true)
+        );
+        setupGenericTable(table, cols, 5, AdjustmentRecord::new);
+    }
+
+    private void setExtartDataTable() {
+        List<TableSetupHelper.ColumnConfig<ExtraResultScale>> cols = List.of(
+                new TableSetupHelper.ColumnConfig<>("بيان 1", 100,
+                        ExtraResultScale::getColumn_1, ExtraResultScale::setColumn_1,
+                        false, false, ColumnAlign.CENTER, false),
+                new TableSetupHelper.ColumnConfig<>("قيمة 1", 90,
+                        ExtraResultScale::getValue_1, ExtraResultScale::setValue_1,
+                        false, false, ColumnAlign.CENTER, false),
+                new TableSetupHelper.ColumnConfig<>("بيان 2", 120,
+                        ExtraResultScale::getColumn_2, ExtraResultScale::setColumn_2,
+                        false, false, ColumnAlign.CENTER, false),
+                new TableSetupHelper.ColumnConfig<>("قيمة 2", 120,
+                        ExtraResultScale::getValue_2, ExtraResultScale::setValue_2,
+                        false, false, ColumnAlign.CENTER, false)
+        );
+        setupGenericTable(table_extraDate, cols, 10, ExtraResultScale::new);
+    }
+
+    void setTable_result() {
+        List<ColumnConfig<ScaleTimelinePoint>> cols = new ArrayList<>();
+        cols.add(new ColumnConfig<>("التاريخ", 90,
+                r -> formatDateOutput(r.getDate()),
+                (r, v) -> r.setDate(parseDateInput(v)),
+                false, true));
+        cols.add(new ColumnConfig<>("الاساسي", 90,
+                r -> r.getCurrentBasic() != null ? r.getCurrentBasic().toString() : "",
+                (r, v) -> r.setCurrentBasic(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("الدورية", 70,
+                r -> nonZero(r.getPeriodicBonus()),
+                (r, v) -> r.setPeriodicBonus(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("خاصة خاضعة", 90,
+                r -> nonZero(r.getSpBonusSubject()),
+                (r, v) -> r.setSpBonusSubject(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("خاصة غير خ", 90,
+                r -> nonZero(r.getSpBonusNotSubject()),
+                (r, v) -> r.setSpBonusNotSubject(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("أخرى خاضعة", 90,
+                r -> nonZero(r.getOther_sp_subject()),
+                (r, v) -> r.setOther_sp_subject(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("ترقية", 90,
+                r -> nonZero(r.getUpgradeBonus()),
+                (r, v) -> r.setUpgradeBonus(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("تشجيعية", 90,
+                r -> nonZero(r.getEncourageBonus()),
+                (r, v) -> r.setEncourageBonus(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("اخرى", 90,
+                r -> nonZero(r.getOtherBonus()),
+                (r, v) -> r.setOtherBonus(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("المجرد", 90,
+                r -> nonZero(r.getMogard()),
+                (r, v) -> r.setMogard(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("الأساس 30-6", 90,
+                r -> nonZero(r.getBasic30_6()),
+                (r, v) -> r.setBasic30_6(parseBigDecimal(v)),
+                false, false));
+        cols.add(new ColumnConfig<>("الدرجة", 90,
+                ScaleTimelinePoint::getDegreeLabel,
+                ScaleTimelinePoint::setDegreeLabel,
+                false, false));
+        setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
+    }
+
+    private static String nonZero(BigDecimal v) {
+        return v != null && v.compareTo(BigDecimal.ZERO) != 0 ? v.toString() : "";
+    }
+
+    // ═════════════════════════════════════════════
+    //  Clear / Add empty rows
+    // ═════════════════════════════════════════════
+
+    private void doClear() {
+        List.of(txt_nationalId, txt_empCode, txt_empName, txt_Management,
+                        txt_startDate, txt_backStart, txt_debloma, txt_magester,
+                        txt_doctoraa, txt_tied, txt_regrade3, txt_regrade4,
+                        txt_regrade5, txt_backRegrade, txt_group, txt_law,
+                        txt_code, txt_startDegree, yearUp, yearNoUp, gpUp,
+                        gpNoUp, yearsBack, date_kader, txt_retirementDay,
+                        txt_startCut, txt_endCut)
+                .forEach(TextField::clear);
+
+        table_upgrade.getItems().clear();
+        table_encourge.getItems().clear();
+        table_promotion.getItems().clear();
+        table_result.getItems().clear();
+        table_mogardAdd.getItems().clear();
+        table_mogardRival.getItems().clear();
+        table_bonusAdd.getItems().clear();
+        table_bonusRival.getItems().clear();
+        table_extraDate.getItems().clear();
+        table_stopPeriodic.getItems().clear();
+        currentDto = null;
+    }
+
+    private void addEmptyUpgradeRow() {
+        table_upgrade.getItems().add(new UpgradeRecord());
+        int lastIdx = table_upgrade.getItems().size() - 1;
+        table_upgrade.scrollTo(lastIdx);
+        table_upgrade.getSelectionModel().select(lastIdx);
+    }
+
+    private void addEmptyEncouragementRow() {
+        table_encourge.getItems().add(new EncouragementRecord());
+        int lastIdx = table_encourge.getItems().size() - 1;
+        table_encourge.scrollTo(lastIdx);
+        table_encourge.getSelectionModel().select(lastIdx);
+    }
+
+    private void addEmptyPromotionRow() {
+        table_promotion.getItems().add(new PromotionIncentiveRecord());
+        int lastIdx = table_promotion.getItems().size() - 1;
+        table_promotion.scrollTo(lastIdx);
+        table_promotion.getSelectionModel().select(lastIdx);
+    }
+
+    // ═════════════════════════════════════════════
+    //  Fill Form
+    // ═════════════════════════════════════════════
+
+    private void fillForm(ScaleDto dto) {
+        ScaleExtraInfo extraInfo = dto.getExtraInfo();
+
+        setText(txt_nationalId, dto.getNationalId());
+        setText(txt_empCode, dto.getCodeId());
+        setText(txt_empName, dto.getEmpName());
+        setText(txt_group, dto.getQualitativeGroup());
+        setText(txt_law, dto.getLaw());
+        setText(txt_code, dto.getLawCode());
+        setText(txt_startDegree, dto.getStartDegree());
+        setText(txt_startDate, fmt(dto.getStartDate()));
+        setText(txt_backStart, fmt(dto.getRestartDate()));
+        setText(txt_startCut, fmt(dto.getCutStart()));
+        setText(txt_endCut, fmt(dto.getCutEnd()));
+        setText(yearUp, extraInfo != null ? extraInfo.getYearUp() : null);
+        setText(yearNoUp, extraInfo != null ? extraInfo.getYearNoUp() : null);
+        setText(gpUp, extraInfo != null ? extraInfo.getGpUp() : null);
+        setText(gpNoUp, extraInfo != null ? extraInfo.getGpNoUp() : null);
+        setText(yearsBack, extraInfo != null ? extraInfo.getYearBack() : null);
+        setText(txt_tied, dto.getStartTied());
+
+        setText(txt_regrade3, fmt(extraInfo != null ? extraInfo.getRegrade3() : null));
+        setText(txt_regrade4, fmt(extraInfo != null ? extraInfo.getRegrade4() : null));
+        setText(txt_regrade5, fmt(extraInfo != null ? extraInfo.getRegrade5() : null));
+        setText(txt_debloma, fmt(extraInfo != null ? extraInfo.getDebloma() : null));
+        setText(txt_magester, fmt(extraInfo != null ? extraInfo.getMagester() : null));
+        setText(txt_doctoraa, fmt(extraInfo != null ? extraInfo.getDoctoraa() : null));
+        setText(txt_backRegrade, fmt(extraInfo != null ? extraInfo.getReBackDate() : null));
+        setText(date_kader, dto.getBasic30Date() != null ? fmt(dto.getBasic30Date()) : null);
+        setText(txt_retirementDay, dto.getRetiredDate() != null ? fmt(dto.getRetiredDate()) : null);
+
+        fillUpgradeTable(dto.getUpgrades());
+        fillEncouragementTable(dto.getEncouragements());
+        fillPromotionTable(dto.getPromotionIncentives());
+        fillStopPeriodicTable(dto.getStopPeriodicList());
+        fillResultTable(dto.getTimeline());
+        fillExtraDataTable(dto.getExtraResults());
+        fillAdjustmentTable(table_mogardAdd, dto.getMogardAdditions());
+        fillAdjustmentTable(table_mogardRival, dto.getMogardRemovals());
+        fillAdjustmentTable(table_bonusAdd, dto.getBonusAdditions());
+        fillAdjustmentTable(table_bonusRival, dto.getBonusRemovals());
+    }
+
+    void fillUpgradeTable(List<UpgradeRecord> upgrades) {
+        table_upgrade.getItems().clear();
+        if (upgrades != null && !upgrades.isEmpty()) {
+            table_upgrade.getItems().addAll(upgrades);
+        } else {
+            table_upgrade.getItems().addAll(new UpgradeRecord(), new UpgradeRecord());
+        }
+    }
+
+    void fillEncouragementTable(List<EncouragementRecord> encouragements) {
+        table_encourge.getItems().clear();
+        if (encouragements != null && !encouragements.isEmpty()) {
+            table_encourge.getItems().addAll(encouragements);
+        } else {
+            table_encourge.getItems().addAll(new EncouragementRecord(), new EncouragementRecord());
+        }
+    }
+
+    void fillPromotionTable(List<PromotionIncentiveRecord> promotions) {
+        table_promotion.getItems().clear();
+        if (promotions != null && !promotions.isEmpty()) {
+            table_promotion.getItems().addAll(promotions);
+        } else {
+            table_promotion.getItems().addAll(new PromotionIncentiveRecord(), new PromotionIncentiveRecord());
+        }
+    }
+
+    void fillResultTable(List<ScaleTimelinePoint> result) {
+        table_result.getItems().clear();
+        if (result != null && !result.isEmpty()) {
+            List<ScaleTimelinePoint> resultCopy = new ArrayList<>();
+            for (ScaleTimelinePoint point : result) {
+                if (point.getCurrentBasic() != null && point.getCurrentBasic().compareTo(BigDecimal.ZERO) > 0) {
+                    resultCopy.add(point);
+                }
+            }
+            table_result.getItems().addAll(resultCopy);
+        } else {
+            table_result.getItems().addAll(new ScaleTimelinePoint(), new ScaleTimelinePoint());
+        }
+    }
+
+    void fillExtraDataTable(List<ExtraResultScale> extraResultScales) {
+        table_extraDate.getItems().clear();
+        if (extraResultScales != null && !extraResultScales.isEmpty()) {
+            table_extraDate.getItems().addAll(extraResultScales);
+        }
+    }
+
+    void fillStopPeriodicTable(List<StopPeriodic> stopPeriodicList) {
+        table_stopPeriodic.getItems().clear();
+        if (stopPeriodicList != null && !stopPeriodicList.isEmpty()) {
+            table_stopPeriodic.getItems().addAll(stopPeriodicList);
+        } else {
+            table_stopPeriodic.getItems().addAll(new StopPeriodic(), new StopPeriodic());
+        }
+    }
+
+    void fillAdjustmentTable(TableView<AdjustmentRecord> table, List<AdjustmentRecord> adjustments) {
+        table.getItems().clear();
+        if (adjustments != null && !adjustments.isEmpty()) {
+            table.getItems().addAll(adjustments);
+        } else {
+            table.getItems().addAll(new AdjustmentRecord(), new AdjustmentRecord());
+        }
+    }
+
+    // ═════════════════════════════════════════════
+    //  Build DTO
+    // ═════════════════════════════════════════════
+
+    private ScaleDto buildDto() {
+        try {
+            ScaleDto dto = new ScaleDto();
+
+            dto.setNationalId(txt_nationalId.getText());
+            dto.setCodeId(txt_empCode.getText().trim());
+            dto.setEmpName(txt_empName.getText().trim());
+            dto.setQualitativeGroup(txt_group.getText().trim());
+            dto.setLaw(parseInt(txt_law.getText()));
+
+            dto.setLawCode(txt_code.getText());
+            dto.setStartDegree(parseInt(txt_startDegree.getText()));
+            dto.setStartDate(parseDate(txt_startDate.getText()));
+            dto.setRestartDate(parseDate(txt_backStart.getText()));
+            dto.setRetiredDate(parseDate(txt_retirementDay.getText()));
+            dto.setCutStart(parseDate(txt_startCut.getText()));
+            dto.setCutEnd(parseDate(txt_endCut.getText()));
+            dto.setBasic30Date(parseDate(date_kader.getText()));
+
+            ScaleExtraInfo extraInfo = new ScaleExtraInfo();
+            extraInfo.setRegrade3(parseDate(txt_regrade3.getText()));
+            extraInfo.setRegrade4(parseDate(txt_regrade4.getText()));
+            extraInfo.setRegrade5(parseDate(txt_regrade5.getText()));
+            extraInfo.setReBackDate(parseDate(txt_backRegrade.getText()));
+            extraInfo.setDebloma(parseDate(txt_debloma.getText()));
+            extraInfo.setMagester(parseDate(txt_magester.getText()));
+            extraInfo.setDoctoraa(parseDate(txt_doctoraa.getText()));
+            extraInfo.setYearUp(parseInt(yearUp.getText()));
+            extraInfo.setYearNoUp(parseInt(yearNoUp.getText()));
+            extraInfo.setGpUp(parseBigDecimal(gpUp.getText()));
+            extraInfo.setGpNoUp(parseBigDecimal(gpNoUp.getText()));
+            extraInfo.setYearBack(parseInt(yearsBack.getText()));
+            extraInfo.setPeriodicCalcType(
+                    currentDto != null && currentDto.getExtraInfo() != null
+                            ? currentDto.getExtraInfo().getPeriodicCalcType()
+                            : null);
+            dto.setExtraInfo(extraInfo);
+
+            dto.setUpgrades(extractRows(table_upgrade, r -> r.getDate() != null));
+            dto.setEncouragements(extractRows(table_encourge, r -> r.getDate() != null));
+            dto.setPromotionIncentives(extractRows(table_promotion, r -> r.getDate() != null));
+            dto.setStopPeriodicList(extractRows(table_stopPeriodic, r -> r.getStartYear() != null && r.getEndYear() != null));
+            dto.setMogardAdditions(extractRows(table_mogardAdd, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setMogardRemovals(extractRows(table_mogardRival, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusAdditions(extractRows(table_bonusAdd, r -> r.getDate() != null && r.getAmount() != null));
+            dto.setBonusRemovals(extractRows(table_bonusRival, r -> r.getDate() != null && r.getAmount() != null));
+
+            if (currentDto != null) {
+                dto.setGroupChanges(currentDto.getGroupChanges());
+                dto.setBasic30From(currentDto.getBasic30From());
+            } else {
+                dto.setGroupChanges(List.of());
+            }
+
+            return dto;
+
+        } catch (IllegalArgumentException e) {
+            showError("خطأ في البيانات: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private <T> List<T> extractRows(TableView<T> table, Predicate<T> isValid) {
+        List<T> rows = new ArrayList<>();
+        for (T item : table.getItems()) {
+            if (isValid.test(item)) rows.add(item);
+        }
+        return rows;
+    }
+
+    // ═════════════════════════════════════════════
+    //  Validation
+    // ═════════════════════════════════════════════
+
+    private boolean validateForm() {
+        if (txt_nationalId.getText().trim().isBlank()) {
+            showWarning("الرقم القومي مطلوب");
+            txt_nationalId.requestFocus();
+            return false;
+        }
+        if (txt_startDate.getText().trim().isBlank()) {
+            showWarning("تاريخ التعيين مطلوب");
+            txt_startDate.requestFocus();
+            return false;
+        }
+        if (txt_law.getText().trim().isBlank()) {
+            showWarning("القانون مطلوب (47 أو 81)");
+            txt_law.requestFocus();
+            return false;
+        }
+        return true;
+    }
+
+    // ═════════════════════════════════════════════
+    //  Helpers
+    // ═════════════════════════════════════════════
+
+    private String fmt(LocalDate date) {
+        return date != null ? date.format(FMT_DISPLAY) : "";
+    }
+
+    private LocalDate parseDate(String text) {
+        if (text == null || text.isBlank()) return null;
+        text = text.trim();
+        try {
+            return text.contains("/")
+                    ? LocalDate.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    : LocalDate.parse(text, FMT_ISO);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private Integer parseInt(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("قيمة رقمية غير صالحة: " + text);
+        }
+    }
+
+    private BigDecimal parseBigDecimal(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+            return new BigDecimal(text.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void setText(TextField f, Object v) {
+        if (f != null) f.setText(v != null ? v.toString() : "");
+    }
+
+    private void setButtonsDisabled(boolean b) {
+        btn_search.setDisable(b);
+        btn_save.setDisable(b);
+        btn_calculate.setDisable(b);
+        btn_clear.setDisable(b);
+        btn_pdf.setDisable(b);
+        btn_shortScale.setDisable(b);
+    }
+
+    private void showInfo(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
+    }
+
+    private void showWarning(String msg) {
+        Alert a = new Alert(Alert.AlertType.WARNING);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
+    }
+
+    private void showError(String msg) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.show();
+    }
+
+    @FXML
+    private void openAllowancesTab() {
+        String nationalId = txt_nationalId.getText();
+        if (nationalId.isEmpty()) {
+            return;
+        }
+        TabPane parentTab = findParentTabPane();
+        if (parentTab == null) return;
+
+        TabManager.loadFXMLInMainTab(
+                "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml",
+                "مفردات",
+                true,
+                controller -> {
+                    if (controller instanceof AllowanceFxController c) {
+                        c.setInitialNationalId(nationalId);
+                    }
+                }
+        );
+    }
+
+    private TabPane findParentTabPane() {
+        javafx.scene.Node node = getTxt_empName();
+        while (node != null) {
+            if (node instanceof TabPane tp) return tp;
+            node = node.getParent();
+        }
+        return null;
+    }
+}

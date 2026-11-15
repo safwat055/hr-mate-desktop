@@ -1,6 +1,6 @@
 package com.safwat.hr.network;
 
-import com.safwat.hr.controller.message.dto.UserInfo;
+import com.safwat.hr.controller._public.message.dto.UserInfo;
 import lombok.Getter;
 import lombok.Setter;
 

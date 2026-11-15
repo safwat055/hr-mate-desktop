@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.hr.employee.ui.EmployeeFormController"
+      nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="app-bg"
+      prefHeight="860" prefWidth="1040">
+
+    <padding>
+        <Insets top="12" right="12" bottom="12" left="12"/>
+    </padding>
+
+    <!-- ══════════ ① البحث وموظف جديد (ثابت فوق) ══════════ -->
+    <VBox styleClass="card">
+        <HBox styleClass="panel-header">
+            <Label text="بحث عن موظف"/>
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="8">
+            <padding>
+                <Insets top="10" right="12" bottom="10" left="12"/>
+            </padding>
+            <TextField fx:id="searchField" HBox.hgrow="ALWAYS" maxWidth="Infinity"
+                       promptText="الاسم أو الرقم القومي أو رقم الموظف..."/>
+            <Button fx:id="searchButton" defaultButton="true" text="🔍 بحث" styleClass="btn-primary"/>
+            <Region prefWidth="16"/>
+            <Button fx:id="newEmployeeButton" text="➕ موظف جديد" styleClass="btn-success"/>
+        </HBox>
+    </VBox>
+
+    <!-- ══════════ ② ملخص الموظف الحالي (ثابت فوق) ══════════ -->
+    <HBox styleClass="card" alignment="CENTER_LEFT" spacing="24">
+        <padding>
+            <Insets top="10" right="12" bottom="10" left="12"/>
+        </padding>
+        <Label styleClass="text-muted" text="الحالة الاجتماعية:"/>
+        <Label fx:id="currentSocialStatusLabel" styleClass="current-value-label" text="—"/>
+        <Label styleClass="text-muted" text="الوظيفة الحالية:"/>
+        <Label fx:id="currentJobTitleLabel" styleClass="current-value-label" text="—"/>
+    </HBox>
+
+    <!-- ══════════ ③ التبويبات (كل قسم في تبويب) ══════════ -->
+    <TabPane VBox.vgrow="ALWAYS">
+        <tabs>
+
+            <!-- ── تبويب البيانات الأساسية ── -->
+            <Tab closable="false" text="البيانات الأساسية">
+                <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="12" right="12" bottom="12" left="12"/>
+                        </padding>
+
+                        <VBox styleClass="card">
+                            <HBox styleClass="panel-header">
+                                <Label text="البيانات الأساسية"/>
+                            </HBox>
+                            <VBox spacing="12">
+                                <padding>
+                                    <Insets top="12" right="12" bottom="12" left="12"/>
+                                </padding>
+
+                                <GridPane hgap="16" vgap="12">
+                                    <columnConstraints>
+                                        <ColumnConstraints minWidth="120" prefWidth="130"/>
+                                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                                        <ColumnConstraints minWidth="120" prefWidth="130"/>
+                                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                                    </columnConstraints>
+
+                                    <Label styleClass="form-label" text="رقم الموظف" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="0"/>
+                                    <TextField fx:id="employeeNumberField" GridPane.columnIndex="1"
+                                               GridPane.rowIndex="0"/>
+                                    <Label styleClass="form-label" text="الاسم بالكامل" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="0"/>
+                                    <TextField fx:id="fullNameField" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+                                    <Label styleClass="form-label" text="الرقم القومي" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="1"/>
+                                    <TextField fx:id="nationalIdField" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                                    <Label styleClass="form-label" text="القطاع" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="1"/>
+                                    <ComboBox fx:id="sectorCombo" maxWidth="Infinity" GridPane.columnIndex="3"
+                                              GridPane.rowIndex="1"/>
+
+                                    <Label styleClass="form-label" text="استلام العمل" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="2"/>
+                                    <TextField fx:id="hireDateField" maxWidth="Infinity"
+                                               promptText="yyyy-MM-dd أو dd/MM/yyyy"
+                                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                                    <Label styleClass="form-label" text="تاريخ إنهاء الخدمة" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="2"/>
+                                    <TextField fx:id="terminationDateField" maxWidth="Infinity"
+                                               promptText="yyyy-MM-dd أو dd/MM/yyyy"
+                                               GridPane.columnIndex="3" GridPane.rowIndex="2"/>
+
+                                    <Label styleClass="form-label" text="سبب إنهاء الخدمة" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="3"/>
+                                    <ComboBox fx:id="terminationReasonCombo" maxWidth="Infinity"
+                                              GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                                    <CheckBox fx:id="disabilityCheck" text="من ذوي الإعاقة" styleClass="form-checkbox"
+                                              GridPane.columnIndex="2" GridPane.rowIndex="3"/>
+
+                                    <CheckBox fx:id="remoteGovernorateCheck" text="يعمل في محافظة نائية (+15 يوم)"
+                                              styleClass="form-checkbox"
+                                              GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="4"/>
+                                </GridPane>
+
+                                <!-- بيانات الإعاقة (تظهر لما الـ checkbox يتفعّل) -->
+                                <HBox fx:id="disabilityFieldsBox" spacing="8" managed="false" visible="false"
+                                      alignment="CENTER_LEFT" styleClass="soft-box">
+                                    <padding>
+                                        <Insets top="8" right="10" bottom="8" left="10"/>
+                                    </padding>
+                                    <Label styleClass="form-label" text="تاريخ قرار الإعاقة:" minWidth="130"/>
+                                    <TextField fx:id="disabilityStartDateField" promptText="yyyy-MM-dd"
+                                               prefWidth="150"/>
+                                    <Label styleClass="form-label" text="رقم القرار:"/>
+                                    <TextField fx:id="disabilityDecisionNoField" promptText="رقم القرار"
+                                               HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                </HBox>
+
+                                <HBox alignment="CENTER_LEFT" spacing="8">
+                                    <Button fx:id="saveBasicButton" text="💾 حفظ البيانات الأساسية"
+                                            styleClass="btn-primary"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Button fx:id="deleteButton" text="🗑 حذف الموظف" styleClass="btn-danger"/>
+                                </HBox>
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- ── تبويب الحالة الاجتماعية والوظائف ── -->
+            <Tab closable="false" text="الحالة والوظائف">
+                <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="12" right="12" bottom="12" left="12"/>
+                        </padding>
+
+                        <HBox fx:id="historyRow1" managed="false" visible="false" spacing="0" styleClass="card">
+                            <VBox fx:id="socialStatusContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
+                            <Separator orientation="VERTICAL"/>
+                            <VBox fx:id="jobTitleContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
+                        </HBox>
+
+                        <Separator fx:id="historyRow1Separator" managed="false" visible="false"/>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+            <!-- ── تبويب الترقيات والتشجيعيات والحوافز ── -->
+            <Tab closable="false" text="الترقيات والحوافز">
+                <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="12" right="12" bottom="12" left="12"/>
+                        </padding>
+
+                        <HBox fx:id="historyRow2" managed="false" visible="false" spacing="0" styleClass="card">
+                            <VBox fx:id="promotionsContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
+                            <Separator orientation="VERTICAL"/>
+                            <VBox fx:id="encouragementsContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
+                            <Separator orientation="VERTICAL"/>
+                            <VBox fx:id="incentivesContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+
+        </tabs>
+    </TabPane>
+</VBox>

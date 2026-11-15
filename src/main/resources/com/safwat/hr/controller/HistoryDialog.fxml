@@ -2,11 +2,11 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.safwat.hr.controller.employee.ui.HistoryDialogController"
+      fx:controller="com.safwat.hr.controller.hr.employee.ui.HistoryDialogController"
       spacing="10" nodeOrientation="RIGHT_TO_LEFT" prefWidth="480">
     <padding>
         <Insets top="15" right="15" bottom="15" left="15"/>

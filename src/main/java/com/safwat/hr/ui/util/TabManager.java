@@ -1,7 +1,7 @@
 package com.safwat.hr.ui.util;
 
-import com.safwat.hr.controller.appearance.FontSettingsManager;
-import com.safwat.hr.controller.appearance.ZoomManager;
+import com.safwat.hr.controller._public.appearance.FontSettingsManager;
+import com.safwat.hr.controller._public.appearance.ZoomManager;
 import com.safwat.hr.shared.ViewRegistry;
 import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.fxml.FXMLLoader;
@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class TabManager {
-   private static TabPane mainTabPane;
+    private static TabPane mainTabPane;
     /**
      * نخزّن التاب + الـ Controller مع بعض عشان نقدر نعيد التهيئة لو التاب موجود.
      */
@@ -37,8 +37,9 @@ public class TabManager {
                                      String tabTitle, boolean closAble) {
         loadFXMLInTab(tabPane, fxmlPath, tabTitle, closAble, null);
     }
+
     public static void loadFxmlInMainTabPane(String fxmlPath,
-                                             String tabTitle, boolean closAble){
+                                             String tabTitle, boolean closAble) {
         // ── التاب موجود بالفعل ──
         if (loadedTabs.containsKey(fxmlPath)) {
             TabInfo info = loadedTabs.get(fxmlPath);
@@ -73,6 +74,7 @@ public class TabManager {
             SAFNotification.error(e.getMessage());
         }
     }
+
     /**
      * نسخة جديدة — تقبل {@code controllerInitializer} يتنفّذ على الـ Controller
      * بعد التحميل. بيُستخدم لتمرير بيانات للتاب (زي الرقم القومي).
@@ -83,7 +85,7 @@ public class TabManager {
     public static void loadFXMLInTab(TabPane tabPane, String fxmlPath,
                                      String tabTitle, boolean closAble,
                                      Consumer<Object> controllerInitializer) {
-        if(mainTabPane == null){
+        if (mainTabPane == null) {
             mainTabPane = tabPane;
         }
         // ── التاب موجود بالفعل ──
@@ -128,8 +130,8 @@ public class TabManager {
     }
 
     public static void loadFXMLInMainTab(String fxmlPath,
-                                     String tabTitle, boolean closAble,
-                                     Consumer<Object> controllerInitializer) {
+                                         String tabTitle, boolean closAble,
+                                         Consumer<Object> controllerInitializer) {
 
         // ── التاب موجود بالفعل ──
         if (loadedTabs.containsKey(fxmlPath)) {

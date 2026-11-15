@@ -1,7 +1,7 @@
 package com.safwat.hr.system.setup;
 
-import com.safwat.hr.controller.admin.system.BackendService;
-import com.safwat.hr.controller.admin.system.PostgreSQLService;
+import com.safwat.hr.controller._public.system.BackendService;
+import com.safwat.hr.controller._public.system.PostgreSQLService;
 import com.safwat.hr.shared.AppConfig;
 import javafx.application.Platform;
 
