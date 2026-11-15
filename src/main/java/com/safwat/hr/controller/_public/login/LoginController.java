@@ -163,7 +163,7 @@ public class LoginController implements Initializable {
     private void openServiceManager() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/admin/system/AdminConsole.fxml"));
+                    "/com/safwat/hr/controller/_public/system/AdminConsole.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();
@@ -465,7 +465,7 @@ public class LoginController implements Initializable {
     private void openMainWindow() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/login/MainView.fxml"));
+                    "/com/safwat/hr/controller/_public/login/MainView.fxml"));
             Parent root = loader.load();
 
             Stage stage = new Stage();

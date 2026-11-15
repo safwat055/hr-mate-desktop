@@ -43,7 +43,7 @@ public class HR_Client extends Application {
                 new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/safwat/hr/icons/logo.png")))
         );
         FXMLLoader fxmlLoader = new FXMLLoader(
-                HR_Client.class.getResource("/com/safwat/hr/controller/login/Login.fxml"));
+                HR_Client.class.getResource("/com/safwat/hr/controller/_public/login/Login.fxml"));
 
         Scene scene = new Scene(fxmlLoader.load());
         ThemeEventBus.applyTheme(scene, AppConfig.getString("ui", "theme", ThemeEventBus.LIGHT));

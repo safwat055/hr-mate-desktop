@@ -16,15 +16,15 @@ public class FXMLPaths {
     private final String payrollReport = "/com/safwat/hr/controller/report/PayrollReport.fxml";
 
 
-    private final String chat = "/com/safwat/hr/chat/ChatView.fxml";
-    private final String MessageInboxView = "/com/safwat/hr/controller/message/MessageInboxView.fxml";
+    private final String chat = "/com/safwat/hr/controller/_public/chat/ChatView.fxml";
+    private final String MessageInboxView = "/com/safwat/hr/controller/_public/message/MessageInboxView.fxml";
 
 
     private final String backendSetting = "/com/safwat/hr/view/Settings.fxml";
 
     // scale views
     private final String salaryScale = "/com/safwat/hr/controller/hr/scale/ScaleView.fxml";
-    private final String allowanceView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml";
+    private final String allowanceView = "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceView.fxml";
 
     private final String backupView = "/com/safwat/hr/controller/_public/backup/BackupView.fxml";
 
@@ -32,13 +32,13 @@ public class FXMLPaths {
     private final String historyDialog = "/com/safwat/hr/controller/HistoryDialog.fxml";
     private final String wagesView = "/com/safwat/hr/controller/hr/wages/EmployeeWagesScreen.fxml";
     private final String form5View = "/com/safwat/hr/controller/hr/form5/Form5.fxml";
-    private final String sectorView = "/com/safwat/hr/controller/entitlements/allowance/SectorJobTitleDialog.fxml";
-    private final String OverrideDialogView = "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml";
-    private final String statutoryDialogView = "/com/safwat/hr/controller/entitlements/allowance/StatutoryDialog.fxml";
-    private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/entitlements/allowance/AllowanceDefinitionDialog.fxml";
+    private final String sectorView = "/com/safwat/hr/controller/hr/entitlements/allowance/SectorJobTitleDialog.fxml";
+    private final String OverrideDialogView = "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceOverrideDialog.fxml";
+    private final String statutoryDialogView = "/com/safwat/hr/controller/hr/entitlements/allowance/StatutoryDialog.fxml";
+    private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceDefinitionDialog.fxml";
 
 
     public String getLeavesView() {
-        return "/com/safwat/hr/controller/leave/LeaveManagementView.fxml";
+        return "/com/safwat/hr/controller/hr/leave/LeaveManagementView.fxml";
     }
 }

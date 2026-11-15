@@ -76,7 +76,7 @@ public class MainViewController implements Initializable {
 
     private Icons icons;
 
-    private static final String CHAT_FXML = "/com/safwat/hr/controller/chat/ChatView.fxml";
+    private static final String CHAT_FXML = "/com/safwat/hr/controller/_public/chat/ChatView.fxml";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -499,7 +499,7 @@ public class MainViewController implements Initializable {
     @FXML
     void openBasicSetting() {
         ViewManager.openIndependentView(
-                "/com/safwat/hr/controller/admin/system/AdminConsole.fxml",
+                "/com/safwat/hr/controller/_public/system/AdminConsole.fxml",
                 "اعدادات التشغيل");
     }
 
@@ -532,7 +532,7 @@ public class MainViewController implements Initializable {
     @FXML
     private void navigateToLogin() {
         try {
-            String fxmlPath = "/com/safwat/hr/controller/login/Login.fxml";
+            String fxmlPath = "/com/safwat/hr/controller/_public/login/Login.fxml";
             URL resource = getClass().getResource(fxmlPath);
 
             if (resource == null) {

@@ -459,6 +459,7 @@ public class AdminUsersController implements Initializable {
             }
             boolean protectedAdmin = PROTECTED_ADMIN.equalsIgnoreCase(user.getUsername());
             btnPerms.setDisable(protectedAdmin);
+
             btnReset.setDisable(protectedAdmin);
             btnToggle.setDisable(protectedAdmin);
 

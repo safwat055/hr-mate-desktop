@@ -101,19 +101,19 @@ public class AdminConsoleController implements Initializable {
 
         // حمّل الشاشات مرة واحدة
         registerView(NavigationBus.HOME, "🏠  الرئيسية",
-                "/com/safwat/hr/controller/admin/system/main.fxml");
+                "/com/safwat/hr/controller/_public/system/main.fxml");
         registerView(NavigationBus.POSTGRESQL, "🐘  PostgreSQL",
-                "/com/safwat/hr/controller/admin/system/postgresql.fxml");
+                "/com/safwat/hr/controller/_public/system/postgresql.fxml");
         registerView(NavigationBus.BACKEND, "🚀  Backend",
-                "/com/safwat/hr/controller/admin/system/backend.fxml");
+                "/com/safwat/hr/controller/_public/system/backend.fxml");
         registerView(NavigationBus.LOGS, "📊  السجلات",
-                "/com/safwat/hr/controller/admin/system/logs.fxml");
+                "/com/safwat/hr/controller/_public/system/logs.fxml");
         registerView(NavigationBus.BACKEND_PROPERTIES, "⚙  إعدادات الباك إند",
-                "/com/safwat/hr/controller/backendSetting/backend-properties.fxml");
+                "/com/safwat/hr/controller/_public/backendSetting/backend-properties.fxml");
         registerView(NavigationBus.BACKEND_JSON, "اعدادات اضافية للنظام",
-                "/com/safwat/hr/controller/backendSetting/backend-json.fxml");
+                "/com/safwat/hr/controller/_public/backendSetting/backend-json.fxml");
         registerView(NavigationBus.FRONTEND_JSON, "🔧  إعدادات الفرونت (JSON)",
-                "/com/safwat/hr/controller/backendSetting/frontend-json.fxml");
+                "/com/safwat/hr/controller/_public/backendSetting/frontend-json.fxml");
 
         navList.setItems(FXCollections.observableArrayList(views.keySet()));
         navList.setCellFactory(lv -> new ListCell<>() {
