@@ -1,6 +1,6 @@
-package com.safwat.hr.controller.payroll.form5;
+package com.safwat.hr.controller.form5;
 
-import com.safwat.hr.controller.payroll.form5.Form5Models.*;
+import com.safwat.hr.controller.form5.Form5Models.*;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.ui.SearchDialog;

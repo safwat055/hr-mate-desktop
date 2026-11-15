@@ -10,21 +10,29 @@ import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFDialog;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.icons.Icons;
+import com.safwat.hr.ui.util.PDFView;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static com.safwat.hr.shared.util.StringUtil.convertArabicToEnglishNumbers;
 
@@ -35,11 +43,13 @@ import static com.safwat.hr.shared.util.StringUtil.convertArabicToEnglishNumbers
 public class PaymentsController implements Initializable {
     private final ObservableList<PaymentsResult> resultList = FXCollections.observableArrayList();
     private final PayrollPaymentsService paymentsService = PayrollPaymentsService.getInstance();
+
+    @FXML
+    private Button btn_back;
     @FXML
     private Button btn_clear;
     @FXML
     private Button btn_pdf;
-
     @FXML
     private Button btn_search;
     @FXML
@@ -58,10 +68,14 @@ public class PaymentsController implements Initializable {
     private TextField txt_searchValue;
     @FXML
     private TextField txt_startMonth;
-
-
     @FXML
     private CheckBox chk_showAction;
+
+    @FXML
+    private VBox resultBox;
+    @FXML
+    private WebView webView;
+
     private TableColumn<PaymentsResult, Void> colActions;
 
     @Override
@@ -70,32 +84,28 @@ public class PaymentsController implements Initializable {
         setTextActions();
         setButtonsAction();
         setupTable();
-
+        showForm();
     }
-
 
     /**
      * Use To Set Buttons Actions
      */
     void setButtonsAction() {
-
         Icons.getInstance().getPDFImage(btn_pdf);
 
         btn_view.setOnAction(_ -> getEmployeeData());
         btn_pdf.setOnAction(_ -> exportToPDF());
         btn_clear.setOnAction(_ -> clear());
+        btn_back.setOnAction(_ -> showForm());
 
         chk_showAction.selectedProperty().addListener((_, _, newValue) -> colActions.setVisible(newValue));
-
     }
-
 
     /**
      * use to clear all components in view
      */
     void clear() {
         resultList.clear();
-        table_payments.getItems().clear();
         txt_searchValue.clear();
         txt_empCode.clear();
         txt_empName.clear();
@@ -103,26 +113,89 @@ public class PaymentsController implements Initializable {
         txt_startMonth.clear();
         txt_endMonth.clear();
 
-
+        showForm();
     }
 
+    // ═════════════════════════════════════════════
+    //  حالة الواجهة (جدول / معاينة PDF)
+    // ═════════════════════════════════════════════
+
+    /**
+     * يعرض الجدول ويخفي المعاينة، ويفضّي الـ WebView من الذاكرة
+     */
+    private void showForm() {
+        setShown(resultBox, true);
+        setShown(webView, false);
+        setShown(btn_back, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");
+        }
+    }
+
+    /**
+     * يعرض المعاينة ويخفي الجدول. البيانات بتفضل في الجدول عشان زر الرجوع يرجعها
+     */
+    private void showPreview() {
+        setShown(resultBox, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    // ═════════════════════════════════════════════
+    //  PDF
+    // ═════════════════════════════════════════════
 
     private void exportToPDF() {
-
-        paymentsService.downloadPaymentsPDF(txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText(), txt_empName.getText());
-
+        showPdf(paymentsService.downloadPaymentsPDFToFile(
+                txt_nationalID.getText(),
+                txt_startMonth.getText(),
+                txt_endMonth.getText(),
+                txt_empName.getText()));
     }
 
     private void customExportToPDF(String month, String payGroup) {
-
-        paymentsService.downLoadCustomReview(txt_nationalID.getText(), month, payGroup, txt_empName.getText());
+        showPdf(paymentsService.downloadCustomReviewToFile(
+                txt_nationalID.getText(),
+                month,
+                payGroup,
+                txt_empName.getText()));
     }
 
     private void compareExportToPDF(String month) {
-        paymentsService.downloadComparePDF(month, txt_nationalID.getText(), txt_empName.getText());
-
+        showPdf(paymentsService.downloadComparePDFToFile(
+                month,
+                txt_nationalID.getText(),
+                txt_empName.getText()));
     }
 
+    /**
+     * يستنى الملف يتحمّل، وبعدين يعرضه في المعاينة. المعاينة بتظهر بس لو الملف نجح.
+     */
+    private void showPdf(CompletableFuture<Path> request) {
+        request.whenComplete((path, ex) -> Platform.runLater(() -> {
+            if (ex != null) {
+                SAFNotification.error("فشل إنشاء الملف: " + friendly(ex));
+                return;
+            }
+            showPreview();
+            PDFView.showIN(path.toString(), webView);
+        }));
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex instanceof CompletionException && ex.getCause() != null ? ex.getCause() : ex;
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
+    }
+
+    // ═════════════════════════════════════════════
+    //  الجدول
+    // ═════════════════════════════════════════════
 
     /**
      *
@@ -131,6 +204,7 @@ public class PaymentsController implements Initializable {
     private void setupTable() {
         table_payments.setItems(resultList);
         table_payments.getColumns().clear();
+
         TableColumn<PaymentsResult, Boolean> colSelected = new TableColumn<>("*");
         colSelected.setCellValueFactory(new PropertyValueFactory<>("selected"));
         colSelected.setCellFactory(CheckBoxTableCell.forTableColumn(colSelected));
@@ -173,7 +247,6 @@ public class PaymentsController implements Initializable {
         colDescription.setPrefWidth(150);
 
         TableColumn<PaymentsResult, String> colNote = new TableColumn<>("ملاحظات");
-        // هذا هو الحل المهم:
         colNote.setCellValueFactory(cellData -> cellData.getValue().noteProperty());
         colNote.setCellFactory(TextFieldTableCell.forTableColumn());
         colNote.setEditable(true);
@@ -186,7 +259,6 @@ public class PaymentsController implements Initializable {
         });
 
         colActions = new TableColumn<>("الإجراءات");
-        //  colActions.setPrefWidth(180);
 
         colActions.setCellFactory(_ -> new TableCell<>() {
 
@@ -202,7 +274,6 @@ public class PaymentsController implements Initializable {
                 btnPDF.getStyleClass().add("btn-iconFlat");
                 Icons.getInstance().getPDFImage(btnPDF);
 
-
                 btnEdit.setOnAction(_ -> {
                     PaymentsResult row = getTableView().getItems().get(getIndex());
                     if (row.getSelected()) {
@@ -214,38 +285,32 @@ public class PaymentsController implements Initializable {
                     } else {
                         SAFNotification.error("يجب تحديد الصف أولا ...");
                     }
-
                 });
 
                 btnPDF.setOnAction(_ -> {
                     PaymentsResult row = getTableView().getItems().get(getIndex());
                     customExportToPDF(row.getMonth(), row.getPayGroup());
-
                 });
 
                 btnComparePDF.setOnAction(_ -> {
-
                     PaymentsResult row = getTableView().getItems().get(getIndex());
                     if (!row.getPayGroup().contains("رئيسية")) {
                         SAFNotification.error("الملاحظات للصرفية الرئيسية فقط");
                         return;
                     }
                     compareExportToPDF(row.getMonth());
-
                 });
 
                 btnDelete.setOnAction(_ -> {
                     PaymentsResult row = getTableView().getItems().get(getIndex());
                     if (row.getSelected()) {
                         if (SAFDialog.confirm("تأكيد", "هل تريد حذف هذا القيد ؟")) {
-
                             int a = deleteOneEmployeeRecord(row);
                             SAFNotification.success("تم حذف " + a + " قيد");
                         }
                     } else {
                         SAFNotification.error("يجب تحديد الصف أولا ...");
                     }
-
                 });
             }
 
@@ -264,11 +329,15 @@ public class PaymentsController implements Initializable {
         });
 
         colActions.setVisible(false);
-        boolean _ = table_payments.getColumns().addAll(colSelected, colMonth, colGroup, colTotal, colTax, colStampTax, colNet, colDescription, colNote, colActions);
+        table_payments.getColumns().addAll(colSelected, colMonth, colGroup, colTotal, colTax,
+                colStampTax, colNet, colDescription, colNote, colActions);
 
         table_payments.setEditable(true);
-
     }
+
+    // ═════════════════════════════════════════════
+    //  البحث
+    // ═════════════════════════════════════════════
 
     void setTextActions() {
         SmartSearchHelper.bind(
@@ -278,12 +347,11 @@ public class PaymentsController implements Initializable {
                         .title("اختر الشهر")
                         .column("التاريخ", s -> s == null ? "" : s)
                         .searchPlaceholder("اكتب جزءاً من التاريخ..."),
-                _ -> {
-                    getEmployeeData();
-                },
+                _ -> getEmployeeData(),
                 SmartSearchHelper.FieldBind.of(txt_startMonth, date ->
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(date)))
         );
+
         SmartSearchHelper.bind(
                 txt_endMonth, btn_view,
                 () -> paymentsService.getEmployeeMonths(txt_nationalID.getText()),
@@ -291,14 +359,10 @@ public class PaymentsController implements Initializable {
                         .title("اختر الشهر")
                         .column("التاريخ", s -> s == null ? "" : s)
                         .searchPlaceholder("اكتب جزءاً من التاريخ..."),
-                _ -> {
-                    getEmployeeData();
-                },
+                _ -> getEmployeeData(),
                 SmartSearchHelper.FieldBind.of(txt_endMonth, date ->
                         DateUtils.toArabicMonthYear(DateUtils.getFirstDayOfMonth(date)))
         );
-
-
     }
 
     /**
@@ -316,9 +380,7 @@ public class PaymentsController implements Initializable {
                         .column("الوظيفة", EmployeeSearchResult::getJob)
                         .column("الادارة", EmployeeSearchResult::getPay_management)
                         .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
-                _ -> {
-                    getEmployeeData();
-                },
+                _ -> getEmployeeData(),
                 SmartSearchHelper.FieldBind.of(txt_nationalID, EmployeeSearchResult::getNational_id),
                 SmartSearchHelper.FieldBind.of(txt_empName, EmployeeSearchResult::getEmp_name),
                 SmartSearchHelper.FieldBind.of(txt_empCode, EmployeeSearchResult::getPay_id)
@@ -329,16 +391,19 @@ public class PaymentsController implements Initializable {
      * use to get employee payments data in view
      */
     private void getEmployeeData() {
-
+        showForm();
         resultList.clear();
-        List<PaymentsResult> data = paymentsService.getPaymentsData(txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText());
+        List<PaymentsResult> data = paymentsService.getPaymentsData(
+                txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText());
         resultList.addAll(data);
         SAFNotification.success("تم تحميل " + resultList.size() + " سجل بنجاح");
-
     }
 
+    // ═════════════════════════════════════════════
+    //  عمليات الصفوف
+    // ═════════════════════════════════════════════
+
     /**
-     *
      * @param row .
      * @return .
      */
@@ -360,6 +425,4 @@ public class PaymentsController implements Initializable {
 
         return paymentsService.deleteOneEmployeeRecord(request);
     }
-
-
 }

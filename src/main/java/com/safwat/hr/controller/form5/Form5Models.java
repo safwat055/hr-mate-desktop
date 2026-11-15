@@ -1,4 +1,4 @@
-package com.safwat.hr.controller.payroll.form5;
+package com.safwat.hr.controller.form5;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

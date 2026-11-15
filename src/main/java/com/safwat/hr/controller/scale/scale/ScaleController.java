@@ -5,16 +5,22 @@ import com.safwat.hr.controller.scale.scale.dto.*;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.table.TableSetupHelper;
+import com.safwat.hr.ui.util.PDFView;
 import com.safwat.hr.ui.util.TabManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import lombok.Getter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,15 +28,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
 
 /**
  * Controller شاشة السلم الوظيفي.
  * <p>
- * كل استدعاءات REST بتتم عبر {@link ScaleApiService} — مفيش أي تفاصيل
- * HTTP أو TypeReference أو بناء URL جوه الكنترولر.
+ * كل استدعاءات REST بتتم عبر {@link ScaleApiService}.
+ * معاينة الـ PDF بتتعرض في WebView، وزرار "رجوع" بيرجّع الفورم.
  */
 @Getter
 public class ScaleController implements Initializable {
@@ -136,6 +144,8 @@ public class ScaleController implements Initializable {
     private Button btn_pdf, btn_shortScale;
     @FXML
     private Button btn_clear;
+    @FXML
+    private Button btn_back;
 
     @FXML
     private Button btn_addUpgrade;
@@ -143,6 +153,14 @@ public class ScaleController implements Initializable {
     private Button btn_addEncouragement;
     @FXML
     private Button btn_addPromotion;
+
+    // ─────────────────────────────────────────────
+    //  عرض الـ PDF
+    // ─────────────────────────────────────────────
+    @FXML
+    private VBox formBox;
+    @FXML
+    private WebView webView;
 
     private ScaleUtilsUi utilsUi;
     private ScaleDto currentDto = null;
@@ -154,13 +172,15 @@ public class ScaleController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         utilsUi = new ScaleUtilsUi(this);
+
         btn_search.setOnAction(_ -> search());
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
         btn_shortScale.setOnAction(_ -> doShortPdf());
         btn_clear.setOnAction(_ -> doClear());
-// في initialize()
+        btn_back.setOnAction(_ -> showForm());
+
         if (btn_delete != null) btn_delete.setOnAction(_ -> doDelete());
         if (btn_updateIdentity != null) btn_updateIdentity.setOnAction(_ -> doUpdateIdentity());
         if (btn_addUpgrade != null) btn_addUpgrade.setOnAction(_ -> addEmptyUpgradeRow());
@@ -168,6 +188,7 @@ public class ScaleController implements Initializable {
         if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
 
         txt_nationalId.setOnAction(_ -> search());
+
         setupUpgradeTable();
         setupEncouragementTable();
         setupPromotionTable();
@@ -180,7 +201,38 @@ public class ScaleController implements Initializable {
         setupAdjustmentTable(table_mogardRival);
         setupAdjustmentTable(table_bonusAdd);
         setupAdjustmentTable(table_bonusRival);
+
+        showForm();
     }
+
+    // ═════════════════════════════════════════════
+    //  حالة الواجهة (فورم / معاينة PDF)
+    // ═════════════════════════════════════════════
+
+    private void showForm() {
+        setShown(formBox, true);
+        setShown(webView, false);
+        setShown(btn_back, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");   // يفضّي الـ PDF من الذاكرة
+        }
+    }
+
+    private void showPreview() {
+        setShown(formBox, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(javafx.scene.Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    // ═════════════════════════════════════════════
+    //  Delete / Update identity
+    // ═════════════════════════════════════════════
 
     private void doDelete() {
         String id = txt_nationalId.getText().trim();
@@ -207,7 +259,6 @@ public class ScaleController implements Initializable {
         }
     }
 
-
     private void doUpdateIdentity() {
         String oldId = txt_nationalId.getText().trim();
         if (oldId.isBlank()) {
@@ -233,11 +284,14 @@ public class ScaleController implements Initializable {
                     showInfo("تم التعديل بنجاح ✓");
                 }));
     }
+
     // ═════════════════════════════════════════════
-    //  Search  ← بعد التعديل
+    //  Search
     // ═════════════════════════════════════════════
 
     private void search() {
+        showForm();
+
         String searchValue;
         String searchType;
 
@@ -320,7 +374,7 @@ public class ScaleController implements Initializable {
     }
 
     // ═════════════════════════════════════════════
-    //  Calculate  ← بعد التعديل
+    //  Calculate
     // ═════════════════════════════════════════════
 
     private void doCalculate() {
@@ -342,9 +396,8 @@ public class ScaleController implements Initializable {
                 }));
     }
 
-
     // ═════════════════════════════════════════════
-    //  Save  ← بعد التعديل
+    //  Save
     // ═════════════════════════════════════════════
 
     private void doSave() {
@@ -367,11 +420,34 @@ public class ScaleController implements Initializable {
                 }));
     }
 
+    // ═════════════════════════════════════════════
+    //  PDF (الميثودين بيستخدموا نفس الفلو)
+    // ═════════════════════════════════════════════
+
+    /**
+     * زرار PDF: السلم الوظيفي الكامل.
+     */
     private void doPdf() {
         if (!validateForm()) return;
         ScaleDto dto = buildDto();
-        apiService.downloadScale(dto);
+        if (dto == null) return;
+
+        setButtonsDisabled(true);
+        apiService.downloadScaleToFile(dto)
+                .whenComplete((path, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    showPreview();
+                    PDFView.showIN(path.toString(), webView);
+                }));
     }
+
+    /**
+     * زرار "تدرج مختصر": تفاصيل المرتبات من تاريخ معيّن.
+     */
     private void doShortPdf() {
         if (!validateForm()) return;
 
@@ -391,10 +467,73 @@ public class ScaleController implements Initializable {
         ScaleDto dto = buildDto();
         if (dto == null) return;
 
-        apiService.downloadSalaryDetails(dto, fromDate);
+        final LocalDate from = fromDate;
+        setButtonsDisabled(true);
+        apiService.downloadSalaryDetailsToFile(dto, from)
+                .whenComplete((path, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    showPreview();
+                    PDFView.showIN(path.toString(), webView);
+                }));
     }
+
+    /**
+     * الفلو المشترك للميثودين:
+     * 1) تعطيل الأزرار 2) طلب الـ PDF كـ bytes 3) حفظ + عرض في الـ WebView
+     */
+    private void generateAndPreview(Supplier<CompletableFuture<byte[]>> request, String prefix) {
+        setButtonsDisabled(true);
+
+        request.get()
+                .whenComplete((bytes, ex) -> Platform.runLater(() -> {
+                    setButtonsDisabled(false);
+
+                    if (ex != null) {
+                        showError("فشل إنشاء الملف:\n" + friendly(ex));
+                        return;
+                    }
+                    if (bytes == null || bytes.length == 0) {
+                        showError("الملف الناتج فارغ");
+                        return;
+                    }
+                    savePdfAndShow(bytes, prefix);
+                }));
+    }
+
+    /**
+     * يحفظ الـ PDF في temp_downloads ويعرضه في الـ WebView. لازم يتنادى على الـ FX thread.
+     */
+    private void savePdfAndShow(byte[] bytes, String prefix) {
+        try {
+            Path dir = Paths.get(System.getProperty("user.dir"), "temp_downloads");
+            Files.createDirectories(dir);
+
+            String id = txt_nationalId.getText() == null ? "unknown" : txt_nationalId.getText().trim();
+            Path target = dir.resolve(prefix + "_" + id + "_" + System.currentTimeMillis() + ".pdf");
+            Files.write(target, bytes);
+
+            showPreview();
+            PDFView.showIN(target.toString(), webView);
+
+        } catch (IOException e) {
+            showError("تعذر حفظ الملف: " + e.getMessage());
+        }
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
+    }
+
     // ═════════════════════════════════════════════
-    //  باقي الكلاس كما هو (ما عدا حذف import TypeReference)
+    //  Tables setup
     // ═════════════════════════════════════════════
 
     private void setupUpgradeTable() {
@@ -499,39 +638,39 @@ public class ScaleController implements Initializable {
                 (r, v) -> r.setCurrentBasic(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("الدورية", 70,
-                r -> r.getPeriodicBonus() != null && !r.getPeriodicBonus().equals(BigDecimal.ZERO) ? r.getPeriodicBonus().toString() : "",
+                r -> nonZero(r.getPeriodicBonus()),
                 (r, v) -> r.setPeriodicBonus(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("خاصة خاضعة", 90,
-                r -> r.getSpBonusSubject() != null && !r.getSpBonusSubject().equals(BigDecimal.ZERO) ? r.getSpBonusSubject().toString() : "",
+                r -> nonZero(r.getSpBonusSubject()),
                 (r, v) -> r.setSpBonusSubject(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("خاصة غير خ", 90,
-                r -> r.getSpBonusNotSubject() != null && !r.getSpBonusNotSubject().equals(BigDecimal.ZERO) ? r.getSpBonusNotSubject().toString() : "",
+                r -> nonZero(r.getSpBonusNotSubject()),
                 (r, v) -> r.setSpBonusNotSubject(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("أخرى خاضعة", 90,
-                r -> r.getOther_sp_subject() != null && !r.getOther_sp_subject().equals(BigDecimal.ZERO) ? r.getOther_sp_subject().toString() : "",
+                r -> nonZero(r.getOther_sp_subject()),
                 (r, v) -> r.setOther_sp_subject(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("ترقية", 90,
-                r -> r.getUpgradeBonus() != null && !r.getUpgradeBonus().equals(BigDecimal.ZERO) ? r.getUpgradeBonus().toString() : "",
+                r -> nonZero(r.getUpgradeBonus()),
                 (r, v) -> r.setUpgradeBonus(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("تشجيعية", 90,
-                r -> r.getEncourageBonus() != null && !r.getEncourageBonus().equals(BigDecimal.ZERO) ? r.getEncourageBonus().toString() : "",
+                r -> nonZero(r.getEncourageBonus()),
                 (r, v) -> r.setEncourageBonus(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("اخرى", 90,
-                r -> r.getOtherBonus() != null && !r.getOtherBonus().equals(BigDecimal.ZERO) ? r.getOtherBonus().toString() : "",
+                r -> nonZero(r.getOtherBonus()),
                 (r, v) -> r.setOtherBonus(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("المجرد", 90,
-                r -> r.getMogard() != null && !r.getMogard().equals(BigDecimal.ZERO) ? r.getMogard().toString() : "",
+                r -> nonZero(r.getMogard()),
                 (r, v) -> r.setMogard(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("الأساس 30-6", 90,
-                r -> r.getBasic30_6() != null && !r.getBasic30_6().equals(BigDecimal.ZERO) ? r.getBasic30_6().toString() : "",
+                r -> nonZero(r.getBasic30_6()),
                 (r, v) -> r.setBasic30_6(parseBigDecimal(v)),
                 false, false));
         cols.add(new ColumnConfig<>("الدرجة", 90,
@@ -539,6 +678,10 @@ public class ScaleController implements Initializable {
                 ScaleTimelinePoint::setDegreeLabel,
                 false, false));
         setupGenericTable(table_result, cols, 1, ScaleTimelinePoint::new);
+    }
+
+    private static String nonZero(BigDecimal v) {
+        return v != null && v.compareTo(BigDecimal.ZERO) != 0 ? v.toString() : "";
     }
 
     // ═════════════════════════════════════════════
@@ -717,7 +860,7 @@ public class ScaleController implements Initializable {
             dto.setQualitativeGroup(txt_group.getText().trim());
             dto.setLaw(parseInt(txt_law.getText()));
 
-            dto.setLawCode((txt_code.getText()));
+            dto.setLawCode(txt_code.getText());
             dto.setStartDegree(parseInt(txt_startDegree.getText()));
             dto.setStartDate(parseDate(txt_startDate.getText()));
             dto.setRestartDate(parseDate(txt_backStart.getText()));
@@ -765,7 +908,6 @@ public class ScaleController implements Initializable {
 
         } catch (IllegalArgumentException e) {
             showError("خطأ في البيانات: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
@@ -814,7 +956,7 @@ public class ScaleController implements Initializable {
         text = text.trim();
         try {
             return text.contains("/")
-                    ? LocalDate.parse(text, FMT_DISPLAY)
+                    ? LocalDate.parse(text, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                     : LocalDate.parse(text, FMT_ISO);
         } catch (DateTimeParseException e) {
             return null;
@@ -839,10 +981,6 @@ public class ScaleController implements Initializable {
         }
     }
 
-    private String safeStr(Object v) {
-        return v != null ? v.toString() : "";
-    }
-
     private void setText(TextField f, Object v) {
         if (f != null) f.setText(v != null ? v.toString() : "");
     }
@@ -852,6 +990,8 @@ public class ScaleController implements Initializable {
         btn_save.setDisable(b);
         btn_calculate.setDisable(b);
         btn_clear.setDisable(b);
+        btn_pdf.setDisable(b);
+        btn_shortScale.setDisable(b);
     }
 
     private void showInfo(String msg) {
@@ -877,29 +1017,27 @@ public class ScaleController implements Initializable {
 
     @FXML
     private void openAllowancesTab() {
-        String nationalId = txt_nationalId.getText();   // الرقم اللي عايز تمرره
+        String nationalId = txt_nationalId.getText();
         if (nationalId.isEmpty()) {
             return;
         }
-        TabPane parentTab = findParentTabPane();   // شوف الدالة تحت
+        TabPane parentTab = findParentTabPane();
         if (parentTab == null) return;
 
         TabManager.loadFXMLInMainTab(
-
-                "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml", // مسار الـ FXML
+                "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml",
                 "مفردات",
                 true,
                 controller -> {
                     if (controller instanceof AllowanceFxController c) {
                         c.setInitialNationalId(nationalId);
-
                     }
                 }
         );
     }
 
     private TabPane findParentTabPane() {
-        javafx.scene.Node node = getTxt_empName();   // أي عقدة في الشاشة
+        javafx.scene.Node node = getTxt_empName();
         while (node != null) {
             if (node instanceof TabPane tp) return tp;
             node = node.getParent();

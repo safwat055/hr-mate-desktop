@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -46,9 +47,8 @@ public class ChangeCardController implements Initializable {
      */
     private boolean updatingYears = false;
 
-    
     @FXML
-    private Button btn_clear, btn_pdf, btn_search, btn_view;
+    private Button btn_back, btn_clear, btn_pdf, btn_search, btn_view;
     @FXML
     private TextField txt_empCode, txt_empName, txt_nationalID, txt_searchValue;
     @FXML
@@ -73,6 +73,7 @@ public class ChangeCardController implements Initializable {
         setButtonsAction();
 
         setupTable();
+        showForm();
     }
 
     /**
@@ -94,6 +95,7 @@ public class ChangeCardController implements Initializable {
         btn_view.setOnAction(_ -> getEmployeeDataView());
         btn_pdf.setOnAction(_ -> exportToPDF());
         btn_clear.setOnAction(_ -> clear());
+        btn_back.setOnAction(_ -> showForm());
         chk_showAction.selectedProperty().addListener((_, _, newValue) -> colActions.setVisible(newValue));
     }
 
@@ -102,7 +104,6 @@ public class ChangeCardController implements Initializable {
      */
     void clear() {
         resultList.clear();
-        resultTable.getItems().clear();
         txt_searchValue.clear();
         txt_empCode.clear();
         txt_empName.clear();
@@ -111,8 +112,38 @@ public class ChangeCardController implements Initializable {
         txt_endMonth.clear();
         resetYears();
 
-        webView.setManaged(false);
-        resultTable.setManaged(false);
+        showForm();
+    }
+
+    // ═════════════════════════════════════════════
+    //  حالة الواجهة (جدول / معاينة PDF)
+    // ═════════════════════════════════════════════
+
+    /**
+     * يعرض الجدول ويخفي المعاينة، ويفضّي الـ WebView من الذاكرة
+     */
+    private void showForm() {
+        setShown(resultTable, true);
+        setShown(webView, false);
+        setShown(btn_back, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");
+        }
+    }
+
+    /**
+     * يعرض المعاينة ويخفي الجدول. البيانات بتفضل في الجدول عشان زر الرجوع يرجعها
+     */
+    private void showPreview() {
+        setShown(resultTable, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
     }
 
     /**
@@ -279,21 +310,6 @@ public class ChangeCardController implements Initializable {
         resultTable.setEditable(true);
     }
 
-    private void showWebView() {
-        resultTable.getItems().clear();
-        resultTable.setManaged(false);
-        resultTable.setVisible(false);
-        webView.setManaged(true);
-        webView.setVisible(true);
-    }
-
-    private void showResultTable() {
-        webView.setManaged(false);
-        webView.setVisible(false);
-        resultTable.setManaged(true);
-        resultTable.setVisible(true);
-    }
-
     void setTextFieldsAction() {
         SmartSearchHelper.bind(
                 txt_startMonth, btn_view,
@@ -355,8 +371,8 @@ public class ChangeCardController implements Initializable {
             SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
             return;
         }
+        showForm();
         resultList.clear();
-        showResultTable();
         ObservableList<ChangeCardResult> data = changeService.getChangeCardData(
                 txt_nationalID.getText(), txt_startMonth.getText(), txt_endMonth.getText());
         if (data == null) {
@@ -374,7 +390,7 @@ public class ChangeCardController implements Initializable {
             SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
             return;
         }
-        showWebView();
+        showPreview();
         changeService.downloadChangeCardPDF(
                 txt_nationalID.getText(),
                 txt_startMonth.getText(),
@@ -395,7 +411,7 @@ public class ChangeCardController implements Initializable {
         LocalDate from = LocalDate.of(yearValue, 1, 1);
         LocalDate to = LocalDate.of(yearValue, 12, 31);
 
-        showWebView();
+        showPreview();
         changeService.downloadChangeCardPDF(
                 txt_nationalID.getText(),
                 from,

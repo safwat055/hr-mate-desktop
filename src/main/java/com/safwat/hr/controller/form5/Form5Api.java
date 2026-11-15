@@ -1,9 +1,9 @@
-package com.safwat.hr.controller.payroll.form5;
+package com.safwat.hr.controller.form5;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.safwat.hr.controller.payroll.form5.Form5Models.Data;
-import com.safwat.hr.controller.payroll.form5.Form5Models.EmployeeHit;
-import com.safwat.hr.controller.payroll.form5.Form5Models.ExportRequest;
+import com.safwat.hr.controller.form5.Form5Models.Data;
+import com.safwat.hr.controller.form5.Form5Models.EmployeeHit;
+import com.safwat.hr.controller.form5.Form5Models.ExportRequest;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.network.ApiResponse;
 
@@ -26,7 +26,7 @@ public final class Form5Api {
     public static CompletableFuture<ApiResponse<List<EmployeeHit>>> searchAsync(String query) {
         return ApiClient.getAsync(
                 BASE + "/search",
-                
+
                 Map.of("query", query == null ? "" : query),
                 new TypeReference<List<EmployeeHit>>() {
                 });

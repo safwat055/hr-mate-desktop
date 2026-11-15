@@ -8,18 +8,14 @@ import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.util.DateUtils;
 import com.safwat.hr.ui.controls.SAFNotification;
-import com.safwat.hr.ui.util.PDFView;
 import javafx.application.Platform;
-import javafx.scene.web.WebView;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.http.HttpTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
@@ -29,16 +25,18 @@ import java.util.function.Predicate;
  *   <li>دوال الـ lookup ({@code searchEmployee} / {@code getEmployeeMonthsReview} /
  *       {@code getMonthRecordsName}) blocking — بتتنادّى من SmartSearchHelper
  *       على ASYNC_EXECUTOR.</li>
- *   <li>دوال التحميل ({@code download*Report}) بتتنادّى من الـ FX thread
- *       وبترجع فورًا: التحميل على ASYNC_EXECUTOR، وكل ما يخص الـ UI
- *       (إشعارات / WebView) بيرجع على الـ FX thread.</li>
+ *   <li>دوال التحميل ({@code download*Report}) بترجع {@link CompletableFuture}<Path>
+ *       وبتشتغل على ASYNC_EXECUTOR. الإشعارات بترجع على الـ FX thread داخل الخدمة،
+ *       والـ Controller هو اللي بيعرض المعاينة.</li>
  * </ul>
  */
 public class PayrollVocabService {
 
     private final PayrollReviewApi payrollReviewApi = PayrollReviewApi.getInstance();
 
-    /** يمنع تشغيل أكتر من تحميل في نفس الوقت (ضغطات متكررة). */
+    /**
+     * يمنع تشغيل أكتر من تحميل في نفس الوقت (ضغطات متكررة).
+     */
     private final AtomicBoolean downloading = new AtomicBoolean(false);
 
     // ─────────────────────────────────────────────
@@ -67,15 +65,13 @@ public class PayrollVocabService {
     }
 
     // ─────────────────────────────────────────────
-    //  Downloads (non-blocking — آمنة من FX thread)
+    //  Downloads (non-blocking — بترجع Future بالمسار)
     // ─────────────────────────────────────────────
 
-    public void downloadMainReviewReport(String nationalId, String targetMonth, WebView webView, String name) {
-        if (nationalId == null || nationalId.length() != 14) {
-            SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
-            return;
-        }
-
+    /**
+     * تقرير المراجعة الرئيسي للشهر (زرار PDF).
+     */
+    public CompletableFuture<Path> downloadMainReviewReport(String nationalId, String targetMonth, String name) {
         PayrollRequest request;
         try {
             request = PayrollRequest.builder().build();
@@ -83,19 +79,17 @@ public class PayrollVocabService {
             request.setStartDate(DateUtils.getFirstDayOfMonth(targetMonth));
             request.setFormat("PDF");
         } catch (Exception e) {
-            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
-            return;
+            return CompletableFuture.failedFuture(e);
         }
 
-        runDownload(target -> payrollReviewApi.downloadMainReviewReport(request, target), webView, name);
+        return runDownload(target -> payrollReviewApi.downloadMainReviewReport(request, target), name);
     }
 
-    public void downloadCustomReviewReport(String nationalId, String payGroup, String targetMonth, WebView webView, String name) {
-        if (nationalId == null || nationalId.length() != 14) {
-            SAFNotification.warning("يجب إدخال الرقم القومى او البحث عن قيمة أولا");
-            return;
-        }
-
+    /**
+     * تقرير مراجعة لصرفية معينة داخل الشهر.
+     */
+    public CompletableFuture<Path> downloadCustomReviewReport(String nationalId, String payGroup,
+                                                              String targetMonth, String name) {
         PayrollRequest request;
         try {
             request = PayrollRequest.builder()
@@ -104,71 +98,58 @@ public class PayrollVocabService {
                     .payGroup(payGroup)
                     .build();
         } catch (Exception e) {
-            SAFNotification.error("حدث خطأ أثناء التحميل: " + e.getMessage());
-            return;
+            return CompletableFuture.failedFuture(e);
         }
 
-        runDownload(target -> payrollReviewApi.downloadCustomReviewPDF(request, target), webView, name);
+        return runDownload(target -> payrollReviewApi.downloadCustomReviewPDF(request, target), name);
     }
 
     /**
-     * ينفّذ التحميل على ASYNC_EXECUTOR ثم يرجع للـ FX thread لعرض النتيجة.
+     * ينفّذ التحميل على ASYNC_EXECUTOR، ويرجع المسار بعد النجاح.
+     * الإشعار بيتعرض على الـ FX thread.
      *
      * @param job بياخد المسار الهدف ويرجع true لو التحميل نجح
      */
-    private void runDownload(Predicate<Path> job, WebView webView, String name) {
+    private CompletableFuture<Path> runDownload(Predicate<Path> job, String name) {
         if (!downloading.compareAndSet(false, true)) {
-            SAFNotification.warning("جاري تحميل تقرير آخر، برجاء الانتظار...");
-            return;
+            return CompletableFuture.failedFuture(
+                    new IllegalStateException("جاري تحميل تقرير آخر، برجاء الانتظار..."));
         }
 
-        SAFNotification.success("جاري تحميل الملف...");
+        Platform.runLater(() -> SAFNotification.success("جاري تحميل الملف..."));
 
-        CompletableFuture
+        return CompletableFuture
                 .supplyAsync(() -> {
                     try {
                         Path dir = Paths.get(System.getProperty("user.dir"), "temp_downloads");
                         Files.createDirectories(dir);
                         Path target = dir.resolve("REVIEW_REPORT" + System.currentTimeMillis() + ".pdf");
-                        return job.test(target) ? target : null;
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+
+                        if (!job.test(target)) {
+                            throw new RuntimeException("فشل تحميل الملف");
+                        }
+                        return target;
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
                     }
                 }, HttpCore.ASYNC_EXECUTOR)
                 .whenComplete((target, ex) -> Platform.runLater(() -> {
                     downloading.set(false);
-
-                    if (ex != null) {
-                        SAFNotification.error("حدث خطأ أثناء التحميل: " + friendly(ex));
-                        return;
+                    if (ex == null) {
+                        SAFNotification.withAction("هل تريد فتح التقرير الان ؟", target.toFile());
+                        notifyPdfReady(target, name);
                     }
-                    if (target == null) {
-                        SAFNotification.error("فشل تحميل الملف");
-                        return;
-                    }
-
-                    SAFNotification.withAction("هل تريد فتح التقرير الان ؟", target.toFile());
-                    openPDF(target, webView, name);
                 }));
     }
 
-    private static String friendly(Throwable ex) {
-        Throwable root = ex;
-        while (root.getCause() != null && root.getCause() != root) root = root.getCause();
-        if (root instanceof HttpTimeoutException) return "انتهت مهلة الاتصال بالسيرفر";
-        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
-    }
-
-    /** لازم تتنادّى على الـ FX thread (WebView). */
-    private void openPDF(Path targetPath, WebView webView, String name) {
-        PDFView.showIN(targetPath.toString(), webView);
+    private void notifyPdfReady(Path target, String name) {
         NotificationService.getInstance().send(
                 HRNotification.builder()
                         .type(HRNotification.NotificationType.SYSTEM)
                         .priority(HRNotification.Priority.HIGH)
                         .title("تقرير مراجعه")
                         .message(name)
-                        .file(targetPath.toString())
+                        .file(target.toString())
                         .sender("system")
                         .build()
         );

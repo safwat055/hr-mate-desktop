@@ -11,18 +11,26 @@ import com.safwat.hr.network.DownloadWithNotification;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.util.PDFView;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * كنترولر موحَّد لشاشة الأجور المتغيرة بالكامل.
@@ -32,10 +40,24 @@ import java.util.List;
  *
  * <p>لو المستخدم احتسب الدورة الأول، النتيجة ({@code lastCycleResult})
  * بتتبعت مع طلب التصدير، والباك ما يحسبهاش تاني.
+ *
+ * <p>التصدير بيعرض الـ PDF في المعاينة داخل الشاشة، وزر "رجوع" بيرجّع المحتوى.
  */
 public class EmployeeWagesScreenController {
 
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    // ══ شريط الرجوع والمعاينة ══
+    @FXML
+    private HBox backBar;
+    @FXML
+    private Button btn_back;
+    @FXML
+    private VBox mainContent;
+    @FXML
+    private TabPane mainTabs;
+    @FXML
+    private WebView webView;
 
     // ══ بيانات الموظف / البحث ══
     @FXML
@@ -178,6 +200,65 @@ public class EmployeeWagesScreenController {
         exportBreakdownButton.setDisable(true);
         exportAllowanceMatrixButton.setOnAction(e -> onExportAllowanceMatrix());
         exportAllowanceMatrixButton.setDisable(true);
+
+        // ── المعاينة ──
+        btn_back.setOnAction(_ -> showForm());
+        showForm();
+    }
+
+    // ══════════════════════════════════════════════════════
+    //  حالة الواجهة (المحتوى / معاينة PDF)
+    // ══════════════════════════════════════════════════════
+
+    /**
+     * يعرض المحتوى الرئيسي ويخفي المعاينة، ويفضّي الـ WebView من الذاكرة.
+     */
+    private void showForm() {
+        setShown(mainContent, true);
+        setShown(webView, false);
+        setShown(backBar, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");
+        }
+    }
+
+    /**
+     * يعرض المعاينة ويخفي المحتوى الرئيسي.
+     */
+    private void showPreview() {
+        setShown(mainContent, false);
+        setShown(webView, true);
+        setShown(backBar, true);
+    }
+
+    private static void setShown(Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    /**
+     * يستنى التحميل، وبعدين يعرض الملف. المعاينة بتظهر بس لو التحميل نجح.
+     */
+    private void showPdf(CompletableFuture<Path> request, Button trigger) {
+        trigger.setDisable(true);
+        setExportMsg("جاري التصدير...", "#555555");
+
+        request.whenComplete((path, ex) -> Platform.runLater(() -> {
+            trigger.setDisable(false);
+            if (ex != null) {
+                setExportMsg("فشل التصدير: " + friendly(ex), "#b00020");
+                return;
+            }
+            setExportMsg("", "#000000");
+            showPreview();
+            PDFView.showIN(path.toString(), webView);
+        }));
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex instanceof CompletionException && ex.getCause() != null ? ex.getCause() : ex;
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
     }
 
     // ══════════════════════════════════════════════════════
@@ -194,7 +275,7 @@ public class EmployeeWagesScreenController {
                 .column("الرقم القومي", EmployeeSearchResult::nationalId);
 
         SmartSearchHelper.bind(
-                searchField,searchButton,
+                searchField, searchButton,
                 () -> {
                     String q = searchField.getText();
                     return q == null ? List.of() : employeeSearchApi.searchEmployees(q.trim());
@@ -213,6 +294,7 @@ public class EmployeeWagesScreenController {
      */
     private void loadEmployee(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
+        showForm();
         try {
             String url = "/wages/employees/search?query="
                     + URLEncoder.encode(nationalId.trim(), StandardCharsets.UTF_8);
@@ -384,7 +466,7 @@ public class EmployeeWagesScreenController {
     }
 
     // ══════════════════════════════════════════════════════
-    //  تصدير PDF
+    //  تصدير PDF (بيعرض المعاينة داخل الشاشة)
     // ══════════════════════════════════════════════════════
 
     private void onExport() {
@@ -446,20 +528,14 @@ public class EmployeeWagesScreenController {
                 + " → " + (toText.isEmpty() ? "..." : toText) + ")"
                 : "";
 
-        setExportMsg("جاري التصدير...", "#555555");
-        triggerButton.setDisable(true);
-
-        DownloadWithNotification.downloadPdfToTempAndNotifyPost(
-                endpoint,
-                req,
-                fileNamePrefix + currentNationalId,
-                empName + period,
-                notificationTitle,
-                () -> {
-                    triggerButton.setDisable(false);
-                    setExportMsg("تم حفظ التقرير — راجع الإشعارات", "#1a7a1a");
-                }
-        );
+        showPdf(
+                DownloadWithNotification.downloadPdfToTempAndNotifyPostAsync(
+                        endpoint,
+                        req,
+                        fileNamePrefix + currentNationalId,
+                        empName + period,
+                        notificationTitle),
+                triggerButton);
     }
 
     // ══════════════════════════════════════════════════════

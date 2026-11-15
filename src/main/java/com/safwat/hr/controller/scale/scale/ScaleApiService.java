@@ -10,7 +10,7 @@ import com.safwat.hr.network.FileTransferClient;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
 import com.safwat.hr.ui.controls.SAFNotification;
-import lombok.SneakyThrows;
+import javafx.application.Platform;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public class ScaleApiService {
 
@@ -28,7 +29,6 @@ public class ScaleApiService {
     private static ScaleApiService instance;
 
     private ScaleApiService() {
-
     }
 
     public static synchronized ScaleApiService getInstance() {
@@ -100,57 +100,60 @@ public class ScaleApiService {
     }
 
     // ═════════════════════════════════════════════════════════════
-    //  PDF
+    //  PDF — بترجع مسار الملف المحمّل للعرض في الـ WebView
     // ═════════════════════════════════════════════════════════════
 
     /**
-     * تدرج كامل لحد الإحالة (زرار التحميل القديم).
+     * تدرج كامل لحد الإحالة (زرار PDF).
      */
-    public void downloadScale(ScaleDto dto) {
-        downloadPdf(API_BASE + "/download", dto, "ScaleReport", dto.getEmpName());
+    public CompletableFuture<Path> downloadScaleToFile(ScaleDto dto) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return downloadToTemp(API_BASE + "/download", dto, "ScaleReport", "تدرج الراتب");
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 
     /**
-     * تفاصيل الراتب (قانون 81) ابتداءً من تاريخ معين (زرار btn_shortScale).
+     * تفاصيل الراتب ابتداءً من تاريخ معين (زرار تدرج مختصر).
      * لو fromDate فاضي، الـ PDF بيبدأ من أول التعيين.
      */
-    public void downloadSalaryDetails(ScaleDto dto, LocalDate fromDate) {
-        String endpoint = API_BASE + "/" + dto.getNationalId() + "/details/pdf";
-        if (fromDate != null) {
-            endpoint += "?fromDate=" + fromDate;
-        }
-        downloadPdf(endpoint, dto, "SalaryDetails", dto.getEmpName());
+    public CompletableFuture<Path> downloadSalaryDetailsToFile(ScaleDto dto, LocalDate fromDate) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String endpoint = API_BASE + "/" + dto.getNationalId() + "/details/pdf";
+                if (fromDate != null) endpoint += "?fromDate=" + fromDate;
+                return downloadToTemp(endpoint, dto, "SalaryDetails", "تفاصيل الراتب");
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 
-    @SneakyThrows
-    private void downloadPdf(String endpoint, ScaleDto dto, String prefix, String empName) {
-        String fileName = prefix + System.currentTimeMillis() + ".pdf";
-        String workingDir = System.getProperty("user.dir");
+    private Path downloadToTemp(String endpoint, ScaleDto dto, String prefix, String reportName) throws Exception {
+        Path dir = Paths.get(System.getProperty("user.dir"), "temp_downloads");
+        Files.createDirectories(dir);
+        Path target = dir.resolve(prefix + System.currentTimeMillis() + ".pdf");
 
-        Path tempDownloadsDir = Paths.get(workingDir, "temp_downloads");
-        if (!Files.exists(tempDownloadsDir)) {
-            Files.createDirectories(tempDownloadsDir);
-        }
+        boolean ok = FileTransferClient.downloadFileViaPost(endpoint, dto, target);
+        if (!ok) throw new RuntimeException("فشل تحميل الملف");
 
-        Path targetPath = tempDownloadsDir.resolve(fileName);
-        boolean success = FileTransferClient.downloadFileViaPost(endpoint, dto, targetPath);
-
-        if (success) {
-            openPDF(targetPath, "تفاصيل الراتب", empName);
-        } else {
-            SAFNotification.error("فشل تحميل الملف");
-        }
+        String empName = dto.getEmpName();
+        Platform.runLater(() -> notifyPdfReady(target, reportName, empName));
+        return target;
     }
 
-    private void openPDF(Path targetPath, String reportName, String empName) {
-        SAFNotification.withAction(targetPath.toString(), targetPath.toFile());
+    private void notifyPdfReady(Path target, String reportName, String empName) {
+        SAFNotification.withAction(target.toString(), target.toFile());
         NotificationService.getInstance().send(
                 HRNotification.builder()
                         .type(HRNotification.NotificationType.SYSTEM)
                         .priority(HRNotification.Priority.HIGH)
                         .title(reportName)
                         .message(empName)
-                        .file(targetPath.toString())
+                        .file(target.toString())
                         .sender("system")
                         .build()
         );

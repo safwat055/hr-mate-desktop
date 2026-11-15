@@ -7,7 +7,7 @@
 <ScrollPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
             fitToWidth="true" fitToHeight="true" nodeOrientation="RIGHT_TO_LEFT"
             styleClass="app-bg" prefHeight="1200.0" prefWidth="1280.0"
-            fx:controller="com.safwat.hr.controller.payroll.form5.Form5Controller">
+            fx:controller="com.safwat.hr.controller.form5.Form5Controller">
     <content>
         <VBox spacing="10" styleClass="card" nodeOrientation="RIGHT_TO_LEFT">
             <padding>

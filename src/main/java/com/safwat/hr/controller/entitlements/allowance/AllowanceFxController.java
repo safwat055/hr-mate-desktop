@@ -15,10 +15,12 @@ import com.safwat.hr.controller.leave.service.LeaveApiClient;
 import com.safwat.hr.controller.scale.scale.dto.ScaleDto;
 import com.safwat.hr.controller.wages.ui.EmployeeWagesScreenController;
 import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.network.DownloadWithNotification;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.util.PDFView;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
 import javafx.application.Platform;
@@ -28,23 +30,28 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
-
-import static com.safwat.hr.network.DownloadWithNotification.downloadPdfToTempAndNotify;
 
 public class AllowanceFxController implements Initializable {
 
     // ── شريط البحث ──────────────────────────────────────────────
+    @FXML
+    private Button btn_back;
     @FXML
     private Button btn_supplementaryPdf;
     @FXML
@@ -59,6 +66,12 @@ public class AllowanceFxController implements Initializable {
     private Button btn_reset;
     @FXML
     private Button btn_manageDefinitions;
+
+    // ── التبويبات والمعاينة ─────────────────────────────────────
+    @FXML
+    private TabPane main_tabs;
+    @FXML
+    private WebView webView;
 
     // ── تاب بيانات الموظف ───────────────────────────────────────
     @FXML
@@ -172,6 +185,7 @@ public class AllowanceFxController implements Initializable {
         setupAllowanceAutocomplete();
         setupEmployeeSearch();
 
+        btn_back.setOnAction(_ -> showForm());
         btn_manageSectors.setOnAction(_ -> openSectorsDialog());
         txt_calculationDate.setText(LocalDate.now().format(DATE_FMT));
 
@@ -193,6 +207,62 @@ public class AllowanceFxController implements Initializable {
         TextFieldSetupHelper.setupDateFields(txt_basic30Date);
         TextFieldSetupHelper.setupDateFields(txt_basic30From);
         btn_saveBasic30.setOnAction(_ -> handleSaveBasic30());
+
+        showForm();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  حالة الواجهة (التبويبات / معاينة PDF)
+    // ════════════════════════════════════════════════════════════
+
+    /**
+     * يعرض التبويبات ويخفي المعاينة، ويفضّي الـ WebView من الذاكرة
+     */
+    private void showForm() {
+        setShown(main_tabs, true);
+        setShown(webView, false);
+        setShown(btn_back, false);
+        if (webView != null) {
+            webView.getEngine().load("about:blank");
+        }
+    }
+
+    /**
+     * يعرض المعاينة ويخفي التبويبات
+     */
+    private void showPreview() {
+        setShown(main_tabs, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    /**
+     * يستنى الملف يتحمّل، وبعدين يعرضه. المعاينة بتظهر بس لو التحميل نجح.
+     */
+    private void showPdf(CompletableFuture<Path> request, Button trigger) {
+        trigger.setDisable(true);
+        clearError();
+
+        request.whenComplete((path, ex) -> Platform.runLater(() -> {
+            trigger.setDisable(false);
+            if (ex != null) {
+                showError("حدث خطأ أثناء التحميل: " + friendly(ex));
+                return;
+            }
+            showPreview();
+            PDFView.showIN(path.toString(), webView);
+        }));
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex instanceof CompletionException && ex.getCause() != null ? ex.getCause() : ex;
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
     }
 
     // ════════════════════════════════════════════════════════════
@@ -209,7 +279,7 @@ public class AllowanceFxController implements Initializable {
                 .column("الرقم القومي", EmployeeSearchResult::nationalId);
 
         SmartSearchHelper.bind(
-                txt_nationalId,btn_search,
+                txt_nationalId, btn_search,
                 () -> {
                     String q = txt_nationalId.getText();
                     return q == null ? List.of() : employeeSearchApi.searchEmployees(q.trim());
@@ -228,6 +298,7 @@ public class AllowanceFxController implements Initializable {
      */
     private void selectEmployee(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
+        showForm();
 
         if (!nationalId.equals(currentNationalId)) {
             resetEmployeeState();
@@ -269,19 +340,16 @@ public class AllowanceFxController implements Initializable {
                 ? txt_empName.getText().trim()
                 : nationalId;
 
-        btn_exportPDF.setDisable(true);
-        clearError();
-
         String path = "/entitlements/employee/" + nationalId
                 + "/payslip/pdf?date=" + calcDate.format(DATE_FMT);
 
-        downloadPdfToTempAndNotify(
-                path,
-                "PAYSLIP_" + nationalId,
-                empName + " — " + calcDate.format(DATE_FMT),
-                "مفردات المرتب",
-                () -> btn_exportPDF.setDisable(false)
-        );
+        showPdf(
+                DownloadWithNotification.downloadPdfToTempAsync(
+                        path,
+                        "PAYSLIP_" + nationalId,
+                        empName + " — " + calcDate.format(DATE_FMT),
+                        "مفردات المرتب"),
+                btn_exportPDF);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -419,19 +487,16 @@ public class AllowanceFxController implements Initializable {
                 ? txt_empName.getText().trim()
                 : currentNationalId;
 
-        btn_supplementaryPdf.setDisable(true);
-        clearError();
-
         String path = "/entitlements/employee/" + currentNationalId
                 + "/supplementary-bonus/pdf";
 
-        downloadPdfToTempAndNotify(
-                path,
-                "SUPPLEMENTARY_" + currentNationalId,
-                empName,
-                "الحافز التكميلي",
-                () -> btn_supplementaryPdf.setDisable(false)
-        );
+        showPdf(
+                DownloadWithNotification.downloadPdfToTempAsync(
+                        path,
+                        "SUPPLEMENTARY_" + currentNationalId,
+                        empName,
+                        "الحافز التكميلي"),
+                btn_supplementaryPdf);
     }
 
     // ════════════════════════════════════════════════════════════

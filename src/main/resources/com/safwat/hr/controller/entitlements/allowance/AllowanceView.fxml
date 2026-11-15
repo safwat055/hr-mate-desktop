@@ -3,7 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
+<?import javafx.scene.web.WebView?>
 <VBox xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.safwat.hr.controller.entitlements.allowance.AllowanceFxController"
       nodeOrientation="RIGHT_TO_LEFT" spacing="12" styleClass="app-bg"
@@ -18,6 +18,9 @@
         <padding>
             <Insets top="12" right="14" bottom="12" left="14"/>
         </padding>
+
+        <Button fx:id="btn_back" managed="false" visible="false" prefHeight="38" prefWidth="100"
+                styleClass="btn-secondary" text="← رجوع"/>
 
         <!-- مجموعة البحث -->
         <Label styleClass="bold" text="الرقم القومي"/>
@@ -36,7 +39,7 @@
         <Button fx:id="btn_reset" prefHeight="38" styleClass="btn-danger" text="🔄 إعادة الضبط" visible="false"/>
     </HBox>
 
-    <!-- ══════════ ② التبويبات الرئيسية ══════════ -->
+    <!-- ══════════ ② التبويبات الرئيسية (تتخفي لما تظهر المعاينة) ══════════ -->
     <TabPane fx:id="main_tabs" tabClosingPolicy="UNAVAILABLE" tabMinHeight="42" VBox.vgrow="ALWAYS">
 
         <!-- ─── تاب 1: بيانات الموظف (عرض فقط + تعديل تاريخ الأساسي) ─── -->
@@ -67,28 +70,46 @@
                                     </columnConstraints>
 
                                     <!-- الصف 0 -->
-                                    <Label styleClass="form-label" text="اسم الموظف" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                                    <TextField fx:id="txt_empName" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                                    <Label styleClass="form-label" text="القانون" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-                                    <TextField fx:id="txt_empLaw" editable="false" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
-                                    <Label styleClass="form-label" text="الأساسي 30/6" GridPane.columnIndex="4" GridPane.rowIndex="0"/>
-                                    <TextField fx:id="txt_empBasic30" editable="false" GridPane.columnIndex="5" GridPane.rowIndex="0"/>
+                                    <Label styleClass="form-label" text="اسم الموظف" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="0"/>
+                                    <TextField fx:id="txt_empName" editable="false" GridPane.columnIndex="1"
+                                               GridPane.rowIndex="0"/>
+                                    <Label styleClass="form-label" text="القانون" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="0"/>
+                                    <TextField fx:id="txt_empLaw" editable="false" GridPane.columnIndex="3"
+                                               GridPane.rowIndex="0"/>
+                                    <Label styleClass="form-label" text="الأساسي 30/6" GridPane.columnIndex="4"
+                                           GridPane.rowIndex="0"/>
+                                    <TextField fx:id="txt_empBasic30" editable="false" GridPane.columnIndex="5"
+                                               GridPane.rowIndex="0"/>
 
                                     <!-- الصف 1 -->
-                                    <Label styleClass="form-label" text="الرقم القومي" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                                    <TextField fx:id="txt_empNationalId" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                    <Label styleClass="form-label" text="تاريخ التعيين" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
-                                    <TextField fx:id="txt_empStartDate" editable="false" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
-                                    <Label styleClass="form-label" text="من تاريخ" GridPane.columnIndex="4" GridPane.rowIndex="1"/>
-                                    <TextField fx:id="txt_empBasic30From" editable="false" GridPane.columnIndex="5" GridPane.rowIndex="1"/>
+                                    <Label styleClass="form-label" text="الرقم القومي" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="1"/>
+                                    <TextField fx:id="txt_empNationalId" editable="false" GridPane.columnIndex="1"
+                                               GridPane.rowIndex="1"/>
+                                    <Label styleClass="form-label" text="تاريخ التعيين" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="1"/>
+                                    <TextField fx:id="txt_empStartDate" editable="false" GridPane.columnIndex="3"
+                                               GridPane.rowIndex="1"/>
+                                    <Label styleClass="form-label" text="من تاريخ" GridPane.columnIndex="4"
+                                           GridPane.rowIndex="1"/>
+                                    <TextField fx:id="txt_empBasic30From" editable="false" GridPane.columnIndex="5"
+                                               GridPane.rowIndex="1"/>
 
                                     <!-- الصف 2 -->
-                                    <Label styleClass="form-label" text="كود الوظيفة" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                                    <TextField fx:id="txt_empLawCode" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                                    <Label styleClass="form-label" text="الدرجة الحالية" GridPane.columnIndex="2" GridPane.rowIndex="2"/>
-                                    <TextField fx:id="txt_empDegree" editable="false" GridPane.columnIndex="3" GridPane.rowIndex="2"/>
-                                    <Label styleClass="form-label" text="المجموعة" GridPane.columnIndex="4" GridPane.rowIndex="2"/>
-                                    <TextField fx:id="txt_empGroup" editable="false" GridPane.columnIndex="5" GridPane.rowIndex="2"/>
+                                    <Label styleClass="form-label" text="كود الوظيفة" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="2"/>
+                                    <TextField fx:id="txt_empLawCode" editable="false" GridPane.columnIndex="1"
+                                               GridPane.rowIndex="2"/>
+                                    <Label styleClass="form-label" text="الدرجة الحالية" GridPane.columnIndex="2"
+                                           GridPane.rowIndex="2"/>
+                                    <TextField fx:id="txt_empDegree" editable="false" GridPane.columnIndex="3"
+                                               GridPane.rowIndex="2"/>
+                                    <Label styleClass="form-label" text="المجموعة" GridPane.columnIndex="4"
+                                           GridPane.rowIndex="2"/>
+                                    <TextField fx:id="txt_empGroup" editable="false" GridPane.columnIndex="5"
+                                               GridPane.rowIndex="2"/>
                                 </GridPane>
                             </VBox>
 
@@ -166,8 +187,10 @@
                         <Label styleClass="bold" text="إضافة بدل"/>
                         <TextField fx:id="txt_newAllowance" prefHeight="38" prefWidth="300"
                                    promptText="اكتب اسم البدل أو كوده..."/>
-                        <Button fx:id="btn_showAllowances" prefHeight="38" prefWidth="42" styleClass="btn-secondary" text="🔍"/>
-                        <Button fx:id="btn_addAllowance" prefHeight="38" prefWidth="110" styleClass="btn-success" text="+ إضافة"/>
+                        <Button fx:id="btn_showAllowances" prefHeight="38" prefWidth="42" styleClass="btn-secondary"
+                                text="🔍"/>
+                        <Button fx:id="btn_addAllowance" prefHeight="38" prefWidth="110" styleClass="btn-success"
+                                text="+ إضافة"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
                     </HBox>
@@ -187,7 +210,8 @@
                     </HBox>
 
                     <!-- جدول البدلات -->
-                    <TableView fx:id="table_allowances" nodeOrientation="RIGHT_TO_LEFT" prefHeight="440" VBox.vgrow="ALWAYS">
+                    <TableView fx:id="table_allowances" nodeOrientation="RIGHT_TO_LEFT" prefHeight="440"
+                               VBox.vgrow="ALWAYS">
                         <columns>
                             <TableColumn fx:id="col_nameAr" prefWidth="230" text="اسم البدل"/>
                             <TableColumn fx:id="col_elementType" prefWidth="110" text="النوع"/>
@@ -202,4 +226,8 @@
         </Tab>
 
     </TabPane>
+
+    <!-- ══════════ ③ معاينة الـ PDF (تظهر بدل التبويبات) ══════════ -->
+    <WebView fx:id="webView" managed="false" visible="false" maxHeight="1.7976931348623157E308"
+             maxWidth="Infinity" prefHeight="1000.0" prefWidth="1226.0" VBox.vgrow="ALWAYS"/>
 </VBox>

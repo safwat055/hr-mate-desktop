@@ -3,6 +3,9 @@
 <!-- ============================================================
      شاشة تغيير البطاقة — Change Card
      Styled per Salary Scale v1.0 Design System
+     التغييرات:
+     1. زر رجوع في شريط البحث
+     2. الجدول في resultBox، والـ WebView منفصل (بيتخفي/يظهر بالتبادل)
      ============================================================ -->
 
 <?import javafx.geometry.*?>
@@ -27,6 +30,8 @@
                     <Insets bottom="8" left="12" right="12" top="8"/>
                 </padding>
 
+                <Button fx:id="btn_back" managed="false" visible="false" prefHeight="32" prefWidth="100"
+                        styleClass="btn-secondary" text="← رجوع"/>
                 <Button fx:id="btn_search" prefHeight="32" prefWidth="80" styleClass="btn-primary" text="🔍 بحث"/>
                 <Button fx:id="btn_clear" prefHeight="32" prefWidth="70" styleClass="btn-secondary" text="مسح"/>
                 <Separator orientation="VERTICAL" prefHeight="0.0" prefWidth="0.0"/>
@@ -77,9 +82,9 @@
             </HBox>
 
             <!-- ════════════════════════════════════════════════════════
-                 RESULTS — الجدول + WebView
+                 RESULTS — الجدول (يتخفي لما تظهر المعاينة)
                  ════════════════════════════════════════════════════════ -->
-            <VBox spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
+            <VBox fx:id="resultBox" spacing="0" styleClass="card" VBox.vgrow="ALWAYS">
                 <Label alignment="CENTER" maxWidth="Infinity" styleClass="panel-header" text="نتائج البحث"/>
 
                 <VBox spacing="8" VBox.vgrow="ALWAYS">
@@ -94,11 +99,14 @@
                             <Insets bottom="4" left="4" right="4" top="2"/>
                         </padding>
                     </TableView>
-
-                    <WebView fx:id="webView" maxHeight="1.7976931348623157E308" maxWidth="Infinity" prefHeight="32.0"
-                             prefWidth="1226.0" VBox.vgrow="ALWAYS"/>
                 </VBox>
             </VBox>
+
+            <!-- ════════════════════════════════════════════════════════
+                 معاينة الـ PDF — بتظهر بدل الجدول
+                 ════════════════════════════════════════════════════════ -->
+            <WebView fx:id="webView" managed="false" visible="false" maxHeight="1.7976931348623157E308"
+                     maxWidth="Infinity" prefHeight="1000.0" prefWidth="1226.0" VBox.vgrow="ALWAYS"/>
 
         </VBox>
     </content>
