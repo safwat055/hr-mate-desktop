@@ -1,4 +1,4 @@
-package com.safwat.hr.report.payroll.direct;
+package com.safwat.hr.report.payroll.direct.payroll;
 
 import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;

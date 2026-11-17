@@ -10,6 +10,7 @@ import com.safwat.hr.network.dto.AvailableReportInfo;
 import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.report.core.DataSourceResolver;
 import com.safwat.hr.report.core.ReportContext;
+import com.safwat.hr.report.core.ReportEventBus;
 import com.safwat.hr.report.core.ReportSubmissionService;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportRegistryHolder;
@@ -19,6 +20,7 @@ import com.safwat.hr.report.core.ui.PayrollUIManager;
 import com.safwat.hr.shared.PayrollRequest;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.util.DateUtils;
+import com.safwat.hr.ui.TextFieldSetupHelper;
 import com.safwat.hr.ui.controls.SAFNotification;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -131,6 +133,11 @@ public class PayrollReportController implements Initializable {
      */
     private ReportStrategy currentStrategy;
 
+    /**
+     * يكون {@code true} أثناء إرسال التقرير، ويمنع الإرسال المكرر.
+     */
+    private boolean submitting = false;
+
     // ═══════════════════════════════════════════════════════════════
     //  FXML Components
     // ═══════════════════════════════════════════════════════════════
@@ -166,6 +173,12 @@ public class PayrollReportController implements Initializable {
     private TextField txt_payGroup, txt_management;
     @FXML
     private TextField txt_Days, txt_DaysPercent;
+
+    /**
+     * حقل التاريخ النصي للتقارير ذات التاريخ المحدد (صيغة yyyy-MM-dd).
+     */
+    @FXML
+    private TextField txt_targetDate;
 
     // --- الـ Container الرئيسي ---
     @FXML
@@ -213,6 +226,8 @@ public class PayrollReportController implements Initializable {
         loadAvailableReports();
         setupListeners();
         uiManager.hideAll();
+
+        TextFieldSetupHelper.setupDateFields("yyyy-MM-dd", txt_targetDate);
 
         btn_copyLast.setOnAction(_ -> copyLastReport());
     }
@@ -594,15 +609,21 @@ public class PayrollReportController implements Initializable {
      * يُنفِّذ عملية إرسال التقرير.
      *
      * <ol>
-     *   <li>التحقق من اختيار استراتيجية.</li>
-     *   <li>بناء {@link ReportContext} من حقول الـ UI (بما فيها الملفات).</li>
-     *   <li>التحقق من صحة المدخلات عبر {@code strategy.validate()}.</li>
-     *   <li>بناء الطلب عبر {@code strategy.buildRequest()}.</li>
-     *   <li>الإرسال عبر {@link ReportSubmissionService#submit} على خيط خلفي.</li>
+     *   <li>يمنع الإرسال إذا كان هناك إرسال جارٍ.</li>
+     *   <li>يتحقق من اختيار استراتيجية.</li>
+     *   <li>يبني {@link ReportContext} من حقول الـ UI (بما فيها الملفات).</li>
+     *   <li>يتحقق من صحة المدخلات عبر {@code strategy.validate()}.</li>
+     *   <li>يبني الطلب عبر {@code strategy.buildRequest()}.</li>
+     *   <li>يعطّل زر "تقديم" ويُرسل الطلب على خيط خلفي عبر {@link ReportSubmissionService#submit}.</li>
+     *   <li>عند النجاح يُبلغ الشاشات المهتمة ويغلق النافذة، وعند الفشل يعيد تفعيل الزر.</li>
      * </ol>
      */
     @FXML
     void doReport() {
+        if (submitting) {
+            return;
+        }
+
         if (currentStrategy == null) {
             SAFNotification.warning("اختر تقرير أولاً");
             return;
@@ -615,6 +636,7 @@ public class PayrollReportController implements Initializable {
                     .reportType(combo_reportType.getSelectionModel().getSelectedItem())
                     .startDate(txt_startDate.getText())
                     .endDate(txt_endDate.getText())
+                    .targetDate(txt_targetDate.getText())
                     .management(txt_management.getText())
                     .payGroup(txt_payGroup.getText())
                     .nationalId(lbl_nationalId.getText())
@@ -629,19 +651,37 @@ public class PayrollReportController implements Initializable {
 
             PayrollRequest request = currentStrategy.buildRequest(context);
 
+            setSubmitting(true);
             submissionService.submit(request, new ArrayList<>(selectedFiles),
                     reportId -> Platform.runLater(() -> {
+                        ReportEventBus.fireSubmitted(reportId);
                         closeStage(btnDoReport);
                         SAFNotification.success("تم تقديم الطلب بنجاح — رقم الطلب: " + reportId);
                     }),
-                    error -> Platform.runLater(() ->
-                            SAFNotification.error(error.getMessage())
-                    )
+                    error -> Platform.runLater(() -> {
+                        setSubmitting(false);
+                        SAFNotification.error(error.getMessage());
+                    })
             );
 
         } catch (ValidationException ve) {
             SAFNotification.warning(ve.getMessage());
+        } catch (IllegalStateException ise) {
+            SAFNotification.warning(ise.getMessage());
+        } catch (RuntimeException re) {
+            setSubmitting(false);
+            SAFNotification.error("تعذّر تقديم التقرير: " + re.getMessage());
         }
+    }
+
+    /**
+     * يفعّل أو يعطّل زر "تقديم" أثناء الإرسال، ويحدّث حالة الإرسال.
+     *
+     * @param busy {@code true} لتعطيل الزر، و{@code false} لإعادة تفعيله
+     */
+    private void setSubmitting(boolean busy) {
+        submitting = busy;
+        btnDoReport.setDisable(busy);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -742,6 +782,9 @@ public class PayrollReportController implements Initializable {
         // ── التواريخ ──
         setDateIfNotNull(payload.get("startDate"), txt_startDate, lbl_startDate);
         setDateIfNotNull(payload.get("endDate"), txt_endDate, lbl_endDate);
+
+        // ── التاريخ المحدد (نص yyyy-MM-dd) ──
+        setIfNotNull(payload.get("startDate"), txt_targetDate::setText);
 
         setIfNotNull(payload.get("management"), txt_management::setText);
         setIfNotNull(payload.get("payGroup"), txt_payGroup::setText);

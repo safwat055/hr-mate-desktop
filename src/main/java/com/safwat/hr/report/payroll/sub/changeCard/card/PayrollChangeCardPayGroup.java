@@ -45,7 +45,7 @@ public class PayrollChangeCardPayGroup implements ReportStrategy {
         return UiConfiguration.builder()
                 .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_PAY_GROUP))
                 .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE, UiField.H_PAY_GROUP))
-                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر إدارة", "management"))
+                .searchField(SearchFieldConfig.of(UiField.H_PAY_GROUP, "اختر مجموعة", "payGroup"))
                 .build();
     }
 

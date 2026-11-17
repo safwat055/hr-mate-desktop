@@ -1,7 +1,6 @@
-package com.safwat.hr.report.payroll.direct;
+package com.safwat.hr.report.payroll.direct.payroll;
 
 import com.safwat.hr.controller.report.PayrollReportController;
-import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.ValidationException;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
@@ -12,21 +11,15 @@ import com.safwat.hr.shared.util.DateUtils;
 
 import java.util.List;
 
-@PayrollReport(
-        code = "payrollYearly_5",
-        displayName = "تقرير صافى شهرين",
-        category = "main_direct",
-        mainReport = "main_direct"
-)
-public class NetForTowMonths implements ReportStrategy {
+public class SupplementaryIncentiveReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "payrollYearly_5";
+        return "SUPPLEMENTARY_INCENTIVE";
     }
 
     @Override
     public String getDisplayName() {
-        return "تقرير صافى شهرين";
+        return "احتساب الحافز التكميلي للموظفين من تقرير المراجعة";
     }
 
     @Override
@@ -42,38 +35,32 @@ public class NetForTowMonths implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
-                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
-                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_END_DATE))
-
+                .requiredFields(List.of(UiField.H_START_DATE, UiField.H_SupplementaryIncentive))
+                .visibleFields(List.of(UiField.H_START_DATE, UiField.H_SupplementaryIncentive))
                 .build();
     }
 
-
     @Override
     public void onApply(PayrollReportController c) {
-
         c.setupMonthButton(c.getBtn_searchMonth(), c.getTxt_startDate(), c.getLbl_startDate());
-        c.setupMonthButton(c.getBtn_searchMonthEnd(), c.getTxt_endDate(), c.getLbl_endDate());
-        c.getLbl_start().setText("شهر حالي");
-        c.getLbl_end().setText("شهر سابق");
 
     }
 
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-
                 .reportName(context.getReportName())
                 .report(getCode())
                 .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
-                .endDate(DateUtils.getFirstDayOfMonth(context.getEndDate()))
+                .intValue(context.getIntValue())
+                .doubleValue(context.getDoubleValue())
                 .build();
     }
 
     @Override
     public void validate(ReportContext context) {
-        if (context.getStartDate() == null || context.getStartDate().isBlank()) {
-            throw new ValidationException("يجب اختيار فترة من أولا.");
+        if (context.getStartDate() == null) {
+            throw new ValidationException("يجب اختيار شهر اولا");
         }
     }
 }

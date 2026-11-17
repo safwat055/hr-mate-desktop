@@ -31,6 +31,7 @@ public class PayrollUIManager {
     public PayrollUIManager(PayrollReportController controller) {
         this.controller = controller;
 
+        // ملاحظة: Map.of يقبل 10 أزواج كحد أقصى. أي إضافة جديدة تتطلب Map.ofEntries.
         this.fieldToComponent = Map.of(
 
                 UiField.H_REPORT_TYPE, controller::getH_ReportType,
@@ -41,7 +42,8 @@ public class PayrollUIManager {
                 UiField.H_EMPLOYEE, controller::getH_employee,
                 UiField.H_SEARCH, controller::getH_Search,
                 UiField.H_FILES, controller::getH_files,
-                UiField.H_SupplementaryIncentive, controller::getH_SupplementaryIncentive
+                UiField.H_SupplementaryIncentive, controller::getH_SupplementaryIncentive,
+                UiField.H_4, controller::getH_4
 
         );
 

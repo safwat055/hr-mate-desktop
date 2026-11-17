@@ -1,29 +1,23 @@
-package com.safwat.hr.report.payroll.direct;
+package com.safwat.hr.report.payroll.direct.scale;
 
 import com.safwat.hr.controller.report.PayrollReportController;
-import com.safwat.hr.report.core.PayrollReport;
 import com.safwat.hr.report.core.ReportContext;
 import com.safwat.hr.report.core.strategies.ReportStrategy;
 import com.safwat.hr.report.core.ui.UiConfiguration;
 import com.safwat.hr.report.core.ui.UiField;
 import com.safwat.hr.shared.PayrollRequest;
-import com.safwat.hr.shared.util.DateUtils;
 
-@PayrollReport(
-        code = "PAYROLL_REVIEW_SHEET",
-        displayName = "شيت الرواتب الشهري",
-        category = "main_direct",
-        mainReport = "main_direct"
-)
-public class PayrollReviewSheet implements ReportStrategy {
+import java.util.List;
+
+public class ScaleReport implements ReportStrategy {
     @Override
     public String getCode() {
-        return "PAYROLL_REVIEW_SHEET";
+        return "SALARY_SCALE_REPORT_PDF";
     }
 
     @Override
     public String getDisplayName() {
-        return "شيت الرواتب الشهري";
+        return "استخراج تدرج راتب";
     }
 
     @Override
@@ -39,24 +33,27 @@ public class PayrollReviewSheet implements ReportStrategy {
     @Override
     public UiConfiguration getUiConfig() {
         return UiConfiguration.builder()
+                .requiredFields(List.of(UiField.H_EMPLOYEE, UiField.H_REPORT_TYPE))
+                .visibleFields(List.of(UiField.H_EMPLOYEE, UiField.H_REPORT_TYPE))
 
-                .requiredField(UiField.H_START_DATE)
-                .visibleField(UiField.H_START_DATE)
                 .build();
     }
 
     @Override
     public void onApply(PayrollReportController controller) {
-        controller.setChoseMonth();
+        controller.getCombo_reportType().getItems().clear();
+        controller.getCombo_reportType().getItems().addAll("موظف واحد", "الكل");
+        controller.setSearchEmployeeActions();
     }
 
     @Override
     public PayrollRequest buildRequest(ReportContext context) {
         return PayrollRequest.builder()
-                .reportName(context.getReportName())
-                .report(getCode())
 
-                .startDate(DateUtils.getFirstDayOfMonth(context.getStartDate()))
+                .report(getCode())
+                .reportType(context.getReportType())
+                .reportName(context.getReportName())
+                .nationalId(context.getNationalId())
                 .build();
     }
 }

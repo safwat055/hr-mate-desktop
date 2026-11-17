@@ -1,6 +1,7 @@
 package com.safwat.hr.report.core.strategies;
 
-import com.safwat.hr.report.payroll.direct.*;
+import com.safwat.hr.report.payroll.direct.payroll.*;
+import com.safwat.hr.report.payroll.direct.scale.*;
 import com.safwat.hr.report.payroll.mainContainer.*;
 import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardAll;
 import com.safwat.hr.report.payroll.sub.changeCard.card.PayrollChangeCardEmployee;
@@ -86,6 +87,22 @@ public class ReportRegistryFactory {
         registry.register(new FullBackupReport());
         registry.register(new ScheduledTemplateUploadReport());
         registry.register(new ScheduledScriptExecutionReport());
+        registry.register(new BasicSalaryAtDateStrategy());
+        registry.register(new MogardAtDateStrategy());
+        registry.register(new PeriodicAndSpecialBonusAtDateStrategy());
+        registry.register(new UpgradeBonusAtDateStrategy());
+        registry.register(new EncourageBonusAtDateStrategy());
+        registry.register(new PromotionIncentiveAtDateStrategy());
+        registry.register(new ExtraIncentiveAtDateStrategy());
+        registry.register(new SocialPackageAtDateStrategy());
+        registry.register(new LastUpgradeAtDateStrategy());
+        registry.register(new Law47BonusesAtDateStrategy());
+        registry.register(new SpecialBonusesNotAddedStrategy());
+        registry.register(new Basic30ForBonusesStrategy());
+        registry.register(new SocialPackageDetailedStrategy());
+        registry.register(new ExtraIncentiveDetailedStrategy());
+        registry.register(new DegreeAndJobAtDateStrategy());
+        registry.register(new RestAllowanceStrategy());
 
         // ══════════════════════════════════════════
         //  Direct — lazy

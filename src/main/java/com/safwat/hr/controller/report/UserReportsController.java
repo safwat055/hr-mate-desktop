@@ -6,6 +6,7 @@ import com.safwat.hr.network.dto.ReportPayloadResponse;
 import com.safwat.hr.network.dto.ReportStatusResponse;
 import com.safwat.hr.notification.model.HRNotification;
 import com.safwat.hr.notification.service.NotificationService;
+import com.safwat.hr.report.core.ReportEventBus;
 import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.theme.ThemeEventBus;
@@ -32,6 +33,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 /**
  * واجهة عرض تقارير المستخدم.
@@ -44,6 +46,9 @@ import java.util.ResourceBundle;
  *   <li>ملف (output != null) → FileChooser للتحميل</li>
  *   <li>نص/خطأ → Alert مع TextArea للقراءة</li>
  * </ul>
+ *
+ * <p><b>التحديث التلقائي:</b> الكنترولر يسجّل نفسه في {@link ReportEventBus}،
+ * فيُعاد تحميل الجدول تلقائيًا عند تقديم أي تقرير جديد، ويُلغي التسجيل عند إغلاق النافذة.
  */
 @Slf4j
 public class UserReportsController implements Initializable {
@@ -75,11 +80,18 @@ public class UserReportsController implements Initializable {
     @FXML
     private Label lblStatus;
 
+    /**
+     * المستمع الذي يحدّث الجدول عند تقديم تقرير جديد.
+     * محفوظ في متغير لأن الحذف لازم يتم بنفس المرجع.
+     */
+    private final Consumer<Long> submittedListener = this::onReportSubmitted;
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         setupColumns();
         loadReports();
         setButtonsActions();
+        ReportEventBus.addSubmittedListener(submittedListener);
     }
 
     void setButtonsActions() {
@@ -190,6 +202,31 @@ public class UserReportsController implements Initializable {
             lblStatus.setText("خطأ في الاتصال");
             SAFNotification.error("تعذر الاتصال بالخادم: " + e.getMessage());
         }
+    }
+
+    /**
+     * يُستدعى عند تقديم تقرير جديد من أي شاشة.
+     *
+     * <p>لو النافذة دي اتقفلت، يشيل المستمع نفسه عشان ما يفضلش يحدّث شاشة مش ظاهرة.</p>
+     *
+     * @param reportId رقم التقرير المُقدَّم
+     */
+    private void onReportSubmitted(Long reportId) {
+        if (!isWindowOpen()) {
+            ReportEventBus.removeSubmittedListener(submittedListener);
+            return;
+        }
+        loadReports();
+    }
+
+    /**
+     * يتحقق مما إذا كانت النافذة الحاوية للجدول ما زالت ظاهرة.
+     *
+     * @return {@code true} إذا كانت النافذة ظاهرة
+     */
+    private boolean isWindowOpen() {
+        Scene scene = reportsTable.getScene();
+        return scene != null && scene.getWindow() != null && scene.getWindow().isShowing();
     }
 
     // ─────────────────────────────────────────────

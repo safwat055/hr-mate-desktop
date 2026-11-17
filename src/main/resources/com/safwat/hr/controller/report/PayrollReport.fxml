@@ -94,14 +94,14 @@
                             </children>
                         </HBox>
                         <HBox fx:id="H_SupplementaryIncentive" alignment="CENTER_RIGHT" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" style="-fx-managed: true;" styleClass="divider-border" visible="false">
-                     <children>
-                        <TextField fx:id="txt_DaysPercent" alignment="CENTER" layoutX="522.0" layoutY="14.0" prefHeight="28.0" prefWidth="107.0" promptText="عدد عشري 0.05" />
-                        <Label layoutX="634.0" layoutY="12.0" prefHeight="31.0" prefWidth="70.0" text="نسبة اليوم" />
-                        <TextField fx:id="txt_Days" alignment="CENTER" prefHeight="28.0" prefWidth="107.0" promptText="عدد صحيح" />
-                        <Label prefHeight="31.0" prefWidth="70.0" text="عدد الايام" />
-                        <Label layoutX="710.0" layoutY="12.0" prefHeight="31.0" prefWidth="99.0" text="المكافات الجماعية" />
-                     </children>
-                  </HBox>
+                            <children>
+                                <TextField fx:id="txt_DaysPercent" alignment="CENTER" layoutX="522.0" layoutY="14.0" prefHeight="28.0" prefWidth="107.0" promptText="عدد عشري 0.05" />
+                                <Label layoutX="634.0" layoutY="12.0" prefHeight="31.0" prefWidth="70.0" text="نسبة اليوم" />
+                                <TextField fx:id="txt_Days" alignment="CENTER" prefHeight="28.0" prefWidth="107.0" promptText="عدد صحيح" />
+                                <Label prefHeight="31.0" prefWidth="70.0" text="عدد الايام" />
+                                <Label layoutX="710.0" layoutY="12.0" prefHeight="31.0" prefWidth="99.0" text="المكافات الجماعية" />
+                            </children>
+                        </HBox>
                         <HBox fx:id="H_files" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="225.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" styleClass="divider-border" visible="false">
                             <children>
                                 <Label fx:id="lbl_filesCount" alignment="CENTER" prefHeight="33.0" prefWidth="556.0" />
@@ -109,7 +109,12 @@
                                 <Button fx:id="btn_attachFiles" mnemonicParsing="false" onAction="#chooseFiles" prefHeight="26.0" prefWidth="101.0" text="اضافة مرفقات" />
                             </children>
                         </HBox>
-                        <HBox fx:id="H_4" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="330.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" styleClass="divider-border" visible="false" />
+                        <HBox fx:id="H_4" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="330.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" styleClass="divider-border" visible="false">
+                            <children>
+                                <TextField fx:id="txt_targetDate" alignment="CENTER" prefHeight="26.0" prefWidth="138.0" promptText="yyyy-MM-dd" />
+                                <Label alignment="CENTER" contentDisplay="CENTER" nodeOrientation="LEFT_TO_RIGHT" prefHeight="25.0" prefWidth="92.0" text="التاريخ :-" />
+                            </children>
+                        </HBox>
                         <HBox fx:id="H_5" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="365.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" styleClass="divider-border" visible="false" />
                         <HBox fx:id="H_6" alignment="CENTER_RIGHT" layoutX="20.0" layoutY="400.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" nodeOrientation="LEFT_TO_RIGHT" prefHeight="35.0" prefWidth="799.0" spacing="5.0" styleClass="divider-border" visible="false" />
                     </children>

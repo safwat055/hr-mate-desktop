@@ -46,6 +46,12 @@ public class ReportContext {
     private String endDate;
 
     /**
+     * التاريخ المطلوب كنص بصيغة {@code yyyy-MM-dd}، من الحقل النصي المخصص.
+     * يُحوَّل إلى {@code LocalDate} داخل الاستراتيجية عبر {@code TextFieldSetupHelper}.
+     */
+    private String targetDate;
+
+    /**
      * اسم الإدارة المختارة من نافذة البحث.
      * مثال: {@code "إدارة الموارد البشرية"}
      */

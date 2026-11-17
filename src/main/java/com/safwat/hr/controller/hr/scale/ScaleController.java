@@ -298,8 +298,8 @@ public class ScaleController implements Initializable {
         if (!txt_nationalId.getText().isEmpty()) {
             searchValue = txt_nationalId.getText();
             searchType = "nationalId";
-        } else if (!txt_code.getText().isEmpty()) {
-            searchValue = txt_code.getText();
+        } else if (!txt_empCode.getText().isEmpty()) {
+            searchValue = txt_empCode.getText();
             searchType = "code";
         } else if (!txt_empName.getText().isEmpty()) {
             searchValue = txt_empName.getText();
