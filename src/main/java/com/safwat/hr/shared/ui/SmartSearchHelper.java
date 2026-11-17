@@ -21,24 +21,25 @@ import java.util.function.Supplier;
  * ────────────────────────────────────────────────────────────
  * SmartSearchHelper
  * ────────────────────────────────────────────────────────────
- * أداة بحث ذكية عامة — تُستخدم في أي Controller دون تبعية.
+ * أداة بحث ذكية عامة، تُستخدم في أي Controller دون تبعية.
  * <p>
- * تدعم ثلاثة أنماط:
- * 1. String فقط  (backward compatible)
- * 2. Generic Object + حقل واحد
- * 3. Generic Object + تحديث متعدد الحقول (Multi-Field Bind)
+ * الأنماط المدعومة:
+ * <ol>
+ *   <li>String فقط (backward compatible)</li>
+ *   <li>Generic Object + حقل واحد</li>
+ *   <li>Generic Object + تحديث متعدد الحقول (Multi-Field Bind)</li>
+ *   <li>نفس السابق + زرار</li>
+ *   <li>نسخ تستقبل نص الحقل مباشرة ({@code bindWithInput})</li>
+ * </ol>
  * <p>
- * المشغلات: Enter  |  Double-Click  |  زرار (في النسخة اللي بتاخد Button)
+ * المشغلات: Enter | Double-Click | زرار (لو اتمرر)
  * <p>
  * ⭐ threading:
- * الـ {@code dataSupplier} بيتنفذ على {@link HttpCore#ASYNC_EXECUTOR}
- * (مش على الـ FX thread)، فمسموح يعمل نداء شبكة blocking. الـ Dialog
- * وتحديث الحقول بيرجعوا على الـ FX thread. القائمة بتتجاب مرة واحدة
- * بس لكل ضغطة (مرة واحدة للمطابقة الفورية + عرض الـ Dialog).
+ * الـ dataSupplier بيتنفذ على {@link HttpCore#ASYNC_EXECUTOR} (مش على الـ FX thread)،
+ * فمسموح يعمل نداء شبكة blocking. الـ Dialog وتحديث الحقول بيرجعوا على الـ FX thread.
  * <p>
- * ملاحظة: المطابقة الفورية (single-match) بتتم عن طريق
- * {@link SearchDialog#matches(Object, String)} على القيمة الخام المعروضة
- * في الجدول — مش عن طريق extractors بتاعة FieldBind.
+ * المطابقة الفورية: لو فيه نص مكتوب وعنصر واحد بس بيطابقه {@link SearchDialog#matches(Object, String)}،
+ * الاختيار بيتم من غير Dialog.
  * ────────────────────────────────────────────────────────────
  */
 public final class SmartSearchHelper {
@@ -47,7 +48,7 @@ public final class SmartSearchHelper {
     } // utility class
 
     // ═══════════════════════════════════════════════════════════
-    //  1. STRING-ONLY  (backward compatible)
+    //  1. STRING-ONLY (backward compatible)
     // ═══════════════════════════════════════════════════════════
 
     public static void bind(
@@ -70,12 +71,14 @@ public final class SmartSearchHelper {
             Consumer<T> onSelect,
             SearchDialog<T> dialogConfig) {
 
-        bind(triggerField, dataSupplier, dialogConfig, onSelect,
-                new FieldBind<>(triggerField, displayMapper));
+        wire(triggerField, null, true,
+                in -> dataSupplier.get(),
+                dialogConfig, onSelect,
+                new FieldBind[]{new FieldBind<>(triggerField, displayMapper)});
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  3. GENERIC — Multi-Field Bind  (Enter + Double Click)
+    //  3. GENERIC — Multi-Field Bind (Enter + Double Click)
     // ═══════════════════════════════════════════════════════════
 
     @SafeVarargs
@@ -86,11 +89,13 @@ public final class SmartSearchHelper {
             Consumer<T> onSelect,
             FieldBind<T>... bindings) {
 
-        wire(triggerField, null, true, dataSupplier, dialogConfig, onSelect, bindings);
+        wire(triggerField, null, true,
+                in -> dataSupplier.get(),
+                dialogConfig, onSelect, bindings);
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  4. Multi-Field + زرار  (Enter + Button)
+    //  4. Multi-Field + زرار (Enter + Button)
     // ═══════════════════════════════════════════════════════════
 
     @SafeVarargs
@@ -101,7 +106,9 @@ public final class SmartSearchHelper {
             Consumer<T> onSelect,
             FieldBind<T>... bindings) {
 
-        wire(triggerField, actionButton, false, dataSupplier, dialogConfig, onSelect, bindings);
+        wire(triggerField, actionButton, false,
+                in -> dataSupplier.get(),
+                dialogConfig, onSelect, bindings);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -114,7 +121,36 @@ public final class SmartSearchHelper {
             Supplier<List<T>> dataSupplier,
             SearchDialog<T> dialogConfig,
             FieldBind<T>... bindings) {
-        bind(triggerField, dataSupplier, dialogConfig, null, bindings);
+
+        wire(triggerField, null, true,
+                in -> dataSupplier.get(),
+                dialogConfig, null, bindings);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  6. نسخ تستقبل نص الحقل (للبحث على السيرفر)
+    // ═══════════════════════════════════════════════════════════
+
+    @SafeVarargs
+    public static <T> void bindWithInput(
+            TextField triggerField,
+            Function<String, List<T>> dataSupplier,
+            SearchDialog<T> dialogConfig,
+            Consumer<T> onSelect,
+            FieldBind<T>... bindings) {
+
+        wire(triggerField, null, false, dataSupplier, dialogConfig, onSelect, bindings);
+    }
+
+    @SafeVarargs
+    public static <T> void bindWithInput(
+            TextField triggerField, Button actionButton,
+            Function<String, List<T>> dataSupplier,
+            SearchDialog<T> dialogConfig,
+            Consumer<T> onSelect,
+            FieldBind<T>... bindings) {
+
+        wire(triggerField, actionButton, false, dataSupplier, dialogConfig, onSelect, bindings);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -123,18 +159,18 @@ public final class SmartSearchHelper {
 
     private static <T> void wire(
             TextField triggerField,
-            Button actionButton,              // nullable
+            Button actionButton,                      // nullable
             boolean doubleClick,
-            Supplier<List<T>> dataSupplier,
+            Function<String, List<T>> dataSupplier,   // بياخد نص الحقل
             SearchDialog<T> dialogConfig,
-            Consumer<T> onSelect,
+            Consumer<T> onSelect,                     // nullable
             FieldBind<T>[] bindings) {
 
-        if (bindings.length == 0) {
+        if (bindings == null || bindings.length == 0) {
             throw new IllegalArgumentException("يجب تمرير FieldBind واحد على الأقل");
         }
 
-        // ── دالة تحديث كل الحقول ──
+        // ── تحديث كل الحقول بالعنصر المختار ──
         Consumer<T> updateAll = obj -> {
             for (FieldBind<T> b : bindings) {
                 String val = b.extractor().apply(obj);
@@ -149,15 +185,14 @@ public final class SmartSearchHelper {
 
         AtomicBoolean busy = new AtomicBoolean(false);
 
-        // ── التنفيذ: fetch مرة واحدة → (مطابقة فورية | Dialog) ──
         Runnable run = () -> {
-            if (!busy.compareAndSet(false, true)) return;   // فيه طلب شغال بالفعل
+            if (!busy.compareAndSet(false, true)) return; // فيه طلب شغال
 
-            final String input = triggerField.getText();    // اقرأه على الـ FX thread
+            final String input = triggerField.getText(); // يتقري على الـ FX thread
             setBusy(busyNodes, true);
 
             CompletableFuture
-                    .supplyAsync(dataSupplier::get, HttpCore.ASYNC_EXECUTOR)
+                    .supplyAsync(() -> dataSupplier.apply(input), HttpCore.ASYNC_EXECUTOR)
                     .whenComplete((list, ex) -> Platform.runLater(() -> {
                         busy.set(false);
                         setBusy(busyNodes, false);
@@ -171,7 +206,7 @@ public final class SmartSearchHelper {
                             return;
                         }
 
-                        // مطابقة فورية لو فيه نص مكتوب وعنصر واحد بس بيطابقه
+                        // مطابقة فورية: لو عنصر واحد بس بيطابق النص
                         if (input != null && !input.isBlank()) {
                             List<T> matches = list.stream()
                                     .filter(t -> dialogConfig.matches(t, input))
@@ -189,12 +224,12 @@ public final class SmartSearchHelper {
         // ── Enter ──
         triggerField.setOnAction(_ -> run.run());
 
-        // ── Button ──
+        // ── زرار ──
         if (actionButton != null) {
             actionButton.setOnAction(_ -> run.run());
         }
 
-        // ── Double Click ──
+        // ── دبل كليك ──
         if (doubleClick) {
             triggerField.setOnMouseClicked((MouseEvent event) -> {
                 if (event.getClickCount() == 2) run.run();
@@ -215,7 +250,9 @@ public final class SmartSearchHelper {
 
     private static void notifyError(Throwable ex) {
         Throwable root = ex;
-        while (root.getCause() != null && root.getCause() != root) root = root.getCause();
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
 
         if (root instanceof HttpTimeoutException) {
             SAFNotification.error("انتهت مهلة الاتصال بالسيرفر، حاول مرة أخرى");
@@ -225,7 +262,7 @@ public final class SmartSearchHelper {
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  FieldBind — Record بيربط حقل بقيمة من Object
+    //  FieldBind — بيربط حقل بقيمة من الـ Object
     // ═══════════════════════════════════════════════════════════
 
     public record FieldBind<T>(TextField field, Function<T, String> extractor) {

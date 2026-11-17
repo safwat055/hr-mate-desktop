@@ -3,6 +3,7 @@ package com.safwat.hr.controller.hr.scale;
 import com.safwat.hr.controller.hr.entitlements.allowance.AllowanceFxController;
 import com.safwat.hr.controller.hr.scale.dto.*;
 import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import com.safwat.hr.ui.util.PDFView;
@@ -29,9 +30,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
+import com.safwat.hr.shared.ui.SmartSearchHelper;
+import com.safwat.hr.shared.ui.SmartSearchHelper.FieldBind;
+import java.util.function.Consumer;
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
 
 /**
@@ -173,7 +177,7 @@ public class ScaleController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         utilsUi = new ScaleUtilsUi(this);
 
-        btn_search.setOnAction(_ -> search());
+
         btn_calculate.setOnAction(_ -> doCalculate());
         btn_save.setOnAction(_ -> doSave());
         btn_pdf.setOnAction(_ -> doPdf());
@@ -187,7 +191,6 @@ public class ScaleController implements Initializable {
         if (btn_addEncouragement != null) btn_addEncouragement.setOnAction(_ -> addEmptyEncouragementRow());
         if (btn_addPromotion != null) btn_addPromotion.setOnAction(_ -> addEmptyPromotionRow());
 
-        txt_nationalId.setOnAction(_ -> search());
 
         setupUpgradeTable();
         setupEncouragementTable();
@@ -201,10 +204,73 @@ public class ScaleController implements Initializable {
         setupAdjustmentTable(table_mogardRival);
         setupAdjustmentTable(table_bonusAdd);
         setupAdjustmentTable(table_bonusRival);
-
+        setupEmployeeSearch();
         showForm();
+
+    }
+// ═════════════════════════════════════════════
+//  Search (SmartSearchHelper)
+// ═════════════════════════════════════════════
+
+    private static final String SEARCH_NATIONAL_ID = "nationalId";
+    private static final String SEARCH_CODE = "code";
+    private static final String SEARCH_NAME = "empName";
+
+    private void setupEmployeeSearch() {
+        SearchDialog<SearchScaleEmployee> dialog = SearchDialog.builder(SearchScaleEmployee.class)
+                .title("بحث عن موظف")
+                .column("رقم قومي", SearchScaleEmployee::nationalId)
+                .column("كود الموظف", SearchScaleEmployee::codeId)
+                .column("الاسم", SearchScaleEmployee::empName)
+                .column("قانون", SearchScaleEmployee::castToString)
+                .column("المجموعة النوعية", SearchScaleEmployee::qualitativeGroup);
+
+        // بعد ما الحقول تتملى من الـ FieldBind، نحمّل السجل الكامل
+        Consumer<SearchScaleEmployee> onSelect = emp -> {
+            showForm();
+            doSearch();
+        };
+
+        // الرقم القومي: Enter + زرار البحث
+        SmartSearchHelper.bindWithInput(txt_nationalId, btn_search,
+                in -> fetchEmployees(in, SEARCH_NATIONAL_ID),
+                dialog, onSelect,
+                FieldBind.of(txt_nationalId, SearchScaleEmployee::nationalId),
+                FieldBind.of(txt_empCode, SearchScaleEmployee::codeId),
+                FieldBind.of(txt_empName, SearchScaleEmployee::empName));
+
+        // كود الموظف: Enter + دبل كليك
+        SmartSearchHelper.bindWithInput(txt_empCode,
+                in -> fetchEmployees(in, SEARCH_CODE),
+                dialog, onSelect,
+                FieldBind.of(txt_nationalId, SearchScaleEmployee::nationalId),
+                FieldBind.of(txt_empCode, SearchScaleEmployee::codeId),
+                FieldBind.of(txt_empName, SearchScaleEmployee::empName));
+
+        // الاسم: Enter + دبل كليك
+        SmartSearchHelper.bindWithInput(txt_empName,
+                in -> fetchEmployees(in, SEARCH_NAME),
+                dialog, onSelect,
+                FieldBind.of(txt_nationalId, SearchScaleEmployee::nationalId),
+                FieldBind.of(txt_empCode, SearchScaleEmployee::codeId),
+                FieldBind.of(txt_empName, SearchScaleEmployee::empName));
     }
 
+    /**
+     * بيجيب الموظفين من السيرفر حسب نوع البحث.
+     * بيتنادى من background thread، فمسموح فيه نداء شبكة blocking.
+     */
+    private List<SearchScaleEmployee> fetchEmployees(String input, String searchType) {
+        if (input == null || input.isBlank()) return List.of();
+        try {
+            return apiService.search(input.trim(), searchType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+    }
     // ═════════════════════════════════════════════
     //  حالة الواجهة (فورم / معاينة PDF)
     // ═════════════════════════════════════════════
