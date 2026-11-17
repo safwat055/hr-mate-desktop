@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.safwat.hr.controller.tutorials.TutorialsController"
+            nodeOrientation="RIGHT_TO_LEFT"
+            styleClass="tut-root"
+            prefWidth="900" prefHeight="700">
+    <top>
+        <VBox spacing="6" styleClass="tut-header">
+            <padding>
+                <Insets top="16" right="20" bottom="8" left="20"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label text="شروحات التطبيق" styleClass="tut-page-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="إعادة كتابة الملف من الصفر"
+                        onAction="#onRewriteClicked"
+                        styleClass="tut-rewrite-btn"/>
+            </HBox>
+            <Label fx:id="versionLabel" styleClass="tut-version"/>
+            <Label fx:id="sourceLabel" styleClass="tut-source" wrapText="true"/>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="tut-scroll">
+            <content>
+                <VBox fx:id="sectionsBox" spacing="14">
+                    <padding>
+                        <Insets top="8" right="20" bottom="20" left="20"/>
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <HBox fx:id="linksBox" alignment="CENTER" spacing="10" styleClass="tut-links">
+            <padding>
+                <Insets top="10" right="20" bottom="14" left="20"/>
+            </padding>
+        </HBox>
+    </bottom>
+</BorderPane>

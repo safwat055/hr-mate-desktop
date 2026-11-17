@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "sections": [
+    {
+      "youtubeUrl": "https://youtu.be/Ibemo9OJC0s",
+      "description": "شرح كامل لواجهة إدخال البيانات وخطوات الإدخال خطوة بخطوة.",
+      "id": "data-entry",
+      "title": "شرح واجهة الإدخال"
+    },
+    {
+      "youtubeUrl": "https://youtu.be/F4syhq9IoEE",
+      "description": "شرح واجهة مدير الاستحقاقات وإدارة البنود والمجموعات.",
+      "id": "deductions-manager",
+      "title": "شرح واجهة مدير الاستحقاقات"
+    },
+    {
+      "youtubeUrl": "https://youtu.be/BXHO97gWPOE",
+      "description": "شرح واجهة مفردات بيرول وطريقة التعامل معها.",
+      "id": "payroll-vocabulary",
+      "title": "شرح واجهة مفردات بيرول"
+    }
+  ],
+  "updatedAt": "2026-11-17"
+}

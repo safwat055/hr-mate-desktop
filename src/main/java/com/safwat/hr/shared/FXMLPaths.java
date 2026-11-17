@@ -36,6 +36,7 @@ public class FXMLPaths {
     private final String OverrideDialogView = "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceOverrideDialog.fxml";
     private final String statutoryDialogView = "/com/safwat/hr/controller/hr/entitlements/allowance/StatutoryDialog.fxml";
     private final String allowanceDefinitionDialog = "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceDefinitionDialog.fxml";
+    private final String tutorialsView = "/com/safwat/hr/controller/tutorials/TutorialsScreen.fxml";
 
 
     public String getLeavesView() {

@@ -705,4 +705,18 @@
 .form-checkbox {
     -fx-font-size: 13;
 }
-
+.tut-root { -fx-background-color: #f4f6f9; }
+.tut-page-title { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f; }
+.tut-version { -fx-text-fill: #667085; -fx-font-size: 12px; }
+.tut-source { -fx-text-fill: #667085; -fx-font-size: 11px; }
+.tut-rewrite-btn { -fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-cursor: hand; }
+.tut-card { -fx-background-color: white; -fx-background-radius: 10; -fx-padding: 14; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2); }
+.tut-title { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1a1a1a; }
+.tut-desc { -fx-font-size: 12px; -fx-text-fill: #475467; }
+.tut-preview { -fx-background-color: #e4e7ec; -fx-background-radius: 8; -fx-alignment: center; }
+.tut-offline { -fx-text-fill: #667085; -fx-font-size: 11px; -fx-text-alignment: center; }
+.tut-open-btn { -fx-background-color: #2e7d32; -fx-text-fill: white; -fx-cursor: hand; }
+.tut-scroll, .tut-scroll > .viewport { -fx-background-color: transparent; }
+.tut-links { -fx-background-color: #ffffff; -fx-border-color: #e4e7ec; -fx-border-width: 1 0 0 0; }
+.tut-link-btn { -fx-background-color: #f0f3f8; -fx-text-fill: #1e3a5f; -fx-cursor: hand; -fx-background-radius: 8; }
+.tut-link-btn:hover { -fx-background-color: #dfe6f1; }

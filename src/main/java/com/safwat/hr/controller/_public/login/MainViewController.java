@@ -306,6 +306,9 @@ public class MainViewController implements Initializable {
     @FXML
     private void openEmployeeForm() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getEmployeeForm(), "بيانات موظف", true);
+    } @FXML
+    private void openTutorials() {
+        TabManager.loadFXMLInTab(tab, new FXMLPaths().getTutorialsView(), "شروحات", true);
     }
 
     /**
