@@ -790,7 +790,7 @@ public class LeaveManagementController implements Initializable {
         }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/leave/LeaveRecordDialog.fxml"));
+                    "/com/safwat/hr/controller/hr/leave/LeaveRecordDialog.fxml"));
             Parent root = loader.load();
             LeaveRecordDialogController ctrl = loader.getController();
             ctrl.init(currentEmployee, leaveTypes, existing);
@@ -929,7 +929,7 @@ public class LeaveManagementController implements Initializable {
         }
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(
-                    "/com/safwat/hr/controller/leave/LatePermissionDialog.fxml"));
+                    "/com/safwat/hr/controller/hr/leave/LatePermissionDialog.fxml"));
             Parent root = loader.load();
             LatePermissionDialogController ctrl = loader.getController();
             ctrl.init(currentEmployee, existing);

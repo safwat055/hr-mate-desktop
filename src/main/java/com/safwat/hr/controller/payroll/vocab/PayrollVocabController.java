@@ -20,6 +20,7 @@ import javafx.scene.web.WebView;
 
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -165,6 +166,8 @@ public class PayrollVocabController implements Initializable {
                         .column("الادارة", EmployeeSearchResult::getPay_management)
                         .column("فئة التعيين", EmployeeSearchResult::getAssignment_class),
                 _ -> {
+
+
                 },
                 SmartSearchHelper.FieldBind.of(txt_nationalID, EmployeeSearchResult::getNational_id),
                 SmartSearchHelper.FieldBind.of(txt_name, EmployeeSearchResult::getEmp_name),

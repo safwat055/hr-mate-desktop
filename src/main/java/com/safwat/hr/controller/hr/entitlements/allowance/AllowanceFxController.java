@@ -1222,7 +1222,7 @@ public class AllowanceFxController implements Initializable {
 
     private void openOverrideDialog(AllowanceResultDto.AllowanceLineDto line) {
         ViewManager.openIndependentView(
-                "/com/safwat/hr/controller/entitlements/allowance/AllowanceOverrideDialog.fxml",
+                "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceOverrideDialog.fxml",
                 "تعديل فترات البدل",
                 null,
                 Modality.APPLICATION_MODAL,

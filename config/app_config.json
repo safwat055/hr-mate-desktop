@@ -16,6 +16,7 @@
     "تقرير جديد",
     "سجل الاجور",
     "سجلات",
+    "شروحات",
     "مدير استحقاقات",
     "مدير التقارير",
     "مفردات",
@@ -27,15 +28,15 @@
     "واجهة البيانات",
     "👥 إدارة المستخدمين",
     "🔑 تغيير كلمة المرور",
-    "شروحات"
+    "تعديل فترات البدل"
   ]},
   "connection": {
     "alone": "false",
     "pgAsService": "false",
     "url2": "ws://",
-    "port": "8080",
+    "port": "9090",
     "pgPort": "5432",
-    "masterPC": "localhost",
+    "masterPC": "hr-mate.local",
     "user": "admin",
     "url": "http://",
     "backendAsService": "false"

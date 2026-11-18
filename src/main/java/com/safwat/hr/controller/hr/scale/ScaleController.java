@@ -4,6 +4,7 @@ import com.safwat.hr.controller.hr.entitlements.allowance.AllowanceFxController;
 import com.safwat.hr.controller.hr.scale.dto.*;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
+import com.safwat.hr.shared.ui.SmartSearchHelper.FieldBind;
 import com.safwat.hr.ui.controls.SAFNotification;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import com.safwat.hr.ui.util.PDFView;
@@ -33,9 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import com.safwat.hr.shared.ui.SmartSearchHelper;
-import com.safwat.hr.shared.ui.SmartSearchHelper.FieldBind;
-import java.util.function.Consumer;
+
 import static com.safwat.hr.ui.table.TableSetupHelper.*;
 
 /**
@@ -1091,7 +1090,7 @@ public class ScaleController implements Initializable {
         if (parentTab == null) return;
 
         TabManager.loadFXMLInMainTab(
-                "/com/safwat/hr/controller/entitlements/allowance/AllowanceView.fxml",
+                "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceView.fxml",
                 "مفردات",
                 true,
                 controller -> {
