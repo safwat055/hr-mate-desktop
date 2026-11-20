@@ -136,16 +136,18 @@ public class TutorialsController {
         VBox card = new VBox(12, top);
         card.getStyleClass().add("tut-card");
 
-        if (t.hasVideo()) {
-            Button open = new Button("فتح الفيديو على يوتيوب");
+        if (t.youtubeUrl() != null) {
+            Button open = new Button("فتح على يوتيوب");
             open.getStyleClass().add("tut-open-btn");
             open.setOnAction(e -> runLink(
-                    TutorialsLoader.openInBrowser(t.youtubeUrl()), "الفيديو", t.youtubeUrl()));
+                    TutorialsLoader.openInBrowser(t.youtubeUrl()), "الرابط", t.youtubeUrl()));
             card.getChildren().add(open);
 
-            preview.setCursor(Cursor.HAND);
-            preview.setOnMouseClicked(e -> runLink(
-                    TutorialsLoader.openInBrowser(t.youtubeUrl()), "الفيديو", t.youtubeUrl()));
+            if (t.hasVideo()) {
+                preview.setCursor(Cursor.HAND);
+                preview.setOnMouseClicked(e -> runLink(
+                        TutorialsLoader.openInBrowser(t.youtubeUrl()), "الفيديو", t.youtubeUrl()));
+            }
         }
         return card;
     }
