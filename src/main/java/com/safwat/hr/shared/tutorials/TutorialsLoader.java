@@ -30,8 +30,8 @@ public final class TutorialsLoader {
     public static final String FILE_NAME = "tutorials.json";
 
     /** رقم نسخة الشروحات المدمجة في الكود. زوّده مع كل تعديل على المحتوى */
-    private static final int DEFAULT_VERSION = 1;
-    private static final String DEFAULT_UPDATED_AT = "2026-11-17";
+    private static final int DEFAULT_VERSION = 2;
+    private static final String DEFAULT_UPDATED_AT = "2026-11-21";
 
     private static final Pattern VIDEO_ID_PATTERN = Pattern.compile(
             "(?:v=|youtu\\.be/|shorts/|embed/)([A-Za-z0-9_-]{11})");
@@ -226,20 +226,48 @@ public final class TutorialsLoader {
         root.put("updatedAt", DEFAULT_UPDATED_AT);
 
         JSONArray sections = new JSONArray();
-        sections.put(section("data-entry",
-                "شرح واجهة الإدخال",
-                "شرح كامل لواجهة إدخال البيانات وخطوات الإدخال خطوة بخطوة.",
-                "https://youtu.be/Ibemo9OJC0s"));
+
+        sections.put(section("all-tutorials",
+                "كل شروحات البرنامج",
+                "كل شروحات البرنامج",
+                "https://youtube.com/playlist?list=PLVfF7h2n8YhM&si=y9nvv-Ol5MY3y1Tl"));
+
+        sections.put(section("reports-upload",
+                "شرح تحميل التقارير",
+                "شرح كامل لتحميل تقارير المنظومة: مراجعة، وسنوي، وأجر اشتراك، وفهرس.",
+                "https://youtu.be/bycxuzEUK_w"));
+
         sections.put(section("deductions-manager",
                 "شرح واجهة مدير الاستحقاقات",
                 "شرح واجهة مدير الاستحقاقات وإدارة البنود والمجموعات.",
                 "https://youtu.be/F4syhq9IoEE"));
+
         sections.put(section("payroll-vocabulary",
                 "شرح واجهة مفردات بيرول",
                 "شرح واجهة مفردات بيرول وطريقة التعامل معها.",
                 "https://youtu.be/BXHO97gWPOE"));
-        root.put("sections", sections);
 
+        sections.put(section("payroll-payReport-Ui",
+                "شرح واجهة تقارير الصرف",
+                "شرح واجهة تقارير الصرف وطريقة التعامل معها.",
+                "https://youtu.be/W3zwiNF0l-0"));
+
+        sections.put(section("data-entry-ui",
+                "شرح واجهة الإدخال",
+                "شرح كامل لواجهة إدخال البيانات وخطوات الإدخال خطوة بخطوة.",
+                "https://youtu.be/Ibemo9OJC0s"));
+
+        sections.put(section("form-129",
+                "شرح واجهة سجلات 129",
+                "شرح كامل لواجهة سجلات 129 الإلكترونية، وطريقة التعامل معها، واستخراج سجلات 129 من التقارير.",
+                "https://youtu.be/BuMHMZYTGcY"));
+
+        sections.put(section("payroll-ChangeCard-ui",
+                "شرح واجهة أجر الاشتراك",
+                "شرح كامل لواجهة أجر الاشتراك وطريقة استخراج بطاقات أجر الاشتراك المحمّلة من المنظومة.",
+                "https://youtu.be/X5869MzeuAI"));
+
+        root.put("sections", sections);
         return root;
     }
 
