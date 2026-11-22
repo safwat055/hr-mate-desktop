@@ -20,6 +20,7 @@ import com.safwat.hr.shared.FXMLPaths;
 import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.util.AlertUtil;
 import com.safwat.hr.ui.util.PDFView;
 import com.safwat.hr.ui.util.TabManager;
 import com.safwat.hr.ui.util.ViewManager;
@@ -72,7 +73,8 @@ public class AllowanceFxController implements Initializable {
     private TabPane main_tabs;
     @FXML
     private WebView webView;
-
+    @FXML
+    private Button btn_syncAllowances;
     // ── تاب بيانات الموظف ───────────────────────────────────────
     @FXML
     private TextField txt_empName;
@@ -194,6 +196,7 @@ public class AllowanceFxController implements Initializable {
         btn_addAllowance.setOnAction(_ -> handleAddAllowance());
         btn_showAllowances.setOnAction(_ -> showAllAllowancesMenu());
         btn_reset.setOnAction(_ -> handleReset());
+        btn_syncAllowances.setOnAction(_ -> handleSyncAllowances());
         btn_supplementaryPdf.setOnAction(_ -> handleExportSupplementaryPdf());
         if (btn_manageDefinitions != null) {
             btn_manageDefinitions.setOnAction(_ -> openDefinitionsDialog());
@@ -226,7 +229,42 @@ public class AllowanceFxController implements Initializable {
             webView.getEngine().load("about:blank");
         }
     }
+    private void handleSyncAllowances() {
+        if (currentNationalId == null || currentNationalId.isBlank()) {
+            showError("ابحث عن موظف أولاً");
+            return;
+        }
 
+        btn_syncAllowances.setDisable(true);
+        clearError();
+
+        FxApiSupport.post(
+                "/entitlements/allowances/employee/" + currentNationalId + "/sync-missing",
+                Map.of(),
+                AllowanceSyncResult.class,
+                result -> {
+                    btn_syncAllowances.setDisable(false);
+                    if (result.addedNames().isEmpty() && result.removedNames().isEmpty()) {
+                        AlertUtil.showInfo("مزامنة البدلات", "كل البدلات المستحقة متطابقة بالفعل");
+                        return;
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    if (!result.addedNames().isEmpty()) {
+                        sb.append("تمت إضافة:\n- ").append(String.join("\n- ", result.addedNames()));
+                    }
+                    if (!result.removedNames().isEmpty()) {
+                        if (sb.length() > 0) sb.append("\n\n");
+                        sb.append("تم حذف (غير مستحقة):\n- ").append(String.join("\n- ", result.removedNames()));
+                    }
+                    AlertUtil.showInfo("تمت المزامنة", sb.toString());
+                    loadAllowances();
+                },
+                err -> {
+                    btn_syncAllowances.setDisable(false);
+                    AlertUtil.showError("فشلت المزامنة", err);
+                }
+        );
+    }
     /**
      * يعرض المعاينة ويخفي التبويبات
      */
@@ -955,8 +993,15 @@ public class AllowanceFxController implements Initializable {
                 btnDelete.getStyleClass().add("btn-danger");
                 btnDelete.setPrefHeight(26);
                 btnDelete.setPrefWidth(36);
-                btnEdit.setOnAction(e -> openOverrideDialog(
-                        getTableView().getItems().get(getIndex())));
+                btnEdit.setOnAction(e -> {
+                    AllowanceResultDto.AllowanceLineDto line =
+                            getTableView().getItems().get(getIndex());
+                    if (line.calcType() == AllowanceDefinition.CalcType.TICKET_CASH) {
+                        openTicketDialog(line.code(), line.nameAr());
+                    } else {
+                        openOverrideDialog(line);
+                    }
+                });
                 btnDelete.setOnAction(e -> handleDeleteAllowance(
                         getTableView().getItems().get(getIndex()).code()));
             }
@@ -986,7 +1031,20 @@ public class AllowanceFxController implements Initializable {
             }
         });
     }
-
+    private void openTicketDialog(String code, String nameAr) {
+        ViewManager.openIndependentView(
+                "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceTicketDialog.fxml",
+                "فترات التذاكر",
+                null,
+                Modality.APPLICATION_MODAL,
+                false,
+                (ctrl, stage) -> {
+                    stage.setTitle("فترات التذاكر: " + nameAr);
+                    ((AllowanceTicketDialogController) ctrl)
+                            .init(code, nameAr, currentNationalId, this::loadAllowances);
+                }
+        );
+    }
     // ════════════════════════════════════════════════════════════
     //  API Ops
     // ════════════════════════════════════════════════════════════
@@ -1038,6 +1096,9 @@ public class AllowanceFxController implements Initializable {
                     txt_newAllowance.clear();
                     selectedAllowanceCode = null;
                     loadAllowances();
+                    if (selected.getCalcType() == AllowanceDefinition.CalcType.TICKET_CASH) {
+                        openTicketDialog(selected.getCode(), selected.getNameAr());
+                    }
                 },
                 err -> {
                     btn_addAllowance.setDisable(false);

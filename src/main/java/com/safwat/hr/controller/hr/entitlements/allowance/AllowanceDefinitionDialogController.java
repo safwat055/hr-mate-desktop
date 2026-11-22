@@ -283,7 +283,12 @@ public class AllowanceDefinitionDialogController implements Initializable {
             new MapKeyOption("percent", "النسبة من الأساسي (%)"),
             new MapKeyOption("days", "عدد الأيام")
     );
-
+    private static final List<MapKeyOption> TICKET_KEYS = List.of(
+            new MapKeyOption("full_4_6", "سعر الكاملة (الدرجات 4-6)"),
+            new MapKeyOption("half_4_6", "سعر النصف (الدرجات 4-6)"),
+            new MapKeyOption("full_other", "سعر الكاملة (باقي الدرجات)"),
+            new MapKeyOption("half_other", "سعر النصف (باقي الدرجات)")
+    );
     private static final Map<String, String> KEY_LABELS = buildKeyLabels();
 
     private static Map<String, String> buildKeyLabels() {
@@ -297,6 +302,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         // مفاتيح ANNUAL_BONUS — نسبة وأيام (مختلفة عن "all" فوق)
         m.put("percent", "النسبة من الأساسي (%)");
         m.put("days", "عدد الأيام");
+        TICKET_KEYS.forEach(k -> m.put(k.value(), k.label()));
         return Map.copyOf(m);
     }
 
@@ -314,6 +320,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case PERCENT_BY_JOB, AMOUNT_BY_JOB -> List.of();  // وظائف ديناميكية
             case ANNUAL_BONUS -> ANNUAL_BONUS_KEYS; // ← جديد
             case PERCENT_OF_ALLOWANCES, PERCENT_OF_INSURABLE_WAGE -> INSURANCE_KEYS; // key = "rate"
+            case TICKET_CASH -> TICKET_KEYS;
             case COMPENSATORY_BONUS, SPECIAL_ALLOWANCE_ADDED,
                  SPECIAL_ALLOWANCE_NOT_ADDED, SOCIAL_PACKAGE_MINIMUM,
                  PROMOTION_INCENTIVE -> List.of();
@@ -384,6 +391,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case ANNUAL_BONUS -> "مكافأة سنوية";          // ← جديد
             case PERCENT_OF_ALLOWANCES -> "نسبة من بدلات أخرى";
             case PERCENT_OF_INSURABLE_WAGE -> "نسبة من أجر الاشتراك";
+            case TICKET_CASH -> "بدل نقدي مقابل تذاكر السفر";
 
         };
     }
@@ -1388,6 +1396,20 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 && !valuesMap.containsKey("rate")) {
             rejectSave("أدخل النسبة (rate) للنوع المختار");
             return;
+        }
+
+        if (calcType == CalcType.TICKET_CASH) {
+            if (behavior != Behavior.REPLACE) {
+                rejectSave("بدل التذاكر لازم يكون سلوكه REPLACE");
+                return;
+            }
+            for (String key : List.of("full_4_6", "half_4_6", "full_other", "half_other")) {
+                boolean present = valueRows.stream().anyMatch(r -> r.key().equals(key));
+                if (!present) {
+                    rejectSave("أدخل الأسعار الأربعة لبدل التذاكر (ناقص: " + key + ")");
+                    return;
+                }
+            }
         }
 // ═══════════════════════════════════════════════════
 //  minValue / maxValue — اختياريان

@@ -74,8 +74,9 @@ public class AllowanceDefinition {
         PERCENT_ALL_JOB,
         AMOUNT_BY_JOB,
         ANNUAL_BONUS,
-        PERCENT_OF_ALLOWANCES,        // 🆕
-        PERCENT_OF_INSURABLE_WAGE     // 🆕
+        PERCENT_OF_ALLOWANCES,
+        PERCENT_OF_INSURABLE_WAGE,
+        TICKET_CASH                       // 🆕
     }
 
     public enum InsuranceBase {BASIC, VARIABLE, COMBINED}

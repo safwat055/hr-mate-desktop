@@ -173,7 +173,8 @@
                         <Label styleClass="bold" text="تاريخ الاحتساب"/>
                         <TextField fx:id="txt_calculationDate" prefHeight="38" prefWidth="150" promptText="2024-07-01"/>
                         <Button fx:id="btn_recalculate" prefHeight="38" styleClass="btn-purple" text="⚙ احتساب"/>
-
+                        <Button fx:id="btn_syncAllowances" text="مزامنة"
+                                styleClass="btn-secondary" prefHeight="34"/>
                         <Region HBox.hgrow="ALWAYS"/>
 
                         <Button fx:id="btn_exportPDF" prefHeight="38" styleClass="btn-outline danger" text="📄 PDF"/>

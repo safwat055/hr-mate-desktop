@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Dialog فترات تذاكر السفر (TICKET_CASH)
+    ────────────────────────────────────────────────────────────
+    بيعرض فترات التذاكر للموظف: من / إلى / عدد الكاملة / عدد الأنصاف / عدد الأفراد.
+    الحد الأقصى 3 أفراد — نصف التذكرة بيحسب فرد.
+-->
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox nodeOrientation="RIGHT_TO_LEFT"
+      spacing="18"
+      prefWidth="780"
+      styleClass="card"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.safwat.hr.controller.hr.entitlements.allowance.AllowanceTicketDialogController">
+
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20"/>
+    </padding>
+
+    <!-- عنوان -->
+    <Label fx:id="lbl_dialog_title"
+           alignment="CENTER"
+           maxWidth="Infinity"
+           styleClass="panel-header"
+           text="فترات تذاكر السفر"/>
+
+    <!-- معلومات البدل + ملاحظة الحد -->
+    <HBox alignment="CENTER_RIGHT" spacing="16" styleClass="card">
+        <padding>
+            <Insets bottom="12" left="16" right="16" top="12"/>
+        </padding>
+        <Label styleClass="bold" text="البدل:"/>
+        <Label fx:id="lbl_allowance_name" styleClass="bold text-navy fs-14"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label styleClass="text-muted fs-12"
+               text="كل نصف تذكرة يحسب فرد — الحد الأقصى 3 أفراد"/>
+    </HBox>
+
+    <!-- جدول الفترات -->
+    <VBox styleClass="card" spacing="4" VBox.vgrow="ALWAYS">
+        <HBox alignment="CENTER_RIGHT" spacing="12">
+            <padding>
+                <Insets bottom="10" left="12" right="12" top="10"/>
+            </padding>
+            <Label alignment="CENTER" maxWidth="Infinity"
+                   styleClass="panel-header compact"
+                   text="فترات التذاكر"
+                   HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btn_add_period"
+                    prefHeight="32" prefWidth="110"
+                    styleClass="btn-success"
+                    text="+ فترة جديدة"/>
+        </HBox>
+
+        <TableView fx:id="table_periods"
+                   nodeOrientation="RIGHT_TO_LEFT"
+                   prefHeight="240"
+                   editable="false"
+                   styleClass="bold">
+            <columns>
+                <TableColumn fx:id="col_from"    text="من تاريخ"     prefWidth="150"/>
+                <TableColumn fx:id="col_to"      text="إلى تاريخ"    prefWidth="150"/>
+                <TableColumn fx:id="col_full"    text="كاملة"        prefWidth="90"/>
+                <TableColumn fx:id="col_half"    text="أنصاف"        prefWidth="90"/>
+                <TableColumn fx:id="col_persons" text="عدد الأفراد"  prefWidth="110"/>
+                <TableColumn fx:id="col_actions" text="إجراءات"      prefWidth="120"/>
+            </columns>
+            <padding>
+                <Insets bottom="8" left="8" right="8" top="4"/>
+            </padding>
+        </TableView>
+    </VBox>
+
+    <!-- فورم إضافة / تعديل فترة -->
+    <VBox fx:id="pane_period_form" styleClass="card" spacing="14" visible="false" managed="false">
+        <padding>
+            <Insets bottom="16" left="16" right="16" top="14"/>
+        </padding>
+
+        <Label fx:id="lbl_form_title" styleClass="bold text-navy" text="إضافة فترة جديدة"/>
+
+        <HBox spacing="18" alignment="CENTER_RIGHT">
+            <VBox spacing="6">
+                <Label styleClass="bold fs-12" text="من تاريخ *"/>
+                <TextField fx:id="txt_from" alignment="CENTER"
+                           prefHeight="36" prefWidth="160" promptText="yyyy-MM-dd"/>
+            </VBox>
+
+            <VBox spacing="6">
+                <Label styleClass="bold fs-12" text="إلى تاريخ (فارغ = مفتوح)"/>
+                <TextField fx:id="txt_to" alignment="CENTER"
+                           prefHeight="36" prefWidth="160" promptText="yyyy-MM-dd"/>
+            </VBox>
+
+            <VBox spacing="6">
+                <Label styleClass="bold fs-12" text="تذاكر كاملة"/>
+                <ComboBox fx:id="combo_full" prefHeight="36" prefWidth="110"/>
+            </VBox>
+
+            <VBox spacing="6">
+                <Label styleClass="bold fs-12" text="أنصاف التذاكر"/>
+                <ComboBox fx:id="combo_half" prefHeight="36" prefWidth="110"/>
+            </VBox>
+
+            <VBox spacing="6" alignment="CENTER">
+                <Label styleClass="bold fs-12" text="عدد الأفراد"/>
+                <Label fx:id="lbl_persons" styleClass="bold text-navy fs-14"/>
+            </VBox>
+        </HBox>
+
+        <Label fx:id="lbl_form_error"
+               styleClass="text-danger fs-12"
+               visible="false"/>
+
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Button fx:id="btn_save_period"
+                    prefHeight="36" prefWidth="100"
+                    styleClass="btn-success"
+                    text="✔ حفظ"/>
+            <Button fx:id="btn_cancel_period"
+                    prefHeight="36" prefWidth="90"
+                    styleClass="btn-secondary"
+                    text="إلغاء"/>
+        </HBox>
+    </VBox>
+
+    <!-- أزرار الـ Dialog الرئيسية -->
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btn_save_all"
+                prefHeight="38" prefWidth="130"
+                styleClass="btn-primary"
+                text="💾 حفظ الكل"/>
+        <Button fx:id="btn_close"
+                prefHeight="38" prefWidth="90"
+                styleClass="btn-secondary"
+                text="إغلاق"/>
+    </HBox>
+
+</VBox>
