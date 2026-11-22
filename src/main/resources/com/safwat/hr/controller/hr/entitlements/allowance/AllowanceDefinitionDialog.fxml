@@ -222,7 +222,15 @@
                                 </columns>
                             </TableView>
                         </VBox>
-
+                        <VBox fx:id="pane_baseAllowances" spacing="6">
+                            <Label text="البدلات المرجعية (مجموعها هو الوعاء) *" styleClass="form-label"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button fx:id="btn_pick_baseAllowances" text="اختر" styleClass="btn-secondary"
+                                        prefHeight="36" prefWidth="90"/>
+                                <TextField fx:id="txt_baseAllowances" editable="false" focusTraversable="false"
+                                           prefHeight="36" promptText="اختر بدل أو أكتر" HBox.hgrow="ALWAYS"/>
+                            </HBox>
+                        </VBox>
                         <GridPane hgap="16" vgap="6">
                             <columnConstraints>
                                 <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>

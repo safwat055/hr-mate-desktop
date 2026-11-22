@@ -808,37 +808,34 @@ public class AllowanceFxController implements Initializable {
 
     // ── Builders للسطور الوهمية ──
 
-    private AllowanceResultDto.AllowanceLineDto buildSubtotal(
+    // ── Builders للسطور الوهمية ──
+
+    private AllowanceResultDto.AllowanceLineDto virtualLine(
             String code, String nameAr, BigDecimal value, ElementType et) {
         return new AllowanceResultDto.AllowanceLineDto(
                 code, nameAr, value,
-                null,
+                null,                                              // effectiveFrom
                 AllowanceResultDto.AllowanceLineDto.Source.AUTO,
-                null, et,
+                null,                                              // overrides
+                et,
+                null,                                              // calcType — سطر وهمي مش بند احتساب
                 false, false, false,
-                true);
+                true);                                             // displayOnly
+    }
+
+    private AllowanceResultDto.AllowanceLineDto buildSubtotal(
+            String code, String nameAr, BigDecimal value, ElementType et) {
+        return virtualLine(code, nameAr, value, et);
     }
 
     private AllowanceResultDto.AllowanceLineDto buildInfo(
             String code, String nameAr, BigDecimal value) {
-        return new AllowanceResultDto.AllowanceLineDto(
-                code, nameAr, value,
-                null,
-                AllowanceResultDto.AllowanceLineDto.Source.AUTO,
-                null, ElementType.ENTITLEMENT,
-                false, false, false,
-                true);
+        return virtualLine(code, nameAr, value, ElementType.ENTITLEMENT);
     }
 
     private AllowanceResultDto.AllowanceLineDto buildNet(
             String code, String nameAr, BigDecimal value) {
-        return new AllowanceResultDto.AllowanceLineDto(
-                code, nameAr, value,
-                null,
-                AllowanceResultDto.AllowanceLineDto.Source.AUTO,
-                null, ElementType.ENTITLEMENT,
-                false, false, false,
-                true);
+        return virtualLine(code, nameAr, value, ElementType.ENTITLEMENT);
     }
 
     // ════════════════════════════════════════════════════════════

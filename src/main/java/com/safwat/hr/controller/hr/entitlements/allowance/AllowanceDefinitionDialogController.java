@@ -6,6 +6,7 @@ import com.safwat.hr.controller.hr.entitlements.allowance.dto.JobTitleDto;
 import com.safwat.hr.controller.hr.entitlements.allowance.dto.SectorDto;
 import com.safwat.hr.shared.ui.MultiSelectSearchDialog;
 import com.safwat.hr.ui.TextFieldSetupHelper;
+import com.safwat.hr.ui.util.AlertUtil;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -185,7 +186,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private Button btn_cancel_form;
     @FXML
     private Button btn_close;
+    @FXML private VBox pane_baseAllowances;
+    @FXML private Button btn_pick_baseAllowances;
+    @FXML private TextField txt_baseAllowances;
 
+    private final Set<String> selectedBaseAllowanceCodes = new LinkedHashSet<>();
     // ══════════════════════════════════════════════════════════════
     //  Constants & State
     // ══════════════════════════════════════════════════════════════
@@ -308,6 +313,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case PERCENT_ALL_JOB -> ALL_JOBS_KEY;
             case PERCENT_BY_JOB, AMOUNT_BY_JOB -> List.of();  // وظائف ديناميكية
             case ANNUAL_BONUS -> ANNUAL_BONUS_KEYS; // ← جديد
+            case PERCENT_OF_ALLOWANCES, PERCENT_OF_INSURABLE_WAGE -> INSURANCE_KEYS; // key = "rate"
             case COMPENSATORY_BONUS, SPECIAL_ALLOWANCE_ADDED,
                  SPECIAL_ALLOWANCE_NOT_ADDED, SOCIAL_PACKAGE_MINIMUM,
                  PROMOTION_INCENTIVE -> List.of();
@@ -376,6 +382,9 @@ public class AllowanceDefinitionDialogController implements Initializable {
             case PERCENT_ALL_JOB -> "نسبة لكل الوظائف";
             case AMOUNT_BY_JOB -> "مبلغ ثابت حسب الوظيفة";
             case ANNUAL_BONUS -> "مكافأة سنوية";          // ← جديد
+            case PERCENT_OF_ALLOWANCES -> "نسبة من بدلات أخرى";
+            case PERCENT_OF_INSURABLE_WAGE -> "نسبة من أجر الاشتراك";
+
         };
     }
 
@@ -458,7 +467,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
         btn_pick_sectors.setOnAction(e -> openSectorsDialog());
         btn_pick_jobTitles.setOnAction(e -> openJobTitlesDialog());
         btn_pick_laws.setOnAction(e -> openLawsDialog());
-
+        btn_pick_baseAllowances.setOnAction(e -> openBaseAllowancesDialog());   // 🆕
         combo_calcType.valueProperty().addListener((o, old, val) -> autoAdjustForCalcType(val));
 
         loadAllSectorsOnce();
@@ -552,6 +561,21 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         // 8) hint حقل الشهور — معكوس لـ ANNUAL_BONUS
         updateExcludedMonthsHint(val);
+        // 9) البدلات المرجعية
+        boolean needsRefAllowances = val == CalcType.PERCENT_OF_ALLOWANCES;
+        if (pane_baseAllowances != null) {
+            pane_baseAllowances.setVisible(needsRefAllowances);
+            pane_baseAllowances.setManaged(needsRefAllowances);
+        }
+        if (!needsRefAllowances) {
+            selectedBaseAllowanceCodes.clear();
+            updateBaseAllowancesLabel();
+        }
+
+// 10) نسبة من أجر الاشتراك: مش بتدخل في أجر الاشتراك نفسه
+        if (val == CalcType.PERCENT_OF_INSURABLE_WAGE) {
+            chk_subjectToInsurance.setSelected(false);
+        }
     }
 
     /**
@@ -1091,6 +1115,7 @@ public class AllowanceDefinitionDialogController implements Initializable {
     private void applySelectionsFromDefinition(AllowanceDefinition def) {
         selectedSectorCodes.clear();
         if (def.getEligibleSectorCodes() != null) selectedSectorCodes.addAll(def.getEligibleSectorCodes());
+
         updateSectorsLabel();
 
         selectedJobTitles.clear();
@@ -1103,6 +1128,11 @@ public class AllowanceDefinitionDialogController implements Initializable {
 
         updateJobKeyOptions();
         updateJobTitlesHint();
+        selectedBaseAllowanceCodes.clear();
+        if (def.getBaseAllowanceCodes() != null) {
+            selectedBaseAllowanceCodes.addAll(def.getBaseAllowanceCodes());
+        }
+        updateBaseAllowancesLabel();
     }
 
     private void clearForm() {
@@ -1166,6 +1196,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
         updateJobTitlesLabel();
         updateLawsLabel();
         updateJobTitlesHint();
+        selectedBaseAllowanceCodes.clear();
+        updateBaseAllowancesLabel();
         lbl_form_error.setVisible(false);
     }
 
@@ -1327,7 +1359,18 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 return;
             }
         }
-
+        List<String> baseAllowanceCodes = null;
+        if (calcType == CalcType.PERCENT_OF_ALLOWANCES) {
+            if (selectedBaseAllowanceCodes.isEmpty()) {
+                rejectSave("اختر بدل مرجعي واحد على الأقل");
+                return;
+            }
+            if (selectedBaseAllowanceCodes.contains(code)) {
+                rejectSave("البدل ما ينفعش يعتمد على نفسه");
+                return;
+            }
+            baseAllowanceCodes = new ArrayList<>(selectedBaseAllowanceCodes);
+        }
         // valuesMap
         boolean needsValues = calcTypeNeedsValues(calcType);
         Map<String, BigDecimal> valuesMap = new LinkedHashMap<>();
@@ -1338,6 +1381,13 @@ public class AllowanceDefinitionDialogController implements Initializable {
         }
         if (!needsValues && valuesMap.isEmpty()) {
             valuesMap.put("all", BigDecimal.ZERO);
+        }
+
+        if ((calcType == CalcType.PERCENT_OF_ALLOWANCES
+                || calcType == CalcType.PERCENT_OF_INSURABLE_WAGE)
+                && !valuesMap.containsKey("rate")) {
+            rejectSave("أدخل النسبة (rate) للنوع المختار");
+            return;
         }
 // ═══════════════════════════════════════════════════
 //  minValue / maxValue — اختياريان
@@ -1368,6 +1418,8 @@ public class AllowanceDefinitionDialogController implements Initializable {
             showFormError("الحد الأدنى للقيمة لا يمكن أن يكون أكبر من الحد الأقصى");
             return;
         }
+
+
         AllowanceDefinitionRequest request = new AllowanceDefinitionRequest(
                 code, nameAr,
                 txt_nameEn.getText().isBlank() ? null : txt_nameEn.getText().trim(),
@@ -1390,33 +1442,37 @@ public class AllowanceDefinitionDialogController implements Initializable {
                 splitOrNull(txt_excludedMonths.getText()),
                 eligibleLaws,
                 timelineAnchor,
-                txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim()
+                txt_notes.getText().isBlank() ? "" : txt_notes.getText().trim(),
+                baseAllowanceCodes
         );
 
         btn_save_definition.setDisable(true);
         if (editingId != null) {
             FxApiSupport.put("/entitlements/allowances/definitions/" + editingId,
                     request, AllowanceDefinition.class,
-                    saved -> onSaveSuccess(), this::onSaveError);
+                    saved -> onSaveSuccess(true), this::onSaveError);
         } else {
             FxApiSupport.post("/entitlements/allowances/definitions",
                     request, AllowanceDefinition.class,
-                    saved -> onSaveSuccess(), this::onSaveError);
+                    saved -> onSaveSuccess(false), this::onSaveError);
         }
     }
 
-    private void onSaveSuccess() {
+    private void onSaveSuccess(boolean edited) {
         btn_save_definition.setDisable(false);
         hideForm();
         loadDefinitions();
         AllowanceDefinition selected = table_definitions.getSelectionModel().getSelectedItem();
         if (selected != null) loadHistory(selected.getCode());
+        AlertUtil.showInfo("تم الحفظ",
+                edited ? "تم تعديل قاعدة البدل بنجاح" : "تمت إضافة قاعدة البدل بنجاح");
         if (onChanged != null) onChanged.run();
     }
 
     private void onSaveError(String err) {
         btn_save_definition.setDisable(false);
         showFormError("خطأ في الحفظ: " + err);
+        AlertUtil.showError("فشل الحفظ", "لم يتم حفظ قاعدة البدل.\n" + err);
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -1538,7 +1594,51 @@ public class AllowanceDefinitionDialogController implements Initializable {
             throw new IllegalArgumentException(fieldName + " يجب أن يكون رقماً صحيحاً");
         }
     }
+    private void openBaseAllowancesDialog() {
 
+        String ownCode = txt_code.getText().trim();
+
+        // label → code (الـ dialog بيشتغل بـ strings)
+        Map<String, String> labelToCode = new LinkedHashMap<>();
+        Map<String, String> latestNameByCode = new LinkedHashMap<>();
+        for (AllowanceDefinition d : table_definitions.getItems()) {
+            if (d.getCode() == null || d.getCode().equals(ownCode)) continue;
+            latestNameByCode.put(d.getCode(), d.getNameAr());
+        }
+        latestNameByCode.forEach((code, name) ->
+                labelToCode.put(name + "  (" + code + ")", code));
+
+        List<String> preLabels = labelToCode.entrySet().stream()
+                .filter(e -> selectedBaseAllowanceCodes.contains(e.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (labelToCode.isEmpty()) {
+            rejectSave("مفيش بدلات متاحة للاختيار — أضف بدلات الأول");
+            return;
+        }
+        List<String> picked = MultiSelectSearchDialog.forStrings()
+                .title("اختيار البدلات المرجعية")
+                .data(new ArrayList<>(labelToCode.keySet()))
+                .preSelected(preLabels)
+                .searchPlaceholder("ابحث عن بدل...")
+                .owner(getStage())
+                .showAndWait();
+        if (picked == null) return;   // المستخدم ألغى الاختيار
+        selectedBaseAllowanceCodes.clear();
+        picked.forEach(label -> selectedBaseAllowanceCodes.add(labelToCode.get(label)));
+        updateBaseAllowancesLabel();
+    }
+
+    private void updateBaseAllowancesLabel() {
+        txt_baseAllowances.setText(selectedBaseAllowanceCodes.isEmpty()
+                ? ""
+                : String.join(", ", selectedBaseAllowanceCodes));
+    }
+
+    private void rejectSave(String msg) {
+        showFormError(msg);
+        AlertUtil.showWarning("تحقق من البيانات", msg);
+    }
     private void closeDialog() {
         ((Stage) btn_close.getScene().getWindow()).close();
     }

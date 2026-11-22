@@ -35,15 +35,16 @@ public class AllowanceDefinition {
     private boolean displayOnly;
     private boolean appliesToNewHires = true;
     private Map<String, BigDecimal> valuesMap;
-    // ══════════════════════════════════════════
-//  الحد الأدنى / الأقصى (اختياريان)
-// ══════════════════════════════════════════
+
+    // الحد الأدنى / الأقصى (اختياريان)
     private BigDecimal minValue;
     private BigDecimal maxValue;
+
     private List<String> excludedMonths;
     private List<String> eligibleLaws;
     private List<String> eligibleSectorCodes;
     private List<String> eligibleJobTitles;
+    private List<String> baseAllowanceCodes;      // 🆕 أكواد البدلات المرجعية
     private TimelineAnchor timelineAnchor;
     private String notes;
 
@@ -72,7 +73,9 @@ public class AllowanceDefinition {
         PERCENT_BY_JOB,
         PERCENT_ALL_JOB,
         AMOUNT_BY_JOB,
-        ANNUAL_BONUS
+        ANNUAL_BONUS,
+        PERCENT_OF_ALLOWANCES,        // 🆕
+        PERCENT_OF_INSURABLE_WAGE     // 🆕
     }
 
     public enum InsuranceBase {BASIC, VARIABLE, COMBINED}
