@@ -41,5 +41,7 @@ public class FXMLPaths {
 
     public String getLeavesView() {
         return "/com/safwat/hr/controller/hr/leave/LeaveManagementView.fxml";
+    }public String getLeavesAdminView() {
+        return "/com/safwat/hr/controller/hr/leave/admin/LeaveAdminView.fxml";
     }
 }

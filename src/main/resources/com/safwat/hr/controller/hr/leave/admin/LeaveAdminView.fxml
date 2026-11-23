@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.safwat.hr.controller.hr.leave.admin.LeaveAdminController"
+            styleClass="app-bg">
+
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="card">
+            <padding>
+                <Insets top="10" right="14" bottom="10" left="14"/>
+            </padding>
+            <Label text="إدارة قواعد الإجازات" styleClass="bold fs-14"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="btnEmployeeData" text="👤 بيانات موظف للإجازات" styleClass="btn-secondary"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane fx:id="adminTabs" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+
+                <!-- ═════════ الأنواع ═════════ -->
+                <Tab text="الأنواع" closable="false">
+                    <content>
+                        <VBox spacing="10">
+                            <padding>
+                                <Insets top="12" right="12" bottom="12" left="12"/>
+                            </padding>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button fx:id="btnNewType" text="+ نوع جديد" styleClass="btn-success"/>
+                                <Button fx:id="btnEditType" text="✏ تعديل" styleClass="btn-secondary"/>
+                                <Button fx:id="btnToggleType" text="تفعيل / تعطيل" styleClass="btn-secondary"/>
+                                <Button fx:id="btnTypeRules" text="القواعد ←" styleClass="btn-purple"/>
+                            </HBox>
+                            <TableView fx:id="typesTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="colTypeCode" text="الكود" prefWidth="170"/>
+                                    <TableColumn fx:id="colTypeName" text="الاسم" prefWidth="200"/>
+                                    <TableColumn fx:id="colTypeCategory" text="الفئة" prefWidth="130"/>
+                                    <TableColumn fx:id="colTypeGender" text="قيد الجنس" prefWidth="110"/>
+                                    <TableColumn fx:id="colTypeOverlap" text="يسمح بالتداخل" prefWidth="120"/>
+                                    <TableColumn fx:id="colTypeActive" text="الحالة" prefWidth="100"/>
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ═════════ القوانين ═════════ -->
+                <Tab text="القوانين" closable="false">
+                    <content>
+                        <VBox spacing="10">
+                            <padding>
+                                <Insets top="12" right="12" bottom="12" left="12"/>
+                            </padding>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button fx:id="btnNewLaw" text="+ قانون جديد" styleClass="btn-success"/>
+                                <Button fx:id="btnEditLaw" text="✏ تعديل" styleClass="btn-secondary"/>
+                                <Button fx:id="btnToggleLaw" text="تفعيل / تعطيل" styleClass="btn-secondary"/>
+                            </HBox>
+                            <TableView fx:id="lawsTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="colLawCode" text="الكود" prefWidth="100"/>
+                                    <TableColumn fx:id="colLawName" text="الاسم" prefWidth="220"/>
+                                    <TableColumn fx:id="colLawFrom" text="تاريخ النفاذ" prefWidth="120"/>
+                                    <TableColumn fx:id="colLawYearStart" text="بداية السنة" prefWidth="110"/>
+                                    <TableColumn fx:id="colLawActive" text="الحالة" prefWidth="100"/>
+                                    <TableColumn fx:id="colLawRecords" text="عدد السجلات" prefWidth="120"/>
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ═════════ جداول الاستحقاق ═════════ -->
+                <Tab text="جداول الاستحقاق" closable="false">
+                    <content>
+                        <VBox spacing="10">
+                            <padding>
+                                <Insets top="12" right="12" bottom="12" left="12"/>
+                            </padding>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label text="القانون:" styleClass="bold"/>
+                                <ComboBox fx:id="scheduleLawCombo" prefWidth="260"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="btnPublishSchedule" text="+ نشر جدول" styleClass="btn-success"/>
+                                <Button fx:id="btnDeleteSchedule" text="حذف الأحدث" styleClass="btn-danger"/>
+                            </HBox>
+                            <SplitPane orientation="VERTICAL" dividerPositions="0.45" VBox.vgrow="ALWAYS">
+                                <items>
+                                    <TableView fx:id="schedulesTable">
+                                        <columns>
+                                            <TableColumn fx:id="colSchFrom" text="من تاريخ" prefWidth="140"/>
+                                            <TableColumn fx:id="colSchTo" text="إلى تاريخ" prefWidth="140"/>
+                                            <TableColumn fx:id="colSchRules" text="عدد الشروط" prefWidth="120"/>
+                                        </columns>
+                                    </TableView>
+                                    <TableView fx:id="scheduleRulesTable">
+                                        <columns>
+                                            <TableColumn fx:id="colRulePriority" text="الأولوية" prefWidth="90"/>
+                                            <TableColumn fx:id="colRuleConditions" text="الشروط" prefWidth="380"/>
+                                            <TableColumn fx:id="colRuleDays" text="الأيام" prefWidth="90"/>
+                                        </columns>
+                                    </TableView>
+                                </items>
+                            </SplitPane>
+                        </VBox>
+                    </content>
+                </Tab>
+
+                <!-- ═════════ النائية ═════════ -->
+                <Tab text="المنطقة النائية" closable="false">
+                    <content>
+                        <VBox spacing="10">
+                            <padding>
+                                <Insets top="12" right="12" bottom="12" left="12"/>
+                            </padding>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button fx:id="btnAddRemote" text="+ قيمة جديدة" styleClass="btn-success"/>
+                                <Button fx:id="btnDeleteRemote" text="حذف آخر تغيير" styleClass="btn-danger"/>
+                            </HBox>
+                            <TableView fx:id="remoteTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="colRemoteFrom" text="من تاريخ" prefWidth="180"/>
+                                    <TableColumn fx:id="colRemoteDays" text="عدد الأيام" prefWidth="160"/>
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </content>
+                </Tab>
+
+            </tabs>
+        </TabPane>
+    </center>
+
+</BorderPane>
