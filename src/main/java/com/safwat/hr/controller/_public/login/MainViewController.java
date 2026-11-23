@@ -390,12 +390,6 @@ public class MainViewController implements Initializable {
     void openLeavesView() {
         TabManager.loadFXMLInTab(tab, new FXMLPaths().getLeavesView(), "الإجازات", true);
     }
-    @FXML
-    void openLeavesAdminView() {
-     //   TabManager.loadFXMLInTab(tab, new FXMLPaths().getLeavesAdminView(), "إدارة قواعد الإجازات", true);
-    }
-
-
     // ══════════════════════════════════════════════════════════════
     //  Themes
     // ══════════════════════════════════════════════════════════════

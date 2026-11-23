@@ -141,19 +141,6 @@
                                             </VBox>
                                         </content>
                                     </TitledPane>
-                           <TitledPane alignment="CENTER" animated="false" expanded="false" layoutX="10.0" layoutY="114.0" text="اجازات">
-                              <content>
-                                 <VBox alignment="TOP_CENTER" spacing="8">
-                                    <padding>
-                                       <Insets bottom="8" left="5" right="5" top="8" />
-                                    </padding>
-                                    <children>
-                                                   <Button onAction="#openLeavesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجازات" />
-                                       <Button onAction="#openLeavesAdminView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="مدير الاجازات" />
-                                    </children>
-                                 </VBox>
-                              </content>
-                           </TitledPane>
 
                                     <TitledPane alignment="CENTER" animated="false" expanded="false" text="موارد بشرية">
                                         <content>
@@ -163,6 +150,7 @@
                                                 </padding>
                                                 <Button onAction="#openWagesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجور متغيرة" />
                                                 <Button layoutX="27.0" layoutY="18.0" onAction="#openForm5View" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="نموذج 5" />
+                                                <Button onAction="#openLeavesView" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="اجازات" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="ملف الخدمة" />
                                                 <Button onAction="#openEmployeeForm" prefHeight="26" prefWidth="182" styleClass="nav-btn" text="بيانات موظف" />
                                                 <Button prefHeight="26" prefWidth="182" styleClass="nav-btn" text="انتدابات / اعارات" />

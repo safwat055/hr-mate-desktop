@@ -13,8 +13,6 @@ public class LeaveTypeDto {
     private String genderRestriction;
     private boolean openEnded;
     private boolean deductsFromAnnual;
-    private boolean overlapAllowed;
-    private boolean active = true;          // 🆕
     private LeaveRulesDto rules;
 
     @Override
