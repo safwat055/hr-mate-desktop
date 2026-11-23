@@ -7,6 +7,7 @@ import com.safwat.hr.controller.hr.employee.enums.TerminationReason;
 import com.safwat.hr.controller.hr.employee.ui.EmployeeRows.*;
 import com.safwat.hr.network.ApiClient;
 import com.safwat.hr.shared.ui.SearchDialog;
+import com.safwat.hr.shared.ui.SmartSearchHelper;
 import com.safwat.hr.ui.TextFieldSetupHelper;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -19,85 +20,46 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class EmployeeFormController {
-    // ضمن الـ FXML fields
-    @FXML
-    private CheckBox disabilityCheck;
-    @FXML
-    private HBox disabilityFieldsBox;
-    @FXML
-    private TextField disabilityStartDateField;
-    @FXML
-    private TextField disabilityDecisionNoField;
-    @FXML
-    private CheckBox remoteGovernorateCheck;
-    // ─────────────────────────────────────────────────────────────
-    //  FXML — شريط البحث
-    // ─────────────────────────────────────────────────────────────
 
-    @FXML
-    private Button newEmployeeButton;
-    @FXML
-    private TextField searchField;
-    @FXML
-    private Button searchButton;
+    @FXML private CheckBox disabilityCheck;
+    @FXML private HBox disabilityFieldsBox;
+    @FXML private TextField disabilityStartDateField;
+    @FXML private TextField disabilityDecisionNoField;
+    @FXML private CheckBox remoteGovernorateCheck;
 
-    // ─────────────────────────────────────────────────────────────
-    //  FXML — البيانات الأساسية
-    // ─────────────────────────────────────────────────────────────
+    @FXML private Button newEmployeeButton;
+    @FXML private TextField searchField;
+    @FXML private Button searchButton;
 
-    @FXML
-    private TextField employeeNumberField;
-    @FXML
-    private TextField fullNameField;
-    @FXML
-    private TextField nationalIdField;
-    @FXML
-    private TextField hireDateField;
-    @FXML
-    private TextField terminationDateField;
-    @FXML
-    private ComboBox<TerminationReason> terminationReasonCombo;
-    @FXML
-    private ComboBox<SectorOption> sectorCombo;
-    @FXML
-    private Label currentSocialStatusLabel;
-    @FXML
-    private Label currentJobTitleLabel;
-    @FXML
-    private Button saveBasicButton;
-    @FXML
-    private Button deleteButton;
+    @FXML private TextField employeeNumberField;
+    @FXML private TextField fullNameField;
+    @FXML private TextField nationalIdField;
+    @FXML private TextField hireDateField;
+    @FXML private TextField terminationDateField;
+    @FXML private ComboBox<TerminationReason> terminationReasonCombo;
+    @FXML private ComboBox<SectorOption> sectorCombo;
+    @FXML private TextField managementField;
+    @FXML private Label currentSocialStatusLabel;
+    @FXML private Label currentJobTitleLabel;
+    @FXML private Button saveBasicButton;
+    @FXML private Button deleteButton;
 
-    // ─────────────────────────────────────────────────────────────
-    //  FXML — containers (٣ + ٤ في HBox، ٥ + ٦ + ٧ في HBox)
-    // ─────────────────────────────────────────────────────────────
+    @FXML private HBox historyRow1;
+    @FXML private Separator historyRow1Separator;
+    @FXML private HBox historyRow2;
 
-    @FXML
-    private HBox historyRow1;
-    @FXML
-    private Separator historyRow1Separator;
-    @FXML
-    private HBox historyRow2;
-
-    @FXML
-    private VBox socialStatusContainer;
-    @FXML
-    private VBox jobTitleContainer;
-    @FXML
-    private VBox promotionsContainer;
-    @FXML
-    private VBox encouragementsContainer;
-    @FXML
-    private VBox incentivesContainer;
-
-    // ─────────────────────────────────────────────────────────────
-    //  State
-    // ─────────────────────────────────────────────────────────────
+    @FXML private VBox socialStatusContainer;
+    @FXML private VBox jobTitleContainer;
+    @FXML private VBox managementContainer;
+    @FXML private VBox promotionsContainer;
+    @FXML private VBox encouragementsContainer;
+    @FXML private VBox incentivesContainer;
 
     private Long employeeId;
     private EmployeeProfileDto current;
     private EmployeeHistoryTable<SocialStatusRow> socialTbl;
     private EmployeeHistoryTable<JobTitleRow> jobTbl;
+    private EmployeeHistoryTable<ManagementRow> managementTbl;
 
     // ─────────────────────────────────────────────────────────────
     //  Initialize
@@ -108,15 +70,12 @@ public class EmployeeFormController {
         terminationReasonCombo.getItems().setAll(TerminationReason.values());
         terminationReasonCombo.setCellFactory(cb -> reasonCell());
         terminationReasonCombo.setButtonCell(reasonCell());
+
         TextFieldSetupHelper.setupDateFields(
                 "yyyy-MM-dd أو dd/MM/yyyy",
                 hireDateField, terminationDateField, disabilityStartDateField);
 
         disabilityCheck.selectedProperty().addListener((obs, o, n) -> toggleDisabilityFields(n));
-        // حقول التاريخ — TextField مع TextFieldSetupHelper
-        TextFieldSetupHelper.setupDateFields(
-                "yyyy-MM-dd أو dd/MM/yyyy",
-                hireDateField, terminationDateField);
 
         saveBasicButton.setOnAction(e -> onSaveBasic());
         deleteButton.setOnAction(e -> onDelete());
@@ -126,6 +85,7 @@ public class EmployeeFormController {
         searchButton.setOnAction(e -> onSearch());
 
         loadSectors();
+        setupManagementSearch();
 
         setFormEnabled(false);
         setHistorySectionsVisible(false);
@@ -139,9 +99,6 @@ public class EmployeeFormController {
             disabilityDecisionNoField.clear();
         }
     }
-    // ─────────────────────────────────────────────────────────────
-    //  تحميل القطاعات
-    // ─────────────────────────────────────────────────────────────
 
     private void loadSectors() {
         try {
@@ -152,6 +109,41 @@ public class EmployeeFormController {
         } catch (Exception ex) {
             showError("تعذر تحميل القطاعات", ex);
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  بحث ذكي عن الإدارة في حقل "الإدارة" الأساسي
+    // ─────────────────────────────────────────────────────────────
+
+    private void setupManagementSearch() {
+        SearchDialog<String> dialog = SearchDialog.forStrings()
+                .title("اختر الإدارة");
+
+        SmartSearchHelper.bindWithInput(
+                managementField,
+                input -> {
+                    try {
+                        List<String> all = fetchManagements();
+                        if (input == null || input.isBlank()) return all;
+                        String needle = input.trim().toLowerCase();
+                        return all.stream()
+                                .filter(s -> s != null && s.toLowerCase().contains(needle))
+                                .toList();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                dialog,
+                selected -> { },
+                SmartSearchHelper.FieldBind.of(managementField, s -> s)
+        );
+    }
+
+    private List<String> fetchManagements() throws Exception {
+        return ApiClient.getWithTypeRef(
+                "/payroll-data/user-managements",
+                new TypeReference<List<String>>() {}
+        ).getData();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -250,7 +242,8 @@ public class EmployeeFormController {
         terminationDateField.setText(TextFieldSetupHelper.formatDateOutput(dto.terminationDate()));
 
         terminationReasonCombo.setValue(dto.terminationReason());
-// ═══ الإعاقة ═══
+        managementField.setText(dto.management() != null ? dto.management() : "");
+
         boolean hasDisability = dto.disabilityStartDate() != null;
         disabilityCheck.setSelected(hasDisability);
         toggleDisabilityFields(hasDisability);
@@ -259,12 +252,9 @@ public class EmployeeFormController {
         disabilityDecisionNoField.setText(
                 dto.disabilityDecisionNo() == null ? "" : dto.disabilityDecisionNo());
 
-// ═══ المحافظة النائية ═══
         remoteGovernorateCheck.setSelected(
                 Boolean.TRUE.equals(dto.worksInRemoteGovernorate()));
-        // ★ القطاع:
-        //  - لو معروف → اختاره + اقفله (مايتغيرش)
-        //  - لو null (موظف مستورد) → افتحه عشان المستخدم يعيّن قطاع
+
         if (dto.sectorId() != null) {
             sectorCombo.getItems().stream()
                     .filter(s -> s.id().equals(dto.sectorId()))
@@ -290,7 +280,7 @@ public class EmployeeFormController {
     // ─────────────────────────────────────────────────────────────
 
     private void rebuildTables(EmployeeProfileDto dto) {
-        // ── ③ الحالة الاجتماعية — ComboBox ──
+        // ③ الحالة الاجتماعية
         List<SocialStatusRow> statusRows = dto == null ? List.of() :
                 dto.socialStatusHistory().stream().map(SocialStatusRow::from).toList();
 
@@ -299,11 +289,12 @@ public class EmployeeFormController {
                 SocialStatusRow::new,
                 SocialStatusRow.columns(),
                 statusRows,
-                rows -> saveSocialStatus(rows)
+                this::saveSocialStatus,
+                true                             // ← withDeleteColumn
         );
         socialStatusContainer.getChildren().setAll(socialTbl.build());
 
-        // ── ④ الوظائف — ComboBox (لازم نحمّل وظائف القطاع الأول) ──
+        // ④ الوظائف
         List<JobTitleOption> sectorJobTitles = List.of();
         if (dto != null && dto.sectorId() != null) {
             sectorJobTitles = loadJobTitlesForSector(dto.sectorId());
@@ -317,11 +308,29 @@ public class EmployeeFormController {
                 JobTitleRow::new,
                 JobTitleRow.columns(sectorJobTitles),
                 jobRows,
-                rows -> saveJobTitles(rows)
+                this::saveJobTitles,
+                true                             // ← withDeleteColumn
         );
         jobTitleContainer.getChildren().setAll(jobTbl.build());
 
-        // ── ⑤ الترقيات ──
+        // ★ الإدارات
+        List<ManagementRow> mgmtRows = dto == null ? List.of()
+                : (dto.managementHistory() == null ? List.of()
+                : dto.managementHistory().stream().map(ManagementRow::from).toList());
+
+        managementTbl = new EmployeeHistoryTable<>(
+                "الإدارات",
+                ManagementRow::new,
+                ManagementRow.columns(),
+                mgmtRows,
+                this::saveManagementHistory,
+                true                             // ← withDeleteColumn
+        );
+        if (managementContainer != null) {
+            managementContainer.getChildren().setAll(managementTbl.build());
+        }
+
+        // ⑤ الترقيات
         buildReadOnlyTable(
                 promotionsContainer, "الترقيات",
                 dto == null ? List.of() :
@@ -330,7 +339,7 @@ public class EmployeeFormController {
                 PromotionRow::new, PromotionRow.columns()
         );
 
-        // ── ⑥ التشجيعيات ──
+        // ⑥ التشجيعيات
         buildReadOnlyTable(
                 encouragementsContainer, "التشجيعيات",
                 dto == null ? List.of() :
@@ -339,7 +348,7 @@ public class EmployeeFormController {
                 EncouragementRow::new, EncouragementRow.columns()
         );
 
-        // ── ⑦ حوافز الترقية ──
+        // ⑦ حوافز الترقية
         buildReadOnlyTable(
                 incentivesContainer, "حوافز الترقية",
                 dto == null ? List.of() :
@@ -382,7 +391,7 @@ public class EmployeeFormController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  ② حفظ البيانات الأساسية
+    //  حفظ البيانات الأساسية
     // ─────────────────────────────────────────────────────────────
 
     private void onSaveBasic() {
@@ -394,28 +403,15 @@ public class EmployeeFormController {
                 String natId = nationalIdField.getText().trim();
                 LocalDate hire = TextFieldSetupHelper.parseDateInput(hireDateField.getText());
                 SectorOption sector = sectorCombo.getValue();
+                String mgmt = managementField.getText() != null
+                        ? managementField.getText().trim() : null;
 
-                if (empNum.isBlank()) {
-                    showWarn("رقم الموظف مطلوب");
-                    return;
-                }
-                if (fullNm.isBlank()) {
-                    showWarn("الاسم مطلوب");
-                    return;
-                }
-                if (!natId.matches("\\d{14}")) {
-                    showWarn("الرقم القومي لازم 14 رقم");
-                    return;
-                }
-                if (hire == null) {
-                    showWarn("تاريخ التعيين مطلوب أو صيغته غير صحيحة");
-                    return;
-                }
-                if (sector == null) {
-                    showWarn("اختر القطاع");
-                    return;
-                }
-// استخرج القيم الجديدة قبل الإنشاء
+                if (empNum.isBlank()) { showWarn("رقم الموظف مطلوب"); return; }
+                if (fullNm.isBlank()) { showWarn("الاسم مطلوب"); return; }
+                if (!natId.matches("\\d{14}")) { showWarn("الرقم القومي لازم 14 رقم"); return; }
+                if (hire == null) { showWarn("تاريخ التعيين مطلوب أو صيغته غير صحيحة"); return; }
+                if (sector == null) { showWarn("اختر القطاع"); return; }
+
                 LocalDate disabilityStart = null;
                 String disabilityNo = null;
                 if (disabilityCheck.isSelected()) {
@@ -433,6 +429,7 @@ public class EmployeeFormController {
 
                 EmployeeCreateRequest req = new EmployeeCreateRequest(
                         empNum, fullNm, natId, hire, sector.id(),
+                        mgmt,
                         disabilityStart,
                         disabilityNo,
                         remoteGovernorateCheck.isSelected()
@@ -442,9 +439,8 @@ public class EmployeeFormController {
                 employeeId = current.id();
 
                 bindAll(current);
-                showInfo("تم إنشاء الموظف بنجاح — تقدر دلوقتي تضيف سجلات الحالة والوظائف");
+                showInfo("تم إنشاء الموظف بنجاح");
             } else {
-                // ★ نمرر القطاع لو المستخدم عيّنه (مثلاً موظف مستورد كان sectorId = null)
                 Long sectorId = sectorCombo.getValue() != null
                         ? sectorCombo.getValue().id()
                         : null;
@@ -452,16 +448,13 @@ public class EmployeeFormController {
                 String disabilityNo = null;
                 if (disabilityCheck.isSelected()) {
                     disabilityStart = TextFieldSetupHelper.parseDateInput(disabilityStartDateField.getText());
-                    if (disabilityStart == null) {
-                        showWarn("تاريخ قرار الإعاقة مطلوب");
-                        return;
-                    }
+                    if (disabilityStart == null) { showWarn("تاريخ قرار الإعاقة مطلوب"); return; }
                     disabilityNo = disabilityDecisionNoField.getText().trim();
-                    if (disabilityNo.isBlank()) {
-                        showWarn("رقم قرار الإعاقة مطلوب");
-                        return;
-                    }
+                    if (disabilityNo.isBlank()) { showWarn("رقم قرار الإعاقة مطلوب"); return; }
                 }
+                String mgmt = managementField.getText() != null
+                        ? managementField.getText().trim() : null;
+
                 EmployeeUpdateRequest req = new EmployeeUpdateRequest(
                         fullNameField.getText(),
                         nationalIdField.getText(),
@@ -469,6 +462,7 @@ public class EmployeeFormController {
                         TextFieldSetupHelper.parseDateInput(terminationDateField.getText()),
                         terminationReasonCombo.getValue(),
                         sectorId,
+                        mgmt,
                         disabilityStart,
                         disabilityNo,
                         remoteGovernorateCheck.isSelected()
@@ -486,7 +480,7 @@ public class EmployeeFormController {
     }
 
     // ─────────────────────────────────────────────────────────────
-    //  ③ / ④ حفظ الجداول
+    //  حفظ الجداول
     // ─────────────────────────────────────────────────────────────
 
     private void saveSocialStatus(List<SocialStatusRow> rows) throws Exception {
@@ -533,8 +527,28 @@ public class EmployeeFormController {
                 current.jobTitleHistory().stream().map(JobTitleRow::from).toList());
     }
 
+    private void saveManagementHistory(List<ManagementRow> rows) throws Exception {
+        if (employeeId == null)
+            throw new IllegalStateException("لازم تحفظ بيانات الموظف الأساسية الأول");
+
+        List<ManagementEntryRequest> requests = rows.stream()
+                .map(ManagementRow::toRequest)
+                .toList();
+
+        current = ApiClient.put(
+                "/employees/" + employeeId + "/management/bulk",
+                requests,
+                EmployeeProfileDto.class
+        ).getData();
+
+        managementField.setText(current.management() != null ? current.management() : "");
+        managementTbl.reload(
+                current.managementHistory() == null ? List.of()
+                        : current.managementHistory().stream().map(ManagementRow::from).toList());
+    }
+
     // ─────────────────────────────────────────────────────────────
-    //  حذف
+    //  حذف / مساعدات
     // ─────────────────────────────────────────────────────────────
 
     private void onDelete() {
@@ -554,10 +568,6 @@ public class EmployeeFormController {
         });
     }
 
-    // ─────────────────────────────────────────────────────────────
-    //  مساعدات
-    // ─────────────────────────────────────────────────────────────
-
     private void clearBasicForm() {
         employeeNumberField.clear();
         employeeNumberField.setDisable(false);
@@ -568,6 +578,7 @@ public class EmployeeFormController {
         terminationReasonCombo.setValue(null);
         sectorCombo.setValue(null);
         sectorCombo.setDisable(false);
+        managementField.clear();
         currentSocialStatusLabel.setText("—");
         currentJobTitleLabel.setText("—");
         disabilityCheck.setSelected(false);
@@ -582,12 +593,6 @@ public class EmployeeFormController {
         deleteButton.setDisable(!enabled || employeeId == null);
     }
 
-    /**
-     * يظهر/يخفي قسمي السجلات:
-     * - historyRow1: الحالة الاجتماعية + الوظائف
-     * - historyRow2: الترقيات + التشجيعيات + الحوافز
-     * مع الفاصل الأفقي بينهم.
-     */
     private void setHistorySectionsVisible(boolean visible) {
         historyRow1.setVisible(visible);
         historyRow1.setManaged(visible);
@@ -620,10 +625,6 @@ public class EmployeeFormController {
     private void showError(String msg, Exception ex) {
         new Alert(Alert.AlertType.ERROR, msg + "\n" + ex.getMessage(), ButtonType.OK).showAndWait();
     }
-
-    // ─────────────────────────────────────────────────────────────
-    //  inner record — خيار القطاع في ComboBox
-    // ─────────────────────────────────────────────────────────────
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record SectorOption(Long id, String nameAr) {

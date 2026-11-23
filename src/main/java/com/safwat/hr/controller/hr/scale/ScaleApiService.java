@@ -35,7 +35,37 @@ public class ScaleApiService {
         if (instance == null) instance = new ScaleApiService();
         return instance;
     }
+// ═════════════════════════════════════════════════════════════
+//  الإدارات (UserManagement)
+// ═════════════════════════════════════════════════════════════
 
+    /**
+     * جلب قائمة أسماء الإدارات (async).
+     * GET /payroll-data/user-managements → List<String>
+     */
+    public CompletableFuture<ApiResponse<List<String>>> listManagements() {
+        return ApiClient.getAsync(
+                "/payroll-data/user-managements",
+                Map.of(),
+                new TypeReference<List<String>>() {});
+    }
+
+    /**
+     * نسخة sync — تُستخدم من داخل SmartSearchHelper
+     * (بيتنفذ على HttpCore.ASYNC_EXECUTOR، فالـ blocking مسموح).
+     */
+    public List<String> listManagementsSync() throws IOException, InterruptedException {
+        ApiResponse<List<String>> r = ApiClient.getWithTypeRef(
+                "/payroll-data/user-managements",
+                new TypeReference<List<String>>() {});
+
+        if (!r.isSuccess()) {
+            throw new IOException(r.getMessage() != null
+                    ? r.getMessage()
+                    : "فشل جلب قائمة الإدارات");
+        }
+        return r.getData() != null ? r.getData() : List.of();
+    }
     // ═════════════════════════════════════════════════════════════
     //  بحث
     // ═════════════════════════════════════════════════════════════

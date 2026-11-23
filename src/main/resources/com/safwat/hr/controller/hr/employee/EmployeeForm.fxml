@@ -7,13 +7,13 @@
 <VBox xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.safwat.hr.controller.hr.employee.ui.EmployeeFormController"
       nodeOrientation="RIGHT_TO_LEFT" spacing="10" styleClass="app-bg"
-      prefHeight="860" prefWidth="1040">
+      prefHeight="860" prefWidth="1100">
 
     <padding>
         <Insets top="12" right="12" bottom="12" left="12"/>
     </padding>
 
-    <!-- ══════════ ① البحث وموظف جديد (ثابت فوق) ══════════ -->
+    <!-- ══════════ ① البحث وموظف جديد ══════════ -->
     <VBox styleClass="card">
         <HBox styleClass="panel-header">
             <Label text="بحث عن موظف"/>
@@ -30,7 +30,7 @@
         </HBox>
     </VBox>
 
-    <!-- ══════════ ② ملخص الموظف الحالي (ثابت فوق) ══════════ -->
+    <!-- ══════════ ② ملخص الموظف الحالي ══════════ -->
     <HBox styleClass="card" alignment="CENTER_LEFT" spacing="24">
         <padding>
             <Insets top="10" right="12" bottom="10" left="12"/>
@@ -41,7 +41,7 @@
         <Label fx:id="currentJobTitleLabel" styleClass="current-value-label" text="—"/>
     </HBox>
 
-    <!-- ══════════ ③ التبويبات (كل قسم في تبويب) ══════════ -->
+    <!-- ══════════ ③ التبويبات ══════════ -->
     <TabPane VBox.vgrow="ALWAYS">
         <tabs>
 
@@ -104,12 +104,20 @@
                                     <CheckBox fx:id="disabilityCheck" text="من ذوي الإعاقة" styleClass="form-checkbox"
                                               GridPane.columnIndex="2" GridPane.rowIndex="3"/>
 
+                                    <!-- ★ الإدارة -->
+                                    <Label styleClass="form-label" text="الإدارة" GridPane.columnIndex="0"
+                                           GridPane.rowIndex="4"/>
+                                    <TextField fx:id="managementField" maxWidth="Infinity"
+                                               promptText="اسم الإدارة (Enter للبحث)"
+                                               GridPane.columnIndex="1" GridPane.columnSpan="3"
+                                               GridPane.rowIndex="4"/>
+
                                     <CheckBox fx:id="remoteGovernorateCheck" text="يعمل في محافظة نائية (+15 يوم)"
                                               styleClass="form-checkbox"
-                                              GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="4"/>
+                                              GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="5"/>
                                 </GridPane>
 
-                                <!-- بيانات الإعاقة (تظهر لما الـ checkbox يتفعّل) -->
+                                <!-- بيانات الإعاقة -->
                                 <HBox fx:id="disabilityFieldsBox" spacing="8" managed="false" visible="false"
                                       alignment="CENTER_LEFT" styleClass="soft-box">
                                     <padding>
@@ -135,8 +143,8 @@
                 </ScrollPane>
             </Tab>
 
-            <!-- ── تبويب الحالة الاجتماعية والوظائف ── -->
-            <Tab closable="false" text="الحالة والوظائف">
+            <!-- ── تبويب الحالة والوظائف والإدارات ── -->
+            <Tab closable="false" text="الحالة والوظائف والإدارات">
                 <ScrollPane fitToWidth="true" styleClass="scroll-pane">
                     <VBox spacing="12">
                         <padding>
@@ -155,6 +163,12 @@
                                     <Insets top="12" right="16" bottom="12" left="16"/>
                                 </padding>
                             </VBox>
+                            <Separator orientation="VERTICAL"/>
+                            <VBox fx:id="managementContainer" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="12" right="16" bottom="12" left="16"/>
+                                </padding>
+                            </VBox>
                         </HBox>
 
                         <Separator fx:id="historyRow1Separator" managed="false" visible="false"/>
@@ -162,7 +176,7 @@
                 </ScrollPane>
             </Tab>
 
-            <!-- ── تبويب الترقيات والتشجيعيات والحوافز ── -->
+            <!-- ── تبويب الترقيات والحوافز ── -->
             <Tab closable="false" text="الترقيات والحوافز">
                 <ScrollPane fitToWidth="true" styleClass="scroll-pane">
                     <VBox spacing="12">

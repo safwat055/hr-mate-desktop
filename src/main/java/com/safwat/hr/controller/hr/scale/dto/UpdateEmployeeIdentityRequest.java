@@ -10,4 +10,5 @@ public class UpdateEmployeeIdentityRequest {
     private String newNationalId;   // الرقم القومي الجديد (لو مش هيتغير، ابعته زي القديم)
     private String newCodeId;       // رقم الموظف الجديد
     private String newEmpName;      // الاسم الجديد
+    private String newManagement;   // ← جديد
 }

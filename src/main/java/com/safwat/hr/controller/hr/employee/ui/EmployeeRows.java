@@ -1,16 +1,26 @@
 package com.safwat.hr.controller.hr.employee.ui;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.safwat.hr.controller.hr.employee.dto.JobTitleEntryDto;
 import com.safwat.hr.controller.hr.employee.dto.JobTitleEntryRequest;
+import com.safwat.hr.controller.hr.employee.dto.ManagementEntryDto;
+import com.safwat.hr.controller.hr.employee.dto.ManagementEntryRequest;
 import com.safwat.hr.controller.hr.employee.dto.SocialStatusEntryDto;
 import com.safwat.hr.controller.hr.employee.dto.SocialStatusEntryRequest;
 import com.safwat.hr.controller.hr.employee.enums.SocialStatus;
 import com.safwat.hr.controller.hr.scale.dto.EncouragementRecord;
 import com.safwat.hr.controller.hr.scale.dto.PromotionIncentiveRecord;
 import com.safwat.hr.controller.hr.scale.dto.UpgradeRecord;
+import com.safwat.hr.network.ApiClient;
+import com.safwat.hr.shared.ui.SearchDialog;
 import com.safwat.hr.ui.table.TableSetupHelper;
 import com.safwat.hr.ui.table.TableSetupHelper.ComboOption;
 import com.safwat.hr.ui.table.TableSetupHelper.EditorType;
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -20,9 +30,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * كلاسات الصفوف المتغيرة (mutable) المستخدمة في الجداول القابلة للتعديل.
- */
 public final class EmployeeRows {
 
     private static final DateTimeFormatter DATE_FMT =
@@ -32,15 +39,15 @@ public final class EmployeeRows {
     }
 
     // ═══════════════════════════════════════════════════════
-    //  SocialStatusRow — قابل للتعديل
+    //  SocialStatusRow
     // ═══════════════════════════════════════════════════════
 
     @Data
     @NoArgsConstructor
     public static class SocialStatusRow {
-        private String effectiveFrom = "";   // yyyy-MM-dd
-        private String statusCode = "";   // SINGLE / MARRIED_1_CHILD / ...
-        private String statusLabelAr = "";   // للعرض الداخلي فقط
+        private String effectiveFrom = "";
+        private String statusCode = "";
+        private String statusLabelAr = "";
 
         public static SocialStatusRow from(SocialStatusEntryDto dto) {
             SocialStatusRow r = new SocialStatusRow();
@@ -71,7 +78,6 @@ public final class EmployeeRows {
                             .toList();
 
             return List.of(
-                    // تاريخ السريان — TextField (بيتعامل معاه TableSetupHelper كتاريخ)
                     new TableSetupHelper.ColumnConfig<>(
                             "تاريخ السريان", 150,
                             SocialStatusRow::getEffectiveFrom,
@@ -79,7 +85,6 @@ public final class EmployeeRows {
                             true, EditorType.DATE,
                             TableSetupHelper.ColumnAlign.CENTER, false, null
                     ),
-                    // الحالة الاجتماعية — ComboBox
                     new TableSetupHelper.ColumnConfig<>(
                             "الحالة الاجتماعية", 320,
                             SocialStatusRow::getStatusCode,
@@ -93,16 +98,16 @@ public final class EmployeeRows {
     }
 
     // ═══════════════════════════════════════════════════════
-    //  JobTitleRow — قابل للتعديل
+    //  JobTitleRow
     // ═══════════════════════════════════════════════════════
 
     @Data
     @NoArgsConstructor
     public static class JobTitleRow {
         private String effectiveFrom = "";
-        private String jobTitleId = "";   // Long كـ String
-        private String jobTitleCode = "";   // للعرض الداخلي
-        private String jobTitleNameAr = "";   // للعرض الداخلي
+        private String jobTitleId = "";
+        private String jobTitleCode = "";
+        private String jobTitleNameAr = "";
 
         public static JobTitleRow from(JobTitleEntryDto dto) {
             JobTitleRow r = new JobTitleRow();
@@ -125,9 +130,6 @@ public final class EmployeeRows {
             return effectiveFrom + jobTitleId;
         }
 
-        /**
-         * @param jobTitles قائمة وظائف القطاع (تُحمَّل قبل بناء الجدول)
-         */
         public static List<TableSetupHelper.ColumnConfig<JobTitleRow>> columns(
                 List<JobTitleOption> jobTitles) {
 
@@ -158,9 +160,136 @@ public final class EmployeeRows {
         }
     }
 
+    // ═══════════════════════════════════════════════════════
+    //  ManagementRow ★ جديد — 3 أعمدة (تاريخ + إدارة + بحث)
+    //  + عمود حذف تلقائي من EmployeeHistoryTable
+    // ═══════════════════════════════════════════════════════
+
+    @Data
+    @NoArgsConstructor
+    public static class ManagementRow {
+        private String effectiveFrom = "";
+        private String managementName = "";
+
+        public static ManagementRow from(ManagementEntryDto dto) {
+            ManagementRow r = new ManagementRow();
+            r.effectiveFrom = dto.effectiveFrom() != null ? dto.effectiveFrom().format(DATE_FMT) : "";
+            r.managementName = dto.managementName() != null ? dto.managementName() : "";
+            return r;
+        }
+
+        public ManagementEntryRequest toRequest() {
+            LocalDate date = TableSetupHelper.parseDateInput(effectiveFrom);
+            return new ManagementEntryRequest(date,
+                    managementName != null ? managementName.trim() : "");
+        }
+
+        @Override
+        public String toString() {
+            return effectiveFrom + managementName;
+        }
+
+        public static List<TableSetupHelper.ColumnConfig<ManagementRow>> columns() {
+            return List.of(
+                    // ① تاريخ السريان
+                    new TableSetupHelper.ColumnConfig<>(
+                            "تاريخ السريان", 140,
+                            ManagementRow::getEffectiveFrom,
+                            ManagementRow::setEffectiveFrom,
+                            true, EditorType.DATE,
+                            TableSetupHelper.ColumnAlign.CENTER, false, null
+                    ),
+                    // ② الإدارة (HBox: TextField + زر 🔍)
+                    new TableSetupHelper.ColumnConfig<>(
+                            "الإدارة", 380,
+                            tc -> new ManagementSearchCell()
+                    )
+            );
+        }
+    }
+
+    /**
+     * خلية الإدارة — HBox فيه TextField (قابل للكتابة اليدوية) + زر 🔍 (بحث).
+     * بتتزامن تلقائياً مع {@link ManagementRow#getManagementName()}.
+     */
+    private static class ManagementSearchCell extends TableCell<ManagementRow, String> {
+        private final TextField field = new TextField();
+        private final Button searchBtn = new Button("🔍");
+        private final HBox box = new HBox(4, field, searchBtn);
+        private boolean syncing = false;
+
+        ManagementSearchCell() {
+            field.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(field, Priority.ALWAYS);
+            searchBtn.getStyleClass().add("btn-icon");
+            searchBtn.setTooltip(new Tooltip("بحث في الإدارات"));
+
+            field.textProperty().addListener((obs, o, n) -> {
+                if (syncing) return;
+                ManagementRow row = currentRow();
+                if (row != null) row.setManagementName(n == null ? "" : n);
+            });
+
+            searchBtn.setOnAction(e -> {
+                ManagementRow row = currentRow();
+                if (row == null) return;
+                try {
+                    List<String> all = fetchManagements();
+                    SearchDialog.forStrings()
+                            .title("اختر الإدارة")
+                            .data(all)
+                            .show()
+                            .ifPresent(sel -> {
+                                row.setManagementName(sel);
+                                syncing = true;
+                                field.setText(sel);
+                                syncing = false;
+                            });
+                } catch (Exception ex) {
+                    new Alert(Alert.AlertType.ERROR,
+                            "تعذر جلب الإدارات: " + ex.getMessage(),
+                            ButtonType.OK).showAndWait();
+                }
+            });
+        }
+
+        private ManagementRow currentRow() {
+            TableRow<ManagementRow> tr = getTableRow();
+            return tr != null ? tr.getItem() : null;
+        }
+
+        private static List<String> fetchManagements() throws Exception {
+            return ApiClient.getWithTypeRef(
+                    "/payroll-data/user-managements",
+                    new TypeReference<List<String>>() {}
+            ).getData();
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty) {
+                setGraphic(null);
+                return;
+            }
+            ManagementRow row = currentRow();
+            if (row == null) {
+                setGraphic(null);
+                return;
+            }
+            String expected = row.getManagementName() == null ? "" : row.getManagementName();
+            if (!expected.equals(field.getText())) {
+                syncing = true;
+                field.setText(expected);
+                syncing = false;
+            }
+            setAlignment(Pos.CENTER_LEFT);
+            setGraphic(box);
+        }
+    }
 
     // ═══════════════════════════════════════════════════════
-    //  PromotionRow — عرض فقط
+    //  PromotionRow / EncouragementRow / PromotionIncentiveRow
     // ═══════════════════════════════════════════════════════
 
     @Data
@@ -170,9 +299,6 @@ public final class EmployeeRows {
         private String decisionNumber = "";
         private String degree = "";
 
-        /**
-         * ★ يقبل UpgradeRecord الجديد من الباك
-         */
         public static PromotionRow from(UpgradeRecord dto) {
             PromotionRow r = new PromotionRow();
             r.date = dto.getDate() != null ? dto.getDate().format(DATE_FMT) : "";
@@ -194,19 +320,12 @@ public final class EmployeeRows {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  EncouragementRow — عرض فقط
-    // ═══════════════════════════════════════════════════════
-
     @Data
     @NoArgsConstructor
     public static class EncouragementRow {
         private String date = "";
         private String decisionNumber = "";
 
-        /**
-         * ★ يقبل EncouragementRecord الجديد من الباك
-         */
         public static EncouragementRow from(EncouragementRecord dto) {
             EncouragementRow r = new EncouragementRow();
             r.date = dto.getDate() != null ? dto.getDate().format(DATE_FMT) : "";
@@ -225,19 +344,12 @@ public final class EmployeeRows {
         }
     }
 
-    // ═══════════════════════════════════════════════════════
-    //  PromotionIncentiveRow — عرض فقط
-    // ═══════════════════════════════════════════════════════
-
     @Data
     @NoArgsConstructor
     public static class PromotionIncentiveRow {
         private String date = "";
         private String decisionNumber = "";
 
-        /**
-         * ★ يقبل PromotionIncentiveRecord الجديد من الباك
-         */
         public static PromotionIncentiveRow from(PromotionIncentiveRecord dto) {
             PromotionIncentiveRow r = new PromotionIncentiveRow();
             r.date = dto.getDate() != null ? dto.getDate().format(DATE_FMT) : "";
@@ -255,5 +367,4 @@ public final class EmployeeRows {
             );
         }
     }
-
 }

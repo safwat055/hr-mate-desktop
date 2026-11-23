@@ -1,5 +1,6 @@
 package com.safwat.hr.controller.hr.employee.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.safwat.hr.controller.hr.employee.enums.TerminationReason;
 import com.safwat.hr.controller.hr.scale.dto.EncouragementRecord;
 import com.safwat.hr.controller.hr.scale.dto.PromotionIncentiveRecord;
@@ -8,17 +9,8 @@ import com.safwat.hr.controller.hr.scale.dto.UpgradeRecord;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * الـ DTO المجمّع للموظف — يشمل كل السجلات التاريخية.
- * <p>
- * البيانات الحالية (current*) محسوبة بالباك بـ floor lookup على تاريخ اليوم.
- * <p>
- * الـ history lists الجديدة (promotions / encouragements / promotionIncentives)
- * مصدرها ScaleDto اللي في الباك — الباك يجمعها ويرجعها هنا عشان الفرونت
- * ما يعملش استدعاءين منفصلين.
- */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record EmployeeProfileDto(
-        // ... الحقول الحالية
         Long id,
         String employeeNumber,
         String fullName,
@@ -29,20 +21,22 @@ public record EmployeeProfileDto(
         Long sectorId,
         String sectorNameAr,
 
-        // جديد — إعاقة
+        // ★ الإدارة
+        String management,
+        List<ManagementEntryDto> managementHistory,
+
         LocalDate disabilityStartDate,
         String disabilityDecisionNo,
+        Boolean worksInRemoteGovernorate,
 
-        // جديد — محافظة نائية
-        boolean worksInRemoteGovernorate,
-
-        // ... باقي الحقول الحالية (الحالة الاجتماعية، الوظيفة، السجلات)
         String currentSocialStatusCode,
         String currentSocialStatusLabelAr,
         Long currentJobTitleId,
         String currentJobTitleNameAr,
+
         List<SocialStatusEntryDto> socialStatusHistory,
         List<JobTitleEntryDto> jobTitleHistory,
+
         List<UpgradeRecord> upgradeRecords,
         List<EncouragementRecord> encouragementRecords,
         List<PromotionIncentiveRecord> promotionIncentiveRecords

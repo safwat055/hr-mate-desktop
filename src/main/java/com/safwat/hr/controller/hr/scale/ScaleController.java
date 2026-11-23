@@ -204,13 +204,38 @@ public class ScaleController implements Initializable {
         setupAdjustmentTable(table_bonusAdd);
         setupAdjustmentTable(table_bonusRival);
         setupEmployeeSearch();
+        setupManagementSearch();
         showForm();
 
     }
 // ═════════════════════════════════════════════
 //  Search (SmartSearchHelper)
 // ═════════════════════════════════════════════
+private void setupManagementSearch() {
+    SearchDialog<String> dialog = SearchDialog.forStrings()
+            .title("اختر الإدارة");
 
+    SmartSearchHelper.bindWithInput(
+            txt_Management,
+            input -> {
+                // بيتنفذ على HttpCore.ASYNC_EXECUTOR — blocking مسموح
+                try {
+                    List<String> all = apiService.listManagementsSync();
+                    if (input == null || input.isBlank()) return all;
+
+                    String needle = input.trim().toLowerCase();
+                    return all.stream()
+                            .filter(s -> s != null && s.toLowerCase().contains(needle))
+                            .toList();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            },
+            dialog,
+            selected -> { /* الحقل بيتملى تلقائياً */ },
+            SmartSearchHelper.FieldBind.of(txt_Management, s -> s)
+    );
+}
     private static final String SEARCH_NATIONAL_ID = "nationalId";
     private static final String SEARCH_CODE = "code";
     private static final String SEARCH_NAME = "empName";
@@ -325,7 +350,10 @@ public class ScaleController implements Initializable {
     }
 
     private void doUpdateIdentity() {
-        String oldId = txt_nationalId.getText().trim();
+        String oldId = (currentDto != null && currentDto.getNationalId() != null)
+                ? currentDto.getNationalId()
+                : txt_nationalId.getText().trim();   // ← صلّح الباج ده كمان
+
         if (oldId.isBlank()) {
             showWarning("أدخل الرقم القومي أولاً");
             return;
@@ -335,6 +363,8 @@ public class ScaleController implements Initializable {
         req.setNewNationalId(txt_nationalId.getText().trim());
         req.setNewCodeId(txt_empCode.getText().trim());
         req.setNewEmpName(txt_empName.getText().trim());
+        req.setNewManagement(txt_Management.getText() != null
+                ? txt_Management.getText().trim() : null);   // ← جديد
 
         setButtonsDisabled(true);
         apiService.updateIdentity(oldId, req)
@@ -807,6 +837,7 @@ public class ScaleController implements Initializable {
         setText(txt_nationalId, dto.getNationalId());
         setText(txt_empCode, dto.getCodeId());
         setText(txt_empName, dto.getEmpName());
+        setText(txt_Management, dto.getManagement());   // ← جديد
         setText(txt_group, dto.getQualitativeGroup());
         setText(txt_law, dto.getLaw());
         setText(txt_code, dto.getLawCode());
@@ -922,6 +953,9 @@ public class ScaleController implements Initializable {
             dto.setNationalId(txt_nationalId.getText());
             dto.setCodeId(txt_empCode.getText().trim());
             dto.setEmpName(txt_empName.getText().trim());
+
+            dto.setManagement(txt_Management.getText() != null
+                    ? txt_Management.getText().trim() : null);   // ← جديد
             dto.setQualitativeGroup(txt_group.getText().trim());
             dto.setLaw(parseInt(txt_law.getText()));
 

@@ -4,43 +4,26 @@ import com.safwat.hr.ui.table.TableSetupHelper;
 import com.safwat.hr.ui.table.TableSetupHelper.ColumnConfig;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * مكوّن مساعد لبناء جدول قابل للتعديل + زر إضافة + زر حفظ.
- * <p>
- * الاستخدام:
- * <pre>
- *   EmployeeHistoryTable&lt;SocialStatusRow&gt; tbl = new EmployeeHistoryTable&lt;&gt;(
- *       "الحالة الاجتماعية",
- *       SocialStatusRow::new,         // صف فارغ جديد
- *       columns,                      // List<ColumnConfig<R>>
- *       rows,                         // البيانات الأولية
- *       saveHandler                   // SaveHandler<R>
- *   );
- *   parentVBox.getChildren().add(tbl.build());
- * </pre>
+ * مكوّن مساعد لبناء جدول قابل للتعديل + زر إضافة + زر حفظ + (اختياري) زر حذف لكل صف.
  *
  * @param <R> نوع صف الجدول — لازم يكون mutable (مش record)
  */
 public class EmployeeHistoryTable<R> {
 
-    /**
-     * callback للحفظ — بيستقبل قائمة الصفوف الحالية
-     */
     @FunctionalInterface
     public interface SaveHandler<R> {
-        /**
-         * @param rows الصفوف الحالية في الجدول (بدون الصف الفارغ الأخير)
-         * @throws Exception لو الـ API رجع خطأ
-         */
         void save(List<R> rows) throws Exception;
     }
 
@@ -49,11 +32,8 @@ public class EmployeeHistoryTable<R> {
     private final List<ColumnConfig<R>> columns;
     private final List<R> initialData;
     private final SaveHandler<R> saveHandler;
+    private final boolean withDeleteColumn;
 
-    /**
-     * -- GETTER --
-     * يرجّع الجدول للـ controller لو محتاج يقرأ الـ items بره.
-     */
     @Getter
     private TableView<R> table;
 
@@ -62,43 +42,49 @@ public class EmployeeHistoryTable<R> {
                                 List<ColumnConfig<R>> columns,
                                 List<R> initialData,
                                 SaveHandler<R> saveHandler) {
+        this(sectionTitle, rowFactory, columns, initialData, saveHandler, false);
+    }
+
+    public EmployeeHistoryTable(String sectionTitle,
+                                Supplier<R> rowFactory,
+                                List<ColumnConfig<R>> columns,
+                                List<R> initialData,
+                                SaveHandler<R> saveHandler,
+                                boolean withDeleteColumn) {
         this.sectionTitle = sectionTitle;
         this.rowFactory = rowFactory;
         this.columns = columns;
         this.initialData = initialData;
         this.saveHandler = saveHandler;
+        this.withDeleteColumn = withDeleteColumn;
     }
 
-    /**
-     * يبني الـ VBox الكامل (عنوان + جدول + أزرار).
-     * استدعيه مرة واحدة وأضف الناتج للـ parent.
-     */
     public VBox build() {
-        // ── العنوان ──────────────────────────────────────────────────
         Label title = new Label(sectionTitle);
         title.getStyleClass().add("section-title");
 
-        // ── الجدول ───────────────────────────────────────────────────
         table = new TableView<>();
         table.setPrefHeight(200);
         VBox.setVgrow(table, Priority.ALWAYS);
 
+        List<ColumnConfig<R>> effectiveCols = new ArrayList<>(columns);
+        if (withDeleteColumn) {
+            effectiveCols.add(buildDeleteColumn());
+        }
+
         TableSetupHelper.setupGenericTable(
                 table,
-                columns,
-                0,          // لا صفوف افتراضية — البيانات من initialData
+                effectiveCols,
+                0,
                 rowFactory
         );
 
-        // نملأ بالبيانات الحقيقية بعد الـ setup
         table.getItems().clear();
         if (initialData != null) {
             table.getItems().addAll(initialData);
         }
-        // صف فارغ في الآخر للإدخال
         table.getItems().add(rowFactory.get());
 
-        // ── أزرار ────────────────────────────────────────────────────
         Button addBtn = new Button("➕ إضافة سطر");
         Button saveBtn = new Button("💾 حفظ " + sectionTitle);
 
@@ -111,23 +97,60 @@ public class EmployeeHistoryTable<R> {
         HBox buttons = new HBox(8, addBtn, saveBtn);
         buttons.setPadding(new Insets(6, 0, 0, 0));
 
-        // ── تجميع ────────────────────────────────────────────────────
         VBox box = new VBox(6, title, table, buttons);
         box.setPadding(new Insets(10, 0, 10, 0));
         return box;
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    //  عمليات داخلية
-    // ─────────────────────────────────────────────────────────────────
+    /**
+     * عمود حذف — زر 🗑 لكل صف.
+     * الحذف فرونت فقط: الصف يتشال من items، والـ bulk replace على السيرفر
+     * هيستبدل السجل بالكامل فالصف المحذوف مش هيروح.
+     */
+    private ColumnConfig<R> buildDeleteColumn() {
+        return new ColumnConfig<>(
+                "", 60,
+                tc -> new TableCell<>() {
+                    private final Button del = new Button("🗑");
+                    {
+                        del.getStyleClass().add("btn-icon-danger");
+                        del.setTooltip(new Tooltip("حذف السطر"));
+                        del.setOnAction(ev -> {
+                            int idx = getIndex();
+                            if (idx < 0 || idx >= getTableView().getItems().size()) return;
+                            R item = getTableView().getItems().get(idx);
+                            getTableView().getItems().remove(item);
+
+                            // لو مبقاش فيه صفوف غير فاضية، أضف صف فارغ
+                            boolean hasNonEmpty = getTableView().getItems().stream()
+                                    .anyMatch(EmployeeHistoryTable.this::isNotEmpty);
+                            if (!hasNonEmpty) {
+                                getTableView().getItems().add(rowFactory.get());
+                            }
+                        });
+                    }
+
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setGraphic(empty ? null : del);
+                        setAlignment(Pos.CENTER);
+                    }
+                }
+        );
+    }
 
     private void addRow() {
+        // احذف الصف الفارغ الأخير الأول لو موجود
+        int lastIdx = table.getItems().size() - 1;
+        if (lastIdx >= 0 && !isNotEmpty(table.getItems().get(lastIdx))) {
+            table.getItems().remove(lastIdx);
+        }
         R fresh = rowFactory.get();
         table.getItems().add(fresh);
         Platform.runLater(() -> {
             table.getSelectionModel().select(fresh);
             table.scrollTo(fresh);
-            // ابدأ التعديل على أول عمود قابل للتعديل
             table.getColumns().stream()
                     .filter(TableColumn::isEditable)
                     .findFirst()
@@ -136,7 +159,6 @@ public class EmployeeHistoryTable<R> {
     }
 
     private void onSave() {
-        // نستبعد الصفوف الفارغة تماماً قبل الإرسال
         List<R> toSave = table.getItems().stream()
                 .filter(this::isNotEmpty)
                 .toList();
@@ -148,25 +170,16 @@ public class EmployeeHistoryTable<R> {
         }
     }
 
-    /**
-     * يتحقق لو الصف فاضي — يشتغل مع أي Row type طالما
-     * toString() بترجع شيء مفيد، أو override للـ subclass.
-     * الـ subclass ممكن يعمل override لو محتاج منطق أدق.
-     */
     protected boolean isNotEmpty(R row) {
         return row != null && !row.toString().isBlank();
     }
 
-    /**
-     * يحدّث بيانات الجدول بعد reload — مثلاً بعد ما الباك يرجع profile جديد.
-     */
     public void reload(List<R> newData) {
         table.getItems().clear();
         if (newData != null) table.getItems().addAll(newData);
         table.getItems().add(rowFactory.get());
     }
 
-    // ─────────────────────────────────────────────────────────────────
     private void showInfo(String msg) {
         new Alert(Alert.AlertType.INFORMATION, msg, ButtonType.OK).showAndWait();
     }

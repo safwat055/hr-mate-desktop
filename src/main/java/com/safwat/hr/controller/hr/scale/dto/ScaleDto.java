@@ -79,4 +79,7 @@ public class ScaleDto {
     private TreeMap<LocalDate, String> jobTitleHistory;
     private Map<LocalDate, String> maritalStatusHistory;  // الحالة الجتماعية
 
+    // com.safwat.hr.controller.hr.scale.dto.ScaleDto
+    private String management;   // ← جديد
+
 }

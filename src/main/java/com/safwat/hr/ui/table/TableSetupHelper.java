@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 import lombok.Getter;
 
@@ -22,11 +23,12 @@ import java.util.function.Supplier;
 /**
  * مساعد عام لإعداد الجداول القابلة للتحرير في JavaFX.
  *
- * <p>يدعم 3 أنواع من الـ editors:
+ * <p>يدعم 4 أنواع من الـ editors:
  * <ul>
  *   <li>{@link EditorType#TEXT} — TextFieldTableCell</li>
  *   <li>{@link EditorType#DATE} — TextFieldTableCell مع parse/format للتواريخ</li>
  *   <li>{@link EditorType#COMBO} — ComboBoxTableCell مع قائمة خيارات ثابتة</li>
+ *   <li>{@link EditorType#ACTION} — خلية مخصصة عبر {@code actionCellFactory} (أزرار، HBox، ...)</li>
  * </ul>
  */
 public class TableSetupHelper {
@@ -66,18 +68,11 @@ public class TableSetupHelper {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    //  EditorType + ComboOption — جديد
+    //  EditorType + ComboOption
     // ═══════════════════════════════════════════════════════════════
 
-    public enum EditorType { TEXT, DATE, COMBO }
+    public enum EditorType { TEXT, DATE, COMBO, ACTION }
 
-    /**
-     * خيار في ComboBox داخل خلية جدول.
-     * <ul>
-     *   <li>{@link #value()} — القيمة اللي تُخزَّن في الصف (String)</li>
-     *   <li>{@link #display()} — النص اللي يظهر للمستخدم في القائمة</li>
-     * </ul>
-     */
     public interface ComboOption {
         String value();
         String display();
@@ -154,9 +149,6 @@ public class TableSetupHelper {
         };
     }
 
-    /**
-     * خلية ComboBox — القيمة المخزّنة String، والعرض عبر ComboOption.display().
-     */
     private static <T> TableCell<T, String> createComboCell(
             List<ComboOption> options,
             ColumnAlign align) {
@@ -236,12 +228,19 @@ public class TableSetupHelper {
                     new javafx.beans.property.SimpleStringProperty(
                             cfg.getter().apply(cellData.getValue())));
 
-            // ── resolved combo options مرة واحدة قبل بناء الـ cell factory ──
             final List<ComboOption> comboOptions =
                     cfg.comboOptions() != null ? cfg.comboOptions().get() : null;
 
             // ── CellFactory ──
-            if (cfg.editable()) {
+            if (cfg.editorType() == EditorType.ACTION) {
+                // ★ خلية مخصصة — لا تعتمد على editable ولا على setter
+                if (cfg.actionCellFactory() == null) {
+                    throw new IllegalStateException(
+                            "العمود \"" + cfg.title() + "\" من نوع ACTION لازم يكون فيه actionCellFactory");
+                }
+                col.setCellFactory(cfg.actionCellFactory());
+                col.setEditable(false);
+            } else if (cfg.editable()) {
                 switch (cfg.editorType()) {
                     case DATE -> col.setCellFactory(c ->
                             createDateCell(c, cfg.getter(), cfg.setter(), cfg.alignment()));
@@ -354,14 +353,15 @@ public class TableSetupHelper {
             EditorType editorType,
             ColumnAlign alignment,
             boolean fillRemaining,
-            Supplier<List<ComboOption>> comboOptions) {
+            Supplier<List<ComboOption>> comboOptions,
+            Callback<TableColumn<T, String>, TableCell<T, String>> actionCellFactory) {
 
         // ── 4 params ──
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter) {
             this(title, width, getter, setter, true, EditorType.TEXT,
-                    ColumnAlign.CENTER, false, null);
+                    ColumnAlign.CENTER, false, null, null);
         }
 
         // ── 5 params ──
@@ -370,10 +370,10 @@ public class TableSetupHelper {
                             BiConsumer<T, String> setter,
                             boolean editable) {
             this(title, width, getter, setter, editable, EditorType.TEXT,
-                    ColumnAlign.CENTER, false, null);
+                    ColumnAlign.CENTER, false, null, null);
         }
 
-        // ── 6 params (editable + isDateColumn — backward compat) ──
+        // ── 6 params (editable + isDateColumn) ──
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter,
@@ -381,10 +381,10 @@ public class TableSetupHelper {
                             boolean isDateColumn) {
             this(title, width, getter, setter, editable,
                     isDateColumn ? EditorType.DATE : EditorType.TEXT,
-                    ColumnAlign.CENTER, false, null);
+                    ColumnAlign.CENTER, false, null, null);
         }
 
-        // ── 7 params (editable + isDateColumn + align — backward compat) ──
+        // ── 7 params (editable + isDateColumn + align) ──
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter,
@@ -393,10 +393,10 @@ public class TableSetupHelper {
                             ColumnAlign alignment) {
             this(title, width, getter, setter, editable,
                     isDateColumn ? EditorType.DATE : EditorType.TEXT,
-                    alignment, false, null);
+                    alignment, false, null, null);
         }
 
-        // ── 8 params (editable + isDateColumn + align + fillRemaining — backward compat) ──
+        // ── 8 params (editable + isDateColumn + align + fillRemaining) ──
         public ColumnConfig(String title, double width,
                             Function<T, String> getter,
                             BiConsumer<T, String> setter,
@@ -406,7 +406,7 @@ public class TableSetupHelper {
                             boolean fillRemaining) {
             this(title, width, getter, setter, editable,
                     isDateColumn ? EditorType.DATE : EditorType.TEXT,
-                    alignment, fillRemaining, null);
+                    alignment, fillRemaining, null, null);
         }
 
         // ── 8 params (EditorType + align + fillRemaining) ──
@@ -418,7 +418,7 @@ public class TableSetupHelper {
                             ColumnAlign alignment,
                             boolean fillRemaining) {
             this(title, width, getter, setter, editable, editorType,
-                    alignment, fillRemaining, null);
+                    alignment, fillRemaining, null, null);
         }
 
         // ── 9 params (COMBO كامل) ──
@@ -430,15 +430,22 @@ public class TableSetupHelper {
                             ColumnAlign alignment,
                             boolean fillRemaining,
                             Supplier<List<ComboOption>> comboOptions) {
-            this.title = title;
-            this.width = width;
-            this.getter = getter;
-            this.setter = setter;
-            this.editable = editable;
-            this.editorType = editorType;
-            this.alignment = alignment;
-            this.fillRemaining = fillRemaining;
-            this.comboOptions = comboOptions;
+            this(title, width, getter, setter, editable, editorType,
+                    alignment, fillRemaining, comboOptions, null);
+        }
+
+        // ── 9 params (ACTION — cellFactory مخصص) ──
+        public ColumnConfig(String title, double width,
+                            Callback<TableColumn<T, String>, TableCell<T, String>> actionCellFactory) {
+            this(title, width,
+                    r -> "",
+                    (r, v) -> { },
+                    false,
+                    EditorType.ACTION,
+                    ColumnAlign.CENTER,
+                    false,
+                    null,
+                    actionCellFactory);
         }
     }
 }

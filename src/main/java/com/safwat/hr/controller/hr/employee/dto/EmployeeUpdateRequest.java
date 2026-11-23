@@ -11,12 +11,9 @@ public record EmployeeUpdateRequest(
         LocalDate terminationDate,
         TerminationReason terminationReason,
         Long sectorId,
-
-        // جديد — إعاقة
+        String management,                  // ← جديد
         LocalDate disabilityStartDate,
         String disabilityDecisionNo,
-
-        // جديد — محافظة نائية
         boolean worksInRemoteGovernorate
 ) {
 }
