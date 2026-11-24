@@ -75,6 +75,7 @@ public class AllowanceFxController implements Initializable {
     private WebView webView;
     @FXML
     private Button btn_syncAllowances;
+
     // ── تاب بيانات الموظف ───────────────────────────────────────
     @FXML
     private TextField txt_empName;
@@ -192,7 +193,10 @@ public class AllowanceFxController implements Initializable {
         txt_calculationDate.setText(LocalDate.now().format(DATE_FMT));
 
         btn_statutory.setOnAction(_ -> openStatutoryDialog());
-        btn_recalculate.setOnAction(_ -> loadAllowances());
+
+        // ★ زر الاحتساب مربوط مرة واحدة فقط — بيبني/يحسب الـ config
+        btn_recalculate.setOnAction(_ -> handleCalculate());
+
         btn_addAllowance.setOnAction(_ -> handleAddAllowance());
         btn_showAllowances.setOnAction(_ -> showAllAllowancesMenu());
         btn_reset.setOnAction(_ -> handleReset());
@@ -218,9 +222,6 @@ public class AllowanceFxController implements Initializable {
     //  حالة الواجهة (التبويبات / معاينة PDF)
     // ════════════════════════════════════════════════════════════
 
-    /**
-     * يعرض التبويبات ويخفي المعاينة، ويفضّي الـ WebView من الذاكرة
-     */
     private void showForm() {
         setShown(main_tabs, true);
         setShown(webView, false);
@@ -229,9 +230,52 @@ public class AllowanceFxController implements Initializable {
             webView.getEngine().load("about:blank");
         }
     }
+
+    private void showPreview() {
+        setShown(main_tabs, false);
+        setShown(webView, true);
+        setShown(btn_back, true);
+    }
+
+    private static void setShown(Node node, boolean shown) {
+        if (node == null) return;
+        node.setVisible(shown);
+        node.setManaged(shown);
+    }
+
+    private void showPdf(CompletableFuture<Path> request, Button trigger) {
+        trigger.setDisable(true);
+        clearError();
+
+        request.whenComplete((path, ex) -> Platform.runLater(() -> {
+            trigger.setDisable(false);
+            if (ex != null) {
+                showError("حدث خطأ أثناء التحميل: " + friendly(ex));
+                return;
+            }
+            showPreview();
+            PDFView.showIN(path.toString(), webView);
+        }));
+    }
+
+    private static String friendly(Throwable ex) {
+        Throwable root = ex instanceof CompletionException && ex.getCause() != null
+                ? ex.getCause() : ex;
+        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  مزامنة البدلات
+    // ════════════════════════════════════════════════════════════
+
     private void handleSyncAllowances() {
         if (currentNationalId == null || currentNationalId.isBlank()) {
             showError("ابحث عن موظف أولاً");
+            return;
+        }
+
+        if (currentResult == null) {
+            showError("لا يوجد سجل بدلات — اضغط \"احتساب\" أولاً");
             return;
         }
 
@@ -254,7 +298,8 @@ public class AllowanceFxController implements Initializable {
                     }
                     if (!result.removedNames().isEmpty()) {
                         if (sb.length() > 0) sb.append("\n\n");
-                        sb.append("تم حذف (غير مستحقة):\n- ").append(String.join("\n- ", result.removedNames()));
+                        sb.append("تم حذف (غير مستحقة):\n- ")
+                                .append(String.join("\n- ", result.removedNames()));
                     }
                     AlertUtil.showInfo("تمت المزامنة", sb.toString());
                     loadAllowances();
@@ -265,46 +310,9 @@ public class AllowanceFxController implements Initializable {
                 }
         );
     }
-    /**
-     * يعرض المعاينة ويخفي التبويبات
-     */
-    private void showPreview() {
-        setShown(main_tabs, false);
-        setShown(webView, true);
-        setShown(btn_back, true);
-    }
-
-    private static void setShown(Node node, boolean shown) {
-        if (node == null) return;
-        node.setVisible(shown);
-        node.setManaged(shown);
-    }
-
-    /**
-     * يستنى الملف يتحمّل، وبعدين يعرضه. المعاينة بتظهر بس لو التحميل نجح.
-     */
-    private void showPdf(CompletableFuture<Path> request, Button trigger) {
-        trigger.setDisable(true);
-        clearError();
-
-        request.whenComplete((path, ex) -> Platform.runLater(() -> {
-            trigger.setDisable(false);
-            if (ex != null) {
-                showError("حدث خطأ أثناء التحميل: " + friendly(ex));
-                return;
-            }
-            showPreview();
-            PDFView.showIN(path.toString(), webView);
-        }));
-    }
-
-    private static String friendly(Throwable ex) {
-        Throwable root = ex instanceof CompletionException && ex.getCause() != null ? ex.getCause() : ex;
-        return root.getMessage() != null ? root.getMessage() : root.getClass().getSimpleName();
-    }
 
     // ════════════════════════════════════════════════════════════
-    //  البحث عن موظف (اسم / رقم قومي / رقم وظيفي)
+    //  البحث عن موظف
     // ════════════════════════════════════════════════════════════
 
     private void setupEmployeeSearch() {
@@ -333,6 +341,7 @@ public class AllowanceFxController implements Initializable {
 
     /**
      * يختار الموظف ويحمّل بياناته. لو الموظف اتغير بيمسح الحالة القديمة الأول.
+     * <p>★ البحث لا يبني config — فقط يحمّل البيانات الأساسية ويجرّب تحميل config موجود.
      */
     private void selectEmployee(String nationalId) {
         if (nationalId == null || nationalId.isBlank()) return;
@@ -342,7 +351,179 @@ public class AllowanceFxController implements Initializable {
             resetEmployeeState();
         }
         currentNationalId = nationalId;
-        loadAllowances();
+
+        // ★ loadEmployeeDetailsAndProfile بقت بتستدعي loadExistingConfigOrNotify
+        //   بعد ما cachedScaleDto يتوفر
+        loadEmployeeDetailsAndProfile();
+    }
+
+    /**
+     * يحمّل بيانات السلم + بيانات الموظف (جداول الحالة/الوظيفة).
+     * بعد ما cachedScaleDto يتوفر، يستدعي loadExistingConfigOrNotify.
+     */
+    private void loadEmployeeDetailsAndProfile() {
+        // ① بيانات السلم — أولاً (عشان cachedScaleDto يكون متاح)
+        FxApiSupport.get(
+                "/salary-scale/" + currentNationalId,
+                ScaleDto.class,
+                dto -> {
+                    cachedScaleDto = dto;
+                    applyEmployeeDetails(dto);
+
+                    // ★ بعد ما cachedScaleDto اتوفر — جرّب تحميل config
+                    loadExistingConfigOrNotify();
+                },
+                err -> {
+                    // لو السلم فشل، جرّب config برضه (ممكن ينجح)
+                    loadExistingConfigOrNotify();
+                }
+        );
+
+        // ② بيانات الموظف (مستقل — parallel)
+        FxApiSupport.get(
+                "/employees/by-national-id/" + currentNationalId,
+                EmployeeProfileDto.class,
+                profile -> {
+                    employeeId = profile.id();
+                    rebuildHistoryTables(profile);
+                    setHistoryVisible(true);
+                },
+                err -> setHistoryVisible(false)
+        );
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  تحميل config موجود / إشعار بالمتطلبات
+    // ════════════════════════════════════════════════════════════
+
+    /**
+     * يحاول تحميل config موجود. لو مش موجود (404) → notification تحذيرية.
+     * لو موجود → يعرض البدلات.
+     */
+    private void loadExistingConfigOrNotify() {
+        if (currentNationalId == null || currentNationalId.isBlank()) return;
+
+        LocalDate calcDate = getCalculationDate();
+        String dateParam = calcDate != null ? "?date=" + calcDate.format(DATE_FMT) : "";
+
+        showLoading(true);
+        clearError();
+
+        FxApiSupport.get(
+                "/entitlements/employee/" + currentNationalId + dateParam,
+                AllowanceResultDto.class,
+                result -> {
+                    showLoading(false);
+                    currentResult = result;
+                    fillAllowancesTable(result);
+                    btn_reset.setVisible(true);
+                    loadDefinitions();
+                },
+                err -> {
+                    showLoading(false);
+                    // ★ لو مفيش config — نبّه المستخدم
+                    if (err != null && (err.contains("لا يوجد سجل بدلات")
+                            || err.contains("اضغط") || err.contains("NoSuchElement"))) {
+                        showPrerequisitesNotification();
+                    } else {
+                        showError(err);
+                    }
+                    // امسح الجدول
+                    table_allowances.setItems(FXCollections.observableArrayList());
+                    lbl_total.setText("0.00 ج");
+                    currentResult = null;
+                }
+        );
+    }
+
+    /**
+     * يعرض notification فيها:
+     * - لو الوظيفة/الحالة ناقصة → يوجّه المستخدم لإضافتها
+     * - لو موجودة → يوجّه المستخدم لضغط "احتساب"
+     */
+    private void showPrerequisitesNotification() {
+        if (cachedScaleDto != null) {
+            displayPrerequisitesNotification(cachedScaleDto);
+            return;
+        }
+
+        // احتياطي — لو cachedScaleDto مش متاح لأي سبب
+        FxApiSupport.get(
+                "/salary-scale/" + currentNationalId,
+                ScaleDto.class,
+                dto -> {
+                    cachedScaleDto = dto;
+                    displayPrerequisitesNotification(dto);
+                },
+                err -> showError("تعذر جلب بيانات الموظف: " + err)
+        );
+    }
+
+    private void displayPrerequisitesNotification(ScaleDto dto) {
+        boolean hasJob = dto.getJobTitleHistory() != null && !dto.getJobTitleHistory().isEmpty();
+        boolean hasStatus = dto.getMaritalStatusHistory() != null
+                && !dto.getMaritalStatusHistory().isEmpty();
+
+        List<String> missing = new ArrayList<>();
+        if (!hasJob) missing.add("الوظيفة");
+        if (!hasStatus) missing.add("الحالة الاجتماعية");
+
+        if (!missing.isEmpty()) {
+            // ★ ناقص → وجّه المستخدم لتاب "بيانات الموظف"
+            AlertUtil.showWarning("بيانات ناقصة",
+                    "الموظف لا يملك: " + String.join(" + ", missing) + ".\n\n"
+                            + "اذهب لتاب \"بيانات الموظف\" وأضف السجل المطلوب أولاً، "
+                            + "ثم اضغط \"احتساب\".");
+            // بدّل لتاب بيانات الموظف
+            main_tabs.getSelectionModel().select(0);
+        } else {
+            // ★ كل حاجة موجودة → وجّهه لضغط احتساب
+            AlertUtil.showInfo("جاهز للاحتساب",
+                    "بيانات الموظف مكتملة (وظيفة + حالة اجتماعية).\n"
+                            + "اضغط زر \"احتساب\" لبناء سجل البدلات.");
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  الاحتساب (بناء config لو مش موجود + حساب)
+    // ════════════════════════════════════════════════════════════
+
+    @FXML
+    private void handleCalculate() {
+        if (currentNationalId == null || currentNationalId.isBlank()) {
+            showError("ابحث عن موظف أولاً");
+            return;
+        }
+
+        LocalDate calcDate = getCalculationDate();
+        if (calcDate == null) {
+            showError("أدخل تاريخ احتساب صحيح أولاً");
+            return;
+        }
+
+        btn_recalculate.setDisable(true);
+        clearError();
+
+        String url = "/entitlements/employee/" + currentNationalId
+                + "/calculate?date=" + calcDate.format(DATE_FMT);
+
+        FxApiSupport.post(
+                url,
+                Map.of(),  // body فاضي — الـ date في query
+                AllowanceResultDto.class,
+                result -> {
+                    btn_recalculate.setDisable(false);
+                    currentResult = result;
+                    fillAllowancesTable(result);
+                    btn_reset.setVisible(true);
+                    loadDefinitions();
+                    showInfo("تم بناء سجل البدلات والاحتساب بنجاح");
+                },
+                err -> {
+                    btn_recalculate.setDisable(false);
+                    showError("تعذر الاحتساب: " + err);
+                }
+        );
     }
 
     private void resetEmployeeState() {
@@ -355,6 +536,7 @@ public class AllowanceFxController implements Initializable {
         socialStatusContainer.getChildren().clear();
         jobTitleContainer.getChildren().clear();
         setHistoryVisible(false);
+        btn_reset.setVisible(false);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -538,7 +720,8 @@ public class AllowanceFxController implements Initializable {
     }
 
     // ════════════════════════════════════════════════════════════
-    //  Load Allowances
+    //  Load Allowances — إعادة تحميل config موجود
+    //  (تُستخدم بعد add / delete / sync / ticket / override)
     // ════════════════════════════════════════════════════════════
 
     private void loadAllowances() {
@@ -564,11 +747,18 @@ public class AllowanceFxController implements Initializable {
                 },
                 err -> {
                     showLoading(false);
-                    showError(err);
+                    // ★ لو الـ config اختفى (مثلاً بعد reset) — نبّه المستخدم
+                    if (err != null && (err.contains("لا يوجد سجل بدلات")
+                            || err.contains("اضغط") || err.contains("NoSuchElement"))) {
+                        currentResult = null;
+                        table_allowances.setItems(FXCollections.observableArrayList());
+                        lbl_total.setText("0.00 ج");
+                        showPrerequisitesNotification();
+                    } else {
+                        showError(err);
+                    }
                 }
         );
-
-        ensureEmployeeDetailsLoaded();
     }
 
     private void loadDefinitions() {
@@ -598,25 +788,6 @@ public class AllowanceFxController implements Initializable {
     //  Employee Details
     // ════════════════════════════════════════════════════════════
 
-    private void ensureEmployeeDetailsLoaded() {
-        if (cachedScaleDto != null) {
-            applyEmployeeDetails(cachedScaleDto);
-            loadEmployeeProfile();
-            return;
-        }
-        FxApiSupport.get(
-                "/salary-scale/" + currentNationalId,
-                ScaleDto.class,
-                dto -> {
-                    cachedScaleDto = dto;
-                    applyEmployeeDetails(dto);
-                    loadEmployeeProfile();
-                },
-                err -> {
-                }
-        );
-    }
-
     private void applyEmployeeDetails(ScaleDto dto) {
         txt_empName.setText(dto.getEmpName());
         txt_empNationalId.setText(dto.getNationalId());
@@ -640,21 +811,6 @@ public class AllowanceFxController implements Initializable {
     // ════════════════════════════════════════════════════════════
     //  جداول الحالة الاجتماعية والوظائف
     // ════════════════════════════════════════════════════════════
-
-    private void loadEmployeeProfile() {
-        if (currentNationalId == null || currentNationalId.isBlank()) return;
-
-        FxApiSupport.get(
-                "/employees/by-national-id/" + currentNationalId,
-                EmployeeProfileDto.class,
-                profile -> {
-                    employeeId = profile.id();
-                    rebuildHistoryTables(profile);
-                    setHistoryVisible(true);
-                },
-                err -> setHistoryVisible(false)
-        );
-    }
 
     private void rebuildHistoryTables(EmployeeProfileDto profile) {
 
@@ -740,6 +896,7 @@ public class AllowanceFxController implements Initializable {
         }
 
         cachedScaleDto = null;
+        showInfo("تم حفظ الحالة الاجتماعية — اضغط \"احتساب\" لتحديث البدلات");
     }
 
     // ════════════════════════════════════════════════════════════
@@ -769,6 +926,7 @@ public class AllowanceFxController implements Initializable {
         }
 
         cachedScaleDto = null;
+        showInfo("تم حفظ الوظائف — اضغط \"احتساب\" لتحديث البدلات");
     }
 
     // ════════════════════════════════════════════════════════════
@@ -846,19 +1004,17 @@ public class AllowanceFxController implements Initializable {
 
     // ── Builders للسطور الوهمية ──
 
-    // ── Builders للسطور الوهمية ──
-
     private AllowanceResultDto.AllowanceLineDto virtualLine(
             String code, String nameAr, BigDecimal value, ElementType et) {
         return new AllowanceResultDto.AllowanceLineDto(
                 code, nameAr, value,
-                null,                                              // effectiveFrom
+                null,
                 AllowanceResultDto.AllowanceLineDto.Source.AUTO,
-                null,                                              // overrides
+                null,
                 et,
-                null,                                              // calcType — سطر وهمي مش بند احتساب
+                null,
                 false, false, false,
-                true);                                             // displayOnly
+                true);
     }
 
     private AllowanceResultDto.AllowanceLineDto buildSubtotal(
@@ -1031,6 +1187,7 @@ public class AllowanceFxController implements Initializable {
             }
         });
     }
+
     private void openTicketDialog(String code, String nameAr) {
         ViewManager.openIndependentView(
                 "/com/safwat/hr/controller/hr/entitlements/allowance/AllowanceTicketDialog.fxml",
@@ -1045,6 +1202,7 @@ public class AllowanceFxController implements Initializable {
                 }
         );
     }
+
     // ════════════════════════════════════════════════════════════
     //  API Ops
     // ════════════════════════════════════════════════════════════
@@ -1057,7 +1215,7 @@ public class AllowanceFxController implements Initializable {
         }
 
         if (currentResult == null) {
-            showError("لم يتم تحميل بيانات الموظف بعد — اضغط إعادة الحساب");
+            showError("لا يوجد سجل بدلات — اضغط \"احتساب\" أولاً");
             return;
         }
 
@@ -1127,6 +1285,10 @@ public class AllowanceFxController implements Initializable {
         });
     }
 
+    /**
+     * إعادة الضبط: تمسح الـ config من الباك، ثم تعيد بناءه عبر "احتساب".
+     * (لا نستخدم loadAllowances هنا لأن الـ config بقى غير موجود بعد المسح)
+     */
     private void handleReset() {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "إعادة الضبط ستحذف كل التعديلات اليدوية وتعيد البناء التلقائي.",
@@ -1137,7 +1299,10 @@ public class AllowanceFxController implements Initializable {
             if (btn == ButtonType.YES) {
                 FxApiSupport.delete(
                         "/entitlements/allowances/employee/" + currentNationalId + "/reset",
-                        this::loadAllowances,
+                        () -> {
+                            // ★ بعد المسح — ابني config من جديد
+                            handleCalculate();
+                        },
                         this::showError
                 );
             }
@@ -1378,8 +1543,9 @@ public class AllowanceFxController implements Initializable {
             );
 
             cachedScaleDto = null;
-            ensureEmployeeDetailsLoaded();
-            loadAllowances();
+            // ★ نعيد تحميل البيانات الأساسية + محاولة تحميل config موجود
+            //   (مش loadAllowances، لأن الـ config ممكن يكون مش موجود)
+            loadEmployeeDetailsAndProfile();
             showInfo("تم حفظ بيانات 30/6 بنجاح");
 
         } catch (Exception ex) {
@@ -1392,9 +1558,5 @@ public class AllowanceFxController implements Initializable {
     private String extractMessage(Exception ex) {
         String msg = ex.getMessage();
         return (msg == null || msg.isBlank()) ? "حدث خطأ غير متوقع" : msg;
-    }
-
-    private LocalDate getCalculationDateOrNull() {
-        return getCalculationDate();
     }
 }
