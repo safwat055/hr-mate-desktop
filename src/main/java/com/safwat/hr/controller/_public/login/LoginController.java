@@ -40,7 +40,7 @@ import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
 
-    private String clientVersion = "v1.2.1";
+    private String clientVersion = "v1.2.6";
 
     @FXML
     private Button btn_cancel;
